@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Премиальное Портфолио - Избранное</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* === Все цвета строго из theme_colors.md === */
+
+            /* Нейтральная база — семейство Ivory */
+            --bg-site: #FAFAF9;
+            /* Ivory 50 */
+            --bg-card: #FAFAF9;
+            /* Ivory 100 */
+            --text-main: #1F1B16;
+            /* Tan 900 */
+            --text-muted: #827C6B;
+            /* Ivory 500 */
+            --text-muted-rose: #B87070;
+
+
+            --border-light: #EBE7E3;
+            /* Tan 200 */
+            --border-rose: #E8D5D5;
+
+            /* Категория: Игрушки — семейство Rose */
+            --accent-rose-bg: #F1E7E7;
+            /* Rose 200 */
+            --accent-rose-text: #8F4A4A;
+            /* Rose 600 */
+
+            /* Категория: Пэчворк — семейство Lime */
+            --accent-lime-bg: #EAECE0;
+            /* Lime 200 */
+            --accent-lime-text: #5C6535;
+            /* Lime 600 */
+
+            /* Категория: Композиция — семейство Tan */
+            --accent-tan-bg: #EBE7E3;
+            /* Tan 200 */
+            --accent-tan-text: #63523F;
+            /* Tan 600 */
+
+            /* Категория: Текстиль — семейство Sand */
+            --accent-sand-bg: #EAE7E2;
+            /* Sand 200 */
+            --accent-sand-text: #59513C;
+            /* Sand 600 */
+
+            /* Категория: Одежда для кукол — семейство Brown */
+            --accent-brown-bg: #EFE9E8;
+            /* Brown 200 */
+            --accent-brown-text: #835952;
+            /* Brown 600 */
+
+            /* Категория: Аксессуары — семейство Orange */
+            --accent-orange-bg: #F9E4D3;
+            /* Orange 200 */
+            --accent-orange-text: #904504;
+            /* Orange 600 */
+
+            /* Категория: Вязание — семейство Teal */
+            --accent-teal-bg: #D8EFEF;
+            /* Teal 200 */
+            --accent-teal-text: #1E6262;
+            /* Teal 600 */
+
+            /* Категория: Новинки / В наличии — семейство Olive */
+            --accent-olive-bg: #E7E7E5;
+            /* Olive 200 */
+            --accent-olive-text: #504E47;
+            /* Olive 600 */
+
+            /* Сердечко — семейство Rose */
+            --heart-outline: #D0A3A3;
+            /* Rose 400 */
+            --heart-active: #B87070;
+            /* Rose 500 */
+
+            /* Ссылки */
+            --link-color: #AFAA9E;
+            /* Ivory 400 */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-site);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 40px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .search-bar {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 20px;
+            border-radius: 100px;
+            border: 1px solid var(--border-light);
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-bar:focus {
+            border-color: var(--text-muted);
+        }
+
+        /* --- ВАРИАНТ 2: Dropdown (Приоритет + Ещё) --- */
+        .filters-container-dropdown {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .filters-main {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn--favorite {
+            border: 1px solid var(--border-rose);
+            color: var(--text-muted-rose);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+        }
+
+        .filter-btn--favorite svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--heart-active);
+            stroke: var(--heart-active);
+            transition: transform 0.2s;
+        }
+
+        .filter-btn--favorite.active svg,
+        .filter-btn--favorite:hover svg {
+            transform: scale(1.15);
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--border-light);
+            color: var(--text-main);
+            border-color: var(--border-light);
+        }
+
+        .filter-btn--favorite.active,
+        .filter-btn--favorite:hover {
+            background: var(--border-rose);
+            color: var(--text-muted-rose);
+            border: 1px solid var(--border-rose);
+        }
+
+        .filter-btn--instock {
+            border: 1px solid #DADFC6;
+            color: #7D8945;
+        }
+
+        .filter-btn--instock.active,
+        .filter-btn--instock:hover {
+            background: #DADFC6;
+            color: #7D8945;
+            border: 1px solid #DADFC6;
+        }
+
+        .filter-divider {
+            width: 1px;
+            height: 24px;
+            background-color: var(--border-light);
+            margin: 0 4px;
+        }
+
+        /* Стили для выпадающего меню */
+        .dropdown-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            display: none;
+            /* Скрыто по умолчанию */
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            /* Центрирование попапа относительно кнопки */
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+            min-width: 200px;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .dropdown-wrapper.open .dropdown-menu {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        .dropdown-item {
+            border: none;
+            background: transparent;
+            text-align: left;
+            padding: 10px 16px;
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item.active {
+            background: var(--bg-site);
+        }
+
+        .dropdown-toggle .arrow {
+            font-size: 0.8rem;
+            margin-left: 4px;
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+
+        .dropdown-wrapper.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* --- Сетка Pinterest --- */
+        .masonry {
+            column-count: 3;
+            column-gap: 30px;
+            padding-bottom: 80px;
+        }
+
+        @media (max-width: 1024px) {
+            .masonry {
+                column-count: 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .masonry {
+                column-count: 1;
+            }
+        }
+
+        .card {
+            background-color: transparent;
+            break-inside: avoid;
+            margin-bottom: 40px;
+            transition: transform 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+        }
+
+        .card-img-wrapper {
+            position: relative;
+            display: block;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            /* чтобы картинка не вылезала за скругления */
+        }
+
+        .card-img-wrapper img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.6s ease;
+        }
+
+        .card:hover .card-img-wrapper img {
+            transform: scale(1.03);
+            /* Легкий зум картинки при наведении на карточку */
+        }
+
+        /* --- Галерея: стрелки навигации (Instagram-style) --- */
+        .gallery-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.85);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.25s ease, background 0.2s ease, box-shadow 0.2s ease;
+            z-index: 3;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            padding: 0;
+        }
+
+        .gallery-arrow svg {
+            width: 14px;
+            height: 14px;
+            stroke: #262626;
+            stroke-width: 2.5;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .gallery-arrow--left {
+            left: 10px;
+        }
+
+        .gallery-arrow--right {
+            right: 10px;
+        }
+
+        .card-img-wrapper:hover .gallery-arrow {
+            opacity: 1;
+        }
+
+        .gallery-arrow:hover {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-arrow:active {
+            transform: translateY(-50%) scale(0.92);
+        }
+
+        /* --- Галерея: точки-индикаторы --- */
+        .gallery-dots {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            z-index: 3;
+        }
+
+        .gallery-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.45);
+            transition: background 0.25s ease, transform 0.25s ease;
+        }
+
+        .gallery-dot.active {
+            background: rgba(255, 255, 255, 0.95);
+            transform: scale(1.15);
+        }
+
+        /* --- Мета-строка: категория + лайк --- */
+        .card-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .card-meta .card-category {
+            margin-bottom: 0;
+            /* Убираем, т.к. отступ даёт card-meta */
+        }
+
+        /* --- Кнопка Лайка (inline) --- */
+        .like-btn {
+            background: transparent;
+            border: none;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .like-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: var(--heart-outline);
+            stroke-width: 1.8;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .like-btn:hover svg {
+            stroke: var(--heart-active);
+            transform: scale(1.1);
+        }
+
+        .like-btn.liked svg {
+            fill: var(--heart-active);
+            stroke: var(--heart-active);
+            transform: scale(1.15);
+        }
+
+        /* --- Контент карточки --- */
+        .card-content {
+            padding: 0;
+        }
+
+        .card-category {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 12px;
+        }
+
+        .cat-doll {
+            background: var(--accent-rose-bg);
+            color: var(--accent-rose-text);
+        }
+
+        .cat-quilt {
+            background: var(--accent-lime-bg);
+            color: var(--accent-lime-text);
+        }
+
+        .cat-outfit {
+            background: var(--accent-tan-bg);
+            color: var(--accent-tan-text);
+        }
+
+        .cat-textile {
+            background: var(--accent-sand-bg);
+            color: var(--accent-sand-text);
+        }
+
+        .cat-clothing {
+            background: var(--accent-brown-bg);
+            color: var(--accent-brown-text);
+        }
+
+        .cat-accessory {
+            background: var(--accent-orange-bg);
+            color: var(--accent-orange-text);
+        }
+
+        .cat-knitting {
+            background: var(--accent-teal-bg);
+            color: var(--accent-teal-text);
+        }
+
+        .cat-new {
+            background: var(--accent-olive-bg);
+            color: var(--accent-olive-text);
+        }
+
+        .cat-instock {
+            background: var(--accent-olive-bg);
+            color: var(--accent-olive-text);
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-weight: 500;
+            margin: 0 0 10px 0;
+            line-height: 1.2;
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin: 0 0 20px 0;
+        }
+
+        .card-link {
+            font-size: 0.85rem;
+            color: var(--link-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+
+        .card-link:hover {
+            color: var(--text-main);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div style="text-align: center; margin: 40px 0 60px 0;">
+            <img src="./images/logo_1.png" alt="Добрые Подарки" style="max-width: 500px; width: 100%; height: auto;">
+        </div>
+
+        <div class="controls">
+            <input type="text" id="searchInput" class="search-bar" placeholder="Поиск по названию или описанию...">
+
+            <!-- ВАРИАНТ 2: Имплементация Dropdown -->
+            <div class="filters-container-dropdown">
+                <div class="filters-main">
+                    <!-- Основные приоритетные категории -->
+                    <button class="filter-btn filter-btn--favorite" data-filter="all">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                            </path>
+                        </svg>
+                    </button>
+
+                    <button class="filter-btn filter-btn--instock" data-filter="instock">В наличии</button>
+                    <span class="filter-divider"></span>
+                    <button class="filter-btn active" data-filter="all">Все</button>
+                    <button class="filter-btn" data-filter="Игрушки">Игрушки</button>
+                    <button class="filter-btn" data-filter="Композиция">Композиция</button>
+                    <button class="filter-btn" data-filter="Пэчворк">Пэчворк</button>
+
+                    <!-- Кнопка "Ещё" с выпадающим списком -->
+                    <div class="dropdown-wrapper" id="dropdownWrapper">
+                        <button class="filter-btn dropdown-toggle" id="dropdownToggle">Ещё <span
+                                class="arrow">▾</span></button>
+                        <div class="dropdown-menu">
+                            <button class="filter-btn dropdown-item" data-filter="Текстиль">Текстиль</button>
+                            <button class="filter-btn dropdown-item" data-filter="Одежда">Одежда для кукол</button>
+                            <button class="filter-btn dropdown-item" data-filter="Аксессуары">Аксессуары</button>
+                            <button class="filter-btn dropdown-item" data-filter="Вязание">Вязание</button>
+                            <button class="filter-btn dropdown-item" data-filter="Новинки">Новинки</button>
+                            <button class="filter-btn dropdown-item" data-filter="В наличии">В наличии</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="masonry" id="masonryGrid">
+            <!-- Карточка 1 -->
+            <div class="card" data-id="item-1">
+                <div class="card-img-wrapper">
+                    <img src="./images/image-1.png" alt="Зайка у окна">
+                    <button class="gallery-arrow gallery-arrow--left" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="gallery-arrow gallery-arrow--right" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="9 6 15 12 9 18"></polyline>
+                        </svg>
+                    </button>
+                    <div class="gallery-dots">
+                        <span class="gallery-dot active"></span>
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot"></span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-meta">
+                        <span class="card-category cat-doll">Игрушки</span>
+                        <button class="like-btn" aria-label="Добавить в избранное">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <h3 class="card-title">Зайка Мечтательница</h3>
+                    <p class="card-desc">Нежная зайка ручной работы в розовом платье, ждущая чуда у окна.</p>
+                    <a href="#" class="card-link">Смотреть работу &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Карточка 2 -->
+            <div class="card" data-id="item-2">
+                <div class="card-img-wrapper">
+                    <img src="./images/image-1.png" alt="Жираф">
+                    <button class="gallery-arrow gallery-arrow--left" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="gallery-arrow gallery-arrow--right" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="9 6 15 12 9 18"></polyline>
+                        </svg>
+                    </button>
+                    <div class="gallery-dots">
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot active"></span>
+                        <span class="gallery-dot"></span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-meta">
+                        <span class="card-category cat-doll">Игрушки</span>
+                        <button class="like-btn" aria-label="Добавить в избранное">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <h3 class="card-title">Осенний Жираф</h3>
+                    <p class="card-desc">Уютный жираф в желтом шарфе, вдохновленный теплыми осенними днями.</p>
+                    <a href="#" class="card-link">Смотреть работу &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Карточка 3 -->
+            <div class="card" data-id="item-3">
+                <div class="card-img-wrapper">
+                    <img src="./images/image-2.png" alt="Зайка на стуле">
+                    <button class="gallery-arrow gallery-arrow--left" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="gallery-arrow gallery-arrow--right" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="9 6 15 12 9 18"></polyline>
+                        </svg>
+                    </button>
+                    <div class="gallery-dots">
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot active"></span>
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot"></span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-meta">
+                        <span class="card-category cat-doll">Игрушки</span>
+                        <button class="like-btn" aria-label="Добавить в избранное">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <h3 class="card-title">Зайка в детской</h3>
+                    <p class="card-desc">Милая зайка с сумочкой, идеальный друг для украшения детской комнаты.</p>
+                    <a href="#" class="card-link">Смотреть работу &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Карточка 4 -->
+            <div class="card" data-id="item-4">
+                <div class="card-img-wrapper">
+                    <img src="./images/image-3.png" alt="Зайка у домика">
+                    <button class="gallery-arrow gallery-arrow--left" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="gallery-arrow gallery-arrow--right" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="9 6 15 12 9 18"></polyline>
+                        </svg>
+                    </button>
+                    <div class="gallery-dots">
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot active"></span>
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot"></span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-meta">
+                        <span class="card-category cat-outfit">Композиция</span>
+                        <button class="like-btn" aria-label="Добавить в избранное">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <h3 class="card-title">Зайка и сказочный дом</h3>
+                    <p class="card-desc">Уникальная интерьерная композиция с зайкой ручной работы.</p>
+                    <a href="#" class="card-link">Смотреть работу &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Карточка 5 -->
+            <div class="card" data-id="item-5">
+                <div class="card-img-wrapper">
+                    <img src="./images/image-4.png" alt="Зайка у окна">
+                    <button class="gallery-arrow gallery-arrow--left" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="gallery-arrow gallery-arrow--right" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="9 6 15 12 9 18"></polyline>
+                        </svg>
+                    </button>
+                    <div class="gallery-dots">
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot active"></span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-meta">
+                        <span class="card-category cat-doll">Игрушки</span>
+                        <button class="like-btn" aria-label="Добавить в избранное">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <h3 class="card-title">Зайка Мечтательница (Копия)</h3>
+                    <p class="card-desc">Нежная зайка ручной работы в розовом платье, ждущая чуда у окна.</p>
+                    <a href="#" class="card-link">Смотреть работу &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Карточка 6 -->
+            <div class="card" data-id="item-6">
+                <div class="card-img-wrapper">
+                    <img src="./images/image-5.png" alt="Жираф">
+                    <button class="gallery-arrow gallery-arrow--left" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="gallery-arrow gallery-arrow--right" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="9 6 15 12 9 18"></polyline>
+                        </svg>
+                    </button>
+                    <div class="gallery-dots">
+                        <span class="gallery-dot active"></span>
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot"></span>
+                        <span class="gallery-dot"></span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-meta">
+                        <span class="card-category cat-doll">Игрушки</span>
+                        <button class="like-btn" aria-label="Добавить в избранное">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <h3 class="card-title">Осенний Жираф (Копия)</h3>
+                    <p class="card-desc">Уютный жираф в желтом шарфе, вдохновленный теплыми осенними днями.</p>
+                    <a href="#" class="card-link">Смотреть работу &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            const filterBtns = document.querySelectorAll('.filter-btn:not(.dropdown-toggle)');
+            const cards = document.querySelectorAll('.card');
+
+            // Логика Dropdown меню
+            const dropdownToggle = document.getElementById('dropdownToggle');
+            const dropdownWrapper = document.getElementById('dropdownWrapper');
+
+            dropdownToggle.addEventListener('click', (e) => {
+                e.stopPropagation(); // Предотвращаем закрытие при клике на саму кнопку
+                dropdownWrapper.classList.toggle('open');
+            });
+
+            // Закрываем меню при клике вне его
+            document.addEventListener('click', (e) => {
+                if (!dropdownWrapper.contains(e.target)) {
+                    dropdownWrapper.classList.remove('open');
+                }
+            });
+
+            // Текущие фильтры
+            let activeCategory = 'all';
+            let searchQuery = '';
+
+            function filterCards() {
+                cards.forEach(card => {
+                    const title = card.querySelector('.card-title').textContent.toLowerCase();
+                    const desc = card.querySelector('.card-desc').textContent.toLowerCase();
+                    const category = card.querySelector('.card-category').textContent;
+
+                    const matchesSearch = title.includes(searchQuery) || desc.includes(searchQuery);
+                    const matchesCategory = activeCategory === 'all' || category === activeCategory;
+
+                    if (matchesSearch && matchesCategory) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            // Обработка поиска
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                filterCards();
+            });
+
+            // Обработка категорий
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Убираем active у всех
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    // Если кликнули на элемент внутри dropdown, делаем кнопку "Ещё" активной
+                    if (btn.classList.contains('dropdown-item')) {
+                        dropdownToggle.classList.add('active');
+                    } else {
+                        dropdownToggle.classList.remove('active');
+                    }
+
+                    activeCategory = btn.getAttribute('data-filter');
+                    filterCards();
+
+                    // Закрываем меню после выбора
+                    if (window.innerWidth < 1024) {
+                        dropdownWrapper.classList.remove('open');
+                    }
+                });
+            });
+
+            // Логика для кнопок "Лайк" (пока без localStorage, просто визуальная часть)
+            const likeBtns = document.querySelectorAll('.like-btn');
+            likeBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault(); // Предотвращаем любые переходы, если кнопка в ссылке
+                    btn.classList.toggle('liked');
+
+                    // Анимация микро-всплеска
+                    const svgEl = btn.querySelector('svg');
+                    svgEl.style.transform = 'scale(0.8)';
+                    setTimeout(() => {
+                        svgEl.style.transform = btn.classList.contains('liked') ? 'scale(1.15)' : 'scale(1)';
+                    }, 50);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
