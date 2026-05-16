@@ -10,84 +10,72 @@
 
 ## Public API
 
-- **GET /api/v1/albums/:slug/posts**: 
-    - Retrieve posts belonging to a specific album.
-    - **Query Params**:
-        - `search`: filter by title/description.
-        - `category`: array of category slugs.
-        - `tag`: array of tag slugs.
-        - `in_stock`: boolean filter.
-        - `page`: for pagination.
-- **GET /api/v1/albums/:slug/posts/:post_slug**: 
-    - Retrieve full project details, including all image metadata, positions, and taxonomy.
-- **GET /api/v1/categories**: 
-    - List all active categories with their color metadata.
-- **GET /api/v1/tags**: 
-    - List all tags, optionally filtered by category.
-- **GET /api/v1/localization/:locale**:
-    - Fetch localized strings/content.
+- **General**:
+    - `GET /api/v1/albums/:slug/posts`: Retrieve posts belonging to a specific album.
+    - `GET /api/v1/albums/:album_slug/posts/:post_slug`: Retrieve full project details.
+- **Filter posts by query**:
+    - `?category=...&category=...`: Filter by multiple category slugs.
+    - `?tag=...&tag=...`: Filter by multiple tag slugs.
+    - `?in_stock=true`: Filter by availability.
+- **Pagination**:
+    - `?page=1`: Standard pagination.
 
 ## Admin API
 
 - **Auth**:
-    - `POST /api/v1/admin/sign-in`
-    - `POST /api/v1/admin/sign-out`
+    - `POST /api/v1/admin/auth/sign-in`
+    - `POST /api/v1/admin/auth/sign-out`
 - **User Management**:
-    - CRUD for users (`/api/v1/admin/users`).
+    - `GET, POST, PATCH, DELETE /api/v1/admin/users`
 - **Album Management**:
-    - CRUD for albums (`/api/v1/admin/albums`).
-- **Post Editor**:
-    - CRUD for posts (`/api/v1/admin/posts`).
-    - Soft-delete (Archive) and Restore logic.
-    - Status management (Draft vs. Published).
-    - Date override for manual sorting.
-    - `in_stock` status toggle.
-- **Taxonomy Management**:
-    - CRUD for categories (`/api/v1/admin/categories`).
-    - CRUD for tags (`/api/v1/admin/tags`).
-    - Logic for implicit category creation if it doesn't exist during post creation.
-- **Color Management**:
-    - CRUD for colors (`/api/v1/admin/colors`).
+    - `GET, POST, PATCH, DELETE /api/v1/admin/albums`
+- **Category Management**:
+    - `GET, POST, PATCH, DELETE /api/v1/admin/categories`
+- **Tag Management**:
+    - `GET, POST, PATCH, DELETE /api/v1/admin/tags`
 - **Media Management**:
-    - Bulk upload handling (`/api/v1/admin/media`).
+    - `GET, POST, PATCH, DELETE /api/v1/admin/media`
     - Convert all images to JPG.
-    - Generate two sizes:
-        - **Thumbnail**: 300x300 (fit).
-        - **Original**: 1200x1200 (fit).
-    - Integrity check: Prevent deletion of media if used in any post or as a cover.
+    - Generate sizes: **Thumbnail** (300x300) and **Original** (1200x1200).
 - **Localization**:
-    - CRUD for localized content (`/api/v1/admin/localization`).
+    - `GET, POST, PATCH, DELETE /api/v1/admin/localization`
+- **Post Editor**:
+    - `GET, POST, PATCH, DELETE /api/v1/admin/posts`
+    - Status management (Draft vs. Published vs. Archived).
+- **Color Management**:
+    - `GET, POST, PATCH, DELETE /api/v1/admin/colors`
 - **Slug Management**:
-    - Manage entity slugs (`/api/v1/admin/slugs`).
+    - `GET, POST, PATCH, DELETE /api/v1/admin/slugs`
 
 ## Data Models
 
 - **User**:
     - `id`, `email`, `name`, `password`.
 - **Album**:
-    - `id`, `title`, `description`, `slug`.
+    - `id`, `title`, `description`.
 - **Category**:
-    - `id`, `title`, `description`, `colorId` (ref Color), `albumId` (ref Album), `userId`.
-- **Tag**:
-    - `id`, `name`, `categories` (Array of IDs), `userId`.
+    - `id`, `title`, `description`, `color` (ref Color), `album` (ref Album), `user` (ref User).
 - **Color**:
-    - `id`, `color` (hex/string), `userId`.
+    - `id`, `color` (hex/string), `user` (ref User).
 - **Media**:
-    - `id`, `originalUrl`, `thumbnailUrl`, `userId`.
-- **Post**:
-    - `id`, `title`, `description`, `posterId` (ref Media), `in_stock` (Boolean), `status` (Draft/Published/Archived), `userId`, `categoryId`, `tags` (Array of IDs).
-    - `media` (Array of PostMedia objects).
-- **PostMedia**:
-    - `id`, `order`, `mediaId`, `position` (Object: {x, y, width, height}).
-- **Localization**:
-    - `id`, `locale`, `payload` (JSON), `entity` (String), `userId`.
+    - `id`, `thumbnailUrl`, `originalUrl`, `user` (ref User).
 - **Slug**:
-    - `id`, `name`, `entity` (String/ID).
+    - `id`, `name`, `entity` (String/ID), `user` (ref User).
+- **Localization**:
+    - `id`, `locale`, `payload` (JSON), `entity` (String/ID), `user` (ref User).
+- **Tag**:
+    - `id`, `name`, `user` (ref User), `categories` (Array of IDs).
+- **Post**:
+    - `id`, `title`, `description`, `media` (Array of PostMedia), `poster` (ref Media), `in_stock` (Boolean), `status`, `user` (ref User), `category` (ref Category), `tags` (Array of IDs).
+- **PostMedia**:
+    - `id`, `order`, `media` (ref Media), `position` (ref Position).
+- **Position**:
+    - `id`, `x`, `y`, `width`, `height`.
 
 ---
 
 **Important (Consistency when deleting):**
-If an admin deletes a Tag or Category from their own collections, you'll need to run a background task that will remove that ID from the tags and categories arrays in all posts. NoSQL doesn't have a built-in ON DELETE CASCADE.
+If an admin deletes a Tag or Category, run a background task to remove that ID from all associated posts. NoSQL lacks built-in ON DELETE CASCADE.
 
 ### REST API Response contract:
 
