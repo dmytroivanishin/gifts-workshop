@@ -476,6 +476,11 @@
             color: var(--accent-rose-text);
         }
 
+        .cat-toy {
+            background: var(--accent-orange-bg);
+            color: var(--accent-orange-text);
+        }
+
         .cat-quilt {
             background: var(--accent-lime-bg);
             color: var(--accent-lime-text);
@@ -497,8 +502,8 @@
         }
 
         .cat-accessory {
-            background: var(--accent-orange-bg);
-            color: var(--accent-orange-text);
+            background: var(--accent-teal-bg);
+            color: var(--accent-teal-text);
         }
 
         .cat-knitting {
@@ -551,7 +556,7 @@
 
     <div class="container">
         <div style="text-align: center; margin: 40px 0 60px 0;">
-            <img src="./images/logo_1.png" alt="Добрые Подарки" style="max-width: 500px; width: 100%; height: auto;">
+            <img src="./images/logo.png" alt="Добрые Подарки" style="max-width: 300px; width: 100%; height: auto;">
         </div>
 
         <div class="controls">
@@ -572,23 +577,26 @@
                     <button class="filter-btn filter-btn--instock" data-filter="instock">В наличии</button>
                     <span class="filter-divider"></span>
                     <button class="filter-btn active" data-filter="all">Все</button>
-                    <button class="filter-btn" data-filter="Игрушки">Игрушки</button>
-                    <button class="filter-btn" data-filter="Композиция">Композиция</button>
-                    <button class="filter-btn" data-filter="Пэчворк">Пэчворк</button>
+                    <button class="filter-btn" data-filter="Плюшевые истории">Плюшевые истории</button>
+                    <button class="filter-btn" data-filter="Куколки">Куколки</button>
+                    <button class="filter-btn" data-filter="Уют на кухне">Уют на кухне</button>
+                    <button class="filter-btn" data-filter="Для любимого дома">Для любимого дома</button>
+                    <button class="filter-btn" data-filter="Радость в деталях">Радость в деталях</button>
+                    <button class="filter-btn" data-filter="Семейные традиции">Семейные традиции</button>
 
                     <!-- Кнопка "Ещё" с выпадающим списком -->
-                    <div class="dropdown-wrapper" id="dropdownWrapper">
+                    <!-- <div class="dropdown-wrapper" id="dropdownWrapper">
                         <button class="filter-btn dropdown-toggle" id="dropdownToggle">Ещё <span
                                 class="arrow">▾</span></button>
                         <div class="dropdown-menu">
-                            <button class="filter-btn dropdown-item" data-filter="Текстиль">Текстиль</button>
-                            <button class="filter-btn dropdown-item" data-filter="Одежда">Одежда для кукол</button>
-                            <button class="filter-btn dropdown-item" data-filter="Аксессуары">Аксессуары</button>
-                            <button class="filter-btn dropdown-item" data-filter="Вязание">Вязание</button>
-                            <button class="filter-btn dropdown-item" data-filter="Новинки">Новинки</button>
-                            <button class="filter-btn dropdown-item" data-filter="В наличии">В наличии</button>
+                            <button class="filter-btn dropdown-item" data-filter="Текстиль">Доп. категория 1</button>
+                            <button class="filter-btn dropdown-item" data-filter="Одежда">Доп. категория 2</button>
+                            <button class="filter-btn dropdown-item" data-filter="Аксессуары">Доп. категория 3</button>
+                            <button class="filter-btn dropdown-item" data-filter="Вязание">Доп. категория 4</button>
+                            <button class="filter-btn dropdown-item" data-filter="Новинки">Доп. категория 5</button>
+                            <button class="filter-btn dropdown-item" data-filter="В наличии">Доп. категория 6</button>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -617,7 +625,7 @@
                 </div>
                 <div class="card-content">
                     <div class="card-meta">
-                        <span class="card-category cat-doll">Игрушки</span>
+                        <span class="card-category cat-toy">Плюшевые истории</span>
                         <button class="like-btn" aria-label="Добавить в избранное">
                             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -635,7 +643,7 @@
             <!-- Карточка 2 -->
             <div class="card" data-id="item-2">
                 <div class="card-img-wrapper">
-                    <img src="./images/image-1.png" alt="Жираф">
+                    <img src="./images/image-4.png" alt="Жираф">
                     <button class="gallery-arrow gallery-arrow--left" aria-label="Предыдущее фото">
                         <svg viewBox="0 0 24 24">
                             <polyline points="15 18 9 12 15 6"></polyline>
@@ -654,7 +662,7 @@
                 </div>
                 <div class="card-content">
                     <div class="card-meta">
-                        <span class="card-category cat-doll">Игрушки</span>
+                        <span class="card-category cat-toy">Плюшевые истории</span>
                         <button class="like-btn" aria-label="Добавить в избранное">
                             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -693,7 +701,7 @@
                 </div>
                 <div class="card-content">
                     <div class="card-meta">
-                        <span class="card-category cat-doll">Игрушки</span>
+                        <span class="card-category cat-toy">Плюшевые истории</span>
                         <button class="like-btn" aria-label="Добавить в избранное">
                             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -702,8 +710,8 @@
                             </svg>
                         </button>
                     </div>
-                    <h3 class="card-title">Зайка в детской</h3>
-                    <p class="card-desc">Милая зайка с сумочкой, идеальный друг для украшения детской комнаты.</p>
+                    <h3 class="card-title">Зайка мечтательница</h3>
+                    <p class="card-desc">Нежная зайка ручной работы в розовом платье, ждущая чуда у окна.</p>
                     <a href="#" class="card-link">Смотреть работу &rarr;</a>
                 </div>
             </div>
@@ -711,7 +719,7 @@
             <!-- Карточка 4 -->
             <div class="card" data-id="item-4">
                 <div class="card-img-wrapper">
-                    <img src="./images/image-3.png" alt="Зайка у домика">
+                    <img src="./images/image-5.png" alt="Зайка у домика">
                     <button class="gallery-arrow gallery-arrow--left" aria-label="Предыдущее фото">
                         <svg viewBox="0 0 24 24">
                             <polyline points="15 18 9 12 15 6"></polyline>
@@ -731,7 +739,7 @@
                 </div>
                 <div class="card-content">
                     <div class="card-meta">
-                        <span class="card-category cat-outfit">Композиция</span>
+                        <span class="card-category cat-toy">Плюшевые истории</span>
                         <button class="like-btn" aria-label="Добавить в избранное">
                             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -749,7 +757,7 @@
             <!-- Карточка 5 -->
             <div class="card" data-id="item-5">
                 <div class="card-img-wrapper">
-                    <img src="./images/image-4.png" alt="Зайка у окна">
+                    <img src="./images/image-3.png" alt="Зайка у окна">
                     <button class="gallery-arrow gallery-arrow--left" aria-label="Предыдущее фото">
                         <svg viewBox="0 0 24 24">
                             <polyline points="15 18 9 12 15 6"></polyline>
@@ -768,7 +776,7 @@
                 </div>
                 <div class="card-content">
                     <div class="card-meta">
-                        <span class="card-category cat-doll">Игрушки</span>
+                        <span class="card-category cat-toy">Плюшевые истории</span>
                         <button class="like-btn" aria-label="Добавить в избранное">
                             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -777,7 +785,7 @@
                             </svg>
                         </button>
                     </div>
-                    <h3 class="card-title">Зайка Мечтательница (Копия)</h3>
+                    <h3 class="card-title">Зайка Мечтательница</h3>
                     <p class="card-desc">Нежная зайка ручной работы в розовом платье, ждущая чуда у окна.</p>
                     <a href="#" class="card-link">Смотреть работу &rarr;</a>
                 </div>
@@ -786,7 +794,7 @@
             <!-- Карточка 6 -->
             <div class="card" data-id="item-6">
                 <div class="card-img-wrapper">
-                    <img src="./images/image-5.png" alt="Жираф">
+                    <img src="./images/image-4.png" alt="Жираф">
                     <button class="gallery-arrow gallery-arrow--left" aria-label="Предыдущее фото">
                         <svg viewBox="0 0 24 24">
                             <polyline points="15 18 9 12 15 6"></polyline>
@@ -807,7 +815,7 @@
                 </div>
                 <div class="card-content">
                     <div class="card-meta">
-                        <span class="card-category cat-doll">Игрушки</span>
+                        <span class="card-category cat-toy">Плюшевые истории</span>
                         <button class="like-btn" aria-label="Добавить в избранное">
                             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -816,7 +824,7 @@
                             </svg>
                         </button>
                     </div>
-                    <h3 class="card-title">Осенний Жираф (Копия)</h3>
+                    <h3 class="card-title">Осенний Жираф</h3>
                     <p class="card-desc">Уютный жираф в желтом шарфе, вдохновленный теплыми осенними днями.</p>
                     <a href="#" class="card-link">Смотреть работу &rarr;</a>
                 </div>
@@ -826,77 +834,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('searchInput');
-            const filterBtns = document.querySelectorAll('.filter-btn:not(.dropdown-toggle)');
-            const cards = document.querySelectorAll('.card');
-
-            // Логика Dropdown меню
-            const dropdownToggle = document.getElementById('dropdownToggle');
-            const dropdownWrapper = document.getElementById('dropdownWrapper');
-
-            dropdownToggle.addEventListener('click', (e) => {
-                e.stopPropagation(); // Предотвращаем закрытие при клике на саму кнопку
-                dropdownWrapper.classList.toggle('open');
-            });
-
-            // Закрываем меню при клике вне его
-            document.addEventListener('click', (e) => {
-                if (!dropdownWrapper.contains(e.target)) {
-                    dropdownWrapper.classList.remove('open');
-                }
-            });
-
-            // Текущие фильтры
-            let activeCategory = 'all';
-            let searchQuery = '';
-
-            function filterCards() {
-                cards.forEach(card => {
-                    const title = card.querySelector('.card-title').textContent.toLowerCase();
-                    const desc = card.querySelector('.card-desc').textContent.toLowerCase();
-                    const category = card.querySelector('.card-category').textContent;
-
-                    const matchesSearch = title.includes(searchQuery) || desc.includes(searchQuery);
-                    const matchesCategory = activeCategory === 'all' || category === activeCategory;
-
-                    if (matchesSearch && matchesCategory) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-            }
-
-            // Обработка поиска
-            searchInput.addEventListener('input', (e) => {
-                searchQuery = e.target.value.toLowerCase();
-                filterCards();
-            });
-
-            // Обработка категорий
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    // Убираем active у всех
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    // Если кликнули на элемент внутри dropdown, делаем кнопку "Ещё" активной
-                    if (btn.classList.contains('dropdown-item')) {
-                        dropdownToggle.classList.add('active');
-                    } else {
-                        dropdownToggle.classList.remove('active');
-                    }
-
-                    activeCategory = btn.getAttribute('data-filter');
-                    filterCards();
-
-                    // Закрываем меню после выбора
-                    if (window.innerWidth < 1024) {
-                        dropdownWrapper.classList.remove('open');
-                    }
-                });
-            });
-
             // Логика для кнопок "Лайк" (пока без localStorage, просто визуальная часть)
             const likeBtns = document.querySelectorAll('.like-btn');
             likeBtns.forEach(btn => {
