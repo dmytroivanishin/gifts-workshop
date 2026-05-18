@@ -121,7 +121,7 @@
 - **Tag**:
     - `id`, `name`, `user` (ref User), `categories` (Array of Category IDs).
 - **Post**:
-    - `id`, `title`, `description`, `media` (Array of PostMedia), `poster` (ref Media), `in_stock` (Boolean), `status` (String - Draft/Published/Archived), `collection` (Array of Collection IDs), `user` (ref User), `category` (ref Category), `tags` (Array of Tag IDs).
+    - `id`, `title`, `description`, `media` (Array of PostMedia), `poster` (ref Media), `in_stock` (Boolean), `status` (String - Draft/Published/Archived), `collection` (ref Collection), `user` (ref User), `category` (ref Category), `tags` (Array of Tag IDs).
 - **PostMedia**:
     - `id`, `order`, `media` (ref Media), `position` (ref Position or nested position object).
 - **Position**:
@@ -129,7 +129,7 @@
 
 > [!NOTE]
 > **Relational Consistency**:
-> A `Post` has a direct link to one or more `Collection` entities via `collection (Array of Collection IDs)`. This allows direct, high-performance querying of all posts belonging to a collection without having to perform deep relational JOINs through categories.
+> A `Post` has a direct link to a `Collection` entity via `collection` (ref Collection). This allows direct, high-performance querying of all posts belonging to a collection without having to perform deep relational JOINs through categories.
 
 ---
 
