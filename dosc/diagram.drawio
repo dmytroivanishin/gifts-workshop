@@ -1,4 +1,4 @@
-<mxGraphModel dx="2436" dy="3789" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+<mxGraphModel dx="1165" dy="3032" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
   <root>
     <mxCell id="JPk5O5eHnU2-xyW2PGr0-0" />
     <mxCell id="JPk5O5eHnU2-xyW2PGr0-1" parent="JPk5O5eHnU2-xyW2PGr0-0" />
@@ -72,7 +72,7 @@
     <mxCell id="JPk5O5eHnU2-xyW2PGr0-21" parent="JPk5O5eHnU2-xyW2PGr0-11" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=light-dark(#82B366,#EDEDED);align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12;fontColor=default;fontStyle=1;fillColor=default;shadow=0;" value="tags&amp;nbsp;&lt;span style=&quot;color: rgb(102, 102, 102); font-weight: 400;&quot;&gt;&amp;lt;FK array&amp;gt;&lt;/span&gt;" vertex="1">
       <mxGeometry height="37" width="200" y="356" as="geometry" />
     </mxCell>
-    <mxCell id="AwsRwMC0bd9HAUPlMf75-0" parent="JPk5O5eHnU2-xyW2PGr0-11" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=light-dark(#82B366,#EDEDED);align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12;fontColor=default;fontStyle=1;fillColor=default;shadow=0;" value="collection&amp;nbsp;&lt;span style=&quot;color: rgb(102, 102, 102); font-weight: 400;&quot;&gt;&amp;lt;FK array&amp;gt;&lt;/span&gt;" vertex="1">
+    <mxCell id="AwsRwMC0bd9HAUPlMf75-0" parent="JPk5O5eHnU2-xyW2PGr0-11" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=light-dark(#82B366,#EDEDED);align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12;fontColor=default;fontStyle=1;fillColor=default;shadow=0;" value="collection&amp;nbsp;&lt;span style=&quot;color: rgb(102, 102, 102); font-weight: 400;&quot;&gt;&amp;lt;FK&amp;gt;&lt;/span&gt;" vertex="1">
       <mxGeometry height="37" width="200" y="393" as="geometry" />
     </mxCell>
     <mxCell id="JPk5O5eHnU2-xyW2PGr0-22" parent="JPk5O5eHnU2-xyW2PGr0-1" style="swimlane;whiteSpace=wrap;html=1;swimlaneHead=1;horizontal=1;connectable=1;allowArrows=1;dropTarget=1;collapsible=0;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=1;shadow=0;" value="Tag" vertex="1">
