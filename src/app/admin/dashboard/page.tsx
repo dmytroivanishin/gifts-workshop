@@ -1,21 +1,73 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Search, Edit, Trash2, Eye, Loader2 } from "lucide-react";
 import { useGetPostsQuery, useDeletePostMutation } from "@/store/api";
 import { Post } from "@/types";
 import Link from "next/link";
 
 export default function AdminDashboard() {
   const [search, setSearch] = useState("");
-  const { data: response, isLoading } = useGetPostsQuery({ search: search || undefined });
+  const [page, setPage] = useState(1);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+
+  const { data: response, isLoading, isFetching } = useGetPostsQuery({ search: search || undefined, page, limit: 10 });
   const [deletePost] = useDeletePostMutation();
-  const posts = response?.data || [];
+
+  const loaderRef = useRef<HTMLTableRowElement | null>(null);
+
+  // Reset page on search input changes
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  // Sync loaded page chunk to posts list
+  useEffect(() => {
+    if (response?.data) {
+      if (page === 1) {
+        setPosts(response.data);
+      } else {
+        setPosts((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newPosts = response.data.filter((p: any) => !existingIds.has(p.id));
+          return [...prev, ...newPosts];
+        });
+      }
+      setHasMore(response.meta?.nextPage !== null);
+    }
+  }, [response, page]);
+
+  // IntersectionObserver bottom anchor logic
+  useEffect(() => {
+    if (!hasMore || isFetching || isLoading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentLoader = loaderRef.current;
+    if (currentLoader) {
+      observer.observe(currentLoader);
+    }
+
+    return () => {
+      if (currentLoader) {
+        observer.unobserve(currentLoader);
+      }
+    };
+  }, [hasMore, isFetching, isLoading]);
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this project?")) {
       try {
         await deletePost(id).unwrap();
+        setPage(1); // Reset to page 1 to reload
       } catch (err) {
         console.error("Failed to delete project", err);
       }
@@ -66,7 +118,7 @@ export default function AdminDashboard() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border/40">
-            {isLoading ? (
+            {isLoading && page === 1 ? (
               <tr>
                 <td colSpan={5} className="p-8 text-center text-sm text-muted-foreground">
                   Loading projects...
@@ -145,6 +197,16 @@ export default function AdminDashboard() {
               <tr>
                 <td colSpan={5} className="p-8 text-center text-sm text-muted-foreground">
                   No projects found.
+                </td>
+              </tr>
+            )}
+            {posts.length > 0 && hasMore && (
+              <tr ref={loaderRef}>
+                <td colSpan={5} className="p-4 text-center text-sm text-muted-foreground bg-muted/5 border-t border-border/40">
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
+                    Loading more projects...
+                  </div>
                 </td>
               </tr>
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Image from "next/image";
 import { Heart, Loader2, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -65,14 +65,66 @@ function HomeContent() {
   const { data: categoriesResponse } = useGetCategoriesQuery();
   const dbCategories = categoriesResponse?.data || [];
 
+  const [page, setPage] = useState(1);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+
   // Fetch posts using RTK Query
-  const { data: response, isLoading } = useGetPostsQuery({
+  const { data: response, isLoading, isFetching } = useGetPostsQuery({
     search: search.trim() !== "" ? search : undefined,
     category: activeCategory || undefined,
     inStock: inStockOnly ? true : undefined,
+    page,
+    limit: 6,
   });
 
-  const posts = response?.data || [];
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [search, activeCategory, inStockOnly, favoritesOnly]);
+
+  // Sync loaded page chunk to accumulated posts list
+  useEffect(() => {
+    if (response?.data) {
+      if (page === 1) {
+        setPosts(response.data);
+      } else {
+        setPosts((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newPosts = response.data.filter((p: any) => !existingIds.has(p.id));
+          return [...prev, ...newPosts];
+        });
+      }
+      setHasMore(response.meta?.nextPage !== null);
+    }
+  }, [response, page]);
+
+  // IntersectionObserver bottom anchor logic
+  useEffect(() => {
+    if (!hasMore || isFetching || isLoading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentLoader = loaderRef.current;
+    if (currentLoader) {
+      observer.observe(currentLoader);
+    }
+
+    return () => {
+      if (currentLoader) {
+        observer.unobserve(currentLoader);
+      }
+    };
+  }, [hasMore, isFetching, isLoading]);
 
   // Client-side filtering for favorites
   const displayedPosts = favoritesOnly
@@ -197,32 +249,42 @@ function HomeContent() {
       </div>
 
       {/* Masonry Grid */}
-      {isLoading ? (
+      {isLoading && page === 1 ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="animate-spin text-muted-foreground" size={32} />
         </div>
       ) : displayedPosts.length > 0 ? (
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-[30px] pb-20">
-          <AnimatePresence mode="popLayout">
-            {displayedPosts.map((post) => (
-              <motion.div
-                key={post.id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-                className="break-inside-avoid"
-              >
-                <ProjectCard
-                  post={post}
-                  onLikeToggle={handleLikeToggle}
-                  onCategorySelect={handleCategorySelect}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+        <>
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-[30px] pb-10">
+            <AnimatePresence mode="popLayout">
+              {displayedPosts.map((post) => (
+                <motion.div
+                  key={post.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                  className="break-inside-avoid"
+                >
+                  <ProjectCard
+                    post={post}
+                    onLikeToggle={handleLikeToggle}
+                    onCategorySelect={handleCategorySelect}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+          {hasMore && (
+            <div ref={loaderRef} className="flex items-center justify-center py-10 pb-20">
+              <Loader2 className="animate-spin text-[#7D8945] mr-2" size={24} />
+              <span className="text-sm text-muted-foreground font-sans">
+                {locale === "ru" ? "Загружаем ещё красоты..." : "Loading more beautiful works..."}
+              </span>
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-center py-20 text-muted-foreground">
           {t("no_projects_found")}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Edit, Save, X, Trash2, Loader2 } from "lucide-react";
 import {
   useGetTagsQuery,
@@ -10,17 +10,61 @@ import {
 } from "@/store/api";
 
 export default function AdminTags() {
-  const { data: tagsResponse, isLoading } = useGetTagsQuery();
+  const [page, setPage] = useState(1);
+  const [tags, setTags] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+
+  const { data: tagsResponse, isLoading, isFetching } = useGetTagsQuery({ page, limit: 15 });
   const [createTag, { isLoading: isCreating }] = useCreateTagMutation();
   const [updateTag, { isLoading: isUpdating }] = useUpdateTagMutation();
   const [deleteTag, { isLoading: isDeleting }] = useDeleteTagMutation();
 
-  const tags = tagsResponse?.data || [];
-
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [tagName, setTagName] = useState("");
-  
   const [editTagName, setEditTagName] = useState("");
+
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+
+  // Sync loaded page chunk to tags list
+  useEffect(() => {
+    if (tagsResponse?.data) {
+      if (page === 1) {
+        setTags(tagsResponse.data);
+      } else {
+        setTags((prev) => {
+          const existingIds = new Set(prev.map((t) => t.id));
+          const newTags = tagsResponse.data.filter((t: any) => !existingIds.has(t.id));
+          return [...prev, ...newTags];
+        });
+      }
+      setHasMore(tagsResponse.meta?.nextPage !== null);
+    }
+  }, [tagsResponse, page]);
+
+  // IntersectionObserver bottom anchor logic
+  useEffect(() => {
+    if (!hasMore || isFetching || isLoading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentLoader = loaderRef.current;
+    if (currentLoader) {
+      observer.observe(currentLoader);
+    }
+
+    return () => {
+      if (currentLoader) {
+        observer.unobserve(currentLoader);
+      }
+    };
+  }, [hasMore, isFetching, isLoading]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +73,7 @@ export default function AdminTags() {
     try {
       await createTag({ title: { ru: tagName.trim(), en: "" } }).unwrap();
       setTagName("");
+      setPage(1); // Reset to page 1 to fetch the latest
     } catch (err) {
       console.error("Failed to add tag", err);
     }
@@ -42,6 +87,7 @@ export default function AdminTags() {
         title: { ru: editTagName.trim(), en: "" },
       }).unwrap();
       setIsEditing(null);
+      setPage(1); // Reset to reload updated list
     } catch (err) {
       console.error("Failed to save tag", err);
     }
@@ -51,6 +97,7 @@ export default function AdminTags() {
     if (!confirm("Are you sure you want to delete this tag? It will be removed from all projects.")) return;
     try {
       await deleteTag(id).unwrap();
+      setPage(1); // Reset to reload list
     } catch (err) {
       console.error("Failed to delete tag", err);
     }
@@ -69,10 +116,10 @@ export default function AdminTags() {
         {/* Tags List */}
         <div className="lg:col-span-8 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
           <div className="p-4 border-b border-border bg-muted/30">
-            <h2 className="text-sm font-semibold text-foreground">All Tags ({tags.length})</h2>
+            <h2 className="text-sm font-semibold text-foreground">All Tags ({tagsResponse?.meta?.totalItems || tags.length})</h2>
           </div>
           <div className="divide-y divide-border/45">
-            {isLoading ? (
+            {isLoading && page === 1 ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
                 Loading tags...
@@ -147,6 +194,12 @@ export default function AdminTags() {
               ))
             ) : (
               <div className="p-8 text-center text-sm text-muted-foreground">No tags found.</div>
+            )}
+            {tags.length > 0 && hasMore && (
+              <div ref={loaderRef} className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border/45 bg-muted/5">
+                <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
+                Loading more tags...
+              </div>
             )}
           </div>
         </div>

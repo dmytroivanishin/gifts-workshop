@@ -13,15 +13,28 @@ export class TagService implements ITagService {
   ) {}
 
   async getAllTags(options?: any): Promise<any> {
-    const page = options?.page || 1;
-    const limit = options?.limit || 20;
+    if (options?.page || options?.limit) {
+      const page = options.page || 1;
+      const limit = options.limit || 20;
 
-    const tags = await this.tagRepo.getAll({
-      page,
-      limit: limit + 1,
-    });
+      const tags = await this.tagRepo.getAll({
+        page,
+        limit: limit + 1,
+      });
 
-    return paginate(tags, { page, limit });
+      return paginate(tags, { page, limit });
+    }
+
+    const tags = await this.tagRepo.getAll();
+    return {
+      data: tags,
+      meta: {
+        total: tags.length,
+        page: 1,
+        limit: tags.length,
+        totalPages: 1,
+      }
+    };
   }
 
   async getTagById(id: string): Promise<Tag | undefined> {

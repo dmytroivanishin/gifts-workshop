@@ -66,7 +66,7 @@ export class BaseRepository<T extends { id: string }, TPopulated = T> {
     if (options?.page || options?.limit) {
       const params = new URLSearchParams();
       if (options.page) params.append("_page", options.page.toString());
-      if (options.limit) params.append("_per_page", options.limit.toString());
+      if (options.limit) params.append("_limit", options.limit.toString());
       url += `?${params.toString()}`;
     }
 
@@ -99,7 +99,7 @@ export class BaseRepository<T extends { id: string }, TPopulated = T> {
     });
 
     if (options?.page) params.append("_page", options.page.toString());
-    if (options?.limit) params.append("_per_page", options.limit.toString());
+    if (options?.limit) params.append("_limit", options.limit.toString());
 
     const queryString = params.toString();
     const url = `${this.getUrl()}${queryString ? `?${queryString}` : ""}`;

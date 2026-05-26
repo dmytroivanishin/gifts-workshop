@@ -36,7 +36,7 @@ export class PostRepository extends BaseRepository<Post, PopulatedPost> implemen
       const page = options?.page || 1;
       const limit = options?.limit || 10;
       params.append("_page", page.toString());
-      params.append("_per_page", limit.toString());
+      params.append("_limit", limit.toString());
     }
 
     const queryString = params.toString();

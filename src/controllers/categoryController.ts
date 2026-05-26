@@ -7,7 +7,13 @@ export class CategoryController {
 
   async getCategories(request: Request) {
     try {
-      const result = await this.categoryService.getAllCategories();
+      const { searchParams } = new URL(request.url);
+      const pageStr = searchParams.get("page");
+      const limitStr = searchParams.get("limit");
+      const page = pageStr ? parseInt(pageStr, 10) : undefined;
+      const limit = limitStr ? parseInt(limitStr, 10) : undefined;
+
+      const result = await this.categoryService.getAllCategories({ page, limit });
       return sendSuccess(result.data, result.meta);
     } catch (error: any) {
       return sendError(error);

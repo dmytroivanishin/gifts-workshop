@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Edit, Save, X, Loader2 } from "lucide-react";
 import { 
   useGetCategoriesQuery, 
@@ -12,13 +12,16 @@ import {
 import Combobox from "@/components/ui/combobox";
 
 export default function AdminCategories() {
-  const { data: categoriesResponse, isLoading } = useGetCategoriesQuery();
+  const [page, setPage] = useState(1);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+
+  const { data: categoriesResponse, isLoading, isFetching } = useGetCategoriesQuery({ page, limit: 10 });
   const { data: tagsResponse } = useGetTagsQuery();
   const { data: collectionsResponse } = useGetCollectionsQuery();
   const [saveCategory, { isLoading: isSaving }] = useCreateCategoryMutation();
   const [createTag] = useCreateTagMutation();
 
-  const categories = categoriesResponse?.data || [];
   const allTags = tagsResponse?.data || [];
   const tagOptions = allTags.map((tag: any) => ({ 
     value: tag.id, 
@@ -40,7 +43,52 @@ export default function AdminCategories() {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editColor, setEditColor] = useState("");
+  const [editCollectionId, setEditCollectionId] = useState("");
+  const [editSelectedTags, setEditSelectedTags] = useState<string[]>([]);
   const [activeCategoryObj, setActiveCategoryObj] = useState<any>(null);
+
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+
+  // Sync loaded page chunk to categories list
+  useEffect(() => {
+    if (categoriesResponse?.data) {
+      if (page === 1) {
+        setCategories(categoriesResponse.data);
+      } else {
+        setCategories((prev) => {
+          const existingIds = new Set(prev.map((c) => c.id));
+          const newCats = categoriesResponse.data.filter((c: any) => !existingIds.has(c.id));
+          return [...prev, ...newCats];
+        });
+      }
+      setHasMore(categoriesResponse.meta?.nextPage !== null);
+    }
+  }, [categoriesResponse, page]);
+
+  // IntersectionObserver bottom anchor logic
+  useEffect(() => {
+    if (!hasMore || isFetching || isLoading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentLoader = loaderRef.current;
+    if (currentLoader) {
+      observer.observe(currentLoader);
+    }
+
+    return () => {
+      if (currentLoader) {
+        observer.unobserve(currentLoader);
+      }
+    };
+  }, [hasMore, isFetching, isLoading]);
 
   const handleCreateTag = async (name: string) => {
     try {
@@ -72,13 +120,14 @@ export default function AdminCategories() {
       setColor("#FFD2D2");
       setSelectedTags([]);
       setCollectionId("");
+      setPage(1); // Reset to page 1 to reload
     } catch (err) {
       console.error("Failed to add category", err);
     }
   };
 
   const handleSave = async (id: string) => {
-    if (!editTitle) return;
+    if (!editTitle || !editCollectionId) return;
     try {
       const existingEnTitle = activeCategoryObj?.title && typeof activeCategoryObj.title === "object"
         ? activeCategoryObj.title.en
@@ -92,9 +141,12 @@ export default function AdminCategories() {
         title: { ru: editTitle, en: existingEnTitle || "" },
         description: { ru: editDescription, en: existingEnDesc || "" },
         color: { id: `color-${Date.now()}`, color: editColor },
+        collectionId: editCollectionId,
+        tagsIds: editSelectedTags,
       }).unwrap();
       setIsEditing(null);
       setActiveCategoryObj(null);
+      setPage(1); // Reset to page 1 to reload
     } catch (err) {
       console.error("Failed to save category", err);
     }
@@ -106,6 +158,8 @@ export default function AdminCategories() {
     setEditTitle(typeof cat.title === "string" ? cat.title : cat.title?.ru || "");
     setEditDescription(typeof cat.description === "string" ? cat.description : cat.description?.ru || "");
     setEditColor(typeof cat.color === "object" ? cat.color?.color : cat.color || "#FFD2D2");
+    setEditCollectionId(cat.collectionId || "");
+    setEditSelectedTags(cat.tagsIds || cat.tags?.map((t: any) => t.id) || []);
   };
 
   return (
@@ -155,6 +209,36 @@ export default function AdminCategories() {
                             rows={2}
                           />
                         </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Collection</label>
+                          <select
+                            value={editCollectionId}
+                            onChange={(e) => setEditCollectionId(e.target.value)}
+                            className="w-full px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                            required
+                          >
+                            <option value="" disabled>Select a collection...</option>
+                            {collections.map((col: any) => (
+                              <option key={col.id} value={col.id} className="bg-card text-foreground">
+                                {col.title?.ru || col.title?.en || col.title || ""}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tags</label>
+                          <Combobox
+                            options={tagOptions}
+                            value={editSelectedTags}
+                            onChange={(val) => setEditSelectedTags(val)}
+                            placeholder="Select tags..."
+                            searchPlaceholder="Search or type new tag..."
+                            allowCreate
+                            createLabel='Add new tag "{search}"'
+                            multiple
+                            onCreate={handleCreateTag}
+                          />
+                        </div>
                         <div className="flex items-center gap-2">
                           <label className="text-xs font-semibold text-muted-foreground">Custom Color:</label>
                           <input
@@ -167,7 +251,7 @@ export default function AdminCategories() {
                       </div>
                     ) : (
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-sm text-foreground">{catTitleRu}</span>
                           <span
                             className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider"
@@ -179,8 +263,23 @@ export default function AdminCategories() {
                           >
                             HEX: {catColor}
                           </span>
+                          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border/40">
+                            Collection: {cat.collection?.title?.ru || cat.collection?.title || ""}
+                          </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">{catDescRu}</p>
+                        {cat.tags && cat.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {cat.tags.map((t: any) => (
+                              <span
+                                key={t.id}
+                                className="text-[10px] font-medium bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full border border-border/40"
+                              >
+                                #{t.title?.ru || t.title?.en || t.title || ""}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -220,6 +319,12 @@ export default function AdminCategories() {
             ) : (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 No categories found.
+              </div>
+            )}
+            {categories.length > 0 && hasMore && (
+              <div ref={loaderRef} className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border/45 bg-muted/5">
+                <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
+                Loading more categories...
               </div>
             )}
           </div>

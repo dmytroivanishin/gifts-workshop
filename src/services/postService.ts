@@ -15,9 +15,6 @@ export class PostService implements IPostService {
   ) {}
 
   async getFilteredPosts(filters?: QueryOptions): Promise<any> {
-    const page = filters?.page || 1;
-    const limit = filters?.limit || 20;
-
     const flatFilters: QueryOptions = { ...filters };
 
     // Resolve category slug to ID
@@ -58,13 +55,29 @@ export class PostService implements IPostService {
       delete flatFilters.postSlug;
     }
 
-    const posts = await this.postRepo.getAll({
-      ...flatFilters,
-      page,
-      limit: limit + 1,
-    });
+    if (filters?.page || filters?.limit) {
+      const page = filters.page || 1;
+      const limit = filters.limit || 20;
 
-    return paginate(posts, { page, limit });
+      const posts = await this.postRepo.getAll({
+        ...flatFilters,
+        page,
+        limit: limit + 1,
+      });
+
+      return paginate(posts, { page, limit });
+    }
+
+    const posts = await this.postRepo.getAll(flatFilters);
+    return {
+      data: posts,
+      meta: {
+        page: 1,
+        nextPage: null,
+        prevPage: null,
+        totalItems: posts.length,
+      }
+    };
   }
 
   async getPostById(id: string): Promise<PopulatedPost | undefined> {
