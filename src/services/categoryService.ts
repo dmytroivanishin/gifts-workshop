@@ -1,7 +1,8 @@
 import { ICategoryRepository, IColorRepository, ITagRepository } from "@/repositories/interfaces";
-import { ICategoryService, ISlugService } from "./interfaces";
+import { ICategoryService } from "./interfaces";
 import { Category } from "@/types";
 import { randomUUID } from "crypto";
+import { generateSlugFromField } from "@/lib/slug";
 
 import { paginate } from "./pagination";
 import { PaginationOptions } from "@/types";
@@ -9,7 +10,6 @@ import { PaginationOptions } from "@/types";
 export class CategoryService implements ICategoryService {
   constructor(
     private categoryRepo: ICategoryRepository,
-    private slugService: ISlugService,
     private colorRepo: IColorRepository,
     private tagRepo: ITagRepository
   ) {}
@@ -40,7 +40,17 @@ export class CategoryService implements ICategoryService {
 
     let slug = body.slug;
     if (!slug || (body.title && body.title !== body._originalTitle)) {
-      slug = await this.slugService.generateUniqueSlug(body.title, id, "category");
+      const baseSlug = await generateSlugFromField(body.title);
+      slug = baseSlug;
+      let suffix = 1;
+      while (true) {
+        const existing = await this.categoryRepo.getBySlug(slug);
+        if (!existing || existing.id === id) {
+          break;
+        }
+        slug = `${baseSlug}-${suffix}`;
+        suffix++;
+      }
     }
 
     let colorVal = body.color;
@@ -69,7 +79,17 @@ export class CategoryService implements ICategoryService {
             tagsList.push(foundTag.id);
           } else {
             const tagId = randomUUID();
-            const tagSlug = await this.slugService.generateUniqueSlug(t, tagId, "tag");
+            const baseTagSlug = await generateSlugFromField(t);
+            let tagSlug = baseTagSlug;
+            let tagSuffix = 1;
+            while (true) {
+              const existingTag = await this.tagRepo.getBySlug(tagSlug);
+              if (!existingTag || existingTag.id === tagId) {
+                break;
+              }
+              tagSlug = `${baseTagSlug}-${tagSuffix}`;
+              tagSuffix++;
+            }
             const newTag = await this.tagRepo.save({
               id: tagId,
               title: { ru: t, en: t },
@@ -80,7 +100,20 @@ export class CategoryService implements ICategoryService {
         } else if (t && typeof t === "object") {
           const tagId = t.id || randomUUID();
           const tName = t.name || t.title?.ru || t.title || "";
-          const tagSlug = t.slug || await this.slugService.generateUniqueSlug(tName, tagId, "tag");
+          let tagSlug = t.slug;
+          if (!tagSlug) {
+            const baseTagSlug = await generateSlugFromField(tName);
+            tagSlug = baseTagSlug;
+            let tagSuffix = 1;
+            while (true) {
+              const existingTag = await this.tagRepo.getBySlug(tagSlug);
+              if (!existingTag || existingTag.id === tagId) {
+                break;
+              }
+              tagSlug = `${baseTagSlug}-${tagSuffix}`;
+              tagSuffix++;
+            }
+          }
           const savedTag = await this.tagRepo.save({
             id: tagId,
             title: typeof t.title === "object" ? t.title : { ru: tName, en: tName },
@@ -91,7 +124,7 @@ export class CategoryService implements ICategoryService {
       }
     } else {
       // Keep existing tags if updating without modifying tags
-      const existing = await this.categoryRepo.getById(id);
+      const existing = await this.categoryRepo.getById(id) as any;
       if (existing && existing.tags) {
         tagsList = existing.tags.map((t: any) => typeof t === "string" ? t : t.id);
       }
@@ -113,7 +146,6 @@ export class CategoryService implements ICategoryService {
   }
 
   async deleteCategory(id: string): Promise<boolean> {
-    await this.slugService.deleteSlugForEntity(id, "category");
     return this.categoryRepo.delete(id);
   }
 }

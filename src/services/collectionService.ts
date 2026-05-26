@@ -1,14 +1,14 @@
 import { ICollectionRepository } from "@/repositories/interfaces";
-import { ICollectionService, ISlugService } from "./interfaces";
+import { ICollectionService } from "./interfaces";
 import { Collection } from "@/types";
 import { randomUUID } from "crypto";
+import { generateSlugFromField } from "@/lib/slug";
 
 import { paginate } from "./pagination";
 
 export class CollectionService implements ICollectionService {
   constructor(
-    private collectionRepo: ICollectionRepository,
-    private slugService: ISlugService
+    private collectionRepo: ICollectionRepository
   ) {}
 
   async getAllCollections(options?: any): Promise<any> {
@@ -33,7 +33,21 @@ export class CollectionService implements ICollectionService {
 
   async saveCollection(body: any): Promise<Collection> {
     const id = body.id || randomUUID();
-    const slug = await this.slugService.generateUniqueSlug(body.title, id, "collection");
+    
+    let slug = body.slug;
+    if (!slug) {
+      const baseSlug = await generateSlugFromField(body.title);
+      slug = baseSlug;
+      let suffix = 1;
+      while (true) {
+        const existing = await this.collectionRepo.getBySlug(slug);
+        if (!existing || existing.id === id) {
+          break;
+        }
+        slug = `${baseSlug}-${suffix}`;
+        suffix++;
+      }
+    }
 
     const collection: Collection = {
       id,
@@ -47,7 +61,7 @@ export class CollectionService implements ICollectionService {
   }
 
   async deleteCollection(id: string): Promise<boolean> {
-    await this.slugService.deleteSlugForEntity(id, "collection");
     return this.collectionRepo.delete(id);
   }
 }
+

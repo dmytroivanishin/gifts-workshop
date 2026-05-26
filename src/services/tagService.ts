@@ -1,14 +1,14 @@
 import { ITagRepository, ICategoryRepository } from "@/repositories/interfaces";
-import { ITagService, ISlugService } from "./interfaces";
+import { ITagService } from "./interfaces";
 import { Tag } from "@/types";
 import { randomUUID } from "crypto";
+import { generateSlugFromField } from "@/lib/slug";
 
 import { paginate } from "./pagination";
 
 export class TagService implements ITagService {
   constructor(
     private tagRepo: ITagRepository,
-    private slugService: ISlugService,
     private categoryRepo?: ICategoryRepository
   ) {}
 
@@ -35,7 +35,21 @@ export class TagService implements ITagService {
   async saveTag(body: any): Promise<Tag> {
     const id = body.id || randomUUID();
     const tName = body.title?.ru || body.title || body.name || "";
-    const slug = await this.slugService.generateUniqueSlug(tName, id, "tag");
+    
+    let slug = body.slug;
+    if (!slug) {
+      const baseSlug = await generateSlugFromField(tName);
+      slug = baseSlug;
+      let suffix = 1;
+      while (true) {
+        const existing = await this.tagRepo.getBySlug(slug);
+        if (!existing || existing.id === id) {
+          break;
+        }
+        slug = `${baseSlug}-${suffix}`;
+        suffix++;
+      }
+    }
 
     const tag: Tag = {
       id,
@@ -47,8 +61,6 @@ export class TagService implements ITagService {
   }
 
   async deleteTag(id: string): Promise<boolean> {
-    await this.slugService.deleteSlugForEntity(id, "tag");
-
     // Cascade cleanup: remove tag ID from categories
     if (this.categoryRepo) {
       try {
@@ -73,3 +85,4 @@ export class TagService implements ITagService {
     return this.tagRepo.delete(id);
   }
 }
+

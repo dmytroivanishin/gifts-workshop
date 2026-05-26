@@ -5,8 +5,8 @@ import { Save, Loader2, Languages, CheckCircle2, AlertCircle } from "lucide-reac
 import {
   useGetPostsQuery,
   useGetCategoriesQuery,
-  useGetLocalizationsQuery,
-  useSaveLocalizationMutation,
+  useUpdatePostMutation,
+  useUpdateCategoryMutation,
 } from "@/store/api";
 
 type EntityType = "post" | "category";
@@ -37,24 +37,20 @@ export default function AdminLocalizations() {
     }
   }, [entityType, postsResponse, categoriesResponse]);
 
-  // Load existing localizations for the selected entity
-  const { data: locResponse, isLoading: isLoadingLocs } = useGetLocalizationsQuery(
-    { entityId: selectedEntityId, entityType },
-    { skip: !selectedEntityId }
-  );
-
-  const localizations = locResponse?.data || [];
-
   // Form translation state
   const [ruTitle, setRuTitle] = useState("");
   const [ruDescription, setRuDescription] = useState("");
   const [enTitle, setEnTitle] = useState("");
   const [enDescription, setEnDescription] = useState("");
 
-  const [saveLocalization, { isLoading: isSaving }] = useSaveLocalizationMutation();
+  const [updatePost, { isLoading: isUpdatingPost }] = useUpdatePostMutation();
+  const [updateCategory, { isLoading: isUpdatingCategory }] = useUpdateCategoryMutation();
+  const isSaving = isUpdatingPost || isUpdatingCategory;
+  const isLoadingLocs = false; // Directly read from pre-loaded entities, no additional loading needed
+
   const [saveStatus, setSaveStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  // Sync loaded localizations to form state
+  // Sync loaded entity values directly to form state
   useEffect(() => {
     setRuTitle("");
     setRuDescription("");
@@ -62,23 +58,7 @@ export default function AdminLocalizations() {
     setEnDescription("");
     setSaveStatus(null);
 
-    if (localizations.length > 0) {
-      for (const loc of localizations) {
-        try {
-          const payload = typeof loc.payload === "string" ? JSON.parse(loc.payload) : loc.payload;
-          if (loc.locale === "ru") {
-            setRuTitle(payload.title || "");
-            setRuDescription(payload.description || "");
-          } else if (loc.locale === "en") {
-            setEnTitle(payload.title || "");
-            setEnDescription(payload.description || "");
-          }
-        } catch (e) {
-          console.error("Failed to parse localization payload", e);
-        }
-      }
-    } else if (selectedEntityId) {
-      // Fallback: search standard title/description on selected object to pre-populate Russian
+    if (selectedEntityId) {
       const entity = entitiesList.find((e) => e.id === selectedEntityId);
       if (entity) {
         const rawTitle = entity.title;
@@ -106,7 +86,7 @@ export default function AdminLocalizations() {
         );
       }
     }
-  }, [localizations, selectedEntityId, entityType]);
+  }, [selectedEntityId, entityType, postsResponse, categoriesResponse]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,31 +94,27 @@ export default function AdminLocalizations() {
 
     setSaveStatus(null);
     try {
-      // Save Russian localization
-      await saveLocalization({
-        id: `loc-${selectedEntityId}-ru`,
-        locale: "ru",
-        entityId: selectedEntityId,
-        entityType,
-        userId: "user-1",
-        payload: JSON.stringify({
-          title: ruTitle,
-          description: ruDescription,
-        }),
-      }).unwrap();
+      if (entityType === "post") {
+        await updatePost({
+          id: selectedEntityId,
+          title: { ru: ruTitle, en: enTitle },
+          description: { ru: ruDescription, en: enDescription },
+        }).unwrap();
+      } else {
+        const selectedEntity = entitiesList.find((e) => e.id === selectedEntityId) as any;
+        if (!selectedEntity) return;
 
-      // Save English localization
-      await saveLocalization({
-        id: `loc-${selectedEntityId}-en`,
-        locale: "en",
-        entityId: selectedEntityId,
-        entityType,
-        userId: "user-1",
-        payload: JSON.stringify({
-          title: enTitle,
-          description: enDescription,
-        }),
-      }).unwrap();
+        await updateCategory({
+          id: selectedEntityId,
+          title: { ru: ruTitle, en: enTitle },
+          description: { ru: ruDescription, en: enDescription },
+          color: selectedEntity.colorId,
+          parentId: selectedEntity.parentId,
+          collectionId: selectedEntity.collectionId,
+          tags: selectedEntity.tagsIds,
+          slug: selectedEntity.slug,
+        }).unwrap();
+      }
 
       setSaveStatus({ type: "success", message: "Translations updated successfully!" });
       setTimeout(() => setSaveStatus(null), 3000);

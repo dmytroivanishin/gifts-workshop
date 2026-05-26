@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { Heart, ChevronRight, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Post } from "@/types";
+import { Post, PopulatedPost } from "@/types";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
 
 interface ProjectCardProps {
-  post: Post;
+  post: PopulatedPost;
   className?: string;
   onLikeToggle?: (id: string, liked: boolean) => void;
   onCategorySelect?: (categoryId?: string) => void;

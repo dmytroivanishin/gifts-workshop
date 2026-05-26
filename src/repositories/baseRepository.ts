@@ -1,4 +1,23 @@
 import { PaginationOptions } from "@/types";
+import {
+  ICategoryRepository,
+  ICollectionRepository,
+  IColorRepository,
+  IMediaRepository,
+  IPostRepository,
+  ITagRepository,
+  IUserRepository,
+} from "./interfaces";
+
+export const repositoryRegistry: {
+  category?: ICategoryRepository;
+  collection?: ICollectionRepository;
+  color?: IColorRepository;
+  media?: IMediaRepository;
+  post?: IPostRepository;
+  tag?: ITagRepository;
+  user?: IUserRepository;
+} = {};
 
 export class Database {
   private static uri: string = "http://localhost:3001";
@@ -46,6 +65,14 @@ export class BaseRepository<T extends { id: string }> {
     return id ? `${base}/${this.collectionName}/${id}` : `${base}/${this.collectionName}`;
   }
 
+  protected async populate(item: any): Promise<T> {
+    return item as T;
+  }
+
+  protected serialize(item: T): any {
+    return item;
+  }
+
   async getAll(options?: PaginationOptions): Promise<T[]> {
     let url = this.getUrl();
     if (options?.page || options?.limit) {
@@ -61,7 +88,8 @@ export class BaseRepository<T extends { id: string }> {
     }
 
     const data = await res.json();
-    return Array.isArray(data) ? data : data.data || [];
+    const rawItems = Array.isArray(data) ? data : data.data || [];
+    return Promise.all(rawItems.map((item: any) => this.populate(item)));
   }
 
   async getById(id: string): Promise<T | undefined> {
@@ -70,13 +98,16 @@ export class BaseRepository<T extends { id: string }> {
     if (!res.ok) {
       throw new Error(`Failed to fetch by id from ${this.collectionName}`);
     }
-    return res.json();
+    const raw = await res.json();
+    return this.populate(raw);
   }
 
   async getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<T[]> {
     const params = new URLSearchParams();
     Object.entries(query).forEach(([key, value]) => {
-      params.append(key, value.toString());
+      if (value !== undefined && value !== null) {
+        params.append(key, value.toString());
+      }
     });
 
     if (options?.page) params.append("_page", options.page.toString());
@@ -91,29 +122,32 @@ export class BaseRepository<T extends { id: string }> {
     }
 
     const data = await res.json();
-    return Array.isArray(data) ? data : data.data || [];
+    const rawItems = Array.isArray(data) ? data : data.data || [];
+    return Promise.all(rawItems.map((item: any) => this.populate(item)));
   }
 
   async save(item: T): Promise<T> {
+    const serialized = this.serialize(item);
     const check = await fetch(this.getUrl(item.id), { method: "GET", cache: "no-store" });
     let res;
     if (check.ok) {
       res = await fetch(this.getUrl(item.id), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(item),
+        body: JSON.stringify(serialized),
       });
     } else {
       res = await fetch(this.getUrl(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(item),
+        body: JSON.stringify(serialized),
       });
     }
     if (!res.ok) {
       throw new Error(`Failed to save item in ${this.collectionName}`);
     }
-    return res.json();
+    const raw = await res.json();
+    return this.populate(raw);
   }
 
   async delete(id: string): Promise<boolean> {

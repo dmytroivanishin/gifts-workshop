@@ -1,13 +1,11 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Post, Category, Tag, Collection, Media } from "@/types";
-type Localization = any;
-
+import { Post, Category, Tag, Collection, Media, PopulatedPost, PopulatedCategory } from "@/types";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: "/api/v1" }),
-  tagTypes: ["Post", "Category", "Tag", "Collection", "Localization", "Media"],
+  tagTypes: ["Post", "Category", "Tag", "Collection", "Media"],
   endpoints: (builder) => ({
-    getPosts: builder.query<{ data: Post[]; meta: any }, { search?: string; category?: string; inStock?: boolean }>({
+    getPosts: builder.query<{ data: PopulatedPost[]; meta: any }, { search?: string; category?: string; inStock?: boolean }>({
       query: ({ search, category, inStock }) => {
         const params = new URLSearchParams();
         if (search) params.append("search", search);
@@ -20,11 +18,11 @@ export const api = createApi({
       },
       providesTags: ["Post"],
     }),
-    getPostById: builder.query<{ data: Post }, string>({
+    getPostById: builder.query<{ data: PopulatedPost }, string>({
       query: (id) => `/posts/${id}`,
       providesTags: (result, error, id) => [{ type: "Post", id }],
     }),
-    createPost: builder.mutation<{ data: Post }, any>({
+    createPost: builder.mutation<{ data: PopulatedPost }, any>({
       query: (body) => ({
         url: "/posts",
         method: "POST",
@@ -32,7 +30,7 @@ export const api = createApi({
       }),
       invalidatesTags: ["Post", "Tag"],
     }),
-    updatePost: builder.mutation<{ data: Post }, { id: string } & any>({
+    updatePost: builder.mutation<{ data: PopulatedPost }, { id: string } & any>({
       query: ({ id, ...body }) => ({
         url: `/posts/${id}`,
         method: "PUT",
@@ -47,11 +45,11 @@ export const api = createApi({
       }),
       invalidatesTags: ["Post"],
     }),
-    getCategories: builder.query<{ data: Category[] }, void>({
+    getCategories: builder.query<{ data: PopulatedCategory[] }, void>({
       query: () => "/categories",
       providesTags: ["Category"],
     }),
-    createCategory: builder.mutation<{ data: Category[] }, any>({
+    createCategory: builder.mutation<{ data: PopulatedCategory[] }, any>({
       query: (body) => ({
         url: "/categories",
         method: "POST",
@@ -86,23 +84,13 @@ export const api = createApi({
       }),
       invalidatesTags: ["Tag", "Post"],
     }),
-    getLocalizations: builder.query<{ data: Localization[] }, { entityId?: string; entityType?: string } | void>({
-      query: (params) => {
-        const queryParams = new URLSearchParams();
-        if (params?.entityId) queryParams.append("entityId", params.entityId);
-        if (params?.entityType) queryParams.append("entityType", params.entityType);
-        const queryStr = queryParams.toString();
-        return `/localizations${queryStr ? `?${queryStr}` : ""}`;
-      },
-      providesTags: ["Localization"],
-    }),
-    saveLocalization: builder.mutation<{ data: Localization }, any>({
-      query: (body) => ({
-        url: "/localizations",
-        method: "POST",
+    updateCategory: builder.mutation<{ data: PopulatedCategory }, { id: string } & any>({
+      query: ({ id, ...body }) => ({
+        url: `/categories/${id}`,
+        method: "PUT",
         body,
       }),
-      invalidatesTags: ["Localization", "Post", "Category"],
+      invalidatesTags: ["Category", "Post"],
     }),
     getCollections: builder.query<{ data: Collection[] }, void>({
       query: () => "/collections",
@@ -123,12 +111,11 @@ export const {
   useDeletePostMutation,
   useGetCategoriesQuery,
   useCreateCategoryMutation,
+  useUpdateCategoryMutation,
   useGetTagsQuery,
   useCreateTagMutation,
   useUpdateTagMutation,
   useDeleteTagMutation,
-  useGetLocalizationsQuery,
-  useSaveLocalizationMutation,
   useGetCollectionsQuery,
   useGetMediaQuery,
 } = api;

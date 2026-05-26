@@ -9,14 +9,12 @@ import {
   tagRepository,
   postRepository,
 } from "@/lib/container";
-import {
-  seedUser,
-  seedColors,
-  seedCollection,
-  seedCategories,
-  seedTags,
-  seedPosts,
-} from "@/migrations/seedData";
+import seedUser from "@/migrations/initial-data/users.json";
+import seedColors from "@/migrations/initial-data/colors.json";
+import seedCollection from "@/migrations/initial-data/collections.json";
+import seedCategories from "@/migrations/initial-data/categories.json";
+import seedTags from "@/migrations/initial-data/tags.json";
+import seedPosts from "@/migrations/initial-data/posts.json";
 
 const DB_PATH = path.join(process.cwd(), "src/data/db.json");
 
@@ -43,34 +41,38 @@ export async function GET() {
 
     // 2. Migrate User
     console.log("👤 Migrating User entity...");
-    await userRepository.save(seedUser);
+    if (seedUser && seedUser.length > 0) {
+      await userRepository.save(seedUser[0]);
+    }
 
     // 3. Migrate Colors
     console.log("🎨 Migrating Color entities...");
     for (const color of seedColors) {
-      await colorRepository.save(color);
+      await colorRepository.save(color as any);
     }
 
     // 4. Migrate Collections
     console.log("📦 Migrating Collection entities...");
-    await collectionRepository.save(seedCollection);
+    if (seedCollection && seedCollection.length > 0) {
+      await collectionRepository.save(seedCollection[0] as any);
+    }
 
     // 5. Migrate Categories (automatically saves slugs and localizations!)
     console.log("🏷️ Migrating Category entities...");
     for (const cat of seedCategories) {
-      await categoryRepository.save(cat);
+      await categoryRepository.save(cat as any);
     }
 
     // 6. Migrate Tags (automatically saves slugs!)
     console.log("🏷️ Migrating Tag entities...");
     for (const tag of seedTags) {
-      await tagRepository.save(tag);
+      await tagRepository.save(tag as any);
     }
 
     // 7. Migrate Posts (automatically saves slugs, localizations, and media!)
     console.log("📝 Migrating Post entities...");
     for (const post of seedPosts) {
-      await postRepository.save(post);
+      await postRepository.save(post as any);
     }
 
     console.log("✨ Migration completed successfully!");

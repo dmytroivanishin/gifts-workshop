@@ -1,8 +1,5 @@
 import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions } from "@/types";
 
-export type Slug = any;
-export type Localization = any;
-
 
 export interface QueryOptions extends PaginationOptions {
   search?: string;
@@ -37,14 +34,6 @@ export interface IColorRepository {
   delete(id: string): Promise<boolean>;
 }
 
-export interface ILocalizationRepository {
-  getAll(options?: PaginationOptions): Promise<Localization[]>;
-  getById(id: string): Promise<Localization | undefined>;
-  getByEntity(entityId: string, entityType: string): Promise<Localization[]>;
-  save(localization: Localization): Promise<Localization>;
-  delete(id: string): Promise<boolean>;
-}
-
 export interface IMediaRepository {
   getAll(options?: PaginationOptions): Promise<Media[]>;
   getById(id: string): Promise<Media | undefined>;
@@ -59,15 +48,6 @@ export interface IPostRepository {
   save(post: Post): Promise<Post>;
   delete(id: string): Promise<boolean>;
   getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<Post[]>;
-}
-
-export interface ISlugRepository {
-  getAll(options?: PaginationOptions): Promise<Slug[]>;
-  getById(id: string): Promise<Slug | undefined>;
-  getByName(name: string): Promise<Slug | undefined>;
-  getByEntity(entityId: string, entityType: string): Promise<Slug | undefined>;
-  save(slug: Slug): Promise<Slug>;
-  delete(id: string): Promise<boolean>;
 }
 
 export interface ITagRepository {

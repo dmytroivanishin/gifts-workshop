@@ -1,7 +1,8 @@
 import { IPostRepository, ICategoryRepository, ITagRepository, ICollectionRepository, QueryOptions } from "@/repositories/interfaces";
-import { IPostService, ISlugService } from "./interfaces";
+import { IPostService } from "./interfaces";
 import { Post } from "@/types";
 import { randomUUID } from "crypto";
+import { generateSlugFromField } from "@/lib/slug";
 
 import { paginate } from "./pagination";
 
@@ -10,8 +11,7 @@ export class PostService implements IPostService {
     private postRepo: IPostRepository,
     private categoryRepo: ICategoryRepository,
     private tagRepo: ITagRepository,
-    private collectionRepo: ICollectionRepository,
-    private slugService: ISlugService
+    private collectionRepo: ICollectionRepository
   ) {}
 
   async getFilteredPosts(filters?: QueryOptions): Promise<any> {
@@ -36,12 +36,21 @@ export class PostService implements IPostService {
   async getPostBySlug(slug: string): Promise<Post | undefined> {
     return this.postRepo.getBySlug(slug);
   }
-
   async createPost(body: any): Promise<Post> {
     const id = body.id || randomUUID();
-    
+
     // 1. Generate smart translated unique English slug
-    const slug = await this.slugService.generateUniqueSlug(body.title, id, "post");
+    const baseSlug = await generateSlugFromField(body.title);
+    let slug = baseSlug;
+    let suffix = 1;
+    while (true) {
+      const existing = await this.postRepo.getBySlug(slug);
+      if (!existing || existing.id === id) {
+        break;
+      }
+      slug = `${baseSlug}-${suffix}`;
+      suffix++;
+    }
 
     // 2. Resolve database Category relation
     const categories = await this.categoryRepo.getAll();
@@ -76,14 +85,24 @@ export class PostService implements IPostService {
           } else {
             // Implicit tag creation on the fly
             const tagId = randomUUID();
-            const tagSlug = await this.slugService.generateUniqueSlug(t, tagId, "tag");
+            const baseTagSlug = await generateSlugFromField(t);
+            let tagSlug = baseTagSlug;
+            let tagSuffix = 1;
+            while (true) {
+              const existingTag = await this.tagRepo.getBySlug(tagSlug);
+              if (!existingTag || existingTag.id === tagId) {
+                break;
+              }
+              tagSlug = `${baseTagSlug}-${tagSuffix}`;
+              tagSuffix++;
+            }
             const newTag = await this.tagRepo.save({
               id: tagId,
               title: { ru: t, en: t },
               slug: tagSlug
             });
             tagsList.push(newTag);
-
+ 
             // Associate with category
             if (categoryDetail && typeof categoryDetail === "object") {
               const catObj = await this.categoryRepo.getById(categoryDetail.id);
@@ -103,7 +122,20 @@ export class PostService implements IPostService {
         } else if (t && typeof t === "object") {
           const tagId = t.id || randomUUID();
           const tName = t.name || t.title?.ru || t.title || "";
-          const tagSlug = t.slug || await this.slugService.generateUniqueSlug(tName, tagId, "tag");
+          let tagSlug = t.slug;
+          if (!tagSlug) {
+            const baseTagSlug = await generateSlugFromField(tName);
+            tagSlug = baseTagSlug;
+            let tagSuffix = 1;
+            while (true) {
+              const existingTag = await this.tagRepo.getBySlug(tagSlug);
+              if (!existingTag || existingTag.id === tagId) {
+                break;
+              }
+              tagSlug = `${baseTagSlug}-${tagSuffix}`;
+              tagSuffix++;
+            }
+          }
           const savedTag = await this.tagRepo.save({
             id: tagId,
             title: typeof t.title === "object" ? t.title : { ru: tName, en: tName },
@@ -130,7 +162,7 @@ export class PostService implements IPostService {
       }
     }
 
-    const newPost: Post = {
+    const newPost: any = {
       id,
       title: typeof body.title === "string" ? { ru: body.title, en: "" } : { ru: body.title?.ru || "", en: body.title?.en || "" },
       description: typeof body.description === "string" ? { ru: body.description, en: "" } : { ru: body.description?.ru || "", en: body.description?.en || "" },
@@ -152,13 +184,23 @@ export class PostService implements IPostService {
   }
 
   async updatePost(id: string, body: any): Promise<Post | undefined> {
-    const existing = await this.postRepo.getById(id);
+    const existing = await this.postRepo.getById(id) as any;
     if (!existing) return undefined;
 
     // 1. Generate/resolve slug if title is modified
     let slug = existing.slug;
     if (body.title && JSON.stringify(body.title) !== JSON.stringify(existing.title)) {
-      slug = await this.slugService.generateUniqueSlug(body.title, id, "post");
+      const baseSlug = await generateSlugFromField(body.title);
+      slug = baseSlug;
+      let suffix = 1;
+      while (true) {
+        const existingPost = await this.postRepo.getBySlug(slug);
+        if (!existingPost || existingPost.id === id) {
+          break;
+        }
+        slug = `${baseSlug}-${suffix}`;
+        suffix++;
+      }
     }
 
     // 2. Resolve Category relation
@@ -194,14 +236,24 @@ export class PostService implements IPostService {
           } else {
             // Implicit tag creation
             const tagId = randomUUID();
-            const tagSlug = await this.slugService.generateUniqueSlug(t, tagId, "tag");
+            const baseTagSlug = await generateSlugFromField(t);
+            let tagSlug = baseTagSlug;
+            let tagSuffix = 1;
+            while (true) {
+              const existingTag = await this.tagRepo.getBySlug(tagSlug);
+              if (!existingTag || existingTag.id === tagId) {
+                break;
+              }
+              tagSlug = `${baseTagSlug}-${tagSuffix}`;
+              tagSuffix++;
+            }
             const newTag = await this.tagRepo.save({
               id: tagId,
               title: { ru: t, en: t },
               slug: tagSlug
             });
             tagsList.push(newTag);
-
+ 
             // Associate with category
             if (categoryDetail && typeof categoryDetail === "object") {
               const catObj = await this.categoryRepo.getById(categoryDetail.id);
@@ -221,7 +273,20 @@ export class PostService implements IPostService {
         } else if (t && typeof t === "object") {
           const tagId = t.id || randomUUID();
           const tName = t.name || t.title?.ru || t.title || "";
-          const tagSlug = t.slug || await this.slugService.generateUniqueSlug(tName, tagId, "tag");
+          let tagSlug = t.slug;
+          if (!tagSlug) {
+            const baseTagSlug = await generateSlugFromField(tName);
+            tagSlug = baseTagSlug;
+            let tagSuffix = 1;
+            while (true) {
+              const existingTag = await this.tagRepo.getBySlug(tagSlug);
+              if (!existingTag || existingTag.id === tagId) {
+                break;
+              }
+              tagSlug = `${baseTagSlug}-${tagSuffix}`;
+              tagSuffix++;
+            }
+          }
           const savedTag = await this.tagRepo.save({
             id: tagId,
             title: typeof t.title === "object" ? t.title : { ru: tName, en: tName },
@@ -272,7 +337,6 @@ export class PostService implements IPostService {
   }
 
   async deletePost(id: string): Promise<boolean> {
-    await this.slugService.deleteSlugForEntity(id, "post");
     return this.postRepo.delete(id);
   }
 }

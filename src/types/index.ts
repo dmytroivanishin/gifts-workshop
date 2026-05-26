@@ -97,7 +97,7 @@ export interface Post {
 export interface PopulatedPost extends Omit<Post, 'media'> {
   poster?: Media;
   collection?: Collection;
-  category: Category;
+  category: PopulatedCategory;
   tags: Tag[];
   media: PopulatedPostMedia[];
 }

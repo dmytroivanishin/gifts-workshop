@@ -1,8 +1,5 @@
 import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions } from "@/types";
 
-export type Slug = any;
-export type Localization = any;
-
 import { QueryOptions } from "@/repositories/interfaces";
 
 export interface ICategoryService {
@@ -28,27 +25,11 @@ export interface IColorService {
   deleteColor(id: string): Promise<boolean>;
 }
 
-export interface ILocalizationService {
-  getAllLocalizations(options?: PaginationOptions): Promise<PaginatedResult<Localization>>;
-  getLocalizationById(id: string): Promise<Localization | undefined>;
-  getByEntity(entityId: string, entityType: string): Promise<Localization[]>;
-  saveLocalization(body: any): Promise<Localization>;
-  deleteLocalization(id: string): Promise<boolean>;
-}
-
 export interface IMediaService {
   getAllMedia(options?: PaginationOptions): Promise<PaginatedResult<Media>>;
   getMediaById(id: string): Promise<Media | undefined>;
   saveMedia(body: any): Promise<Media>;
   deleteMedia(id: string): Promise<boolean>;
-}
-
-export interface ISlugService {
-  getAllSlugs(options?: PaginationOptions): Promise<PaginatedResult<Slug>>;
-  getSlugById(id: string): Promise<Slug | undefined>;
-  getSlugByName(name: string): Promise<Slug | undefined>;
-  generateUniqueSlug(titleInput: any, entityId: string, entityType: "post" | "category" | "collection" | "tag"): Promise<string>;
-  deleteSlugForEntity(entityId: string, entityType: "post" | "category" | "collection" | "tag"): Promise<boolean>;
 }
 
 export interface ITagService {

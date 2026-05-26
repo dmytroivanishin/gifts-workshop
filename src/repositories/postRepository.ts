@@ -1,145 +1,82 @@
-import { BaseRepository, Database } from "./baseRepository";
+import { BaseRepository, repositoryRegistry } from "./baseRepository";
 import { IPostRepository, QueryOptions } from "./interfaces";
-import { Post, PaginatedResult } from "@/types";
-import { populatePost } from "./populator";
-
-const DB_URI = Database.getUri();
+import { Post, Tag, PostMedia } from "@/types";
 
 export class PostRepository extends BaseRepository<Post> implements IPostRepository {
   constructor() {
     super("posts");
+    repositoryRegistry.post = this;
   }
 
-  async getBySlug(slug: string): Promise<Post | undefined> {
-    const res = await fetch(`${DB_URI}/posts?slug=${slug}`, { cache: "no-store" });
-    const recs = await res.json();
-    if (!recs || recs.length === 0) return undefined;
-    return populatePost(recs[0]);
-  }
+  protected override async populate(raw: any): Promise<Post> {
+    if (!raw) return raw;
 
-  override async getById(id: string): Promise<Post | undefined> {
-    const res = await fetch(`${DB_URI}/posts/${id}`, { cache: "no-store" });
-    if (!res.ok) return undefined;
-    const raw = await res.json();
-    return populatePost(raw);
-  }
-
-  override async getAll(options?: QueryOptions): Promise<Post[]> {
-    let url = `${DB_URI}/posts?`;
-
-    if (options) {
-      const { search, category, tag, inStock, status, collectionSlug, postSlug } = options;
-
-      if (status) url += `&status=${status}`;
-      if (inStock !== undefined) url += `&in_stock=${inStock}`;
-
-      if (category) {
-        let catId = category;
-        const catRes = await fetch(`${DB_URI}/categories?slug=${category}`);
-        const catRecs = await catRes.json();
-        if (catRecs && catRecs.length > 0) catId = catRecs[0].id;
-        url += `&categoryId=${catId}`;
-      }
-
-      if (collectionSlug) {
-        let colId = collectionSlug;
-        const colRes = await fetch(`${DB_URI}/collections?slug=${collectionSlug}`);
-        const colRecs = await colRes.json();
-        if (colRecs && colRecs.length > 0) colId = colRecs[0].id;
-        url += `&collectionId=${colId}`;
-      }
-
-      if (postSlug) {
-        url += `&slug=${postSlug}`;
-      }
-
-      if (tag) {
-        let tagId = tag;
-        const tagRes = await fetch(`${DB_URI}/tags?slug=${tag}`);
-        const tagRecs = await tagRes.json();
-        if (tagRecs && tagRecs.length > 0) tagId = tagRecs[0].id;
-        url += `&tagsIds=${tagId}`;
-      }
-
-      if (search) {
-        url += `&q=${search}`;
-      }
+    // Resolve collection
+    let collection = undefined;
+    if (typeof raw.collectionId === "string" && raw.collectionId !== "all" && repositoryRegistry.collection) {
+      collection = await repositoryRegistry.collection.getById(raw.collectionId);
     }
 
-    if (options?.page || options?.limit) {
-      const page = options?.page || 1;
-      const limit = options?.limit || 10;
-      url += `&_page=${page}&_per_page=${limit}`;
+    // Resolve category
+    let category = undefined;
+    if (typeof raw.categoryId === "string" && repositoryRegistry.category) {
+      category = await repositoryRegistry.category.getById(raw.categoryId);
     }
 
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("Failed to fetch posts");
-    const json = await res.json();
-
-    let rawPosts = Array.isArray(json) ? json : json.data || [];
-
-    const posts: Post[] = [];
-    for (const raw of rawPosts) {
-      posts.push(await populatePost(raw));
-    }
-
-    return posts;
-  }
-
-  override async save(post: Post): Promise<Post> {
-    // 1. Media
-    let posterId = post.posterId || (post.poster ? post.poster.id : undefined);
-    if (post.poster) {
-      posterId = post.poster.id;
-      const mRes = await fetch(`${DB_URI}/media/${posterId}`, { cache: "no-store" });
-      const mData = {
-        ...post.poster,
-        userId: post.poster.userId || "user-1",
-      };
-      if (mRes.ok) {
-        await fetch(`${DB_URI}/media/${posterId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(mData),
-        });
-      } else {
-        await fetch(`${DB_URI}/media`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(mData),
-        });
-      }
-    }
-
-    const rawMedia: any[] = [];
-    if (Array.isArray(post.media)) {
-      for (const pm of post.media) {
-        const mId = pm.mediaId || (pm.media ? pm.media.id : undefined);
-        if (!mId) continue;
-        
-        if (pm.media) {
-          const mRes = await fetch(`${DB_URI}/media/${mId}`, { cache: "no-store" });
-          const mData = {
-            ...pm.media,
-            userId: pm.media.userId || "user-1",
-          };
-          if (mRes.ok) {
-            await fetch(`${DB_URI}/media/${mId}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(mData),
-            });
-          } else {
-            await fetch(`${DB_URI}/media`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(mData),
-            });
+    // Resolve tags
+    let tags: Tag[] = [];
+    if (Array.isArray(raw.tagsIds) && repositoryRegistry.tag) {
+      for (const tId of raw.tagsIds) {
+        if (typeof tId === "string") {
+          const foundTag = await repositoryRegistry.tag.getById(tId);
+          if (foundTag) {
+            tags.push(foundTag);
           }
         }
-        
+      }
+    }
+
+    // Resolve poster
+    let poster = undefined;
+    if (typeof raw.posterId === "string" && repositoryRegistry.media) {
+      poster = await repositoryRegistry.media.getById(raw.posterId);
+    }
+
+    // Resolve media array
+    let mediaList: PostMedia[] = [];
+    if (Array.isArray(raw.media) && repositoryRegistry.media) {
+      for (const m of raw.media) {
+        let mediaItem = undefined;
+        if (typeof m.mediaId === "string") {
+          mediaItem = await repositoryRegistry.media.getById(m.mediaId);
+        }
+        mediaList.push({
+          ...m,
+          media: mediaItem,
+        });
+      }
+    }
+
+    return {
+      ...raw,
+      collection,
+      category,
+      tags,
+      poster,
+      media: mediaList,
+    };
+  }
+
+  protected override serialize(post: Post): any {
+    const p = post as any;
+
+    const rawMedia: any[] = [];
+    if (Array.isArray(p.media)) {
+      for (const pm of p.media) {
+        const mId = pm.mediaId || (pm.media ? pm.media.id : undefined);
+        if (!mId) continue;
         rawMedia.push({
-          id: pm.id || `pm-${post.id}-${mId}`,
+          id: pm.id || `pm-${p.id}-${mId}`,
           order: pm.order,
           mediaId: mId,
           position: pm.position,
@@ -147,40 +84,119 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
       }
     }
 
-    // 2. Raw Post construct (WITH SLUG, TITLE, DESCRIPTION embedded)
-    const rawPost = {
-      id: post.id,
-      title: post.title,
-      description: post.description,
-      slug: post.slug,
-      in_stock: post.in_stock,
-      status: post.status,
-      collectionId: post.collectionId || (post.collection ? post.collection.id : "all"),
-      categoryId: post.categoryId || (post.category ? post.category.id : undefined),
-      tagsIds: post.tagsIds || (post.tags ? post.tags.map(t => t.id) : []),
+    let posterId = p.posterId || (p.poster ? p.poster.id : undefined);
+
+    return {
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      slug: p.slug,
+      in_stock: p.in_stock,
+      status: p.status,
+      collectionId: p.collectionId || (p.collection ? p.collection.id : "all"),
+      categoryId: p.categoryId || (p.category ? p.category.id : undefined),
+      tagsIds: p.tagsIds || (p.tags ? p.tags.map((t: any) => t.id) : []),
       media: rawMedia,
       posterId: posterId,
-      userId: post.userId || "user-1",
+      userId: p.userId || "user-1",
     };
+  }
 
-    const pCheck = await fetch(`${DB_URI}/posts/${post.id}`, { cache: "no-store" });
-    if (pCheck.ok) {
-      await fetch(`${DB_URI}/posts/${post.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(rawPost),
-      });
-    } else {
-      await fetch(`${DB_URI}/posts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(rawPost),
+  override async save(post: Post): Promise<Post> {
+    const p = post as any;
+
+    // Save poster via mediaRepo if present
+    if (p.poster && repositoryRegistry.media) {
+      await repositoryRegistry.media.save({
+        ...p.poster,
+        userId: p.poster.userId || "user-1",
       });
     }
 
-    const res = await fetch(`${DB_URI}/posts/${post.id}`, { cache: "no-store" });
-    const rawData = await res.json();
-    return populatePost(rawData);
+    // Save media items via mediaRepo if present
+    if (Array.isArray(p.media) && repositoryRegistry.media) {
+      for (const pm of p.media) {
+        if (pm.media) {
+          await repositoryRegistry.media.save({
+            ...pm.media,
+            userId: pm.media.userId || "user-1",
+          });
+        }
+      }
+    }
+
+    // Call super.save to persist post itself
+    return super.save(post);
+  }
+
+  async getBySlug(slug: string): Promise<Post | undefined> {
+    const recs = await this.getByQuery({ slug });
+    if (!recs || recs.length === 0) return undefined;
+    return recs[0];
+  }
+
+  override async getAll(options?: QueryOptions): Promise<Post[]> {
+    const params = new URLSearchParams();
+
+    if (options) {
+      const { search, category, tag, inStock, status, collectionSlug, postSlug } = options;
+
+      if (status) params.append("status", status);
+      if (inStock !== undefined) params.append("in_stock", inStock.toString());
+
+      if (category) {
+        let catId = category;
+        if (repositoryRegistry.category) {
+          const found = await repositoryRegistry.category.getBySlug(category);
+          if (found) catId = found.id;
+        }
+        params.append("categoryId", catId);
+      }
+
+      if (collectionSlug) {
+        let colId = collectionSlug;
+        if (repositoryRegistry.collection) {
+          const found = await repositoryRegistry.collection.getBySlug(collectionSlug);
+          if (found) colId = found.id;
+        }
+        params.append("collectionId", colId);
+      }
+
+      if (postSlug) {
+        params.append("slug", postSlug);
+      }
+
+      if (tag) {
+        let tagId = tag;
+        if (repositoryRegistry.tag) {
+          const found = await repositoryRegistry.tag.getBySlug(tag);
+          if (found) tagId = found.id;
+        }
+        params.append("tagsIds", tagId);
+      }
+
+      if (search) {
+        params.append("q", search);
+      }
+    }
+
+    if (options?.page || options?.limit) {
+      const page = options?.page || 1;
+      const limit = options?.limit || 10;
+      params.append("_page", page.toString());
+      params.append("_per_page", limit.toString());
+    }
+
+    const queryString = params.toString();
+    const url = `${this.getUrl()}${queryString ? `?${queryString}` : ""}`;
+
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch posts`);
+    }
+
+    const json = await res.json();
+    const rawPosts = Array.isArray(json) ? json : json.data || [];
+    return Promise.all(rawPosts.map((p: any) => this.populate(p)));
   }
 }
-
