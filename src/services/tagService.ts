@@ -1,4 +1,4 @@
-import { ITagRepository } from "@/repositories/interfaces";
+import { ITagRepository, ICategoryRepository } from "@/repositories/interfaces";
 import { ITagService, ISlugService } from "./interfaces";
 import { Tag } from "@/types";
 import { randomUUID } from "crypto";
@@ -8,7 +8,8 @@ import { paginate } from "./pagination";
 export class TagService implements ITagService {
   constructor(
     private tagRepo: ITagRepository,
-    private slugService: ISlugService
+    private slugService: ISlugService,
+    private categoryRepo?: ICategoryRepository
   ) {}
 
   async getAllTags(options?: any): Promise<any> {
@@ -38,7 +39,6 @@ export class TagService implements ITagService {
     const tag: Tag = {
       id,
       name: body.name,
-      categories: body.categories || [],
       slug,
     };
 
@@ -47,6 +47,29 @@ export class TagService implements ITagService {
 
   async deleteTag(id: string): Promise<boolean> {
     await this.slugService.deleteSlugForEntity(id, "tag");
+
+    // Cascade cleanup: remove tag ID from categories
+    if (this.categoryRepo) {
+      try {
+        const categories = await this.categoryRepo.getAll();
+        for (const cat of categories) {
+          if (Array.isArray(cat.tags)) {
+            const catTags: string[] = cat.tags.map((t: any) => typeof t === "string" ? t : t.id);
+            const hasTag = catTags.includes(id);
+            if (hasTag) {
+              const updatedTags = catTags.filter((t) => t !== id);
+              await this.categoryRepo.save({
+                ...cat,
+                tags: updatedTags,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to cleanup categories on tag delete", err);
+      }
+    }
+
     return this.tagRepo.delete(id);
   }
 }

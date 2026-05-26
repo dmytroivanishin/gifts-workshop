@@ -154,42 +154,62 @@
       "order": 1,
       "color": "c0100001-beef-4000-8000-000000000001",
       "collection": "c011ec71-beef-4000-8000-000000000001",
-      "slug": "plush-stories"
+      "slug": "plush-stories",
+      "tags": [
+        "fa9e0001-beef-4000-8000-000000000001",
+        "fa9e0002-beef-4000-8000-000000000002",
+        "fa9e0003-beef-4000-8000-000000000003",
+        "fa9e0004-beef-4000-8000-000000000004"
+      ]
     },
     {
       "id": "ca7e0002-beef-4000-8000-000000000002",
       "order": 2,
       "color": "c0100002-beef-4000-8000-000000000002",
       "collection": "c011ec71-beef-4000-8000-000000000001",
-      "slug": "dolls"
+      "slug": "dolls",
+      "tags": [
+        "fa9e0002-beef-4000-8000-000000000002",
+        "fa9e0004-beef-4000-8000-000000000004",
+        "fa9e0005-beef-4000-8000-000000000005"
+      ]
     },
     {
       "id": "ca7e0003-beef-4000-8000-000000000003",
       "order": 3,
       "color": "c0100003-beef-4000-8000-000000000003",
       "collection": "c011ec71-beef-4000-8000-000000000001",
-      "slug": "kitchen-comfort"
+      "slug": "kitchen-comfort",
+      "tags": [
+        "fa9e0006-beef-4000-8000-000000000006"
+      ]
     },
     {
       "id": "ca7e0004-beef-4000-8000-000000000004",
       "order": 4,
       "color": "c0100004-beef-4000-8000-000000000004",
       "collection": "c011ec71-beef-4000-8000-000000000001",
-      "slug": "family-traditions"
+      "slug": "family-traditions",
+      "tags": [
+        "fa9e0005-beef-4000-8000-000000000005",
+        "fa9e0007-beef-4000-8000-000000000007"
+      ]
     },
     {
       "id": "ca7e0005-beef-4000-8000-000000000005",
       "order": 5,
       "color": "c0100005-beef-4000-8000-000000000005",
       "collection": "c011ec71-beef-4000-8000-000000000001",
-      "slug": "for-beloved-home"
+      "slug": "for-beloved-home",
+      "tags": []
     },
     {
       "id": "ca7e0006-beef-4000-8000-000000000006",
       "order": 6,
       "color": "c0100006-beef-4000-8000-000000000006",
       "collection": "c011ec71-beef-4000-8000-000000000001",
-      "slug": "joy-in-details"
+      "slug": "joy-in-details",
+      "tags": []
     }
   ],
   "collections": [
@@ -229,244 +249,40 @@
     {
       "id": "fa9e0001-beef-4000-8000-000000000001",
       "name": "bunny",
-      "slug": "bunny",
-      "categories": [
-        "ca7e0001-beef-4000-8000-000000000001"
-      ]
+      "slug": "bunny"
     },
     {
       "id": "fa9e0002-beef-4000-8000-000000000002",
       "name": "gift",
-      "slug": "gift",
-      "categories": [
-        "ca7e0001-beef-4000-8000-000000000001",
-        "ca7e0002-beef-4000-8000-000000000002"
-      ]
+      "slug": "gift"
     },
     {
       "id": "fa9e0003-beef-4000-8000-000000000003",
       "name": "giraffe",
-      "slug": "giraffe",
-      "categories": [
-        "ca7e0001-beef-4000-8000-000000000001"
-      ]
+      "slug": "giraffe"
     },
     {
       "id": "fa9e0004-beef-4000-8000-000000000004",
       "name": "vintage",
-      "slug": "vintage",
-      "categories": [
-        "ca7e0001-beef-4000-8000-000000000001",
-        "ca7e0002-beef-4000-8000-000000000002"
-      ]
+      "slug": "vintage"
     },
     {
       "id": "fa9e0005-beef-4000-8000-000000000005",
       "name": "miniature",
-      "slug": "miniature",
-      "categories": [
-        "ca7e0002-beef-4000-8000-000000000002",
-        "ca7e0004-beef-4000-8000-000000000004"
-      ]
+      "slug": "miniature"
     },
     {
       "id": "fa9e0006-beef-4000-8000-000000000006",
       "name": "linen",
-      "slug": "linen",
-      "categories": [
-        "ca7e0003-beef-4000-8000-000000000003"
-      ]
+      "slug": "linen"
     },
     {
       "id": "fa9e0007-beef-4000-8000-000000000007",
       "name": "quilt",
-      "slug": "quilt",
-      "categories": [
-        "ca7e0004-beef-4000-8000-000000000004"
-      ]
-    },
-    {
-      "id": "ee0ynMDW8Po",
-      "name": "dgdf",
-      "categories": [],
-      "slug": "dgdf"
-    },
-    {
-      "id": "xep1iW9cil4",
-      "name": "dgdf",
-      "categories": [],
-      "slug": "dgdf-1"
-    },
-    {
-      "id": "HU3aVwd6RzQ",
-      "name": "dgdf",
-      "categories": [],
-      "slug": "dgdf-2"
+      "slug": "quilt"
     }
   ],
-  "slugs": [
-    {
-      "id": "slug-c011ec71-beef-4000-8000-000000000001",
-      "name": "all",
-      "entityId": "c011ec71-beef-4000-8000-000000000001",
-      "entityType": "collection",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-ca7e0001-beef-4000-8000-000000000001",
-      "name": "plush-stories",
-      "entityId": "ca7e0001-beef-4000-8000-000000000001",
-      "entityType": "category",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-ca7e0002-beef-4000-8000-000000000002",
-      "name": "dolls",
-      "entityId": "ca7e0002-beef-4000-8000-000000000002",
-      "entityType": "category",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-ca7e0003-beef-4000-8000-000000000003",
-      "name": "kitchen-comfort",
-      "entityId": "ca7e0003-beef-4000-8000-000000000003",
-      "entityType": "category",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-ca7e0004-beef-4000-8000-000000000004",
-      "name": "family-traditions",
-      "entityId": "ca7e0004-beef-4000-8000-000000000004",
-      "entityType": "category",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-ca7e0005-beef-4000-8000-000000000005",
-      "name": "for-beloved-home",
-      "entityId": "ca7e0005-beef-4000-8000-000000000005",
-      "entityType": "category",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-ca7e0006-beef-4000-8000-000000000006",
-      "name": "joy-in-details",
-      "entityId": "ca7e0006-beef-4000-8000-000000000006",
-      "entityType": "category",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-b0550001-beef-4000-8000-000000000001",
-      "name": "dreamer-bunny",
-      "entityId": "b0550001-beef-4000-8000-000000000001",
-      "entityType": "post",
-      "userId": "user-1"
-    },
-    {
-      "id": "slug-b0550002-beef-4000-8000-000000000002",
-      "name": "autumn-giraffe",
-      "entityId": "b0550002-beef-4000-8000-000000000002",
-      "entityType": "post",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-b0550003-beef-4000-8000-000000000003",
-      "name": "bunny-on-a-chair",
-      "entityId": "b0550003-beef-4000-8000-000000000003",
-      "entityType": "post",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-b0550004-beef-4000-8000-000000000004",
-      "name": "bunny-and-fairytale-house",
-      "entityId": "b0550004-beef-4000-8000-000000000004",
-      "entityType": "post",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-b0550005-beef-4000-8000-000000000005",
-      "name": "cozy-kitchen-set",
-      "entityId": "b0550005-beef-4000-8000-000000000005",
-      "entityType": "post",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-b0550006-beef-4000-8000-000000000006",
-      "name": "family-quilt",
-      "entityId": "b0550006-beef-4000-8000-000000000006",
-      "entityType": "post",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-fa9e0001-beef-4000-8000-000000000001",
-      "name": "bunny",
-      "entityId": "fa9e0001-beef-4000-8000-000000000001",
-      "entityType": "tag",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-fa9e0002-beef-4000-8000-000000000002",
-      "name": "gift",
-      "entityId": "fa9e0002-beef-4000-8000-000000000002",
-      "entityType": "tag",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-fa9e0003-beef-4000-8000-000000000003",
-      "name": "giraffe",
-      "entityId": "fa9e0003-beef-4000-8000-000000000003",
-      "entityType": "tag",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-fa9e0004-beef-4000-8000-000000000004",
-      "name": "vintage",
-      "entityId": "fa9e0004-beef-4000-8000-000000000004",
-      "entityType": "tag",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-fa9e0005-beef-4000-8000-000000000005",
-      "name": "miniature",
-      "entityId": "fa9e0005-beef-4000-8000-000000000005",
-      "entityType": "tag",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-fa9e0006-beef-4000-8000-000000000006",
-      "name": "linen",
-      "entityId": "fa9e0006-beef-4000-8000-000000000006",
-      "entityType": "tag",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "slug-fa9e0007-beef-4000-8000-000000000007",
-      "name": "quilt",
-      "entityId": "fa9e0007-beef-4000-8000-000000000007",
-      "entityType": "tag",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
-    },
-    {
-      "id": "2Xoh4RcZ-E4",
-      "name": "dgdf",
-      "entityId": "df56fbb6-3eb3-47f6-a0ca-fe61ea3acf40",
-      "entityType": "tag",
-      "userId": "user-1"
-    },
-    {
-      "id": "A1vKw2BBd2M",
-      "name": "dgdf-1",
-      "entityId": "24f977f4-c1d1-4c63-84d7-301d5865532d",
-      "entityType": "tag",
-      "userId": "user-1"
-    },
-    {
-      "id": "pB6wxDfAN7E",
-      "name": "dgdf-2",
-      "entityId": "f59788da-a0f6-4214-8b9b-ea73d24b1745",
-      "entityType": "tag",
-      "userId": "user-1"
-    }
-  ],
+  "slugs": [],
   "media": [
     {
       "id": "da7a0001-beef-4000-8000-000000000001",
@@ -857,6 +673,5 @@
       "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
     }
   ],
-  "slugs": [],
   "$schema": "./node_modules/json-server/schema.json"
 }

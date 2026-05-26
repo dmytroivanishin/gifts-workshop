@@ -7,40 +7,28 @@ import {
   useCreateTagMutation,
   useUpdateTagMutation,
   useDeleteTagMutation,
-  useGetCategoriesQuery,
 } from "@/store/api";
-import Combobox from "@/components/ui/combobox";
 
 export default function AdminTags() {
   const { data: tagsResponse, isLoading } = useGetTagsQuery();
-  const { data: categoriesResponse } = useGetCategoriesQuery();
   const [createTag, { isLoading: isCreating }] = useCreateTagMutation();
   const [updateTag, { isLoading: isUpdating }] = useUpdateTagMutation();
   const [deleteTag, { isLoading: isDeleting }] = useDeleteTagMutation();
 
   const tags = tagsResponse?.data || [];
-  const categories = categoriesResponse?.data || [];
-
-  const categoryOptions = categories.map((c: any) => ({
-    value: c.id,
-    label: c.title?.en || c.title?.ru || c.slug || c.id,
-  }));
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [tagName, setTagName] = useState("");
-  const [tagCategories, setTagCategories] = useState<string[]>([]);
   
   const [editTagName, setEditTagName] = useState("");
-  const [editTagCategories, setEditTagCategories] = useState<string[]>([]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tagName.trim()) return;
 
     try {
-      await createTag({ name: tagName.trim(), categories: tagCategories }).unwrap();
+      await createTag({ name: tagName.trim() }).unwrap();
       setTagName("");
-      setTagCategories([]);
     } catch (err) {
       console.error("Failed to add tag", err);
     }
@@ -52,7 +40,6 @@ export default function AdminTags() {
       await updateTag({
         id,
         name: editTagName.trim(),
-        categories: editTagCategories,
       }).unwrap();
       setIsEditing(null);
     } catch (err) {
@@ -97,7 +84,7 @@ export default function AdminTags() {
                   className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors"
                 >
                   {isEditing === tag.id ? (
-                    <div className="flex-1 mr-4 space-y-3">
+                    <div className="flex-1 mr-4">
                       <input
                         type="text"
                         value={editTagName}
@@ -106,34 +93,12 @@ export default function AdminTags() {
                         className="w-full max-w-[300px] px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                         autoFocus
                       />
-                      <div className="max-w-[400px]">
-                        <Combobox
-                          options={categoryOptions}
-                          value={editTagCategories}
-                          onChange={(val) => setEditTagCategories(Array.isArray(val) ? val : [val])}
-                          placeholder="Select categories..."
-                          multiple
-                        />
-                      </div>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-1">
                       <span className="font-semibold text-sm text-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/60 w-fit">
                         #{tag.name}
                       </span>
-                      {tag.categories && tag.categories.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {tag.categories.map((c: any) => {
-                            const catObj = categories.find((cat: any) => cat.id === c);
-                            const name = catObj ? (typeof catObj.title === "string" ? catObj.title : (catObj.title?.en || catObj.title?.ru || catObj.slug)) : c;
-                            return (
-                              <span key={c} className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground border border-border/40">
-                                {name}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -160,7 +125,6 @@ export default function AdminTags() {
                           onClick={() => {
                             setIsEditing(tag.id);
                             setEditTagName(tag.name);
-                            setEditTagCategories(tag.categories || []);
                           }}
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
                           title="Rename Tag"
@@ -199,17 +163,6 @@ export default function AdminTags() {
                 placeholder="e.g. vintage"
                 className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 required
-              />
-            </div>
-            
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Categories (Optional)</label>
-              <Combobox
-                options={categoryOptions}
-                value={tagCategories}
-                onChange={(val) => setTagCategories(Array.isArray(val) ? val : [val])}
-                placeholder="Select categories..."
-                multiple
               />
             </div>
 

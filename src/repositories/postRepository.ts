@@ -1,9 +1,9 @@
-import { BaseRepository } from "./baseRepository";
+import { BaseRepository, Database } from "./baseRepository";
 import { IPostRepository, QueryOptions } from "./interfaces";
 import { Post, PaginatedResult } from "@/types";
 import { populatePost } from "./populator";
 
-const DB_URL = process.env.DB_URL || "http://localhost:3001";
+const DB_URI = Database.getUri();
 
 export class PostRepository extends BaseRepository<Post> implements IPostRepository {
   constructor() {
@@ -16,15 +16,15 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
   }
 
   override async getById(id: string): Promise<Post | undefined> {
-    const res = await fetch(`${DB_URL}/posts/${id}`, { cache: "no-store" });
+    const res = await fetch(`${DB_URI}/posts/${id}`, { cache: "no-store" });
     if (!res.ok) return undefined;
     const raw = await res.json();
     return populatePost(raw);
   }
 
   override async getAll(options?: QueryOptions): Promise<Post[]> {
-    let url = `${DB_URL}/posts?`;
-    
+    let url = `${DB_URI}/posts?`;
+
     if (options) {
       const { search, category, tag, inStock, status, collectionSlug, postSlug } = options;
 
@@ -33,7 +33,7 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
 
       if (category) {
         let catId = category;
-        const slugRes = await fetch(`${DB_URL}/slugs?name=${category}&entityType=category`);
+        const slugRes = await fetch(`${DB_URI}/slugs?name=${category}&entityType=category`);
         const slugRecs = await slugRes.json();
         if (slugRecs && slugRecs.length > 0) catId = slugRecs[0].entityId;
         url += `&category=${catId}`;
@@ -41,7 +41,7 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
 
       if (collectionSlug) {
         let colId = collectionSlug;
-        const slugRes = await fetch(`${DB_URL}/slugs?name=${collectionSlug}&entityType=collection`);
+        const slugRes = await fetch(`${DB_URI}/slugs?name=${collectionSlug}&entityType=collection`);
         const slugRecs = await slugRes.json();
         if (slugRecs && slugRecs.length > 0) colId = slugRecs[0].entityId;
         url += `&collection=${colId}`;
@@ -49,7 +49,7 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
 
       if (postSlug) {
         let postId = postSlug;
-        const slugRes = await fetch(`${DB_URL}/slugs?name=${postSlug}&entityType=post`);
+        const slugRes = await fetch(`${DB_URI}/slugs?name=${postSlug}&entityType=post`);
         const slugRecs = await slugRes.json();
         if (slugRecs && slugRecs.length > 0) postId = slugRecs[0].entityId;
         url += `&id=${postId}`;
@@ -57,11 +57,11 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
 
       if (tag) {
         let tagId = tag;
-        const slugRes = await fetch(`${DB_URL}/slugs?name=${tag}&entityType=tag`);
+        const slugRes = await fetch(`${DB_URI}/slugs?name=${tag}&entityType=tag`);
         const slugRecs = await slugRes.json();
         if (slugRecs && slugRecs.length > 0) tagId = slugRecs[0].entityId;
         else {
-          const nameRes = await fetch(`${DB_URL}/tags?name=${tag}`);
+          const nameRes = await fetch(`${DB_URI}/tags?name=${tag}`);
           const nameRecs = await nameRes.json();
           if (nameRecs && nameRecs.length > 0) tagId = nameRecs[0].id;
         }
@@ -69,14 +69,14 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
       }
 
       if (search) {
-         const locRes = await fetch(`${DB_URL}/localizations?entityType=post`);
-         const allLocs = await locRes.json();
-         const matchedIds = allLocs.filter((l: any) => l.payload.toLowerCase().includes(search.toLowerCase())).map((l: any) => l.entityId);
-         if (matchedIds.length > 0) {
-            matchedIds.forEach((id: string) => url += `&id=${id}`);
-         } else {
-            url += `&id=none`;
-         }
+        const locRes = await fetch(`${DB_URI}/localizations?entityType=post`);
+        const allLocs = await locRes.json();
+        const matchedIds = allLocs.filter((l: any) => l.payload.toLowerCase().includes(search.toLowerCase())).map((l: any) => l.entityId);
+        if (matchedIds.length > 0) {
+          matchedIds.forEach((id: string) => url += `&id=${id}`);
+        } else {
+          url += `&id=none`;
+        }
       }
     }
 
@@ -89,7 +89,7 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error("Failed to fetch posts");
     const json = await res.json();
-    
+
     let rawPosts = Array.isArray(json) ? json : json.data || [];
 
     const posts: Post[] = [];
@@ -103,7 +103,7 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
   override async save(post: Post): Promise<Post> {
     // 1. Slugs
     if (post.slug) {
-      const slugRes = await fetch(`${DB_URL}/slugs?entityId=${post.id}&entityType=post`, { cache: "no-store" });
+      const slugRes = await fetch(`${DB_URI}/slugs?entityId=${post.id}&entityType=post`, { cache: "no-store" });
       const existing = await slugRes.json();
       const slugData = {
         name: post.slug,
@@ -112,13 +112,13 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
         userId: "user-1",
       };
       if (existing && existing.length > 0) {
-        await fetch(`${DB_URL}/slugs/${existing[0].id}`, {
+        await fetch(`${DB_URI}/slugs/${existing[0].id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...existing[0], ...slugData }),
         });
       } else {
-        await fetch(`${DB_URL}/slugs`, {
+        await fetch(`${DB_URI}/slugs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: `slug-${post.id}`, ...slugData }),
@@ -139,7 +139,7 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
     });
 
     // Ru localization
-    const ruRes = await fetch(`${DB_URL}/localizations?entityId=${post.id}&entityType=post&locale=ru`, { cache: "no-store" });
+    const ruRes = await fetch(`${DB_URI}/localizations?entityId=${post.id}&entityType=post&locale=ru`, { cache: "no-store" });
     const ruExist = await ruRes.json();
     const ruData = {
       locale: "ru",
@@ -149,13 +149,13 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
       userId: "user-1",
     };
     if (ruExist && ruExist.length > 0) {
-      await fetch(`${DB_URL}/localizations/${ruExist[0].id}`, {
+      await fetch(`${DB_URI}/localizations/${ruExist[0].id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...ruExist[0], ...ruData }),
       });
     } else {
-      await fetch(`${DB_URL}/localizations`, {
+      await fetch(`${DB_URI}/localizations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: `loc-${post.id}-ru`, ...ruData }),
@@ -163,7 +163,7 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
     }
 
     // En localization
-    const enRes = await fetch(`${DB_URL}/localizations?entityId=${post.id}&entityType=post&locale=en`, { cache: "no-store" });
+    const enRes = await fetch(`${DB_URI}/localizations?entityId=${post.id}&entityType=post&locale=en`, { cache: "no-store" });
     const enExist = await enRes.json();
     const enData = {
       locale: "en",
@@ -173,13 +173,13 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
       userId: "user-1",
     };
     if (enExist && enExist.length > 0) {
-      await fetch(`${DB_URL}/localizations/${enExist[0].id}`, {
+      await fetch(`${DB_URI}/localizations/${enExist[0].id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...enExist[0], ...enData }),
       });
     } else {
-      await fetch(`${DB_URL}/localizations`, {
+      await fetch(`${DB_URI}/localizations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: `loc-${post.id}-en`, ...enData }),
@@ -190,19 +190,19 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
     let posterId = "";
     if (post.poster) {
       posterId = post.poster.id;
-      const mRes = await fetch(`${DB_URL}/media/${posterId}`, { cache: "no-store" });
+      const mRes = await fetch(`${DB_URI}/media/${posterId}`, { cache: "no-store" });
       const mData = {
         ...post.poster,
         user: post.poster.user || { id: "user-1", email: "admin@example.com", name: "Admin" },
       };
       if (mRes.ok) {
-        await fetch(`${DB_URL}/media/${posterId}`, {
+        await fetch(`${DB_URI}/media/${posterId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(mData),
         });
       } else {
-        await fetch(`${DB_URL}/media`, {
+        await fetch(`${DB_URI}/media`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(mData),
@@ -214,19 +214,19 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
     if (Array.isArray(post.media)) {
       for (const pm of post.media) {
         const mId = pm.media.id;
-        const mRes = await fetch(`${DB_URL}/media/${mId}`, { cache: "no-store" });
+        const mRes = await fetch(`${DB_URI}/media/${mId}`, { cache: "no-store" });
         const mData = {
           ...pm.media,
           user: pm.media.user || { id: "user-1", email: "admin@example.com", name: "Admin" },
         };
         if (mRes.ok) {
-          await fetch(`${DB_URL}/media/${mId}`, {
+          await fetch(`${DB_URI}/media/${mId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(mData),
           });
         } else {
-          await fetch(`${DB_URL}/media`, {
+          await fetch(`${DB_URI}/media`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(mData),
@@ -253,22 +253,22 @@ export class PostRepository extends BaseRepository<Post> implements IPostReposit
       poster: posterId || undefined,
     };
 
-    const pCheck = await fetch(`${DB_URL}/posts/${post.id}`, { cache: "no-store" });
+    const pCheck = await fetch(`${DB_URI}/posts/${post.id}`, { cache: "no-store" });
     if (pCheck.ok) {
-      await fetch(`${DB_URL}/posts/${post.id}`, {
+      await fetch(`${DB_URI}/posts/${post.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rawPost),
       });
     } else {
-      await fetch(`${DB_URL}/posts`, {
+      await fetch(`${DB_URI}/posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rawPost),
       });
     }
 
-    const res = await fetch(`${DB_URL}/posts/${post.id}`, { cache: "no-store" });
+    const res = await fetch(`${DB_URI}/posts/${post.id}`, { cache: "no-store" });
     const rawData = await res.json();
     return populatePost(rawData);
   }

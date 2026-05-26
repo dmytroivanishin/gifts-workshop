@@ -71,7 +71,6 @@ export const seedCollection: Collection = {
   title: "Все коллекции",
   description: "Все работы",
   main: true,
-  slug: "all",
 };
 
 export const seedCategories: Category[] = [
@@ -82,7 +81,7 @@ export const seedCategories: Category[] = [
     order: 1,
     color: COLORS.cat1,
     collection: COLLECTION_ID,
-    slug: "plush-stories",
+    tags: [TAGS.tag1, TAGS.tag2, TAGS.tag3, TAGS.tag4],
   },
   {
     id: CATEGORIES.cat2,
@@ -91,7 +90,7 @@ export const seedCategories: Category[] = [
     order: 2,
     color: COLORS.cat2,
     collection: COLLECTION_ID,
-    slug: "dolls",
+    tags: [TAGS.tag2, TAGS.tag4, TAGS.tag5],
   },
   {
     id: CATEGORIES.cat3,
@@ -100,7 +99,7 @@ export const seedCategories: Category[] = [
     order: 3,
     color: COLORS.cat3,
     collection: COLLECTION_ID,
-    slug: "kitchen-comfort",
+    tags: [TAGS.tag6],
   },
   {
     id: CATEGORIES.cat4,
@@ -109,7 +108,7 @@ export const seedCategories: Category[] = [
     order: 4,
     color: COLORS.cat4,
     collection: COLLECTION_ID,
-    slug: "family-traditions",
+    tags: [TAGS.tag5, TAGS.tag7],
   },
   {
     id: CATEGORIES.cat5,
@@ -118,7 +117,7 @@ export const seedCategories: Category[] = [
     order: 5,
     color: COLORS.cat5,
     collection: COLLECTION_ID,
-    slug: "for-beloved-home",
+    tags: [],
   },
   {
     id: CATEGORIES.cat6,
@@ -127,18 +126,18 @@ export const seedCategories: Category[] = [
     order: 6,
     color: COLORS.cat6,
     collection: COLLECTION_ID,
-    slug: "joy-in-details",
+    tags: [],
   },
 ];
 
 export const seedTags: Tag[] = [
-  { id: TAGS.tag1, name: "bunny", slug: "bunny", categories: [CATEGORIES.cat1] },
-  { id: TAGS.tag2, name: "gift", slug: "gift", categories: [CATEGORIES.cat1, CATEGORIES.cat2] },
-  { id: TAGS.tag3, name: "giraffe", slug: "giraffe", categories: [CATEGORIES.cat1] },
-  { id: TAGS.tag4, name: "vintage", slug: "vintage", categories: [CATEGORIES.cat1, CATEGORIES.cat2] },
-  { id: TAGS.tag5, name: "miniature", slug: "miniature", categories: [CATEGORIES.cat2, CATEGORIES.cat4] },
-  { id: TAGS.tag6, name: "linen", slug: "linen", categories: [CATEGORIES.cat3] },
-  { id: TAGS.tag7, name: "quilt", slug: "quilt", categories: [CATEGORIES.cat4] },
+  { id: TAGS.tag1, name: " Bunny" },
+  { id: TAGS.tag2, name: "Gift" },
+  { id: TAGS.tag3, name: "Giraffe" },
+  { id: TAGS.tag4, name: "Vintage" },
+  { id: TAGS.tag5, name: "Miniature" },
+  { id: TAGS.tag6, name: "Linen" },
+  { id: TAGS.tag7, name: "Quilt" },
 ];
 
 export const seedPosts: Post[] = [
@@ -178,7 +177,6 @@ export const seedPosts: Post[] = [
         }
       }
     ],
-    slug: "dreamer-bunny",
   },
   {
     id: POSTS.item2,
@@ -207,7 +205,6 @@ export const seedPosts: Post[] = [
         position: { x: 0, y: 0, zoom: 1.0 }
       }
     ],
-    slug: "autumn-giraffe",
   },
   {
     id: POSTS.item3,
@@ -236,7 +233,6 @@ export const seedPosts: Post[] = [
         position: { x: -10, y: 5, zoom: 1.1 }
       }
     ],
-    slug: "bunny-on-a-chair",
   },
   {
     id: POSTS.item4,
@@ -265,7 +261,6 @@ export const seedPosts: Post[] = [
         position: { x: 0, y: 20, zoom: 1.25 }
       }
     ],
-    slug: "bunny-and-fairytale-house",
   },
   {
     id: POSTS.item5,
@@ -294,7 +289,6 @@ export const seedPosts: Post[] = [
         position: { x: 0, y: 0, zoom: 1.0 }
       }
     ],
-    slug: "cozy-kitchen-set",
   },
   {
     id: POSTS.item6,
@@ -323,6 +317,5 @@ export const seedPosts: Post[] = [
         position: { x: 0, y: -10, zoom: 1.1 }
       }
     ],
-    slug: "family-quilt",
   },
 ];

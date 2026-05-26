@@ -75,10 +75,27 @@ export class PostService implements IPostService {
             const newTag = await this.tagRepo.save({
               id: tagId,
               name: t,
-              categories: categoryDetail && typeof categoryDetail === "object" ? [categoryDetail.id] : [],
               slug: tagSlug
             });
             tagsList.push(newTag);
+
+            // Associate with category
+            if (categoryDetail && typeof categoryDetail === "object") {
+              const catObj = await this.categoryRepo.getById(categoryDetail.id);
+              if (catObj) {
+                const catTags: string[] = Array.isArray(catObj.tags)
+                  ? catObj.tags.map((ct: any) => typeof ct === "string" ? ct : ct.id)
+                  : [];
+                const tagIdStr = newTag.id;
+                const hasTag = catTags.includes(tagIdStr);
+                if (!hasTag) {
+                  await this.categoryRepo.save({
+                    ...catObj,
+                    tags: [...catTags, tagIdStr],
+                  });
+                }
+              }
+            }
           }
         } else if (t && typeof t === "object") {
           const tagId = t.id || randomUUID();
@@ -86,10 +103,27 @@ export class PostService implements IPostService {
           const savedTag = await this.tagRepo.save({
             id: tagId,
             name: t.name,
-            categories: t.categories || (categoryDetail && typeof categoryDetail === "object" ? [categoryDetail.id] : []),
             slug: tagSlug
           });
           tagsList.push(savedTag);
+
+          // Associate with category
+          if (categoryDetail && typeof categoryDetail === "object") {
+            const catObj = await this.categoryRepo.getById(categoryDetail.id);
+            if (catObj) {
+              const catTags: string[] = Array.isArray(catObj.tags)
+                ? catObj.tags.map((ct: any) => typeof ct === "string" ? ct : ct.id)
+                : [];
+              const tagIdStr = savedTag.id;
+              const hasTag = catTags.includes(tagIdStr);
+              if (!hasTag) {
+                await this.categoryRepo.save({
+                  ...catObj,
+                  tags: [...catTags, tagIdStr],
+                });
+              }
+            }
+          }
         }
       }
     }
@@ -153,10 +187,27 @@ export class PostService implements IPostService {
             const newTag = await this.tagRepo.save({
               id: tagId,
               name: t,
-              categories: categoryDetail && typeof categoryDetail === "object" ? [categoryDetail.id] : [],
               slug: tagSlug
             });
             tagsList.push(newTag);
+
+            // Associate with category
+            if (categoryDetail && typeof categoryDetail === "object") {
+              const catObj = await this.categoryRepo.getById(categoryDetail.id);
+              if (catObj) {
+                const catTags: string[] = Array.isArray(catObj.tags)
+                  ? catObj.tags.map((ct: any) => typeof ct === "string" ? ct : ct.id)
+                  : [];
+                const tagIdStr = newTag.id;
+                const hasTag = catTags.includes(tagIdStr);
+                if (!hasTag) {
+                  await this.categoryRepo.save({
+                    ...catObj,
+                    tags: [...catTags, tagIdStr],
+                  });
+                }
+              }
+            }
           }
         } else if (t && typeof t === "object") {
           const tagId = t.id || randomUUID();
@@ -164,10 +215,27 @@ export class PostService implements IPostService {
           const savedTag = await this.tagRepo.save({
             id: tagId,
             name: t.name,
-            categories: t.categories || (categoryDetail && typeof categoryDetail === "object" ? [categoryDetail.id] : []),
             slug: tagSlug
           });
           tagsList.push(savedTag);
+
+          // Associate with category
+          if (categoryDetail && typeof categoryDetail === "object") {
+            const catObj = await this.categoryRepo.getById(categoryDetail.id);
+            if (catObj) {
+              const catTags: string[] = Array.isArray(catObj.tags)
+                ? catObj.tags.map((ct: any) => typeof ct === "string" ? ct : ct.id)
+                : [];
+              const tagIdStr = savedTag.id;
+              const hasTag = catTags.includes(tagIdStr);
+              if (!hasTag) {
+                await this.categoryRepo.save({
+                  ...catObj,
+                  tags: [...catTags, tagIdStr],
+                });
+              }
+            }
+          }
         }
       }
     } else {

@@ -198,17 +198,22 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     label: typeof cat.title === "string" ? cat.title : cat.title?.ru || "",
   }));
 
+  const activeCategory = categories.find((cat) => cat.id === categoryId);
+
   const tagOptions = [...allTags]
     .sort((a, b) => {
-      const aMatches = categoryId && a.categories?.includes(categoryId) ? 1 : 0;
-      const bMatches = categoryId && b.categories?.includes(categoryId) ? 1 : 0;
+      const aMatches = activeCategory?.tags?.some((t: any) => (typeof t === "string" ? t : t.id) === a.id) ? 1 : 0;
+      const bMatches = activeCategory?.tags?.some((t: any) => (typeof t === "string" ? t : t.id) === b.id) ? 1 : 0;
       if (aMatches !== bMatches) return bMatches - aMatches;
       return a.name.localeCompare(b.name);
     })
-    .map((tag) => ({
-      value: tag.name,
-      label: categoryId && tag.categories?.includes(categoryId) ? `${tag.name} (★)` : tag.name,
-    }));
+    .map((tag) => {
+      const isStarred = activeCategory?.tags?.some((t: any) => (typeof t === "string" ? t : t.id) === tag.id);
+      return {
+        value: tag.name,
+        label: isStarred ? `${tag.name} (★)` : tag.name,
+      };
+    });
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 font-sans">

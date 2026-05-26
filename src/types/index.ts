@@ -34,14 +34,13 @@ export interface Category {
   parent?: Category | string;
   color?: Color | string;
   collection: Collection | string;
-  tags?: any[]; // Array of Tag references or IDs
+  tags?: Tag[] | string[]; // Array of Tag references or IDs
   slug?: string;
 }
 
 export interface Tag {
   readonly id: string;
   name: string;
-  categories: string[]; // Array of Category IDs
   slug?: string;
 }
 

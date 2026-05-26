@@ -1,6 +1,7 @@
 import { Post, Category, Collection, Tag, Media, Color, Slug, Localization, PostMedia } from "@/types";
+import { Database } from "./baseRepository";
 
-const DB_URL = process.env.DB_URL || "http://localhost:3001";
+const DB_URI = Database.getUri();
 
 function parsePayload(payload: any) {
   if (!payload) return {};
@@ -16,7 +17,7 @@ function parsePayload(payload: any) {
 
 async function fetchFromDb(endpoint: string) {
   try {
-    const res = await fetch(`${DB_URL}${endpoint}`, { cache: "no-store" });
+    const res = await fetch(`${DB_URI}${endpoint}`, { cache: "no-store" });
     if (!res.ok) return null;
     return await res.json();
   } catch (e) {
@@ -129,6 +130,21 @@ export async function populateCategory(raw: any): Promise<Category> {
     }
   }
 
+  // Resolve tags
+  let tags: Tag[] = [];
+  if (Array.isArray(raw.tags)) {
+    for (const t of raw.tags) {
+      if (typeof t === "string") {
+        const foundTag = await fetchFromDb(`/tags/${t}`);
+        if (foundTag) {
+          tags.push(await populateTag(foundTag));
+        }
+      } else if (t && typeof t === "object") {
+        tags.push(await populateTag(t));
+      }
+    }
+  }
+
   return {
     ...raw,
     title: raw.title && typeof raw.title === "object" ? raw.title : title,
@@ -136,6 +152,7 @@ export async function populateCategory(raw: any): Promise<Category> {
     color,
     collection,
     parent,
+    tags,
     slug,
   };
 }
@@ -239,8 +256,8 @@ export async function populatePost(raw: any): Promise<Post> {
       } else if (mediaItem && typeof mediaItem.id === "string") {
         const foundMedia = await fetchFromDb(`/media/${mediaItem.id}`);
         if (foundMedia) {
-           mediaItem.originalUrl = foundMedia.originalUrl;
-           mediaItem.thumbnailUrl = foundMedia.thumbnailUrl;
+          mediaItem.originalUrl = foundMedia.originalUrl;
+          mediaItem.thumbnailUrl = foundMedia.thumbnailUrl;
         }
       }
       mediaList.push({

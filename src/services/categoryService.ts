@@ -55,20 +55,19 @@ export class CategoryService implements ICategoryService {
 
     // Process Tags
     const allTags = await this.tagRepo.getAll();
-    let tagsList: any[] = [];
+    let tagsList: string[] = [];
     if (Array.isArray(body.tags)) {
       for (const t of body.tags) {
         if (typeof t === "string") {
           const foundTag = allTags.find((tag) => tag.id === t || tag.slug === t || tag.name.toLowerCase() === t.toLowerCase());
           if (foundTag) {
-            tagsList.push(foundTag.id || foundTag);
+            tagsList.push(foundTag.id);
           } else {
             const tagId = randomUUID();
             const tagSlug = await this.slugService.generateUniqueSlug(t, tagId, "tag");
             const newTag = await this.tagRepo.save({
               id: tagId,
               name: t,
-              categories: [id],
               slug: tagSlug
             });
             tagsList.push(newTag.id);
@@ -79,7 +78,6 @@ export class CategoryService implements ICategoryService {
           const savedTag = await this.tagRepo.save({
             id: tagId,
             name: t.name,
-            categories: t.categories || [id],
             slug: tagSlug
           });
           tagsList.push(savedTag.id);
@@ -89,7 +87,7 @@ export class CategoryService implements ICategoryService {
       // Keep existing tags if updating without modifying tags
       const existing = await this.categoryRepo.getById(id);
       if (existing && existing.tags) {
-        tagsList = existing.tags;
+        tagsList = existing.tags.map((t: any) => typeof t === "string" ? t : t.id);
       }
     }
 

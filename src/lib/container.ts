@@ -1,3 +1,19 @@
+import { Database } from "@/repositories/baseRepository";
+
+// Initialize Database connection using environment variables
+const dbUri = process.env.DB_URI || "http://localhost";
+const dbPort = process.env.DB_PORT || 3001;
+const dbName = process.env.DB_NAME || "portfolio";
+const dbUser = process.env.DB_USER || "";
+const dbPassword = process.env.DB_PASSWORD || "";
+
+Database.connect(dbUri, {
+  port: dbPort,
+  dbName,
+  user: dbUser,
+  password: dbPassword
+});
+
 import { CategoryRepository } from "@/repositories/categoryRepository";
 import { CollectionRepository } from "@/repositories/collectionRepository";
 import { ColorRepository } from "@/repositories/colorRepository";
@@ -46,7 +62,7 @@ export const categoryService = new CategoryService(categoryRepository, slugServi
 export const collectionService = new CollectionService(collectionRepository, slugService);
 export const localizationService = new LocalizationService(localizationRepository);
 export const mediaService = new MediaService(mediaRepository, postRepository);
-export const tagService = new TagService(tagRepository, slugService);
+export const tagService = new TagService(tagRepository, slugService, categoryRepository);
 export const userService = new UserService(userRepository);
 export const postService = new PostService(postRepository, categoryRepository, tagRepository, collectionRepository, slugService);
 
