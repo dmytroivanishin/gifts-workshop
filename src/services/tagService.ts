@@ -2,7 +2,7 @@ import { ITagRepository, ICategoryRepository } from "@/repositories/interfaces";
 import { ITagService } from "./interfaces";
 import { Tag } from "@/types";
 import { randomUUID } from "crypto";
-import { generateSlugFromField } from "@/lib/slug";
+import { generateSlugFromField, generateUniqueSlug } from "@/lib/slug";
 
 import { paginate } from "./pagination";
 
@@ -38,17 +38,7 @@ export class TagService implements ITagService {
     
     let slug = body.slug;
     if (!slug) {
-      const baseSlug = await generateSlugFromField(tName);
-      slug = baseSlug;
-      let suffix = 1;
-      while (true) {
-        const existing = await this.tagRepo.getBySlug(slug);
-        if (!existing || existing.id === id) {
-          break;
-        }
-        slug = `${baseSlug}-${suffix}`;
-        suffix++;
-      }
+      slug = await generateUniqueSlug(tName, id, this.tagRepo.getBySlug.bind(this.tagRepo));
     }
 
     const tag: Tag = {
@@ -65,18 +55,16 @@ export class TagService implements ITagService {
     if (this.categoryRepo) {
       try {
         const categories = await this.categoryRepo.getAll();
-        for (const cat of categories) {
-          if (Array.isArray(cat.tagsIds)) {
-            const hasTag = cat.tagsIds.includes(id);
-            if (hasTag) {
-              const updatedTags = cat.tagsIds.filter((t) => t !== id);
-              await this.categoryRepo.save({
+        await Promise.all(
+          categories
+            .filter((cat) => Array.isArray(cat.tagsIds) && cat.tagsIds.includes(id))
+            .map((cat) =>
+              this.categoryRepo!.save({
                 ...cat,
-                tagsIds: updatedTags,
-              });
-            }
-          }
-        }
+                tagsIds: cat.tagsIds!.filter((t) => t !== id),
+              })
+            )
+        );
       } catch (err) {
         console.error("Failed to cleanup categories on tag delete", err);
       }

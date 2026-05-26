@@ -1,15 +1,16 @@
-import { BaseRepository, repositoryRegistry } from "./baseRepository";
+import { BaseRepository, registerRepository } from "./baseRepository";
 import { IUserRepository } from "./interfaces";
 import { User } from "@/types";
 
 export class UserRepository extends BaseRepository<User> implements IUserRepository {
   constructor() {
     super("users");
-    repositoryRegistry.user = this;
+    registerRepository("users", this);
   }
 
   async getByEmail(email: string): Promise<User | undefined> {
-    const all = await this.getAll();
-    return all.find((u: User) => u.email === email);
+    const recs = await this.getByQuery({ email });
+    if (!recs || recs.length === 0) return undefined;
+    return recs[0];
   }
 }

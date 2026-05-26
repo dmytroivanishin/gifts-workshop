@@ -72,3 +72,22 @@ export async function generateSlugFromField(field: string | { ru?: string; en?: 
   
   return `slug-${Date.now()}`;
 }
+
+export async function generateUniqueSlug(
+  field: string | { ru?: string; en?: string } | undefined,
+  currentId: string,
+  getBySlug: (slug: string) => Promise<{ id: string } | null | undefined>
+): Promise<string> {
+  const baseSlug = await generateSlugFromField(field);
+  let slug = baseSlug;
+  let suffix = 1;
+  while (true) {
+    const existing = await getBySlug(slug);
+    if (!existing || existing.id === currentId) {
+      break;
+    }
+    slug = `${baseSlug}-${suffix}`;
+    suffix++;
+  }
+  return slug;
+}

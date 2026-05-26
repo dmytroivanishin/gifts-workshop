@@ -2,8 +2,8 @@ import { IMediaRepository, IPostRepository } from "@/repositories/interfaces";
 import { IMediaService } from "./interfaces";
 import { Media, Post } from "@/types";
 import { randomUUID } from "crypto";
-
 import { paginate } from "./pagination";
+import { ConflictError } from "@/common/errors/conflict";
 
 export class MediaService implements IMediaService {
   constructor(
@@ -43,7 +43,7 @@ export class MediaService implements IMediaService {
     const mediaPosts = await this.postRepo.getByQuery({ "media.media": id });
 
     if (posterPosts.length > 0 || mediaPosts.length > 0) {
-      throw new Error("Cannot delete media that is in use by a post.");
+      throw new ConflictError("Cannot delete media that is in use by a post.");
     }
 
     return this.mediaRepo.delete(id);

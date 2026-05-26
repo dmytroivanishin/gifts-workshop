@@ -18,6 +18,7 @@ interface ComboboxProps {
   createLabel?: string;
   multiple?: boolean;
   className?: string;
+  onCreate?: (search: string) => Promise<string>;
 }
 
 export default function Combobox({
@@ -30,6 +31,7 @@ export default function Combobox({
   createLabel = 'Create new option: "{search}"',
   multiple = false,
   className = "",
+  onCreate,
 }: ComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -79,7 +81,7 @@ export default function Combobox({
     onChange(selectedValues.filter((v) => v !== val));
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!search || !allowCreate) return;
     const trimmed = search.trim();
     if (!trimmed) return;
@@ -88,8 +90,16 @@ export default function Combobox({
     const exists = options.find((opt) => opt.label.toLowerCase() === trimmed.toLowerCase());
     if (exists) {
       handleSelect(exists.value);
+    } else if (onCreate) {
+      try {
+        const newId = await onCreate(trimmed);
+        if (newId) {
+          handleSelect(newId);
+        }
+      } catch (err) {
+        console.error("Failed to create option inside Combobox", err);
+      }
     } else {
-      // Pass the raw string back up. The service layer/form handles generating a safe database ID.
       handleSelect(trimmed);
     }
     setSearch("");

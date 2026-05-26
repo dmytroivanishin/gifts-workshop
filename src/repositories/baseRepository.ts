@@ -1,23 +1,11 @@
 import { PaginationOptions } from "@/types";
-import {
-  ICategoryRepository,
-  ICollectionRepository,
-  IColorRepository,
-  IMediaRepository,
-  IPostRepository,
-  ITagRepository,
-  IUserRepository,
-} from "./interfaces";
+import { InternalServerError } from "@/common/errors/internalServer";
 
-export const repositoryRegistry: {
-  category?: ICategoryRepository;
-  collection?: ICollectionRepository;
-  color?: IColorRepository;
-  media?: IMediaRepository;
-  post?: IPostRepository;
-  tag?: ITagRepository;
-  user?: IUserRepository;
-} = {};
+export const repositoryRegistry: Record<string, any> = {};
+
+export function registerRepository(name: string, repo: any) {
+  repositoryRegistry[name] = repo;
+}
 
 export class Database {
   private static uri: string = "http://localhost:3001";
@@ -57,7 +45,7 @@ export class Database {
   }
 }
 
-export class BaseRepository<T extends { id: string }> {
+export class BaseRepository<T extends { id: string }, TPopulated = T> {
   constructor(protected collectionName: string) { }
 
   protected getUrl(id?: string): string {
@@ -65,15 +53,15 @@ export class BaseRepository<T extends { id: string }> {
     return id ? `${base}/${this.collectionName}/${id}` : `${base}/${this.collectionName}`;
   }
 
-  protected async populate(item: any): Promise<T> {
+  protected async populate(item: T): Promise<TPopulated> {
+    return item as unknown as TPopulated;
+  }
+
+  protected serialize(item: any): T {
     return item as T;
   }
 
-  protected serialize(item: T): any {
-    return item;
-  }
-
-  async getAll(options?: PaginationOptions): Promise<T[]> {
+  async getAll(options?: PaginationOptions): Promise<TPopulated[]> {
     let url = this.getUrl();
     if (options?.page || options?.limit) {
       const params = new URLSearchParams();
@@ -84,25 +72,25 @@ export class BaseRepository<T extends { id: string }> {
 
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
-      throw new Error(`Failed to fetch all from ${this.collectionName}`);
+      throw new InternalServerError(`Failed to fetch all from ${this.collectionName}`);
     }
 
     const data = await res.json();
-    const rawItems = Array.isArray(data) ? data : data.data || [];
-    return Promise.all(rawItems.map((item: any) => this.populate(item)));
+    const rawItems: T[] = Array.isArray(data) ? data : data.data || [];
+    return Promise.all(rawItems.map(item => this.populate(item)));
   }
 
-  async getById(id: string): Promise<T | undefined> {
+  async getById(id: string): Promise<TPopulated | undefined> {
     const res = await fetch(this.getUrl(id), { cache: "no-store" });
     if (res.status === 404) return undefined;
     if (!res.ok) {
-      throw new Error(`Failed to fetch by id from ${this.collectionName}`);
+      throw new InternalServerError(`Failed to fetch by id from ${this.collectionName}`);
     }
     const raw = await res.json();
     return this.populate(raw);
   }
 
-  async getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<T[]> {
+  async getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<TPopulated[]> {
     const params = new URLSearchParams();
     Object.entries(query).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -118,36 +106,36 @@ export class BaseRepository<T extends { id: string }> {
 
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
-      throw new Error(`Failed to fetch by query from ${this.collectionName}`);
+      throw new InternalServerError(`Failed to fetch by query from ${this.collectionName}`);
     }
 
     const data = await res.json();
-    const rawItems = Array.isArray(data) ? data : data.data || [];
-    return Promise.all(rawItems.map((item: any) => this.populate(item)));
+    const rawItems: T[] = Array.isArray(data) ? data : data.data || [];
+    return Promise.all(rawItems.map(item => this.populate(item)));
   }
 
-  async save(item: T): Promise<T> {
-    const serialized = this.serialize(item);
-    const check = await fetch(this.getUrl(item.id), { method: "GET", cache: "no-store" });
+  async save(item: any): Promise<TPopulated> {
+    const flatItem = this.serialize(item);
+    const check = await fetch(this.getUrl(flatItem.id), { method: "GET", cache: "no-store" });
     let res;
     if (check.ok) {
-      res = await fetch(this.getUrl(item.id), {
+      res = await fetch(this.getUrl(flatItem.id), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(serialized),
+        body: JSON.stringify(flatItem),
       });
     } else {
       res = await fetch(this.getUrl(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(serialized),
+        body: JSON.stringify(flatItem),
       });
     }
     if (!res.ok) {
-      throw new Error(`Failed to save item in ${this.collectionName}`);
+      throw new InternalServerError(`Failed to save item in ${this.collectionName}`);
     }
-    const raw = await res.json();
-    return this.populate(raw);
+    const savedRaw = await res.json();
+    return this.populate(savedRaw);
   }
 
   async delete(id: string): Promise<boolean> {

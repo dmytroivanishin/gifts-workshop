@@ -1,49 +1,50 @@
-import { BaseRepository, repositoryRegistry } from "./baseRepository";
+import { BaseRepository, registerRepository, repositoryRegistry } from "./baseRepository";
 import { ICategoryRepository } from "./interfaces";
-import { Category, Tag } from "@/types";
+import { Category, PopulatedCategory, Tag } from "@/types";
+import { NotFoundError } from "@/common/errors/notFound";
 
-export class CategoryRepository extends BaseRepository<Category> implements ICategoryRepository {
+export class CategoryRepository extends BaseRepository<Category, PopulatedCategory> implements ICategoryRepository {
   constructor() {
     super("categories");
-    repositoryRegistry.category = this;
+    registerRepository("categories", this);
   }
 
-  protected override async populate(raw: any): Promise<Category> {
-    if (!raw) return raw;
+  async getBySlug(slug: string): Promise<PopulatedCategory | undefined> {
+    const recs = await this.getByQuery({ slug });
+    if (!recs || recs.length === 0) return undefined;
+    return recs[0];
+  }
 
-    // Resolve color
+  protected async populate(cat: Category): Promise<PopulatedCategory> {
+    const colorRepo = repositoryRegistry["colors"];
+    const collectionRepo = repositoryRegistry["collections"];
+    const tagRepo = repositoryRegistry["tags"];
+
+    // 1. Color
     let color = undefined;
-    if (typeof raw.colorId === "string" && repositoryRegistry.color) {
-      color = await repositoryRegistry.color.getById(raw.colorId);
+    if (cat.colorId && colorRepo) {
+      color = await colorRepo.getById(cat.colorId);
     }
 
-    // Resolve collection
+    // 2. Collection (Strict check!)
     let collection = undefined;
-    if (typeof raw.collectionId === "string" && raw.collectionId !== "all" && repositoryRegistry.collection) {
-      collection = await repositoryRegistry.collection.getById(raw.collectionId);
+    if (cat.collectionId && collectionRepo) {
+      collection = await collectionRepo.getById(cat.collectionId);
+    }
+    if (!collection) {
+      throw new NotFoundError(`Collection with ID ${cat.collectionId} not found for category ${cat.id}`);
     }
 
-    // Resolve parent
-    let parent = undefined;
-    if (typeof raw.parentId === "string") {
-      parent = await this.getById(raw.parentId);
-    }
+    // 3. Parent category (Omitted to prevent N+1 DB queries; UI tree construction)
+    const parent = undefined;
 
-    // Resolve tags
-    let tags: Tag[] = [];
-    if (Array.isArray(raw.tagsIds) && repositoryRegistry.tag) {
-      for (const tId of raw.tagsIds) {
-        if (typeof tId === "string") {
-          const foundTag = await repositoryRegistry.tag.getById(tId);
-          if (foundTag) {
-            tags.push(foundTag);
-          }
-        }
-      }
-    }
+    // 4. Tags
+    const tags = (cat.tagsIds && tagRepo)
+      ? (await Promise.all(cat.tagsIds.map(id => tagRepo.getById(id)))).filter((t): t is Tag => !!t)
+      : [];
 
     return {
-      ...raw,
+      ...cat,
       color,
       collection,
       parent,
@@ -51,25 +52,31 @@ export class CategoryRepository extends BaseRepository<Category> implements ICat
     };
   }
 
-  protected override serialize(category: Category): any {
-    const cat = category as any;
-    return {
-      id: cat.id,
-      title: cat.title,
-      description: cat.description,
-      slug: cat.slug,
-      order: cat.order,
-      colorId: cat.colorId || (cat.color ? cat.color.id : undefined),
-      collectionId: cat.collectionId || (cat.collection ? cat.collection.id : "all"),
-      parentId: cat.parentId || (cat.parent ? cat.parent.id : undefined),
-      tagsIds: cat.tagsIds || (cat.tags ? cat.tags.map((t: any) => t.id) : []),
-      userId: cat.userId || "user-1",
-    };
-  }
+  protected serialize(item: any): Category {
+    const raw: any = { ...item };
 
-  async getBySlug(slug: string): Promise<Category | undefined> {
-    const recs = await this.getByQuery({ slug });
-    if (!recs || recs.length === 0) return undefined;
-    return recs[0];
+    // Extricate relation fields
+    const colorId = raw.colorId || (raw.color ? (typeof raw.color === "string" ? raw.color : raw.color.id) : undefined);
+    const collectionId = raw.collectionId || (raw.collection ? (typeof raw.collection === "string" ? raw.collection : raw.collection.id) : "all");
+    const parentId = raw.parentId || (raw.parent ? (typeof raw.parent === "string" ? raw.parent : raw.parent.id) : undefined);
+
+    let tagsIds = raw.tagsIds;
+    if (Array.isArray(raw.tags)) {
+      tagsIds = raw.tags.map((t: any) => typeof t === "string" ? t : t.id);
+    }
+
+    // Clean relation keys
+    delete raw.color;
+    delete raw.collection;
+    delete raw.parent;
+    delete raw.tags;
+
+    return {
+      ...raw,
+      colorId,
+      collectionId,
+      parentId,
+      tagsIds,
+    };
   }
 }

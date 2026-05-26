@@ -1,5 +1,4 @@
-import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions } from "@/types";
-
+import { Category, PopulatedCategory, Collection, Color, Media, Post, PopulatedPost, Tag, User, PaginationOptions } from "@/types";
 
 export interface QueryOptions extends PaginationOptions {
   search?: string;
@@ -9,13 +8,19 @@ export interface QueryOptions extends PaginationOptions {
   status?: string;
   collectionSlug?: string;
   postSlug?: string;
+  
+  // Database-native flat fields for repository querying
+  categoryId?: string;
+  collectionId?: string;
+  tagsIds?: string;
+  slug?: string;
 }
 
 export interface ICategoryRepository {
-  getAll(options?: PaginationOptions): Promise<Category[]>;
-  getById(id: string): Promise<Category | undefined>;
-  getBySlug(slug: string): Promise<Category | undefined>;
-  save(category: Category): Promise<Category>;
+  getAll(options?: PaginationOptions): Promise<PopulatedCategory[]>;
+  getById(id: string): Promise<PopulatedCategory | undefined>;
+  getBySlug(slug: string): Promise<PopulatedCategory | undefined>;
+  save(category: Category): Promise<PopulatedCategory>;
   delete(id: string): Promise<boolean>;
 }
 
@@ -42,12 +47,12 @@ export interface IMediaRepository {
 }
 
 export interface IPostRepository {
-  getAll(options?: QueryOptions): Promise<Post[]>;
-  getById(id: string): Promise<Post | undefined>;
-  getBySlug(slug: string): Promise<Post | undefined>;
-  save(post: Post): Promise<Post>;
+  getAll(options?: QueryOptions): Promise<PopulatedPost[]>;
+  getById(id: string): Promise<PopulatedPost | undefined>;
+  getBySlug(slug: string): Promise<PopulatedPost | undefined>;
+  save(post: Post): Promise<PopulatedPost>;
   delete(id: string): Promise<boolean>;
-  getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<Post[]>;
+  getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedPost[]>;
 }
 
 export interface ITagRepository {
@@ -65,4 +70,3 @@ export interface IUserRepository {
   save(user: User): Promise<User>;
   delete(id: string): Promise<boolean>;
 }
-

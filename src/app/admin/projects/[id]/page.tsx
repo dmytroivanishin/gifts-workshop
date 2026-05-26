@@ -10,6 +10,7 @@ import {
   useGetPostByIdQuery,
   useGetCategoriesQuery,
   useGetTagsQuery,
+  useCreateTagMutation,
 } from "@/store/api";
 import ImageCropModal from "@/components/shared/ImageCropModal";
 import MediaPickerModal from "@/components/shared/MediaPickerModal";
@@ -40,6 +41,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   });
   const { data: categoriesResponse } = useGetCategoriesQuery();
   const { data: tagsResponse } = useGetTagsQuery();
+  const [createTag] = useCreateTagMutation();
 
   const categories = categoriesResponse?.data || [];
   const allTags = tagsResponse?.data || [];
@@ -59,6 +61,18 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
   const [activeCropMediaId, setActiveCropMediaId] = useState<string | null>(null);
+
+  const handleCreateTag = async (name: string) => {
+    try {
+      const res = await createTag({
+        title: { ru: name, en: "" },
+      }).unwrap();
+      return res.data.id;
+    } catch (err) {
+      console.error("Failed to create tag dynamically", err);
+      return "";
+    }
+  };
 
   // Populate form if in Edit Mode
   useEffect(() => {
@@ -88,8 +102,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       }
 
       if (post.tags) {
-        const tagNames = post.tags.map((t: any) => typeof t === "string" ? t : (t.title?.ru || t.title?.en || t.title || ""));
-        setSelectedTags(tagNames);
+        const tagIds = post.tags.map((t: any) => typeof t === "string" ? t : t.id);
+        setSelectedTags(tagIds);
       }
     }
   }, [isEditMode, postResponse]);
@@ -158,12 +172,12 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     const payload = {
       title: { ru: title, en: existingEnTitle || "" },
       description: { ru: description, en: existingEnDesc || "" },
-      category: categoryId,
+      categoryId,
       in_stock: inStock,
       status: status as any,
       media,
       poster,
-      tags: selectedTags,
+      tagsIds: selectedTags,
     };
 
     try {
@@ -213,7 +227,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       const isStarred = activeCategory?.tagsIds?.includes(tag.id);
       const tagTitle = tag.title?.ru || tag.title?.en || (typeof tag.title === "string" ? tag.title : "");
       return {
-        value: tagTitle,
+        value: tag.id,
         label: isStarred ? `${tagTitle} (★)` : tagTitle,
       };
     });
@@ -302,6 +316,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
               allowCreate
               createLabel='Add new tag "{search}"'
               multiple
+              onCreate={handleCreateTag}
             />
           </div>
 

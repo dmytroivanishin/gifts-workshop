@@ -2,16 +2,26 @@
 
 import { useState } from "react";
 import { Plus, Edit, Save, X, Loader2 } from "lucide-react";
-import { useGetCategoriesQuery, useCreateCategoryMutation, useGetTagsQuery } from "@/store/api";
+import { 
+  useGetCategoriesQuery, 
+  useCreateCategoryMutation, 
+  useGetTagsQuery,
+  useCreateTagMutation 
+} from "@/store/api";
 import Combobox from "@/components/ui/combobox";
 
 export default function AdminCategories() {
   const { data: categoriesResponse, isLoading } = useGetCategoriesQuery();
   const { data: tagsResponse } = useGetTagsQuery();
   const [saveCategory, { isLoading: isSaving }] = useCreateCategoryMutation();
+  const [createTag] = useCreateTagMutation();
+
   const categories = categoriesResponse?.data || [];
   const allTags = tagsResponse?.data || [];
-  const tagOptions = allTags.map((tag: any) => ({ value: tag.name, label: tag.name }));
+  const tagOptions = allTags.map((tag: any) => ({ 
+    value: tag.id, 
+    label: tag.title?.ru || tag.title?.en || tag.title || "" 
+  }));
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
 
@@ -27,6 +37,18 @@ export default function AdminCategories() {
   const [editColor, setEditColor] = useState("");
   const [activeCategoryObj, setActiveCategoryObj] = useState<any>(null);
 
+  const handleCreateTag = async (name: string) => {
+    try {
+      const res = await createTag({
+        title: { ru: name, en: "" },
+      }).unwrap();
+      return res.data.id;
+    } catch (err) {
+      console.error("Failed to create tag dynamically", err);
+      return "";
+    }
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) return;
@@ -37,7 +59,7 @@ export default function AdminCategories() {
         description: { ru: description, en: "" },
         color: { id: `color-${Date.now()}`, color: color },
         collection: "all",
-        tags: selectedTags,
+        tagsIds: selectedTags,
       }).unwrap();
 
       setTitle("");
@@ -235,6 +257,7 @@ export default function AdminCategories() {
                 allowCreate
                 createLabel='Add new tag "{search}"'
                 multiple
+                onCreate={handleCreateTag}
               />
             </div>
 
