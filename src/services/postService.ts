@@ -65,7 +65,12 @@ export class PostService implements IPostService {
     if (Array.isArray(body.tags)) {
       for (const t of body.tags) {
         if (typeof t === "string") {
-          const foundTag = allTags.find((tag) => tag.id === t || tag.slug === t || tag.name.toLowerCase() === t.toLowerCase());
+          const foundTag = allTags.find((tag) => 
+            tag.id === t || 
+            tag.slug === t || 
+            tag.title?.ru?.toLowerCase() === t.toLowerCase() ||
+            tag.title?.en?.toLowerCase() === t.toLowerCase()
+          );
           if (foundTag) {
             tagsList.push(foundTag);
           } else {
@@ -74,7 +79,7 @@ export class PostService implements IPostService {
             const tagSlug = await this.slugService.generateUniqueSlug(t, tagId, "tag");
             const newTag = await this.tagRepo.save({
               id: tagId,
-              name: t,
+              title: { ru: t, en: t },
               slug: tagSlug
             });
             tagsList.push(newTag);
@@ -83,15 +88,13 @@ export class PostService implements IPostService {
             if (categoryDetail && typeof categoryDetail === "object") {
               const catObj = await this.categoryRepo.getById(categoryDetail.id);
               if (catObj) {
-                const catTags: string[] = Array.isArray(catObj.tags)
-                  ? catObj.tags.map((ct: any) => typeof ct === "string" ? ct : ct.id)
-                  : [];
+                const catTags: string[] = Array.isArray(catObj.tagsIds) ? catObj.tagsIds : [];
                 const tagIdStr = newTag.id;
                 const hasTag = catTags.includes(tagIdStr);
                 if (!hasTag) {
                   await this.categoryRepo.save({
                     ...catObj,
-                    tags: [...catTags, tagIdStr],
+                    tagsIds: [...catTags, tagIdStr],
                   });
                 }
               }
@@ -99,10 +102,11 @@ export class PostService implements IPostService {
           }
         } else if (t && typeof t === "object") {
           const tagId = t.id || randomUUID();
-          const tagSlug = t.slug || await this.slugService.generateUniqueSlug(t.name, tagId, "tag");
+          const tName = t.name || t.title?.ru || t.title || "";
+          const tagSlug = t.slug || await this.slugService.generateUniqueSlug(tName, tagId, "tag");
           const savedTag = await this.tagRepo.save({
             id: tagId,
-            name: t.name,
+            title: typeof t.title === "object" ? t.title : { ru: tName, en: tName },
             slug: tagSlug
           });
           tagsList.push(savedTag);
@@ -111,15 +115,13 @@ export class PostService implements IPostService {
           if (categoryDetail && typeof categoryDetail === "object") {
             const catObj = await this.categoryRepo.getById(categoryDetail.id);
             if (catObj) {
-              const catTags: string[] = Array.isArray(catObj.tags)
-                ? catObj.tags.map((ct: any) => typeof ct === "string" ? ct : ct.id)
-                : [];
+              const catTags: string[] = Array.isArray(catObj.tagsIds) ? catObj.tagsIds : [];
               const tagIdStr = savedTag.id;
               const hasTag = catTags.includes(tagIdStr);
               if (!hasTag) {
                 await this.categoryRepo.save({
                   ...catObj,
-                  tags: [...catTags, tagIdStr],
+                  tagsIds: [...catTags, tagIdStr],
                 });
               }
             }
@@ -130,10 +132,14 @@ export class PostService implements IPostService {
 
     const newPost: Post = {
       id,
-      title: body.title,
-      description: body.description,
+      title: typeof body.title === "string" ? { ru: body.title, en: "" } : { ru: body.title?.ru || "", en: body.title?.en || "" },
+      description: typeof body.description === "string" ? { ru: body.description, en: "" } : { ru: body.description?.ru || "", en: body.description?.en || "" },
       in_stock: body.in_stock ?? true,
       status: body.status ?? "Published",
+      collectionId: body.collectionId || (collectionDetail ? (typeof collectionDetail === "string" ? collectionDetail : collectionDetail.id) : "all"),
+      categoryId: body.categoryId || (categoryDetail ? (typeof categoryDetail === "string" ? categoryDetail : categoryDetail.id) : ""),
+      tagsIds: tagsList.map(t => t.id),
+      posterId: body.posterId || (body.poster ? body.poster.id : undefined),
       collection: collectionDetail,
       category: categoryDetail,
       tags: tagsList,
@@ -177,7 +183,12 @@ export class PostService implements IPostService {
     if (Array.isArray(body.tags)) {
       for (const t of body.tags) {
         if (typeof t === "string") {
-          const foundTag = allTags.find((tag) => tag.id === t || tag.slug === t || tag.name.toLowerCase() === t.toLowerCase());
+          const foundTag = allTags.find((tag) => 
+            tag.id === t || 
+            tag.slug === t || 
+            tag.title?.ru?.toLowerCase() === t.toLowerCase() ||
+            tag.title?.en?.toLowerCase() === t.toLowerCase()
+          );
           if (foundTag) {
             tagsList.push(foundTag);
           } else {
@@ -186,7 +197,7 @@ export class PostService implements IPostService {
             const tagSlug = await this.slugService.generateUniqueSlug(t, tagId, "tag");
             const newTag = await this.tagRepo.save({
               id: tagId,
-              name: t,
+              title: { ru: t, en: t },
               slug: tagSlug
             });
             tagsList.push(newTag);
@@ -195,15 +206,13 @@ export class PostService implements IPostService {
             if (categoryDetail && typeof categoryDetail === "object") {
               const catObj = await this.categoryRepo.getById(categoryDetail.id);
               if (catObj) {
-                const catTags: string[] = Array.isArray(catObj.tags)
-                  ? catObj.tags.map((ct: any) => typeof ct === "string" ? ct : ct.id)
-                  : [];
+                const catTags: string[] = Array.isArray(catObj.tagsIds) ? catObj.tagsIds : [];
                 const tagIdStr = newTag.id;
                 const hasTag = catTags.includes(tagIdStr);
                 if (!hasTag) {
                   await this.categoryRepo.save({
                     ...catObj,
-                    tags: [...catTags, tagIdStr],
+                    tagsIds: [...catTags, tagIdStr],
                   });
                 }
               }
@@ -211,10 +220,11 @@ export class PostService implements IPostService {
           }
         } else if (t && typeof t === "object") {
           const tagId = t.id || randomUUID();
-          const tagSlug = t.slug || await this.slugService.generateUniqueSlug(t.name, tagId, "tag");
+          const tName = t.name || t.title?.ru || t.title || "";
+          const tagSlug = t.slug || await this.slugService.generateUniqueSlug(tName, tagId, "tag");
           const savedTag = await this.tagRepo.save({
             id: tagId,
-            name: t.name,
+            title: typeof t.title === "object" ? t.title : { ru: tName, en: tName },
             slug: tagSlug
           });
           tagsList.push(savedTag);
@@ -223,15 +233,13 @@ export class PostService implements IPostService {
           if (categoryDetail && typeof categoryDetail === "object") {
             const catObj = await this.categoryRepo.getById(categoryDetail.id);
             if (catObj) {
-              const catTags: string[] = Array.isArray(catObj.tags)
-                ? catObj.tags.map((ct: any) => typeof ct === "string" ? ct : ct.id)
-                : [];
+              const catTags: string[] = Array.isArray(catObj.tagsIds) ? catObj.tagsIds : [];
               const tagIdStr = savedTag.id;
               const hasTag = catTags.includes(tagIdStr);
               if (!hasTag) {
                 await this.categoryRepo.save({
                   ...catObj,
-                  tags: [...catTags, tagIdStr],
+                  tagsIds: [...catTags, tagIdStr],
                 });
               }
             }
@@ -239,11 +247,17 @@ export class PostService implements IPostService {
         }
       }
     } else {
-      tagsList = existing.tags;
+      tagsList = existing.tags || [];
     }
 
     const updatedData = {
       ...body,
+      title: body.title !== undefined ? (typeof body.title === "string" ? { ru: body.title, en: "" } : { ru: body.title?.ru || "", en: body.title?.en || "" }) : existing.title,
+      description: body.description !== undefined ? (typeof body.description === "string" ? { ru: body.description, en: "" } : { ru: body.description?.ru || "", en: body.description?.en || "" }) : existing.description,
+      collectionId: body.collectionId || (collectionDetail ? (typeof collectionDetail === "string" ? collectionDetail : collectionDetail.id) : existing.collectionId),
+      categoryId: body.categoryId || (categoryDetail ? (typeof categoryDetail === "string" ? categoryDetail : categoryDetail.id) : existing.categoryId),
+      tagsIds: tagsList.map(t => t.id),
+      posterId: body.posterId || (body.poster ? body.poster.id : existing.posterId),
       category: categoryDetail,
       collection: collectionDetail,
       tags: tagsList,

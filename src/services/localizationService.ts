@@ -1,6 +1,5 @@
 import { ILocalizationRepository } from "@/repositories/interfaces";
-import { ILocalizationService } from "./interfaces";
-import { Localization } from "@/types";
+import { ILocalizationService, Localization } from "./interfaces";
 import { randomUUID } from "crypto";
 
 import { paginate } from "./pagination";

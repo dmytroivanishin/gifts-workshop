@@ -1,4 +1,8 @@
-import { Category, Collection, Color, Localization, Media, Post, Slug, Tag, User, PaginatedResult, PaginationOptions } from "@/types";
+import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions } from "@/types";
+
+export type Slug = any;
+export type Localization = any;
+
 
 export interface QueryOptions extends PaginationOptions {
   search?: string;

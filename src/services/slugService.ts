@@ -1,7 +1,6 @@
 import { ISlugRepository } from "@/repositories/interfaces";
-import { ISlugService } from "./interfaces";
+import { ISlugService, Slug } from "./interfaces";
 import { generateSlugFromField } from "@/lib/slug";
-import { Slug } from "@/types";
 import { randomUUID } from "crypto";
 
 import { paginate } from "./pagination";

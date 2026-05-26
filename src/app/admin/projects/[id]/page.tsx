@@ -88,7 +88,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       }
 
       if (post.tags) {
-        const tagNames = post.tags.map((t: any) => typeof t === "string" ? t : t.name);
+        const tagNames = post.tags.map((t: any) => typeof t === "string" ? t : (t.title?.ru || t.title?.en || t.title || ""));
         setSelectedTags(tagNames);
       }
     }
@@ -202,16 +202,19 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
 
   const tagOptions = [...allTags]
     .sort((a, b) => {
-      const aMatches = activeCategory?.tags?.some((t: any) => (typeof t === "string" ? t : t.id) === a.id) ? 1 : 0;
-      const bMatches = activeCategory?.tags?.some((t: any) => (typeof t === "string" ? t : t.id) === b.id) ? 1 : 0;
+      const aMatches = activeCategory?.tagsIds?.includes(a.id) ? 1 : 0;
+      const bMatches = activeCategory?.tagsIds?.includes(b.id) ? 1 : 0;
       if (aMatches !== bMatches) return bMatches - aMatches;
-      return a.name.localeCompare(b.name);
+      const aTitle = a.title?.ru || a.title?.en || (typeof a.title === "string" ? a.title : "");
+      const bTitle = b.title?.ru || b.title?.en || (typeof b.title === "string" ? b.title : "");
+      return aTitle.localeCompare(bTitle);
     })
     .map((tag) => {
-      const isStarred = activeCategory?.tags?.some((t: any) => (typeof t === "string" ? t : t.id) === tag.id);
+      const isStarred = activeCategory?.tagsIds?.includes(tag.id);
+      const tagTitle = tag.title?.ru || tag.title?.en || (typeof tag.title === "string" ? tag.title : "");
       return {
-        value: tag.name,
-        label: isStarred ? `${tag.name} (★)` : tag.name,
+        value: tagTitle,
+        label: isStarred ? `${tagTitle} (★)` : tagTitle,
       };
     });
 

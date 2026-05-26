@@ -18,10 +18,10 @@ export class CollectionRepository extends BaseRepository<Collection> implements 
   }
 
   async getBySlug(slug: string): Promise<Collection | undefined> {
-    const slugRes = await fetch(`${DB_URI}/slugs?name=${slug}&entityType=collection`, { cache: "no-store" });
-    const slugRecs = await slugRes.json();
-    if (!slugRecs || slugRecs.length === 0) return undefined;
-    return this.getById(slugRecs[0].entityId);
+    const res = await fetch(`${DB_URI}/collections?slug=${slug}`, { cache: "no-store" });
+    const recs = await res.json();
+    if (!recs || recs.length === 0) return undefined;
+    return populateCollection(recs[0]);
   }
 
   override async getAll(options?: PaginationOptions): Promise<Collection[]> {
@@ -48,95 +48,13 @@ export class CollectionRepository extends BaseRepository<Collection> implements 
   }
 
   override async save(collection: Collection): Promise<Collection> {
-    // 1. Slugs
-    if (collection.slug) {
-      const slugRes = await fetch(`${DB_URI}/slugs?entityId=${collection.id}&entityType=collection`, { cache: "no-store" });
-      const existing = await slugRes.json();
-      const slugData = {
-        name: collection.slug,
-        entityId: collection.id,
-        entityType: "collection",
-        userId: "user-1",
-      };
-      if (existing && existing.length > 0) {
-        await fetch(`${DB_URI}/slugs/${existing[0].id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...existing[0], ...slugData }),
-        });
-      } else {
-        await fetch(`${DB_URI}/slugs`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: `slug-${collection.id}`, ...slugData }),
-        });
-      }
-    }
-
-    // 2. Localizations
-    const titleObj = collection.title as any;
-    const descObj = collection.description as any;
-    const ruPayload = JSON.stringify({
-      title: typeof titleObj === "string" ? titleObj : titleObj?.ru || "",
-      description: typeof descObj === "string" ? descObj : descObj?.ru || "",
-    });
-    const enPayload = JSON.stringify({
-      title: typeof titleObj === "string" ? titleObj : titleObj?.en || "",
-      description: typeof descObj === "string" ? descObj : descObj?.en || "",
-    });
-
-    // Check ru
-    const ruRes = await fetch(`${DB_URI}/localizations?entityId=${collection.id}&entityType=collection&locale=ru`, { cache: "no-store" });
-    const ruExist = await ruRes.json();
-    const ruData = {
-      locale: "ru",
-      payload: ruPayload,
-      entityId: collection.id,
-      entityType: "collection",
-      userId: "user-1",
-    };
-    if (ruExist && ruExist.length > 0) {
-      await fetch(`${DB_URI}/localizations/${ruExist[0].id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...ruExist[0], ...ruData }),
-      });
-    } else {
-      await fetch(`${DB_URI}/localizations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: `loc-${collection.id}-ru`, ...ruData }),
-      });
-    }
-
-    // Check en
-    const enRes = await fetch(`${DB_URI}/localizations?entityId=${collection.id}&entityType=collection&locale=en`, { cache: "no-store" });
-    const enExist = await enRes.json();
-    const enData = {
-      locale: "en",
-      payload: enPayload,
-      entityId: collection.id,
-      entityType: "collection",
-      userId: "user-1",
-    };
-    if (enExist && enExist.length > 0) {
-      await fetch(`${DB_URI}/localizations/${enExist[0].id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...enExist[0], ...enData }),
-      });
-    } else {
-      await fetch(`${DB_URI}/localizations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: `loc-${collection.id}-en`, ...enData }),
-      });
-    }
-
-    // 3. Raw Collection
     const rawCollection = {
       id: collection.id,
+      title: collection.title,
+      description: collection.description,
+      slug: collection.slug,
       main: collection.main,
+      userId: collection.userId || "user-1",
     };
 
     const colCheck = await fetch(`${DB_URI}/collections/${collection.id}`, { cache: "no-store" });
@@ -159,3 +77,4 @@ export class CollectionRepository extends BaseRepository<Collection> implements 
     return populateCollection(rawData);
   }
 }
+

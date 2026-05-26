@@ -39,7 +39,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     );
   }
 
-  const images = post.media.map((m) => m.media.originalUrl);
+  const images = post.media
+    .map((m) => m.media?.originalUrl)
+    .filter((url): url is string => typeof url === "string");
   
   const categoryObject = typeof post.category !== "string" ? post.category : null;
   const categoryTitle = categoryObject ? loc(categoryObject.title) : "Uncategorized";
@@ -127,7 +129,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
                 {post.tags.map((tag, index) => {
-                  const name = typeof tag === "string" ? tag : tag.name;
+                  const name = typeof tag === "string" ? tag : (tag.title?.ru || tag.title?.en || (typeof tag.title === "string" ? tag.title : ""));
                   return (
                     <span
                       key={index}

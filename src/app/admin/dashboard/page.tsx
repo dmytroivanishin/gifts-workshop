@@ -74,7 +74,8 @@ export default function AdminDashboard() {
               </tr>
             ) : posts.length > 0 ? (
               posts.map((post) => {
-                const rawCatTitle = typeof post.category !== "string" ? post.category.title : post.category;
+                const categoryObject = post.category && typeof post.category === "object" ? post.category : null;
+                const rawCatTitle = categoryObject ? categoryObject.title : "";
                 const categoryTitle = typeof rawCatTitle === "string" ? rawCatTitle : rawCatTitle?.ru || rawCatTitle?.en || "";
                 const postTitle = typeof post.title === "string" ? post.title : post.title?.ru || post.title?.en || "";
                 const postDesc = typeof post.description === "string" ? post.description : post.description?.ru || post.description?.en || "";

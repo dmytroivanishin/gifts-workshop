@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Post, Category, Tag, Collection, Localization, Media } from "@/types";
+import { Post, Category, Tag, Collection, Media } from "@/types";
+type Localization = any;
 
 export const api = createApi({
   reducerPath: "api",

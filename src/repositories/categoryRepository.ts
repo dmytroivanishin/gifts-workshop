@@ -18,10 +18,10 @@ export class CategoryRepository extends BaseRepository<Category> implements ICat
   }
 
   async getBySlug(slug: string): Promise<Category | undefined> {
-    const slugRes = await fetch(`${DB_URI}/slugs?name=${slug}&entityType=category`, { cache: "no-store" });
-    const slugRecs = await slugRes.json();
-    if (!slugRecs || slugRecs.length === 0) return undefined;
-    return this.getById(slugRecs[0].entityId);
+    const res = await fetch(`${DB_URI}/categories?slug=${slug}`, { cache: "no-store" });
+    const recs = await res.json();
+    if (!recs || recs.length === 0) return undefined;
+    return populateCategory(recs[0]);
   }
 
   override async getAll(options?: PaginationOptions): Promise<Category[]> {
@@ -48,101 +48,17 @@ export class CategoryRepository extends BaseRepository<Category> implements ICat
   }
 
   override async save(category: Category): Promise<Category> {
-    // 1. Slugs
-    if (category.slug) {
-      const slugRes = await fetch(`${DB_URI}/slugs?entityId=${category.id}&entityType=category`, { cache: "no-store" });
-      const existing = await slugRes.json();
-      const slugData = {
-        name: category.slug,
-        entityId: category.id,
-        entityType: "category",
-        userId: "user-1",
-      };
-      if (existing && existing.length > 0) {
-        await fetch(`${DB_URI}/slugs/${existing[0].id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...existing[0], ...slugData }),
-        });
-      } else {
-        await fetch(`${DB_URI}/slugs`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: `slug-${category.id}`, ...slugData }),
-        });
-      }
-    }
-
-    // 2. Localizations
-    const titleObj = category.title as any;
-    const descObj = category.description as any;
-    const ruPayload = JSON.stringify({
-      title: typeof titleObj === "string" ? titleObj : titleObj?.ru || "",
-      description: typeof descObj === "string" ? descObj : descObj?.ru || "",
-    });
-    const enPayload = JSON.stringify({
-      title: typeof titleObj === "string" ? titleObj : titleObj?.en || "",
-      description: typeof descObj === "string" ? descObj : descObj?.en || "",
-    });
-
-    // Check ru
-    const ruRes = await fetch(`${DB_URI}/localizations?entityId=${category.id}&entityType=category&locale=ru`, { cache: "no-store" });
-    const ruExist = await ruRes.json();
-    const ruData = {
-      locale: "ru",
-      payload: ruPayload,
-      entityId: category.id,
-      entityType: "category",
-      userId: "user-1",
-    };
-    if (ruExist && ruExist.length > 0) {
-      await fetch(`${DB_URI}/localizations/${ruExist[0].id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...ruExist[0], ...ruData }),
-      });
-    } else {
-      await fetch(`${DB_URI}/localizations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: `loc-${category.id}-ru`, ...ruData }),
-      });
-    }
-
-    // Check en
-    const enRes = await fetch(`${DB_URI}/localizations?entityId=${category.id}&entityType=category&locale=en`, { cache: "no-store" });
-    const enExist = await enRes.json();
-    const enData = {
-      locale: "en",
-      payload: enPayload,
-      entityId: category.id,
-      entityType: "category",
-      userId: "user-1",
-    };
-    if (enExist && enExist.length > 0) {
-      await fetch(`${DB_URI}/localizations/${enExist[0].id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...enExist[0], ...enData }),
-      });
-    } else {
-      await fetch(`${DB_URI}/localizations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: `loc-${category.id}-en`, ...enData }),
-      });
-    }
-
-    // 3. Raw Category
     const rawCategory = {
       id: category.id,
+      title: category.title,
+      description: category.description,
+      slug: category.slug,
       order: category.order,
-      color: typeof category.color === "string" ? category.color : category.color?.id,
-      collection: typeof category.collection === "string" ? category.collection : category.collection?.id || "all",
-      parent: typeof category.parent === "string" ? category.parent : category.parent?.id,
-      tags: Array.isArray(category.tags)
-        ? category.tags.map((t: any) => typeof t === "string" ? t : t.id)
-        : [],
+      colorId: category.colorId || (category.color ? category.color.id : undefined),
+      collectionId: category.collectionId || (category.collection ? category.collection.id : "all"),
+      parentId: category.parentId || (category.parent ? category.parent.id : undefined),
+      tagsIds: category.tagsIds || (category.tags ? category.tags.map(t => t.id) : []),
+      userId: category.userId || "user-1",
     };
 
     const catCheck = await fetch(`${DB_URI}/categories/${category.id}`, { cache: "no-store" });
@@ -165,3 +81,4 @@ export class CategoryRepository extends BaseRepository<Category> implements ICat
     return populateCategory(rawData);
   }
 }
+

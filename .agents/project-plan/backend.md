@@ -78,11 +78,6 @@
     - `DELETE /api/v1/admin/media/:mediaId`
     - Convert all images to JPG.
     - Generate sizes: **Thumbnail** (300x300) and **Original** (1200x1200).
-- **Localization**:
-    - `GET /api/v1/admin/localization`
-    - `POST /api/v1/admin/localization`
-    - `PATCH /api/v1/admin/localization/:localizationId`
-    - `DELETE /api/v1/admin/localization/:localizationId`
 - **Post Editor**:
     - `GET /api/v1/admin/posts`
     - `POST /api/v1/admin/posts`
@@ -94,11 +89,6 @@
     - `POST /api/v1/admin/colors`
     - `PATCH /api/v1/admin/colors/:colorId`
     - `DELETE /api/v1/admin/colors/:colorId`
-- **Slug Management**:
-    - `GET /api/v1/admin/slugs`
-    - `POST /api/v1/admin/slugs`
-    - `PATCH /api/v1/admin/slugs/:slugId`
-    - `DELETE /api/v1/admin/slugs/:slugId`
 
 ---
 
@@ -107,25 +97,23 @@
 - **User**:
     - `id`, `email`, `name`, `password`.
 - **Collection**:
-    - `id`, `title`, `description`, `main` (Boolean).
+    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `user` (ref User).
 - **Category**:
-    - `id`, `title`, `description`, `order` (Number), `parent` (ref Category / self-referential FK), `color` (ref Color), `collection` (ref Collection), `user` (ref User).
+    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `order` (Number), `parent` (ref Category / self-referential FK), `color` (ref Color), `collection` (ref Collection), `tags` (Array of Tag IDs), `user` (ref User).
 - **Color**:
     - `id`, `color` (hex/string), `user` (ref User).
 - **Media**:
     - `id`, `thumbnailUrl`, `originalUrl`, `user` (ref User).
-- **Slug**:
-    - `id`, `name`, `entity` (ref Collection, Category, Post), `user` (ref User).
-- **Localization**:
-    - `id`, `locale`, `payload` (JSON), `entity` (ref Collection, Category, Post, Tag), `user` (ref User).
 - **Tag**:
-    - `id`, `name`, `user` (ref User), `categories` (Array of Category IDs).
+    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `user` (ref User).
+    - *Note: Category-Tag relationships are unidirectional and managed inside the `Category` entity.*
 - **Post**:
-    - `id`, `title`, `description`, `media` (Array of PostMedia), `poster` (ref Media), `in_stock` (Boolean), `status` (String - Draft/Published/Archived), `collection` (ref Collection), `user` (ref User), `category` (ref Category), `tags` (Array of Tag IDs).
+    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `media` (Array of PostMedia), `poster` (PostPoster), `in_stock` (Boolean), `status` (String - Draft/Published/Archived), `collection` (ref Collection), `category` (ref Category), `tags` (Array of Tag IDs), `user` (ref User).
 - **PostMedia**:
-    - `id`, `order`, `media` (ref Media), `position` (ref Position or nested position object).
+    - `order` (Number), `media` (ref Media), `position` (Position object).
 - **Position**:
-    - `id`, `x`, `y`, `width`, `height`.
+    - `x` (Number), `y` (Number), `zoom` (Number).
+
 
 > [!NOTE]
 > **Relational Consistency**:

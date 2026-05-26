@@ -1,6 +1,5 @@
 import { BaseRepository } from "./baseRepository";
-import { ISlugRepository } from "./interfaces";
-import { Slug } from "@/types";
+import { ISlugRepository, Slug } from "./interfaces";
 
 export class SlugRepository extends BaseRepository<Slug> implements ISlugRepository {
   constructor() {

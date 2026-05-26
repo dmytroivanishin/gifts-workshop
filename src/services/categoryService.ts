@@ -59,7 +59,12 @@ export class CategoryService implements ICategoryService {
     if (Array.isArray(body.tags)) {
       for (const t of body.tags) {
         if (typeof t === "string") {
-          const foundTag = allTags.find((tag) => tag.id === t || tag.slug === t || tag.name.toLowerCase() === t.toLowerCase());
+          const foundTag = allTags.find((tag) => 
+            tag.id === t || 
+            tag.slug === t || 
+            tag.title?.ru?.toLowerCase() === t.toLowerCase() ||
+            tag.title?.en?.toLowerCase() === t.toLowerCase()
+          );
           if (foundTag) {
             tagsList.push(foundTag.id);
           } else {
@@ -67,17 +72,18 @@ export class CategoryService implements ICategoryService {
             const tagSlug = await this.slugService.generateUniqueSlug(t, tagId, "tag");
             const newTag = await this.tagRepo.save({
               id: tagId,
-              name: t,
+              title: { ru: t, en: t },
               slug: tagSlug
             });
             tagsList.push(newTag.id);
           }
         } else if (t && typeof t === "object") {
           const tagId = t.id || randomUUID();
-          const tagSlug = t.slug || await this.slugService.generateUniqueSlug(t.name, tagId, "tag");
+          const tName = t.name || t.title?.ru || t.title || "";
+          const tagSlug = t.slug || await this.slugService.generateUniqueSlug(tName, tagId, "tag");
           const savedTag = await this.tagRepo.save({
             id: tagId,
-            name: t.name,
+            title: typeof t.title === "object" ? t.title : { ru: tName, en: tName },
             slug: tagSlug
           });
           tagsList.push(savedTag.id);
@@ -93,13 +99,13 @@ export class CategoryService implements ICategoryService {
 
     const category: Category = {
       id,
-      title: body.title,
-      description: body.description ?? "",
+      title: typeof body.title === "string" ? { ru: body.title, en: "" } : { ru: body.title?.ru || "", en: body.title?.en || "" },
+      description: typeof body.description === "string" ? { ru: body.description, en: "" } : { ru: body.description?.ru || "", en: body.description?.en || "" },
       order: body.order ?? categories.length + 1,
-      parent: body.parent,
-      color: colorVal,
-      collection: body.collection ?? "all",
-      tags: tagsList,
+      parentId: body.parentId || (body.parent ? (typeof body.parent === "string" ? body.parent : body.parent.id) : undefined),
+      colorId: colorVal,
+      collectionId: body.collectionId || (body.collection ? (typeof body.collection === "string" ? body.collection : body.collection.id) : "all"),
+      tagsIds: tagsList,
       slug,
     };
 
@@ -111,3 +117,4 @@ export class CategoryService implements ICategoryService {
     return this.categoryRepo.delete(id);
   }
 }
+

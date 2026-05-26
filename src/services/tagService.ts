@@ -34,11 +34,12 @@ export class TagService implements ITagService {
 
   async saveTag(body: any): Promise<Tag> {
     const id = body.id || randomUUID();
-    const slug = await this.slugService.generateUniqueSlug(body.name, id, "tag");
+    const tName = body.title?.ru || body.title || body.name || "";
+    const slug = await this.slugService.generateUniqueSlug(tName, id, "tag");
 
     const tag: Tag = {
       id,
-      name: body.name,
+      title: typeof body.title === "object" ? body.title : { ru: tName, en: tName },
       slug,
     };
 
@@ -53,14 +54,13 @@ export class TagService implements ITagService {
       try {
         const categories = await this.categoryRepo.getAll();
         for (const cat of categories) {
-          if (Array.isArray(cat.tags)) {
-            const catTags: string[] = cat.tags.map((t: any) => typeof t === "string" ? t : t.id);
-            const hasTag = catTags.includes(id);
+          if (Array.isArray(cat.tagsIds)) {
+            const hasTag = cat.tagsIds.includes(id);
             if (hasTag) {
-              const updatedTags = catTags.filter((t) => t !== id);
+              const updatedTags = cat.tagsIds.filter((t) => t !== id);
               await this.categoryRepo.save({
                 ...cat,
-                tags: updatedTags,
+                tagsIds: updatedTags,
               });
             }
           }

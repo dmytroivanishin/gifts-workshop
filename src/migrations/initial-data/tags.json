@@ -1,0 +1,482 @@
+[
+  {
+    "id": "c0300001-beef-4000-8000-000000000001",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "soft-toys",
+    "title": {
+      "ru": "Мягкие игрушки"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000002",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-toys",
+    "title": {
+      "ru": "Игрушки ручной работы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000003",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "plush-toys",
+    "title": {
+      "ru": "Плюшевые игрушки"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000004",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "gift-for-child",
+    "title": {
+      "ru": "Подарок ребенку"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000005",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "knitted-toys",
+    "title": {
+      "ru": "Вязаные игрушки"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000006",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-plushies",
+    "title": {
+      "ru": "Handmade игрушки"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000007",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "interior-toys",
+    "title": {
+      "ru": "Интерьерные игрушки"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000008",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "kids-decor",
+    "title": {
+      "ru": "Детский декор"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000009",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "eco-friendly-toys",
+    "title": {
+      "ru": "Экологичные игрушки"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000010",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "exclusive-gifts",
+    "title": {
+      "ru": "Эксклюзивные подарки"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000011",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "interior-dolls",
+    "title": {
+      "ru": "Интерьерные куклы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000012",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-dolls",
+    "title": {
+      "ru": "Куклы ручной работы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000013",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "collectible-dolls",
+    "title": {
+      "ru": "Коллекционные куклы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000014",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "art-dolls",
+    "title": {
+      "ru": "Авторские куклы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000015",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "textile-dolls",
+    "title": {
+      "ru": "Текстильные куклы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000016",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "gift-for-girl",
+    "title": {
+      "ru": "Подарок девушке"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000017",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "bedroom-decor",
+    "title": {
+      "ru": "Декор для спальни"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000018",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-dolls-decor",
+    "title": {
+      "ru": "Handmade куклы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000019",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "unique-dolls",
+    "title": {
+      "ru": "Уникальные куклы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000020",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "birthday-gift",
+    "title": {
+      "ru": "Подарок на день рождения"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000021",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "kitchen-textiles",
+    "title": {
+      "ru": "Кухонный текстиль"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000022",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "kitchen-decor",
+    "title": {
+      "ru": "Декор кухни"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000023",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-potholders",
+    "title": {
+      "ru": "Прихватки ручной работы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000024",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "kitchen-towels",
+    "title": {
+      "ru": "Кухонные полотенца"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000025",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-aprons",
+    "title": {
+      "ru": "Фартуки ручной работы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000026",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "scandinavian-style",
+    "title": {
+      "ru": "Скандинавский стиль"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000027",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "cozy-kitchen",
+    "title": {
+      "ru": "Уютная кухня"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000028",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "home-textiles",
+    "title": {
+      "ru": "Текстиль для дома"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000029",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "table-setting",
+    "title": {
+      "ru": "Сервировка стола"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000030",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "housewarming-gifts",
+    "title": {
+      "ru": "Подарки на новоселье"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000031",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "patchwork-quilting",
+    "title": {
+      "ru": "Лоскутное шитье"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000032",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "patchwork-style",
+    "title": {
+      "ru": "Пэчворк"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000033",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "patchwork-quilt",
+    "title": {
+      "ru": "Лоскутное одеяло"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000034",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-bedspread",
+    "title": {
+      "ru": "Покрывало ручной работы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000035",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "quilted-blanket",
+    "title": {
+      "ru": "Стеганое одеяло"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000036",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "family-coziness",
+    "title": {
+      "ru": "Семейный уют"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000037",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "traditional-sewing",
+    "title": {
+      "ru": "Традиционное шитье"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000038",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "cozy-textiles",
+    "title": {
+      "ru": "Уютный текстиль"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000039",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-patchwork",
+    "title": {
+      "ru": "Handmade пэчворк"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000040",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "patchwork-technique",
+    "title": {
+      "ru": "Лоскутная техника"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000041",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "interior-items",
+    "title": {
+      "ru": "Предметы интерьера"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000042",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "home-decor",
+    "title": {
+      "ru": "Декор для дома"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000043",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "cozy-home",
+    "title": {
+      "ru": "Уютный дом"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000044",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "house-decor",
+    "title": {
+      "ru": "Домашний декор"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000045",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "designer-pillows",
+    "title": {
+      "ru": "Дизайнерские подушки"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000046",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "cozy-details",
+    "title": {
+      "ru": "Уютные мелочи"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000047",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "stylish-interior",
+    "title": {
+      "ru": "Стильный интерьер"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000048",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-decor",
+    "title": {
+      "ru": "Handmade декор"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000049",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "knitted-blanket",
+    "title": {
+      "ru": "Вязаный плед"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000050",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "home-accessories",
+    "title": {
+      "ru": "Аксессуары для дома"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000051",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "decorative-accessories",
+    "title": {
+      "ru": "Декоративные аксессуары"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000052",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-gifts",
+    "title": {
+      "ru": "Подарки ручной работы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000053",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "gift-ideas",
+    "title": {
+      "ru": "Идеи подарков"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000054",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-souvenirs",
+    "title": {
+      "ru": "Сувениры ручной работы"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000055",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "cute-little-things",
+    "title": {
+      "ru": "Милые мелочи"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000056",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "holiday-decor",
+    "title": {
+      "ru": "Праздничный декор"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000057",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "handmade-presents",
+    "title": {
+      "ru": "Handmade подарки"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000058",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "original-souvenirs",
+    "title": {
+      "ru": "Оригинальные сувениры"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000059",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "gifts-for-loved-ones",
+    "title": {
+      "ru": "Подарки для близких"
+    }
+  },
+  {
+    "id": "c0300001-beef-4000-8000-000000000060",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "creative-gift",
+    "title": {
+      "ru": "Творческий подарок"
+    }
+  }
+]

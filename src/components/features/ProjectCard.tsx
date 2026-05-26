@@ -30,7 +30,9 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
     }
   }, [post.id]);
 
-  const images = post.media.map((m) => m.media.originalUrl);
+  const images = post.media
+    .map((m) => m.media?.originalUrl)
+    .filter((url): url is string => typeof url === "string");
   const totalImages = images.length;
   
   const categoryObject = typeof post.category !== "string" ? post.category : null;

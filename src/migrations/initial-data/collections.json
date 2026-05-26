@@ -1,0 +1,13 @@
+[
+  {
+    "id": "ca000001-beef-4000-8000-000000000001",
+    "user": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "slug": "my-first-collection",
+    "title": {
+      "ru": "Работы"
+    },
+    "description": {
+      "ru": "Здесь собраны все мои работы"
+    }
+  }
+]

@@ -37,8 +37,8 @@ export class CollectionService implements ICollectionService {
 
     const collection: Collection = {
       id,
-      title: body.title,
-      description: body.description ?? "",
+      title: typeof body.title === "string" ? { ru: body.title, en: "" } : { ru: body.title?.ru || "", en: body.title?.en || "" },
+      description: typeof body.description === "string" ? { ru: body.description, en: "" } : { ru: body.description?.ru || "", en: body.description?.en || "" },
       main: body.main ?? false,
       slug,
     };

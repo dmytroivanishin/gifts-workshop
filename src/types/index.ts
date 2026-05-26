@@ -5,20 +5,27 @@ export interface User {
   // password is omitted intentionally in the frontend types
 }
 
+export interface Position {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
 export interface Media {
   readonly id: string;
   thumbnailUrl: string;
   originalUrl: string;
-  user?: User; // Or userId: string
+  userId?: string;
   position?: Position;
 }
 
 export interface Collection {
   readonly id: string;
-  title: string;
-  description: string;
+  title: { ru: string; en: string };
+  description: { ru: string; en: string };
   main: boolean;
-  slug?: string;
+  slug: string;
+  userId?: string;
 }
 
 export interface Color {
@@ -28,32 +35,37 @@ export interface Color {
 
 export interface Category {
   readonly id: string;
-  title: string | { ru: string; en: string };
-  description: string | { ru: string; en: string };
+  title: { ru: string; en: string };
+  description: { ru: string; en: string };
+  slug: string;
   order: number;
-  parent?: Category | string;
-  color?: Color | string;
-  collection: Collection | string;
-  tags?: Tag[] | string[]; // Array of Tag references or IDs
-  slug?: string;
+  
+  // Foreign Keys
+  parentId?: string;
+  colorId?: string;
+  collectionId: string;
+  tagsIds?: string[];
+  userId?: string;
+  
+  // Populated Relations
+  parent?: Category;
+  color?: Color;
+  collection?: Collection;
+  tags?: Tag[];
 }
 
 export interface Tag {
   readonly id: string;
-  name: string;
-  slug?: string;
-}
-
-export interface Position {
-  x: number;
-  y: number;
-  zoom: number;
+  title: { ru: string; en: string };
+  slug: string;
+  userId?: string;
 }
 
 export interface PostMedia {
   readonly id: string;
   order: number;
-  media: Media;
+  mediaId: string;
+  media?: Media;
   position?: Position;
 }
 
@@ -61,34 +73,29 @@ export type PostStatus = "Draft" | "Published" | "Archived";
 
 export interface Post {
   readonly id: string;
-  title: string | { ru: string; en: string };
-  description: string | { ru: string; en: string };
-  media: PostMedia[];
-  poster?: Media;
+  title: { ru: string; en: string };
+  description: { ru: string; en: string };
+  slug: string;
   in_stock: boolean;
   status: PostStatus;
-  collection: Collection | string;
-  category: Category | string;
-  tags: Tag[] | string[];
-  slug?: string;
+  
+  // Foreign Keys
+  posterId?: string;
+  collectionId?: string;
+  categoryId: string;
+  tagsIds?: string[];
+  userId?: string;
+
+  // Populated Relations
+  poster?: Media;
+  media: PostMedia[];
+  collection?: Collection;
+  category?: Category;
+  tags?: Tag[];
 }
 
-export interface Slug {
-  readonly id: string;
-  name: string;
-  entityId: string;
-  entityType: "post" | "category" | "collection" | "tag";
-  userId?: string;
-}
+export type EntityType = "post" | "category" | "collection" | "tag";
 
-export interface Localization {
-  readonly id: string;
-  locale: string;
-  payload: any; // JSON localized strings
-  entityId: string;
-  entityType: "post" | "category" | "collection" | "tag";
-  userId?: string;
-}
 
 export interface PaginatedResult<T> {
   data: T[];

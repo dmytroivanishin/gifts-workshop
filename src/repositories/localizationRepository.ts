@@ -1,6 +1,5 @@
 import { BaseRepository } from "./baseRepository";
-import { ILocalizationRepository } from "./interfaces";
-import { Localization } from "@/types";
+import { ILocalizationRepository, Localization } from "./interfaces";
 
 export class LocalizationRepository extends BaseRepository<Localization> implements ILocalizationRepository {
   constructor() {

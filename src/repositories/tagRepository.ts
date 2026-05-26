@@ -18,10 +18,10 @@ export class TagRepository extends BaseRepository<Tag> implements ITagRepository
   }
 
   async getBySlug(slug: string): Promise<Tag | undefined> {
-    const slugRes = await fetch(`${DB_URI}/slugs?name=${slug}&entityType=tag`, { cache: "no-store" });
-    const slugRecs = await slugRes.json();
-    if (!slugRecs || slugRecs.length === 0) return undefined;
-    return this.getById(slugRecs[0].entityId);
+    const res = await fetch(`${DB_URI}/tags?slug=${slug}`, { cache: "no-store" });
+    const recs = await res.json();
+    if (!recs || recs.length === 0) return undefined;
+    return populateTag(recs[0]);
   }
 
   override async getAll(options?: PaginationOptions): Promise<Tag[]> {
@@ -48,35 +48,11 @@ export class TagRepository extends BaseRepository<Tag> implements ITagRepository
   }
 
   override async save(tag: Tag): Promise<Tag> {
-    // 1. Slugs
-    if (tag.slug) {
-      const slugRes = await fetch(`${DB_URI}/slugs?entityId=${tag.id}&entityType=tag`, { cache: "no-store" });
-      const existing = await slugRes.json();
-      const slugData = {
-        name: tag.slug,
-        entityId: tag.id,
-        entityType: "tag",
-        userId: "user-1",
-      };
-      if (existing && existing.length > 0) {
-        await fetch(`${DB_URI}/slugs/${existing[0].id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...existing[0], ...slugData }),
-        });
-      } else {
-        await fetch(`${DB_URI}/slugs`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: `slug-${tag.id}`, ...slugData }),
-        });
-      }
-    }
-
-    // 2. Raw Tag
     const rawTag = {
       id: tag.id,
-      name: tag.name,
+      title: tag.title,
+      slug: tag.slug,
+      userId: tag.userId || "user-1",
     };
 
     const tagCheck = await fetch(`${DB_URI}/tags/${tag.id}`, { cache: "no-store" });
@@ -99,4 +75,5 @@ export class TagRepository extends BaseRepository<Tag> implements ITagRepository
     return populateTag(rawData);
   }
 }
+
 
