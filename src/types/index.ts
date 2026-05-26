@@ -46,12 +46,13 @@ export interface Category {
   collectionId: string;
   tagsIds?: string[];
   userId?: string;
-  
-  // Populated Relations
+}
+
+export interface PopulatedCategory extends Category {
   parent?: Category;
   color?: Color;
-  collection?: Collection;
-  tags?: Tag[];
+  collection: Collection;
+  tags: Tag[];
 }
 
 export interface Tag {
@@ -65,8 +66,11 @@ export interface PostMedia {
   readonly id: string;
   order: number;
   mediaId: string;
-  media?: Media;
   position?: Position;
+}
+
+export interface PopulatedPostMedia extends PostMedia {
+  media: Media;
 }
 
 export type PostStatus = "Draft" | "Published" | "Archived";
@@ -86,12 +90,16 @@ export interface Post {
   tagsIds?: string[];
   userId?: string;
 
-  // Populated Relations
-  poster?: Media;
+  // Local Relations (unpopulated)
   media: PostMedia[];
+}
+
+export interface PopulatedPost extends Omit<Post, 'media'> {
+  poster?: Media;
   collection?: Collection;
-  category?: Category;
-  tags?: Tag[];
+  category: Category;
+  tags: Tag[];
+  media: PopulatedPostMedia[];
 }
 
 export type EntityType = "post" | "category" | "collection" | "tag";

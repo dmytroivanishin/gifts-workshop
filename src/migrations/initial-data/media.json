@@ -3,30 +3,30 @@
     "id": "da7a0001-beef-4000-8000-000000000001",
     "thumbnailUrl": "/images/image-1.png",
     "originalUrl": "/images/image-1.png",
-    "user": "c0a80101-1111-4444-9999-abcdefabcdef"
+    "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
   },
   {
     "id": "da7a0002-beef-4000-8000-000000000002",
     "thumbnailUrl": "/images/image-2.png",
     "originalUrl": "/images/image-2.png",
-    "user": "c0a80101-1111-4444-9999-abcdefabcdef"
+    "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
   },
   {
     "id": "da7a0003-beef-4000-8000-000000000003",
     "thumbnailUrl": "/images/image-3.png",
     "originalUrl": "/images/image-3.png",
-    "user": "c0a80101-1111-4444-9999-abcdefabcdef"
+    "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
   },
   {
     "id": "da7a0004-beef-4000-8000-000000000004",
     "thumbnailUrl": "/images/image-4.png",
     "originalUrl": "/images/image-4.png",
-    "user": "c0a80101-1111-4444-9999-abcdefabcdef"
+    "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
   },
   {
     "id": "da7a0005-beef-4000-8000-000000000005",
     "thumbnailUrl": "/images/image-5.png",
     "originalUrl": "/images/image-5.png",
-    "user": "c0a80101-1111-4444-9999-abcdefabcdef"
+    "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
   }
 ]
