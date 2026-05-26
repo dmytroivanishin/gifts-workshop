@@ -1,0 +1,120 @@
+"use client";
+
+import { useState } from "react";
+import { X, Check, Loader2 } from "lucide-react";
+import { useGetMediaQuery } from "@/store/api";
+
+interface MediaPickerModalProps {
+  onClose: () => void;
+  onSelect: (mediaArray: { mediaId: string; url: string }[]) => void;
+  selectedIds: string[];
+}
+
+export default function MediaPickerModal({ onClose, onSelect, selectedIds }: MediaPickerModalProps) {
+  const { data: mediaResponse, isLoading } = useGetMediaQuery();
+  const mediaList = mediaResponse?.data || [];
+  
+  const [currentSelected, setCurrentSelected] = useState<string[]>(selectedIds);
+
+  const toggleSelect = (id: string) => {
+    if (currentSelected.includes(id)) {
+      setCurrentSelected(currentSelected.filter((existingId) => existingId !== id));
+    } else {
+      setCurrentSelected([...currentSelected, id]);
+    }
+  };
+
+  const handleSave = () => {
+    const selectedData = currentSelected.map(id => {
+      const m = mediaList.find(media => media.id === id);
+      return {
+        mediaId: id,
+        url: m?.originalUrl || "",
+      };
+    }).filter(m => m.url);
+    onSelect(selectedData);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 font-sans animate-fade-in">
+      <div className="bg-white rounded-3xl border border-border/45 w-full max-w-4xl p-6 space-y-6 shadow-xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b pb-3">
+          <div>
+            <h3 className="font-heading text-lg font-semibold text-foreground">Select Media</h3>
+            <p className="text-xs text-muted-foreground">Choose images from your library to add to this project.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-full border border-border hover:bg-muted text-muted-foreground transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto min-h-[300px]">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="animate-spin text-muted-foreground" size={32} />
+            </div>
+          ) : mediaList.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+              No media found in the library. Go to Media manager to upload.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-1">
+              {mediaList.map((media) => {
+                const isSelected = currentSelected.includes(media.id);
+                return (
+                  <div
+                    key={media.id}
+                    onClick={() => toggleSelect(media.id)}
+                    className={`group relative aspect-square bg-muted rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
+                      isSelected
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-transparent hover:border-border"
+                    }`}
+                  >
+                    <img
+                      src={media.thumbnailUrl || media.originalUrl}
+                      alt="Media thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                    {isSelected && (
+                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground p-1 rounded-full shadow-md animate-in zoom-in duration-200">
+                        <Check size={14} strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t pt-4 flex justify-between items-center mt-auto">
+          <span className="text-sm font-medium text-muted-foreground">
+            {currentSelected.length} items selected
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted font-medium text-sm transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
+            >
+              Confirm Selection
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

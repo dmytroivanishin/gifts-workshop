@@ -1,0 +1,17 @@
+{
+  "search_placeholder": "Search by title or description...",
+  "in_stock": "In Stock",
+  "made_to_order": "Made to Order",
+  "back_to_gallery": "Back to gallery",
+  "contact_title": "Order or ask about this item:",
+  "no_projects_found": "No projects found. Try changing search parameters.",
+  "all": "All",
+  "favorites": "Favorites",
+  "view_project": "View Project",
+  "send_message": "Message",
+  "admin_panel": "Admin Panel",
+  "dashboard": "Dashboard",
+  "categories": "Categories",
+  "media_library": "Media Library",
+  "tags": "Tags"
+}

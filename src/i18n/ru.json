@@ -1,0 +1,17 @@
+{
+  "search_placeholder": "Поиск по названию или описанию...",
+  "in_stock": "В наличии",
+  "made_to_order": "Под заказ",
+  "back_to_gallery": "Назад к галерее",
+  "contact_title": "Заказать или спросить о работе:",
+  "no_projects_found": "Работы не найдены. Попробуйте изменить параметры поиска.",
+  "all": "Все",
+  "favorites": "Избранное",
+  "view_project": "Смотреть работу",
+  "send_message": "Написать",
+  "admin_panel": "Панель Администратора",
+  "dashboard": "Дашборд",
+  "categories": "Категории",
+  "media_library": "Медиа Библиотека",
+  "tags": "Теги"
+}
