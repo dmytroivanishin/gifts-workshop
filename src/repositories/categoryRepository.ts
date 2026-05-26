@@ -2,6 +2,7 @@ import { BaseRepository, registerRepository, repositoryRegistry } from "./baseRe
 import { ICategoryRepository } from "./interfaces";
 import { Category, PopulatedCategory, Tag } from "@/types";
 import { NotFoundError } from "@/common/errors/notFound";
+import { ValidationError } from "@/common/errors/validation";
 
 export class CategoryRepository extends BaseRepository<Category, PopulatedCategory> implements ICategoryRepository {
   constructor() {
@@ -26,7 +27,7 @@ export class CategoryRepository extends BaseRepository<Category, PopulatedCatego
       color = await colorRepo.getById(cat.colorId);
     }
 
-    // 2. Collection (Strict check!)
+    // 2. Collection
     let collection = undefined;
     if (cat.collectionId && collectionRepo) {
       collection = await collectionRepo.getById(cat.collectionId);
@@ -52,12 +53,32 @@ export class CategoryRepository extends BaseRepository<Category, PopulatedCatego
     };
   }
 
+  async save(item: any): Promise<PopulatedCategory> {
+    const collectionRepo = repositoryRegistry["collections"];
+
+    const collectionId = item.collectionId || (item.collection ? (typeof item.collection === "string" ? item.collection : item.collection.id) : undefined);
+    if (!collectionId || collectionId === "all") {
+      throw new ValidationError("Collection is required to save a category", [
+        { field: "collectionId", message: "Collection is required" }
+      ]);
+    }
+
+    if (collectionRepo) {
+      const collection = await collectionRepo.getById(collectionId);
+      if (!collection) {
+        throw new NotFoundError(`Collection with ID ${collectionId} not found`);
+      }
+    }
+
+    return super.save(item);
+  }
+
   protected serialize(item: any): Category {
     const raw: any = { ...item };
 
     // Extricate relation fields
     const colorId = raw.colorId || (raw.color ? (typeof raw.color === "string" ? raw.color : raw.color.id) : undefined);
-    const collectionId = raw.collectionId || (raw.collection ? (typeof raw.collection === "string" ? raw.collection : raw.collection.id) : "all");
+    const collectionId = raw.collectionId || (raw.collection ? (typeof raw.collection === "string" ? raw.collection : raw.collection.id) : undefined);
     const parentId = raw.parentId || (raw.parent ? (typeof raw.parent === "string" ? raw.parent : raw.parent.id) : undefined);
 
     let tagsIds = raw.tagsIds;

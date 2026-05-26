@@ -27,7 +27,7 @@ export default function AdminTags() {
     if (!tagName.trim()) return;
 
     try {
-      await createTag({ name: tagName.trim() }).unwrap();
+      await createTag({ title: { ru: tagName.trim(), en: "" } }).unwrap();
       setTagName("");
     } catch (err) {
       console.error("Failed to add tag", err);
@@ -39,7 +39,7 @@ export default function AdminTags() {
     try {
       await updateTag({
         id,
-        name: editTagName.trim(),
+        title: { ru: editTagName.trim(), en: "" },
       }).unwrap();
       setIsEditing(null);
     } catch (err) {
@@ -97,7 +97,7 @@ export default function AdminTags() {
                   ) : (
                     <div className="flex flex-col gap-1">
                       <span className="font-semibold text-sm text-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/60 w-fit">
-                        #{tag.name}
+                        #{typeof tag.title === "string" ? tag.title : tag.title?.ru || tag.title?.en || ""}
                       </span>
                     </div>
                   )}
@@ -124,7 +124,8 @@ export default function AdminTags() {
                         <button
                           onClick={() => {
                             setIsEditing(tag.id);
-                            setEditTagName(tag.name);
+                            const tagTitle = typeof tag.title === "string" ? tag.title : tag.title?.ru || tag.title?.en || "";
+                            setEditTagName(tagTitle);
                           }}
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
                           title="Rename Tag"

@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Edit, Save, X, Loader2 } from "lucide-react";
 import { 
   useGetCategoriesQuery, 
   useCreateCategoryMutation, 
   useGetTagsQuery,
-  useCreateTagMutation 
+  useCreateTagMutation,
+  useGetCollectionsQuery
 } from "@/store/api";
 import Combobox from "@/components/ui/combobox";
 
 export default function AdminCategories() {
   const { data: categoriesResponse, isLoading } = useGetCategoriesQuery();
   const { data: tagsResponse } = useGetTagsQuery();
+  const { data: collectionsResponse } = useGetCollectionsQuery();
   const [saveCategory, { isLoading: isSaving }] = useCreateCategoryMutation();
   const [createTag] = useCreateTagMutation();
 
@@ -30,6 +32,9 @@ export default function AdminCategories() {
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("#FFD2D2");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [collectionId, setCollectionId] = useState("");
+
+  const collections = collectionsResponse?.data || [];
 
   // Edit State
   const [editTitle, setEditTitle] = useState("");
@@ -51,14 +56,14 @@ export default function AdminCategories() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title) return;
+    if (!title || !collectionId) return;
 
     try {
       await saveCategory({
         title: { ru: title, en: "" },
         description: { ru: description, en: "" },
         color: { id: `color-${Date.now()}`, color: color },
-        collection: "all",
+        collectionId: collectionId,
         tagsIds: selectedTags,
       }).unwrap();
 
@@ -66,6 +71,7 @@ export default function AdminCategories() {
       setDescription("");
       setColor("#FFD2D2");
       setSelectedTags([]);
+      setCollectionId("");
     } catch (err) {
       console.error("Failed to add category", err);
     }
@@ -244,6 +250,23 @@ export default function AdminCategories() {
                 className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                 rows={3}
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Collection</label>
+              <select
+                value={collectionId}
+                onChange={(e) => setCollectionId(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                required
+              >
+                <option value="" disabled>Select a collection...</option>
+                {collections.map((col: any) => (
+                  <option key={col.id} value={col.id} className="bg-card text-foreground">
+                    {col.title?.ru || col.title?.en || col.title || ""}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1.5">

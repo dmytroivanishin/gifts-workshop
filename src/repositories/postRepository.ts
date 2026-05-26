@@ -83,26 +83,45 @@ export class PostRepository extends BaseRepository<Post, PopulatedPost> implemen
 
     // 4. Resolve poster
     let poster = undefined;
-    if (post.posterId && mediaRepo) {
-      poster = await mediaRepo.getById(post.posterId);
+    let posterMediaId = undefined;
+    if (post.posterId) {
+      if (typeof post.posterId === "string") {
+        posterMediaId = post.posterId;
+      } else if (typeof post.posterId === "object" && (post.posterId as any).media) {
+        posterMediaId = (post.posterId as any).media;
+      }
+    }
+
+    if (posterMediaId && mediaRepo) {
+      poster = await mediaRepo.getById(posterMediaId);
     }
 
     // 5. Resolve media array
     const mediaList = (post.media && mediaRepo)
       ? (await Promise.all(
-          post.media.map(async (m): Promise<PopulatedPostMedia | null> => {
-            const mediaItem = await mediaRepo.getById(m.mediaId);
-            if (!mediaItem) return null;
-            return {
-              id: m.id,
-              order: m.order,
-              mediaId: m.mediaId,
-              position: m.position,
-              media: mediaItem,
-            };
-          })
-        )).filter((m): m is PopulatedPostMedia => !!m)
+        post.media.map(async (m): Promise<PopulatedPostMedia | null> => {
+          const mediaItem = await mediaRepo.getById(m.mediaId);
+          if (!mediaItem) return null;
+          return {
+            id: m.id,
+            order: m.order,
+            mediaId: m.mediaId,
+            position: m.position,
+            media: mediaItem,
+          };
+        })
+      )).filter((m): m is PopulatedPostMedia => !!m)
       : [];
+
+    if (mediaList.length === 0 && poster && posterMediaId) {
+      mediaList.push({
+        id: `m-fallback-${post.id}`,
+        order: 1,
+        mediaId: posterMediaId,
+        position: typeof post.posterId === "object" ? (post.posterId as any).position : undefined,
+        media: poster,
+      });
+    }
 
     return {
       ...post,
@@ -129,17 +148,17 @@ export class PostRepository extends BaseRepository<Post, PopulatedPost> implemen
 
     const flatMedia: PostMedia[] = Array.isArray(raw.media)
       ? raw.media
-          .map((pm: any): PostMedia | null => {
-            const mediaId = pm.mediaId || (pm.media ? pm.media.id : undefined);
-            if (!mediaId) return null;
-            return {
-              id: pm.id || randomUUID(),
-              order: pm.order || 0,
-              mediaId,
-              position: pm.position,
-            };
-          })
-          .filter((m: PostMedia | null): m is PostMedia => !!m)
+        .map((pm: any): PostMedia | null => {
+          const mediaId = pm.mediaId || (pm.media ? pm.media.id : undefined);
+          if (!mediaId) return null;
+          return {
+            id: pm.id || randomUUID(),
+            order: pm.order || 0,
+            mediaId,
+            position: pm.position,
+          };
+        })
+        .filter((m: PostMedia | null): m is PostMedia => !!m)
       : [];
 
     // Strip relations
