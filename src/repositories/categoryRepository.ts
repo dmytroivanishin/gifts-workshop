@@ -1,5 +1,5 @@
-import { BaseRepository, registerRepository, repositoryRegistry } from "./baseRepository";
-import { ICategoryRepository, IColorRepository, ICollectionRepository, ITagRepository } from "./interfaces";
+import { BaseRepository, registerRepository, populateRelations, repositoryRegistry } from "./baseRepository";
+import { ICategoryRepository, ICollectionRepository } from "./interfaces";
 import { Category, PopulatedCategory, Tag } from "@/types";
 import { NotFoundError } from "@/common/errors/notFound";
 import { ValidationError } from "@/common/errors/validation";
@@ -10,54 +10,58 @@ export class CategoryRepository extends BaseRepository<Category, PopulatedCatego
     registerRepository("categories", this);
   }
 
-  async getBySlug(slug: string): Promise<PopulatedCategory | undefined> {
-    const recs = await this.getByQuery({ slug });
+  async getBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined> {
+    const recs = await this.getByQuery({ slug }, options);
     if (!recs || recs.length === 0) return undefined;
     return recs[0];
   }
 
-  protected async populate(cat: Category): Promise<PopulatedCategory> {
-    const colorRepo = repositoryRegistry["colors"] as IColorRepository;
-    const collectionRepo = repositoryRegistry["collections"] as ICollectionRepository;
-    const tagRepo = repositoryRegistry["tags"] as ITagRepository;
+  protected override async populate(cat: Category, options?: { populate?: string }): Promise<PopulatedCategory> {
+    const res = await this.populateMany([cat], options);
+    return res[0];
+  }
 
-    // 1. Color
-    let color = undefined;
-    if (cat.colorId && colorRepo) {
-      color = await colorRepo.getById(cat.colorId);
-    }
-
-    // 2. Collection
-    let collection = undefined;
-    if (cat.collectionId && collectionRepo) {
-      collection = await collectionRepo.getById(cat.collectionId);
-    }
-    if (!collection) {
-      throw new NotFoundError(`Collection with ID ${cat.collectionId} not found for category ${cat.id}`);
-    }
-
-    // 3. Parent category (Omitted to prevent N+1 DB queries; UI tree construction)
-    const parent = undefined;
-
-    // 4. Tags
-    const tags = (cat.tagsIds && cat.tagsIds.length > 0 && tagRepo)
-      ? await tagRepo.getByIds(cat.tagsIds)
-      : [];
-
-    return {
-      ...cat,
-      color,
-      collection,
-      parent,
-      tags,
-    };
+  protected override async populateMany(cats: Category[], options?: { populate?: string }): Promise<PopulatedCategory[]> {
+    return populateRelations<Category, PopulatedCategory>(
+      cats,
+      options?.populate,
+      {
+        color: {
+          repoName: "colors",
+          idExtractor: c => c.colorId,
+          mapper: (cat, colors) => {
+            cat.color = colors.find(c => c.id === cat.colorId);
+          }
+        },
+        collection: {
+          repoName: "collections",
+          idExtractor: c => c.collectionId,
+          mapper: (cat, collections) => {
+            cat.collection = collections.find(c => c.id === cat.collectionId)!;
+          }
+        },
+        tags: {
+          repoName: "tags",
+          idExtractor: c => c.tagsIds,
+          mapper: (cat, tags) => {
+            cat.tags = (cat.tagsIds || []).map(tid => tags.find(t => t.id === tid)).filter((t): t is Tag => !!t);
+          }
+        }
+      }
+    ).then(populatedCats => {
+      // Resolve self-referential parent category from the loaded array
+      return populatedCats.map(cat => {
+        cat.parent = cat.parentId ? populatedCats.find(c => c.id === cat.parentId) : undefined;
+        return cat;
+      });
+    });
   }
 
   async save(item: any): Promise<PopulatedCategory> {
     const collectionRepo = repositoryRegistry["collections"] as ICollectionRepository;
+    const collectionId = item.collectionId;
 
-    const collectionId = item.collectionId || (item.collection ? (typeof item.collection === "string" ? item.collection : item.collection.id) : undefined);
-    if (!collectionId || collectionId === "all") {
+    if (!collectionId) {
       throw new ValidationError("Collection is required to save a category", [
         { field: "collectionId", message: "Collection is required" }
       ]);
@@ -76,17 +80,11 @@ export class CategoryRepository extends BaseRepository<Category, PopulatedCatego
   protected serialize(item: any): Category {
     const raw: any = { ...item };
 
-    // Extricate relation fields
-    const colorId = raw.colorId || (raw.color ? (typeof raw.color === "string" ? raw.color : raw.color.id) : undefined);
-    const collectionId = raw.collectionId || (raw.collection ? (typeof raw.collection === "string" ? raw.collection : raw.collection.id) : undefined);
-    const parentId = raw.parentId || (raw.parent ? (typeof raw.parent === "string" ? raw.parent : raw.parent.id) : undefined);
+    const colorId = raw.colorId;
+    const collectionId = raw.collectionId;
+    const parentId = raw.parentId;
+    const tagsIds = raw.tagsIds || [];
 
-    let tagsIds = raw.tagsIds;
-    if (Array.isArray(raw.tags)) {
-      tagsIds = raw.tags.map((t: any) => typeof t === "string" ? t : t.id);
-    }
-
-    // Clean relation keys
     delete raw.color;
     delete raw.collection;
     delete raw.parent;

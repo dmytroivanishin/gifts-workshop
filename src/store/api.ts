@@ -5,7 +5,7 @@ export const api = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: "/api/v1" }),
   tagTypes: ["Post", "Category", "Tag", "Collection", "Media"],
   endpoints: (builder) => ({
-    getPosts: builder.query<{ data: PopulatedPost[]; meta: any }, { search?: string; category?: string; inStock?: boolean; page?: number; limit?: number } | void>({
+    getPosts: builder.query<{ data: PopulatedPost[]; meta: any }, { search?: string; category?: string; inStock?: boolean; page?: number; limit?: number; populate?: string } | void>({
       query: (params) => {
         const urlParams = new URLSearchParams();
         if (params?.search) urlParams.append("search", params.search);
@@ -13,6 +13,7 @@ export const api = createApi({
         if (params?.inStock) urlParams.append("inStock", "true");
         if (params?.page) urlParams.append("page", params.page.toString());
         if (params?.limit) urlParams.append("limit", params.limit.toString());
+        if (params?.populate) urlParams.append("populate", params.populate);
         
         return {
           url: `/posts?${urlParams.toString()}`,
@@ -47,11 +48,12 @@ export const api = createApi({
       }),
       invalidatesTags: ["Post"],
     }),
-    getCategories: builder.query<{ data: PopulatedCategory[]; meta: any }, { page?: number; limit?: number } | void>({
+    getCategories: builder.query<{ data: PopulatedCategory[]; meta: any }, { page?: number; limit?: number; populate?: string } | void>({
       query: (params) => {
         const urlParams = new URLSearchParams();
         if (params?.page) urlParams.append("page", params.page.toString());
         if (params?.limit) urlParams.append("limit", params.limit.toString());
+        if (params?.populate) urlParams.append("populate", params.populate);
         return {
           url: `/categories?${urlParams.toString()}`,
         };

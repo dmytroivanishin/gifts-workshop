@@ -12,7 +12,12 @@ export default function AdminDashboard() {
   const [posts, setPosts] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
 
-  const { data: response, isLoading, isFetching } = useGetPostsQuery({ search: search || undefined, page, limit: 10 });
+  const { data: response, isLoading, isFetching } = useGetPostsQuery({
+    search: search || undefined,
+    page,
+    limit: 10,
+    populate: "category,poster",
+  });
   const [deletePost] = useDeletePostMutation();
 
   const loaderRef = useRef<HTMLTableRowElement | null>(null);

@@ -13,13 +13,14 @@ export class PostController {
       const tag = searchParams.get("tag") || undefined;
       const collection = searchParams.get("collection") || undefined;
       const inStock = searchParams.get("inStock") === "true" ? true : undefined;
+      const populate = searchParams.get("populate") || undefined;
       
       const pageStr = searchParams.get("page");
       const limitStr = searchParams.get("limit");
       const page = pageStr ? parseInt(pageStr, 10) : undefined;
       const limit = limitStr ? parseInt(limitStr, 10) : undefined;
 
-      const result = await this.postService.getFilteredPosts({ search, category, tag, collectionSlug: collection, inStock, page, limit });
+      const result = await this.postService.getFilteredPosts({ search, category, tag, collectionSlug: collection, inStock, page, limit, populate });
 
       return sendSuccess(result.data, result.meta);
     } catch (error: any) {
@@ -29,7 +30,9 @@ export class PostController {
 
   async getPostById(request: Request, id: string) {
     try {
-      const post = await this.postService.getPostById(id);
+      const { searchParams } = new URL(request.url);
+      const populate = searchParams.get("populate") || undefined;
+      const post = await this.postService.getPostById(id, { populate });
       if (!post) {
         throw new NotFoundError("Post not found");
       }

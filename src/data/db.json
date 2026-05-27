@@ -410,32 +410,32 @@
     {
       "id": "c0100001-beef-4000-8000-000000000001",
       "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
-      "colorId": "#8F4A4A"
+      "color": "#8F4A4A"
     },
     {
       "id": "c0100002-beef-4000-8000-000000000002",
       "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
-      "colorId": "#835952"
+      "color": "#835952"
     },
     {
       "id": "c0100003-beef-4000-8000-000000000003",
       "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
-      "colorId": "#1E6262"
+      "color": "#1E6262"
     },
     {
       "id": "c0100004-beef-4000-8000-000000000004",
       "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
-      "colorId": "#5C6535"
+      "color": "#5C6535"
     },
     {
       "id": "c0100005-beef-4000-8000-000000000005",
       "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
-      "colorId": "#59513C"
+      "color": "#59513C"
     },
     {
       "id": "c0100006-beef-4000-8000-000000000006",
       "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
-      "colorId": "#904504"
+      "color": "#904504"
     }
   ],
   "tags": [

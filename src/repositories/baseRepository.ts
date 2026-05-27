@@ -7,6 +7,134 @@ export function registerRepository(name: string, repo: any) {
   repositoryRegistry[name] = repo;
 }
 
+export function shouldPopulate(field: string, populateStr?: string): boolean {
+  if (populateStr === undefined) return true;
+  const parts = populateStr.split(",").map(s => s.trim());
+  return parts.some(p => p === field || p.startsWith(`${field}.`));
+}
+
+export function getSubPopulateString(field: string, populateStr?: string): string | undefined {
+  if (populateStr === undefined) return undefined;
+  
+  const parts = populateStr.split(",").map(s => s.trim());
+  const subParts = parts
+    .filter(p => p.startsWith(`${field}.`))
+    .map(p => p.substring(field.length + 1));
+    
+  if (subParts.length > 0) {
+    return subParts.join(",");
+  }
+  
+  return undefined;
+}
+
+export function collectUniqueIds<T>(
+  items: T[],
+  extractor: (item: T) => string | undefined | null | (string | undefined | null)[]
+): string[] {
+  return Array.from(
+    new Set(
+      items
+        .flatMap(item => {
+          const val = extractor(item);
+          return Array.isArray(val) ? val : [val];
+        })
+        .filter((id): id is string => typeof id === "string" && id.length > 0)
+    )
+  );
+}
+
+export async function populateRelations<TItem, TPopulated>(
+  items: TItem[],
+  populateStr: string | undefined,
+  config: Record<string, {
+    repoName: string;
+    idExtractor: (item: TItem) => string | undefined | null | (string | undefined | null)[];
+    mapper: (item: TPopulated, resolvedItems: any[]) => void;
+  }>
+): Promise<TPopulated[]> {
+  if (items.length === 0) return [];
+
+  // Clone items to avoid direct mutation of input arrays
+  const populatedList = items.map(item => ({ ...item } as any as TPopulated));
+
+  // Group fields by repoName to batch fetch and avoid N+1 queries
+  const repoGroups: Record<string, {
+    fields: string[];
+    idExtractors: ((item: TItem) => string | undefined | null | (string | undefined | null)[])[];
+  }> = {};
+
+  for (const [field, fieldConfig] of Object.entries(config)) {
+    if (shouldPopulate(field, populateStr)) {
+      if (!repoGroups[fieldConfig.repoName]) {
+        repoGroups[fieldConfig.repoName] = { fields: [], idExtractors: [] };
+      }
+      repoGroups[fieldConfig.repoName].fields.push(field);
+      repoGroups[fieldConfig.repoName].idExtractors.push(fieldConfig.idExtractor);
+    }
+  }
+
+  // Fetch all related entities in parallel (grouped by repo to keep queries flat)
+  const repoNames = Object.keys(repoGroups);
+  const fetchPromises = repoNames.map(async (repoName) => {
+    const group = repoGroups[repoName];
+    const repo = repositoryRegistry[repoName];
+    if (!repo) return { repoName, data: [] };
+
+    // Batch extract unique IDs across all fields sharing this repository
+    const allIds = Array.from(
+      new Set(
+        items
+          .flatMap(item => group.idExtractors.flatMap(ext => {
+            const val = ext(item);
+            return Array.isArray(val) ? val : [val];
+          }))
+          .filter((id): id is string => typeof id === "string" && id.length > 0)
+      )
+    );
+
+    if (allIds.length === 0) return { repoName, data: [] };
+
+    // Merge sub-populate strings for all fields mapping to this repository
+    let subPopulateStr: string | undefined = undefined;
+    if (populateStr !== undefined) {
+      const allSubParts: string[] = [];
+      for (const field of group.fields) {
+        const sub = getSubPopulateString(field, populateStr);
+        if (sub) {
+          allSubParts.push(...sub.split(","));
+        }
+      }
+      if (allSubParts.length > 0) {
+        subPopulateStr = Array.from(new Set(allSubParts)).join(",");
+      }
+    }
+
+    const options = subPopulateStr ? { populate: subPopulateStr } : undefined;
+    const resolved = await repo.getByIds(allIds, options);
+    return { repoName, data: resolved || [] };
+  });
+
+  const fetchResults = await Promise.all(fetchPromises);
+  const resolvedDataByRepo = fetchResults.reduce((acc, curr) => {
+    acc[curr.repoName] = curr.data;
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  // Apply declarative mapping for each item
+  for (const populatedItem of populatedList) {
+    const originalItem = items[populatedList.indexOf(populatedItem)];
+
+    for (const [field, fieldConfig] of Object.entries(config)) {
+      const isFieldPopulated = shouldPopulate(field, populateStr);
+      const resolvedItems = isFieldPopulated ? (resolvedDataByRepo[fieldConfig.repoName] || []) : [];
+      fieldConfig.mapper(populatedItem, resolvedItems);
+    }
+  }
+
+  return populatedList;
+}
+
 export class Database {
   private static uri: string = "http://localhost:3001";
   private static isConnected: boolean = false;
@@ -53,15 +181,19 @@ export class BaseRepository<T extends { id: string }, TPopulated = T> {
     return id ? `${base}/${this.collectionName}/${id}` : `${base}/${this.collectionName}`;
   }
 
-  protected async populate(item: T): Promise<TPopulated> {
+  protected async populate(item: T, options?: { populate?: string }): Promise<TPopulated> {
     return item as unknown as TPopulated;
+  }
+
+  protected async populateMany(items: T[], options?: { populate?: string }): Promise<TPopulated[]> {
+    return Promise.all(items.map(item => this.populate(item, options)));
   }
 
   protected serialize(item: any): T {
     return item as T;
   }
 
-  async getAll(options?: PaginationOptions): Promise<TPopulated[]> {
+  async getAll(options?: PaginationOptions & { populate?: string }): Promise<TPopulated[]> {
     let url = this.getUrl();
     if (options?.page || options?.limit) {
       const params = new URLSearchParams();
@@ -77,20 +209,20 @@ export class BaseRepository<T extends { id: string }, TPopulated = T> {
 
     const data = await res.json();
     const rawItems: T[] = Array.isArray(data) ? data : data.data || [];
-    return Promise.all(rawItems.map(item => this.populate(item)));
+    return this.populateMany(rawItems, options);
   }
 
-  async getById(id: string): Promise<TPopulated | undefined> {
+  async getById(id: string, options?: { populate?: string }): Promise<TPopulated | undefined> {
     const res = await fetch(this.getUrl(id), { cache: "no-store" });
     if (res.status === 404) return undefined;
     if (!res.ok) {
       throw new InternalServerError(`Failed to fetch by id from ${this.collectionName}`);
     }
     const raw = await res.json();
-    return this.populate(raw);
+    return this.populate(raw, options);
   }
 
-  async getByIds(ids: string[]): Promise<TPopulated[]> {
+  async getByIds(ids: string[], options?: { populate?: string }): Promise<TPopulated[]> {
     if (!ids || ids.length === 0) return [];
     const params = new URLSearchParams();
     ids.forEach(id => params.append("id", id));
@@ -102,10 +234,10 @@ export class BaseRepository<T extends { id: string }, TPopulated = T> {
 
     const data = await res.json();
     const rawItems: T[] = Array.isArray(data) ? data : data.data || [];
-    return Promise.all(rawItems.map(item => this.populate(item)));
+    return this.populateMany(rawItems, options);
   }
 
-  async getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<TPopulated[]> {
+  async getByQuery(query: Record<string, any>, options?: PaginationOptions & { populate?: string }): Promise<TPopulated[]> {
     const params = new URLSearchParams();
     Object.entries(query).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -126,7 +258,7 @@ export class BaseRepository<T extends { id: string }, TPopulated = T> {
 
     const data = await res.json();
     const rawItems: T[] = Array.isArray(data) ? data : data.data || [];
-    return Promise.all(rawItems.map(item => this.populate(item)));
+    return this.populateMany(rawItems, options);
   }
 
   async save(item: any): Promise<TPopulated> {

@@ -80,38 +80,35 @@ export class PostService implements IPostService {
     };
   }
 
-  async getPostById(id: string): Promise<PopulatedPost | undefined> {
-    let post = await this.postRepo.getById(id);
+  async getPostById(id: string, options?: { populate?: string }): Promise<PopulatedPost | undefined> {
+    let post = await this.postRepo.getById(id, options);
     if (!post) {
-      post = await this.postRepo.getBySlug(id);
+      post = await this.postRepo.getBySlug(id, options);
     }
     return post;
   }
 
-  async getPostBySlug(slug: string): Promise<PopulatedPost | undefined> {
-    return this.postRepo.getBySlug(slug);
+  async getPostBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedPost | undefined> {
+    return this.postRepo.getBySlug(slug, options);
   }
 
   async createPost(body: any): Promise<PopulatedPost> {
     const id = body.id || randomUUID();
-
-    // 1. Generate slug
     const slug = await generateUniqueSlug(body.title, id, this.postRepo.getBySlug.bind(this.postRepo));
 
-    // 2. Build flat post object
     const flatPost: Post = {
       id,
-      title: typeof body.title === "string" ? { ru: body.title, en: "" } : { ru: body.title?.ru || "", en: body.title?.en || "" },
-      description: typeof body.description === "string" ? { ru: body.description, en: "" } : { ru: body.description?.ru || "", en: body.description?.en || "" },
+      title: body.title,
+      description: body.description,
       in_stock: body.in_stock ?? true,
       status: body.status ?? "Published",
-      collectionId: body.collectionId || "all",
-      categoryId: body.categoryId || "",
-      tagsIds: Array.isArray(body.tagsIds) ? body.tagsIds : [],
-      posterId: body.posterId || undefined,
-      media: Array.isArray(body.media) ? body.media : [],
+      collectionId: body.collectionId,
+      categoryId: body.categoryId,
+      tagsIds: body.tagsIds || [],
+      posterId: body.posterId,
+      media: body.media || [],
       slug,
-      userId: body.userId || "user-1",
+      userId: body.userId,
     };
 
     return this.postRepo.save(flatPost);
@@ -121,31 +118,29 @@ export class PostService implements IPostService {
     const existing = await this.postRepo.getById(id);
     if (!existing) return undefined;
 
-    // 1. Generate/resolve slug if title is modified
     let slug = existing.slug;
     if (body.title && JSON.stringify(body.title) !== JSON.stringify(existing.title)) {
       slug = await generateUniqueSlug(body.title, id, this.postRepo.getBySlug.bind(this.postRepo));
     }
 
-    // 2. Build flat post object
     const flatPost: Post = {
       id,
-      title: body.title !== undefined ? (typeof body.title === "string" ? { ru: body.title, en: "" } : { ru: body.title?.ru || "", en: body.title?.en || "" }) : existing.title,
-      description: body.description !== undefined ? (typeof body.description === "string" ? { ru: body.description, en: "" } : { ru: body.description?.ru || "", en: body.description?.en || "" }) : existing.description,
+      title: body.title !== undefined ? body.title : existing.title,
+      description: body.description !== undefined ? body.description : existing.description,
       in_stock: body.in_stock ?? existing.in_stock,
       status: body.status ?? existing.status,
-      collectionId: body.collectionId ?? existing.collectionId,
-      categoryId: body.categoryId ?? existing.categoryId,
-      tagsIds: Array.isArray(body.tagsIds) ? body.tagsIds : (existing.tagsIds || []),
+      collectionId: body.collectionId !== undefined ? body.collectionId : existing.collectionId,
+      categoryId: body.categoryId !== undefined ? body.categoryId : existing.categoryId,
+      tagsIds: body.tagsIds || existing.tagsIds || [],
       posterId: body.posterId !== undefined ? body.posterId : existing.posterId,
-      media: Array.isArray(body.media) ? body.media : (existing.media ? existing.media.map(m => ({
+      media: body.media || (existing.media ? existing.media.map(m => ({
         id: m.id,
         order: m.order,
         mediaId: m.mediaId,
         position: m.position,
       })) : []),
       slug,
-      userId: body.userId || existing.userId || "user-1",
+      userId: body.userId !== undefined ? body.userId : existing.userId,
     };
 
     return this.postRepo.save(flatPost);

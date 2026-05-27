@@ -14,18 +14,19 @@ export interface QueryOptions extends PaginationOptions {
   collectionId?: string;
   tagsIds?: string;
   slug?: string;
+  populate?: string;
 }
 
 export interface IBaseRepository<T, TPopulated = T, TQueryOptions = PaginationOptions> {
-  getAll(options?: TQueryOptions): Promise<TPopulated[]>;
-  getById(id: string): Promise<TPopulated | undefined>;
-  getByIds(ids: string[]): Promise<TPopulated[]>;
+  getAll(options?: TQueryOptions & { populate?: string }): Promise<TPopulated[]>;
+  getById(id: string, options?: { populate?: string }): Promise<TPopulated | undefined>;
+  getByIds(ids: string[], options?: { populate?: string }): Promise<TPopulated[]>;
   save(item: T): Promise<TPopulated>;
   delete(id: string): Promise<boolean>;
 }
 
 export interface ICategoryRepository extends IBaseRepository<Category, PopulatedCategory> {
-  getBySlug(slug: string): Promise<PopulatedCategory | undefined>;
+  getBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined>;
 }
 
 export interface ICollectionRepository extends IBaseRepository<Collection> {
@@ -37,8 +38,8 @@ export interface IColorRepository extends IBaseRepository<Color> {}
 export interface IMediaRepository extends IBaseRepository<Media> {}
 
 export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, QueryOptions> {
-  getBySlug(slug: string): Promise<PopulatedPost | undefined>;
-  getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedPost[]>;
+  getBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedPost | undefined>;
+  getByQuery(query: Record<string, any>, options?: PaginationOptions & { populate?: string }): Promise<PopulatedPost[]>;
 }
 
 export interface ITagRepository extends IBaseRepository<Tag> {

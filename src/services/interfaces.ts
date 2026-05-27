@@ -3,9 +3,9 @@ import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, P
 import { QueryOptions } from "@/repositories/interfaces";
 
 export interface ICategoryService {
-  getAllCategories(options?: PaginationOptions): Promise<PaginatedResult<Category>>;
-  getCategoryById(id: string): Promise<Category | undefined>;
-  getCategoryBySlug(slug: string): Promise<Category | undefined>;
+  getAllCategories(options?: PaginationOptions & { populate?: string }): Promise<PaginatedResult<Category>>;
+  getCategoryById(id: string, options?: { populate?: string }): Promise<Category | undefined>;
+  getCategoryBySlug(slug: string, options?: { populate?: string }): Promise<Category | undefined>;
   saveCategory(body: any): Promise<Category>;
   deleteCategory(id: string): Promise<boolean>;
 }
@@ -50,8 +50,8 @@ export interface IUserService {
 
 export interface IPostService {
   getFilteredPosts(filters?: QueryOptions): Promise<PaginatedResult<Post>>;
-  getPostById(id: string): Promise<Post | undefined>;
-  getPostBySlug(slug: string): Promise<Post | undefined>;
+  getPostById(id: string, options?: { populate?: string }): Promise<Post | undefined>;
+  getPostBySlug(slug: string, options?: { populate?: string }): Promise<Post | undefined>;
   createPost(body: any): Promise<Post>;
   updatePost(id: string, body: any): Promise<Post | undefined>;
   deletePost(id: string): Promise<boolean>;

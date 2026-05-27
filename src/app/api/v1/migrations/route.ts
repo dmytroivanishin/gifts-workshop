@@ -29,7 +29,7 @@ export async function GET() {
     const mappedColors = seedColors.map((color: any) => ({
       id: color.id,
       userId: color.userId || "c0a80101-1111-4444-9999-abcdefabcdef",
-      colorId: color.colorId,
+      color: color.color || color.colorId,
     }));
 
     // 3. Map Media exactly

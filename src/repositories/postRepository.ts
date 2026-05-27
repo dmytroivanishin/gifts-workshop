@@ -1,7 +1,7 @@
-import { BaseRepository, registerRepository, repositoryRegistry } from "./baseRepository";
+import { BaseRepository, registerRepository, populateRelations } from "./baseRepository";
 import { randomUUID } from "crypto";
-import { IPostRepository, QueryOptions, ICategoryRepository, ICollectionRepository, ITagRepository, IMediaRepository } from "./interfaces";
-import { Post, PopulatedPost, Tag, PostMedia, PopulatedPostMedia, PopulatedCategory } from "@/types";
+import { IPostRepository, QueryOptions } from "./interfaces";
+import { Post, PopulatedPost, Tag, PostMedia } from "@/types";
 import { NotFoundError } from "@/common/errors/notFound";
 import { InternalServerError } from "@/common/errors/internalServer";
 
@@ -11,8 +11,8 @@ export class PostRepository extends BaseRepository<Post, PopulatedPost> implemen
     registerRepository("posts", this);
   }
 
-  async getBySlug(slug: string): Promise<PopulatedPost | undefined> {
-    const recs = await this.getByQuery({ slug });
+  async getBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedPost | undefined> {
+    const recs = await this.getByQuery({ slug }, options);
     if (!recs || recs.length === 0) return undefined;
     return recs[0];
   }
@@ -49,113 +49,82 @@ export class PostRepository extends BaseRepository<Post, PopulatedPost> implemen
 
     const json = await res.json();
     const rawItems: Post[] = Array.isArray(json) ? json : json.data || [];
-    return Promise.all(rawItems.map(item => this.populate(item)));
+    return this.populateMany(rawItems, options);
   }
 
-  protected async populate(post: Post): Promise<PopulatedPost> {
-    const categoryRepo = repositoryRegistry["categories"] as ICategoryRepository;
-    const collectionRepo = repositoryRegistry["collections"] as ICollectionRepository;
-    const tagRepo = repositoryRegistry["tags"] as ITagRepository;
-    const mediaRepo = repositoryRegistry["media"] as IMediaRepository;
+  protected override async populate(post: Post, options?: { populate?: string }): Promise<PopulatedPost> {
+    const res = await this.populateMany([post], options);
+    return res[0];
+  }
 
-    // 1. Resolve collection
-    let collection = undefined;
-    if (post.collectionId && collectionRepo) {
-      collection = await collectionRepo.getById(post.collectionId);
-    }
-    if (!collection) {
-      throw new NotFoundError(`Collection with ID ${post.collectionId} not found for post ${post.id}`);
-    }
-
-    // 2. Resolve category
-    let category = undefined;
-    if (post.categoryId && categoryRepo) {
-      category = await categoryRepo.getById(post.categoryId) as PopulatedCategory;
-    }
-    if (!category) {
-      throw new NotFoundError(`Category with ID ${post.categoryId} not found for post ${post.id}`);
-    }
-
-    // 3. Resolve tags
-    const tags = (post.tagsIds && post.tagsIds.length > 0 && tagRepo)
-      ? await tagRepo.getByIds(post.tagsIds)
-      : [];
-
-    // 4. Resolve poster
-    let poster = undefined;
-    let posterMediaId = undefined;
-    if (post.posterId) {
-      if (typeof post.posterId === "string") {
-        posterMediaId = post.posterId;
-      } else if (typeof post.posterId === "object" && (post.posterId as any).media) {
-        posterMediaId = (post.posterId as any).media;
-      }
-    }
-
-    if (posterMediaId && mediaRepo) {
-      poster = await mediaRepo.getById(posterMediaId);
-    }
-
-    // 5. Resolve media array
-    let mediaList: PopulatedPostMedia[] = [];
-    if (post.media && post.media.length > 0 && mediaRepo) {
-      const mediaIds = post.media.map(m => m.mediaId);
-      const mediaItems = await mediaRepo.getByIds(mediaIds);
-      mediaList = post.media.reduce<PopulatedPostMedia[]>((acc, m) => {
-        const mediaItem = mediaItems.find(item => item.id === m.mediaId);
-        if (mediaItem) {
-          acc.push({
-            id: m.id,
-            order: m.order,
-            mediaId: m.mediaId,
-            position: m.position,
-            media: mediaItem,
-          });
+  protected override async populateMany(posts: Post[], options?: { populate?: string }): Promise<PopulatedPost[]> {
+    return populateRelations<Post, PopulatedPost>(
+      posts,
+      options?.populate,
+      {
+        category: {
+          repoName: "categories",
+          idExtractor: p => p.categoryId,
+          mapper: (post, categories) => {
+            post.category = categories.find(c => c.id === post.categoryId) as any;
+          }
+        },
+        collection: {
+          repoName: "collections",
+          idExtractor: p => p.collectionId,
+          mapper: (post, collections) => {
+            post.collection = collections.find(c => c.id === post.collectionId);
+          }
+        },
+        tags: {
+          repoName: "tags",
+          idExtractor: p => p.tagsIds,
+          mapper: (post, tags) => {
+            post.tags = (post.tagsIds || []).map(tid => tags.find(t => t.id === tid)).filter((t): t is Tag => !!t);
+          }
+        },
+        poster: {
+          repoName: "media",
+          idExtractor: p => p.posterId,
+          mapper: (post, media) => {
+            post.poster = media.find(m => m.id === post.posterId);
+          }
+        },
+        media: {
+          repoName: "media",
+          idExtractor: p => (p.media || []).map(m => m.mediaId),
+          mapper: (post, media) => {
+            post.media = (post.media || [])
+              .map(m => {
+                const med = media.find(item => item.id === m.mediaId);
+                return med ? { ...m, media: med } : null;
+              })
+              .filter((m): m is any => !!m);
+          }
         }
-        return acc;
-      }, []);
-    }
-
-
-    return {
-      ...post,
-      collection,
-      category,
-      tags,
-      poster,
-      media: mediaList,
-    };
+      }
+    );
   }
 
   protected serialize(item: any): Post {
     const raw = { ...item };
 
-    // Extricate IDs from relation fields
-    const categoryId = raw.categoryId || (raw.category ? (typeof raw.category === "string" ? raw.category : raw.category.id) : "");
-    const collectionId = raw.collectionId || (raw.collection ? (typeof raw.collection === "string" ? raw.collection : raw.collection.id) : "all");
-    const posterId = raw.posterId || (raw.poster ? (typeof raw.poster === "string" ? raw.poster : raw.poster.id) : undefined);
-
-    let tagsIds = raw.tagsIds;
-    if (Array.isArray(raw.tags)) {
-      tagsIds = raw.tags.map((t: any) => typeof t === "string" ? t : t.id);
-    }
+    const categoryId = raw.categoryId;
+    const collectionId = raw.collectionId;
+    const posterId = raw.posterId;
+    const tagsIds = raw.tagsIds || [];
 
     const flatMedia: PostMedia[] = Array.isArray(raw.media)
       ? raw.media
-        .map((pm: any): PostMedia | null => {
-          const mediaId = pm.mediaId || (pm.media ? pm.media.id : undefined);
-          if (!mediaId) return null;
-          return {
-            id: pm.id || randomUUID(),
-            order: pm.order || 0,
-            mediaId,
-            position: pm.position,
-          };
-        })
-        .filter((m: PostMedia | null): m is PostMedia => !!m)
+        .map((pm: any): PostMedia => ({
+          id: pm.id || randomUUID(),
+          order: pm.order || 0,
+          mediaId: pm.mediaId || pm.media?.id,
+          position: pm.position,
+        }))
+        .filter((m: PostMedia) => !!m.mediaId)
       : [];
 
-    // Strip relations
     delete raw.category;
     delete raw.collection;
     delete raw.tags;

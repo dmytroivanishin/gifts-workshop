@@ -268,18 +268,6 @@ export default function AdminCategories() {
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">{catDescRu}</p>
-                        {cat.tags && cat.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {cat.tags.map((t: any) => (
-                              <span
-                                key={t.id}
-                                className="text-[10px] font-medium bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full border border-border/40"
-                              >
-                                #{t.title?.ru || t.title?.en || t.title || ""}
-                              </span>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     )}
 

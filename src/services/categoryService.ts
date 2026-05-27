@@ -15,7 +15,9 @@ export class CategoryService implements ICategoryService {
     private tagRepo: ITagRepository
   ) {}
 
-  async getAllCategories(options?: PaginationOptions): Promise<any> {
+  async getAllCategories(options?: PaginationOptions & { populate?: string }): Promise<any> {
+    const populate = options?.populate !== undefined ? options.populate : "color,collection";
+
     if (options?.page || options?.limit) {
       const page = options.page || 1;
       const limit = options.limit || 20;
@@ -23,12 +25,13 @@ export class CategoryService implements ICategoryService {
       const categories = await this.categoryRepo.getAll({
         page,
         limit: limit + 1,
+        populate,
       });
 
       return paginate(categories, { page, limit });
     }
 
-    const categories = await this.categoryRepo.getAll();
+    const categories = await this.categoryRepo.getAll({ populate });
     
     return {
       data: categories,
@@ -41,12 +44,12 @@ export class CategoryService implements ICategoryService {
     };
   }
 
-  async getCategoryById(id: string): Promise<PopulatedCategory | undefined> {
-    return this.categoryRepo.getById(id);
+  async getCategoryById(id: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined> {
+    return this.categoryRepo.getById(id, options);
   }
 
-  async getCategoryBySlug(slug: string): Promise<PopulatedCategory | undefined> {
-    return this.categoryRepo.getBySlug(slug);
+  async getCategoryBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined> {
+    return this.categoryRepo.getBySlug(slug, options);
   }
 
   async saveCategory(body: any): Promise<PopulatedCategory> {
@@ -58,7 +61,7 @@ export class CategoryService implements ICategoryService {
     }
 
     const collectionId = body.collectionId || existingCategory?.collectionId;
-    if (!collectionId || collectionId === "all") {
+    if (!collectionId) {
       throw new ValidationError("Collection is required to save a category", [
         { field: "collectionId", message: "Collection is required" }
       ]);

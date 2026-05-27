@@ -12,8 +12,9 @@ export class CategoryController {
       const limitStr = searchParams.get("limit");
       const page = pageStr ? parseInt(pageStr, 10) : undefined;
       const limit = limitStr ? parseInt(limitStr, 10) : undefined;
+      const populate = searchParams.get("populate") || undefined;
 
-      const result = await this.categoryService.getAllCategories({ page, limit });
+      const result = await this.categoryService.getAllCategories({ page, limit, populate });
       return sendSuccess(result.data, result.meta);
     } catch (error: any) {
       return sendError(error);
