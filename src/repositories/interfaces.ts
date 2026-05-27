@@ -16,57 +16,35 @@ export interface QueryOptions extends PaginationOptions {
   slug?: string;
 }
 
-export interface ICategoryRepository {
-  getAll(options?: PaginationOptions): Promise<PopulatedCategory[]>;
-  getById(id: string): Promise<PopulatedCategory | undefined>;
+export interface IBaseRepository<T, TPopulated = T, TQueryOptions = PaginationOptions> {
+  getAll(options?: TQueryOptions): Promise<TPopulated[]>;
+  getById(id: string): Promise<TPopulated | undefined>;
+  getByIds(ids: string[]): Promise<TPopulated[]>;
+  save(item: T): Promise<TPopulated>;
+  delete(id: string): Promise<boolean>;
+}
+
+export interface ICategoryRepository extends IBaseRepository<Category, PopulatedCategory> {
   getBySlug(slug: string): Promise<PopulatedCategory | undefined>;
-  save(category: Category): Promise<PopulatedCategory>;
-  delete(id: string): Promise<boolean>;
 }
 
-export interface ICollectionRepository {
-  getAll(options?: PaginationOptions): Promise<Collection[]>;
-  getById(id: string): Promise<Collection | undefined>;
+export interface ICollectionRepository extends IBaseRepository<Collection> {
   getBySlug(slug: string): Promise<Collection | undefined>;
-  save(collection: Collection): Promise<Collection>;
-  delete(id: string): Promise<boolean>;
 }
 
-export interface IColorRepository {
-  getAll(options?: PaginationOptions): Promise<Color[]>;
-  getById(id: string): Promise<Color | undefined>;
-  save(color: Color): Promise<Color>;
-  delete(id: string): Promise<boolean>;
-}
+export interface IColorRepository extends IBaseRepository<Color> {}
 
-export interface IMediaRepository {
-  getAll(options?: PaginationOptions): Promise<Media[]>;
-  getById(id: string): Promise<Media | undefined>;
-  save(media: Media): Promise<Media>;
-  delete(id: string): Promise<boolean>;
-}
+export interface IMediaRepository extends IBaseRepository<Media> {}
 
-export interface IPostRepository {
-  getAll(options?: QueryOptions): Promise<PopulatedPost[]>;
-  getById(id: string): Promise<PopulatedPost | undefined>;
+export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, QueryOptions> {
   getBySlug(slug: string): Promise<PopulatedPost | undefined>;
-  save(post: Post): Promise<PopulatedPost>;
-  delete(id: string): Promise<boolean>;
   getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedPost[]>;
 }
 
-export interface ITagRepository {
-  getAll(options?: PaginationOptions): Promise<Tag[]>;
-  getById(id: string): Promise<Tag | undefined>;
+export interface ITagRepository extends IBaseRepository<Tag> {
   getBySlug(slug: string): Promise<Tag | undefined>;
-  save(tag: Tag): Promise<Tag>;
-  delete(id: string): Promise<boolean>;
 }
 
-export interface IUserRepository {
-  getAll(options?: PaginationOptions): Promise<User[]>;
-  getById(id: string): Promise<User | undefined>;
+export interface IUserRepository extends IBaseRepository<User> {
   getByEmail(email: string): Promise<User | undefined>;
-  save(user: User): Promise<User>;
-  delete(id: string): Promise<boolean>;
 }

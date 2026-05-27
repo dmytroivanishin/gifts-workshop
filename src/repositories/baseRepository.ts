@@ -90,6 +90,21 @@ export class BaseRepository<T extends { id: string }, TPopulated = T> {
     return this.populate(raw);
   }
 
+  async getByIds(ids: string[]): Promise<TPopulated[]> {
+    if (!ids || ids.length === 0) return [];
+    const params = new URLSearchParams();
+    ids.forEach(id => params.append("id", id));
+
+    const res = await fetch(`${this.getUrl()}?${params.toString()}`, { cache: "no-store" });
+    if (!res.ok) {
+      throw new InternalServerError(`Failed to fetch by ids from ${this.collectionName}`);
+    }
+
+    const data = await res.json();
+    const rawItems: T[] = Array.isArray(data) ? data : data.data || [];
+    return Promise.all(rawItems.map(item => this.populate(item)));
+  }
+
   async getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<TPopulated[]> {
     const params = new URLSearchParams();
     Object.entries(query).forEach(([key, value]) => {

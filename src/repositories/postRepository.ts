@@ -1,6 +1,6 @@
 import { BaseRepository, registerRepository, repositoryRegistry } from "./baseRepository";
 import { randomUUID } from "crypto";
-import { IPostRepository, QueryOptions } from "./interfaces";
+import { IPostRepository, QueryOptions, ICategoryRepository, ICollectionRepository, ITagRepository, IMediaRepository } from "./interfaces";
 import { Post, PopulatedPost, Tag, PostMedia, PopulatedPostMedia, PopulatedCategory } from "@/types";
 import { NotFoundError } from "@/common/errors/notFound";
 import { InternalServerError } from "@/common/errors/internalServer";
@@ -53,10 +53,10 @@ export class PostRepository extends BaseRepository<Post, PopulatedPost> implemen
   }
 
   protected async populate(post: Post): Promise<PopulatedPost> {
-    const categoryRepo = repositoryRegistry["categories"];
-    const collectionRepo = repositoryRegistry["collections"];
-    const tagRepo = repositoryRegistry["tags"];
-    const mediaRepo = repositoryRegistry["media"];
+    const categoryRepo = repositoryRegistry["categories"] as ICategoryRepository;
+    const collectionRepo = repositoryRegistry["collections"] as ICollectionRepository;
+    const tagRepo = repositoryRegistry["tags"] as ITagRepository;
+    const mediaRepo = repositoryRegistry["media"] as IMediaRepository;
 
     // 1. Resolve collection
     let collection = undefined;
@@ -77,8 +77,8 @@ export class PostRepository extends BaseRepository<Post, PopulatedPost> implemen
     }
 
     // 3. Resolve tags
-    const tags = (post.tagsIds && tagRepo)
-      ? (await Promise.all(post.tagsIds.map(tagId => tagRepo.getById(tagId)))).filter((t): t is Tag => !!t)
+    const tags = (post.tagsIds && post.tagsIds.length > 0 && tagRepo)
+      ? await tagRepo.getByIds(post.tagsIds)
       : [];
 
     // 4. Resolve poster
@@ -97,31 +97,25 @@ export class PostRepository extends BaseRepository<Post, PopulatedPost> implemen
     }
 
     // 5. Resolve media array
-    const mediaList = (post.media && mediaRepo)
-      ? (await Promise.all(
-        post.media.map(async (m): Promise<PopulatedPostMedia | null> => {
-          const mediaItem = await mediaRepo.getById(m.mediaId);
-          if (!mediaItem) return null;
-          return {
+    let mediaList: PopulatedPostMedia[] = [];
+    if (post.media && post.media.length > 0 && mediaRepo) {
+      const mediaIds = post.media.map(m => m.mediaId);
+      const mediaItems = await mediaRepo.getByIds(mediaIds);
+      mediaList = post.media.reduce<PopulatedPostMedia[]>((acc, m) => {
+        const mediaItem = mediaItems.find(item => item.id === m.mediaId);
+        if (mediaItem) {
+          acc.push({
             id: m.id,
             order: m.order,
             mediaId: m.mediaId,
             position: m.position,
             media: mediaItem,
-          };
-        })
-      )).filter((m): m is PopulatedPostMedia => !!m)
-      : [];
-
-    if (mediaList.length === 0 && poster && posterMediaId) {
-      mediaList.push({
-        id: `m-fallback-${post.id}`,
-        order: 1,
-        mediaId: posterMediaId,
-        position: typeof post.posterId === "object" ? (post.posterId as any).position : undefined,
-        media: poster,
-      });
+          });
+        }
+        return acc;
+      }, []);
     }
+
 
     return {
       ...post,

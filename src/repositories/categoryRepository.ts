@@ -1,5 +1,5 @@
 import { BaseRepository, registerRepository, repositoryRegistry } from "./baseRepository";
-import { ICategoryRepository } from "./interfaces";
+import { ICategoryRepository, IColorRepository, ICollectionRepository, ITagRepository } from "./interfaces";
 import { Category, PopulatedCategory, Tag } from "@/types";
 import { NotFoundError } from "@/common/errors/notFound";
 import { ValidationError } from "@/common/errors/validation";
@@ -17,9 +17,9 @@ export class CategoryRepository extends BaseRepository<Category, PopulatedCatego
   }
 
   protected async populate(cat: Category): Promise<PopulatedCategory> {
-    const colorRepo = repositoryRegistry["colors"];
-    const collectionRepo = repositoryRegistry["collections"];
-    const tagRepo = repositoryRegistry["tags"];
+    const colorRepo = repositoryRegistry["colors"] as IColorRepository;
+    const collectionRepo = repositoryRegistry["collections"] as ICollectionRepository;
+    const tagRepo = repositoryRegistry["tags"] as ITagRepository;
 
     // 1. Color
     let color = undefined;
@@ -40,8 +40,8 @@ export class CategoryRepository extends BaseRepository<Category, PopulatedCatego
     const parent = undefined;
 
     // 4. Tags
-    const tags = (cat.tagsIds && tagRepo)
-      ? (await Promise.all(cat.tagsIds.map(id => tagRepo.getById(id)))).filter((t): t is Tag => !!t)
+    const tags = (cat.tagsIds && cat.tagsIds.length > 0 && tagRepo)
+      ? await tagRepo.getByIds(cat.tagsIds)
       : [];
 
     return {
@@ -54,7 +54,7 @@ export class CategoryRepository extends BaseRepository<Category, PopulatedCatego
   }
 
   async save(item: any): Promise<PopulatedCategory> {
-    const collectionRepo = repositoryRegistry["collections"];
+    const collectionRepo = repositoryRegistry["collections"] as ICollectionRepository;
 
     const collectionId = item.collectionId || (item.collection ? (typeof item.collection === "string" ? item.collection : item.collection.id) : undefined);
     if (!collectionId || collectionId === "all") {
