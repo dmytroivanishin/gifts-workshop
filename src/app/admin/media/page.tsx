@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Upload, Trash2 } from "lucide-react";
+import { useTranslation } from "@/i18n";
 
 interface MediaItem {
   id: string;
@@ -19,6 +20,7 @@ const INITIAL_MEDIA: MediaItem[] = [
 ];
 
 export default function AdminMedia() {
+  const { t } = useTranslation();
   const [media, setMedia] = useState<MediaItem[]>(INITIAL_MEDIA);
   const [dragActive, setDragActive] = useState(false);
 
@@ -50,14 +52,15 @@ export default function AdminMedia() {
   };
 
   const handleDelete = (id: string) => {
+    if (!confirm(t("delete_confirm_media"))) return;
     setMedia(media.filter((item) => item.id !== id));
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Media Library</h1>
-        <p className="text-sm text-muted-foreground">Upload and manage visual assets for your projects.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("media_library")}</h1>
+        <p className="text-sm text-muted-foreground">{t("media_subtitle")}</p>
       </div>
 
       {/* Drag & Drop Upload Zone */}
@@ -76,8 +79,8 @@ export default function AdminMedia() {
           <Upload size={24} />
         </div>
         <div className="text-center space-y-1">
-          <p className="text-sm font-semibold text-foreground">Drag and drop your files here</p>
-          <p className="text-xs text-muted-foreground">PNG, JPG or GIF up to 5MB</p>
+          <p className="text-sm font-semibold text-foreground">{t("drag_drop_files")}</p>
+          <p className="text-xs text-muted-foreground">{t("media_limits")}</p>
         </div>
         <label className="px-4 py-2 bg-secondary border border-border rounded-lg text-sm font-semibold text-foreground hover:bg-secondary/70 transition-colors cursor-pointer">
           Select Files

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import ru from "./ru.json";
 import en from "./en.json";
 
@@ -17,20 +18,27 @@ interface I18nContextProps {
 const I18nContext = createContext<I18nContextProps | undefined>(undefined);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [locale, setLocaleState] = useState<Locale>("ru");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("app_locale") as Locale;
+      const isAdmin = pathname?.startsWith("/admin");
+      const key = isAdmin ? "admin_locale" : "app_locale";
+      const saved = localStorage.getItem(key) as Locale;
       if (saved === "ru" || saved === "en") {
         setLocaleState(saved);
+      } else {
+        setLocaleState("ru");
       }
     }
-  }, []);
+  }, [pathname]);
 
   const setLocale = (newLocale: Locale) => {
     setLocaleState(newLocale);
-    localStorage.setItem("app_locale", newLocale);
+    const isAdmin = pathname?.startsWith("/admin");
+    const key = isAdmin ? "admin_locale" : "app_locale";
+    localStorage.setItem(key, newLocale);
   };
 
   const t = (key: keyof typeof ru): string => {

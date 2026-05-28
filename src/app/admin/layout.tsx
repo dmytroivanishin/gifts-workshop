@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
+import { useTranslation } from "@/i18n";
 
 export default function AdminLayout({
   children,
@@ -13,6 +14,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [authorized, setAuthorized] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
@@ -41,38 +43,44 @@ export default function AdminLayout({
       {/* Sidebar */}
       <aside className="w-64 border-r bg-secondary flex-shrink-0">
         <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold text-primary">Admin Panel</h2>
+          <h2 className="text-lg font-semibold text-primary">{t("admin_panel")}</h2>
         </div>
         <nav className="p-4 flex flex-col gap-1">
           <Link
             href="/admin/dashboard"
             className="text-sm font-medium px-3 py-2 rounded-lg hover:bg-background transition-colors block text-foreground"
           >
-            Dashboard
+            {t("projects")}
           </Link>
           <Link
             href="/admin/categories"
             className="text-sm font-medium px-3 py-2 rounded-lg hover:bg-background transition-colors block text-foreground"
           >
-            Categories
+            {t("categories")}
+          </Link>
+          <Link
+            href="/admin/collections"
+            className="text-sm font-medium px-3 py-2 rounded-lg hover:bg-background transition-colors block text-foreground"
+          >
+            {t("collections")}
           </Link>
           <Link
             href="/admin/tags"
             className="text-sm font-medium px-3 py-2 rounded-lg hover:bg-background transition-colors block text-foreground"
           >
-            Tags Manager
+            {t("tags_manager")}
           </Link>
           <Link
             href="/admin/localizations"
             className="text-sm font-medium px-3 py-2 rounded-lg hover:bg-background transition-colors block text-foreground"
           >
-            Translations
+            {t("translations")}
           </Link>
           <Link
             href="/admin/media"
             className="text-sm font-medium px-3 py-2 rounded-lg hover:bg-background transition-colors block text-foreground"
           >
-            Media Library
+            {t("media_library")}
           </Link>
         </nav>
       </aside>

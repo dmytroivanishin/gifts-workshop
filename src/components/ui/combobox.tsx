@@ -78,7 +78,11 @@ export default function Combobox({
 
   const handleRemove = (val: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(selectedValues.filter((v) => v !== val));
+    if (multiple) {
+      onChange(selectedValues.filter((v) => v !== val));
+    } else {
+      onChange("");
+    }
   };
 
   const handleCreate = async () => {

@@ -86,7 +86,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
         className
       )}
     >
-      <Link href={`/projects/${post.id}`} className="block">
+      <Link href={`/projects/${post.slug || post.id}`} className="block">
         {/* Image Gallery */}
         <div className="relative aspect-square w-full overflow-hidden bg-muted rounded-2xl">
           <AnimatePresence initial={false}>

@@ -5,8 +5,10 @@ import { Plus, Search, Edit, Trash2, Eye, Loader2 } from "lucide-react";
 import { useGetPostsQuery, useDeletePostMutation } from "@/store/api";
 import { Post } from "@/types";
 import Link from "next/link";
+import { useTranslation } from "@/i18n";
 
 export default function AdminDashboard() {
+  const { t, loc } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [posts, setPosts] = useState<any[]>([]);
@@ -69,7 +71,7 @@ export default function AdminDashboard() {
   }, [hasMore, isFetching, isLoading]);
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this project?")) {
+    if (confirm(t("delete_confirm"))) {
       try {
         await deletePost(id).unwrap();
         setPage(1); // Reset to page 1 to reload
@@ -84,15 +86,15 @@ export default function AdminDashboard() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Projects Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Manage your portfolio works and items.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("projects_manager")}</h1>
+          <p className="text-sm text-muted-foreground">{t("admin_panel")}</p>
         </div>
         <Link
           href="/admin/projects/new"
           className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground font-sans text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity"
         >
           <Plus size={16} />
-          Add Project
+          {t("add_project")}
         </Link>
       </div>
 
@@ -104,7 +106,7 @@ export default function AdminDashboard() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search projects..."
+            placeholder={t("search_projects")}
             className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-transparent font-sans text-sm outline-none focus:border-primary"
           />
         </div>
@@ -115,27 +117,27 @@ export default function AdminDashboard() {
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-border/60 bg-muted/50">
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Title</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Category</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Availability</th>
-              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
+              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("title")}</th>
+              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("category")}</th>
+              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("status")}</th>
+              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("availability")}</th>
+              <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">{t("actions")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/40">
             {isLoading && page === 1 ? (
               <tr>
                 <td colSpan={5} className="p-8 text-center text-sm text-muted-foreground">
-                  Loading projects...
+                  {t("loading_projects")}
                 </td>
               </tr>
             ) : posts.length > 0 ? (
               posts.map((post) => {
                 const categoryObject = post.category && typeof post.category === "object" ? post.category : null;
                 const rawCatTitle = categoryObject ? categoryObject.title : "";
-                const categoryTitle = typeof rawCatTitle === "string" ? rawCatTitle : rawCatTitle?.ru || rawCatTitle?.en || "";
-                const postTitle = typeof post.title === "string" ? post.title : post.title?.ru || post.title?.en || "";
-                const postDesc = typeof post.description === "string" ? post.description : post.description?.ru || post.description?.en || "";
+                const categoryTitle = loc(rawCatTitle);
+                const postTitle = loc(post.title);
+                const postDesc = loc(post.description);
                 return (
                   <tr key={post.id} className="hover:bg-muted/30 transition-colors">
                     <td className="p-4">
@@ -167,13 +169,13 @@ export default function AdminDashboard() {
                           ? "bg-olive-bg text-olive-text" 
                           : "bg-secondary text-secondary-foreground"
                       }`}>
-                        {post.in_stock ? "In Stock" : "On Request"}
+                        {post.in_stock ? t("in_stock") : t("on_request")}
                       </span>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <Link
-                          href={`/projects/${post.id}`}
+                          href={`/projects/${post.slug || post.id}`}
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                           title="View"
                         >
@@ -201,7 +203,7 @@ export default function AdminDashboard() {
             ) : (
               <tr>
                 <td colSpan={5} className="p-8 text-center text-sm text-muted-foreground">
-                  No projects found.
+                  {t("no_projects")}
                 </td>
               </tr>
             )}
@@ -210,7 +212,7 @@ export default function AdminDashboard() {
                 <td colSpan={5} className="p-4 text-center text-sm text-muted-foreground bg-muted/5 border-t border-border/40">
                   <div className="flex items-center justify-center">
                     <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
-                    Loading more projects...
+                    {t("loading_more_projects")}
                   </div>
                 </td>
               </tr>

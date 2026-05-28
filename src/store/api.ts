@@ -110,30 +110,56 @@ export const api = createApi({
       }),
       invalidatesTags: ["Category", "Post"],
     }),
-    getCollections: builder.query<{ data: Collection[] }, void>({
-      query: () => "/collections",
-      providesTags: ["Collection"],
-    }),
-    getMedia: builder.query<{ data: Media[] }, void>({
-      query: () => "/media",
-      providesTags: ["Media"],
-    }),
-  }),
-});
-
-export const {
-  useGetPostsQuery,
-  useGetPostByIdQuery,
-  useCreatePostMutation,
-  useUpdatePostMutation,
-  useDeletePostMutation,
-  useGetCategoriesQuery,
-  useCreateCategoryMutation,
-  useUpdateCategoryMutation,
-  useGetTagsQuery,
-  useCreateTagMutation,
-  useUpdateTagMutation,
-  useDeleteTagMutation,
-  useGetCollectionsQuery,
-  useGetMediaQuery,
-} = api;
+     getCollections: builder.query<{ data: Collection[] }, void>({
+       query: () => "/collections",
+       providesTags: ["Collection"],
+     }),
+     createCollection: builder.mutation<{ data: Collection }, any>({
+       query: (body) => ({
+         url: "/collections",
+         method: "POST",
+         body,
+       }),
+       invalidatesTags: ["Collection"],
+     }),
+     updateCollection: builder.mutation<{ data: Collection }, { id: string } & any>({
+       query: ({ id, ...body }) => ({
+         url: `/collections/${id}`,
+         method: "PUT",
+         body,
+       }),
+       invalidatesTags: (result, error, { id }) => ["Collection", "Post", "Category"],
+     }),
+     deleteCollection: builder.mutation<{ success: boolean }, string>({
+       query: (id) => ({
+         url: `/collections/${id}`,
+         method: "DELETE",
+       }),
+       invalidatesTags: ["Collection", "Post", "Category"],
+     }),
+     getMedia: builder.query<{ data: Media[] }, void>({
+       query: () => "/media",
+       providesTags: ["Media"],
+     }),
+   }),
+ });
+ 
+ export const {
+   useGetPostsQuery,
+   useGetPostByIdQuery,
+   useCreatePostMutation,
+   useUpdatePostMutation,
+   useDeletePostMutation,
+   useGetCategoriesQuery,
+   useCreateCategoryMutation,
+   useUpdateCategoryMutation,
+   useGetTagsQuery,
+   useCreateTagMutation,
+   useUpdateTagMutation,
+   useDeleteTagMutation,
+   useGetCollectionsQuery,
+   useCreateCollectionMutation,
+   useUpdateCollectionMutation,
+   useDeleteCollectionMutation,
+   useGetMediaQuery,
+ } = api;

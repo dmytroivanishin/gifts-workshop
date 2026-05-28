@@ -8,10 +8,12 @@ import {
   useUpdatePostMutation,
   useUpdateCategoryMutation,
 } from "@/store/api";
+import { useTranslation } from "@/i18n";
 
 type EntityType = "post" | "category";
 
 export default function AdminLocalizations() {
+  const { t } = useTranslation();
   const [entityType, setEntityType] = useState<EntityType>("post");
   const [selectedEntityId, setSelectedEntityId] = useState<string>("");
 
@@ -132,10 +134,10 @@ export default function AdminLocalizations() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <Languages className="text-primary" size={24} />
-          Translation & Localization Manager
+          {t("translations_title")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Translate project titles and descriptions into multiple languages independently of post creation.
+          {t("translations_subtitle")}
         </p>
       </div>
 
@@ -144,7 +146,7 @@ export default function AdminLocalizations() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Entity Type
+              Тип сущности
             </label>
             <div className="flex bg-secondary rounded-lg p-0.5 border border-border/40">
               <button
@@ -154,7 +156,7 @@ export default function AdminLocalizations() {
                   entityType === "post" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Projects
+                {t("projects")}
               </button>
               <button
                 type="button"
@@ -163,18 +165,18 @@ export default function AdminLocalizations() {
                   entityType === "category" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Categories
+                {t("categories")}
               </button>
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Select Item
+              Выбрать элемент
             </label>
             {isLoadingPosts || isLoadingCategories ? (
               <div className="flex items-center h-10 px-3 bg-secondary rounded-lg border border-border/40 text-xs text-muted-foreground">
-                <Loader2 className="animate-spin mr-2" size={14} /> Loading list...
+                <Loader2 className="animate-spin mr-2" size={14} /> Загрузка списка...
               </div>
             ) : (
               <select
@@ -183,7 +185,7 @@ export default function AdminLocalizations() {
                 className="w-full h-10 px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
               >
                 {entitiesList.length === 0 ? (
-                  <option value="">No items found</option>
+                  <option value="">Элементы не найдены</option>
                 ) : (
                   entitiesList.map((item) => {
                     const itemTitle = typeof item.title === "string" ? item.title : item.title?.ru || "";
@@ -201,18 +203,18 @@ export default function AdminLocalizations() {
 
         {selectedEntityId && (
           <div className="flex items-center gap-2 text-xs font-medium border-t pt-3">
-            <span className="text-muted-foreground">Status:</span>
+            <span className="text-muted-foreground">Статус:</span>
             {isLoadingLocs ? (
               <span className="text-muted-foreground flex items-center gap-1">
-                <Loader2 className="animate-spin" size={12} /> Checking translation status...
+                <Loader2 className="animate-spin" size={12} /> Проверка перевода...
               </span>
             ) : isTranslated ? (
               <span className="text-emerald-600 flex items-center gap-1">
-                <CheckCircle2 size={14} /> Fully Translated (RU/EN)
+                <CheckCircle2 size={14} /> Переведено полностью (RU/EN)
               </span>
             ) : (
               <span className="text-amber-600 flex items-center gap-1">
-                <AlertCircle size={14} /> Missing English Translation
+                <AlertCircle size={14} /> Отсутствует английский перевод
               </span>
             )}
           </div>
@@ -230,12 +232,12 @@ export default function AdminLocalizations() {
                 RU
               </div>
               <h3 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2">
-                Russian Translation
+                Русский перевод
               </h3>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Title / Name (RU)
+                  {t("translation_ru")}
                 </label>
                 <input
                   type="text"
@@ -249,7 +251,7 @@ export default function AdminLocalizations() {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Description (RU)
+                  {t("description")} (RU)
                 </label>
                 <textarea
                   value={ruDescription}
@@ -267,12 +269,12 @@ export default function AdminLocalizations() {
                 EN
               </div>
               <h3 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2">
-                English Translation
+                Английский перевод
               </h3>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Title / Name (EN)
+                  {t("translation_en")}
                 </label>
                 <input
                   type="text"
@@ -286,7 +288,7 @@ export default function AdminLocalizations() {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Description (EN)
+                  {t("description")} (EN)
                 </label>
                 <textarea
                   value={enDescription}
@@ -321,12 +323,12 @@ export default function AdminLocalizations() {
               {isSaving ? (
                 <>
                   <Loader2 className="animate-spin" size={16} />
-                  Saving...
+                  Сохранение...
                 </>
               ) : (
                 <>
                   <Save size={16} />
-                  Save Translations
+                  {t("save")}
                 </>
               )}
             </button>

@@ -10,8 +10,10 @@ import {
   useGetCollectionsQuery
 } from "@/store/api";
 import Combobox from "@/components/ui/combobox";
+import { useTranslation } from "@/i18n";
 
 export default function AdminCategories() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [categories, setCategories] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -165,21 +167,21 @@ export default function AdminCategories() {
   return (
     <div className="space-y-6 font-sans">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Categories Manager</h1>
-        <p className="text-sm text-muted-foreground">Manage work categories and custom accent color styling.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("categories")}</h1>
+        <p className="text-sm text-muted-foreground">Управление категориями работ и выбор цветовых акцентов.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Category List */}
         <div className="lg:col-span-8 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
           <div className="p-4 border-b border-border bg-muted/30">
-            <h2 className="text-sm font-semibold text-foreground">All Categories</h2>
+            <h2 className="text-sm font-semibold text-foreground">{t("categories")}</h2>
           </div>
           <div className="divide-y divide-border/45">
             {isLoading ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
-                Loading categories...
+                {t("loading_categories")}
               </div>
             ) : categories.length > 0 ? (
               categories.map((cat: any) => {
@@ -196,7 +198,7 @@ export default function AdminCategories() {
                             type="text"
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
-                            placeholder="Title"
+                            placeholder={t("title")}
                             className="w-full px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                           />
                         </div>
@@ -204,20 +206,20 @@ export default function AdminCategories() {
                           <textarea
                             value={editDescription}
                             onChange={(e) => setEditDescription(e.target.value)}
-                            placeholder="Description"
+                            placeholder={t("description")}
                             className="w-full px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                             rows={2}
                           />
                         </div>
                         <div className="grid grid-cols-1 gap-2">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Collection</label>
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("collections")}</label>
                           <select
                             value={editCollectionId}
                             onChange={(e) => setEditCollectionId(e.target.value)}
                             className="w-full px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                             required
                           >
-                            <option value="" disabled>Select a collection...</option>
+                            <option value="" disabled>Выберите коллекцию...</option>
                             {collections.map((col: any) => (
                               <option key={col.id} value={col.id} className="bg-card text-foreground">
                                 {col.title?.ru || col.title?.en || col.title || ""}
@@ -226,21 +228,21 @@ export default function AdminCategories() {
                           </select>
                         </div>
                         <div className="grid grid-cols-1 gap-2">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tags</label>
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("tags")}</label>
                           <Combobox
                             options={tagOptions}
                             value={editSelectedTags}
                             onChange={(val) => setEditSelectedTags(val)}
-                            placeholder="Select tags..."
-                            searchPlaceholder="Search or type new tag..."
+                            placeholder="Выберите теги..."
+                            searchPlaceholder="Поиск тегов..."
                             allowCreate
-                            createLabel='Add new tag "{search}"'
+                            createLabel='Добавить новый тег "{search}"'
                             multiple
                             onCreate={handleCreateTag}
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <label className="text-xs font-semibold text-muted-foreground">Custom Color:</label>
+                          <label className="text-xs font-semibold text-muted-foreground">Цвет акцента:</label>
                           <input
                             type="color"
                             value={editColor}
@@ -304,13 +306,13 @@ export default function AdminCategories() {
               })
             ) : (
               <div className="p-8 text-center text-sm text-muted-foreground">
-                No categories found.
+                {t("no_categories")}
               </div>
             )}
             {categories.length > 0 && hasMore && (
               <div ref={loaderRef} className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border/45 bg-muted/5">
                 <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
-                Loading more categories...
+                {t("loading_categories")}
               </div>
             )}
           </div>
@@ -318,40 +320,40 @@ export default function AdminCategories() {
 
         {/* Add New Category */}
         <div className="lg:col-span-4 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
-          <h3 className="font-semibold text-sm text-foreground border-b pb-2">Add New Category</h3>
+          <h3 className="font-semibold text-sm text-foreground border-b pb-2">{t("add_category")}</h3>
           <form onSubmit={handleAdd} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Title</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("title")}</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Плюшевые истории"
+                placeholder="Например: Плюшевые истории"
                 className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("description")}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Category description..."
+                placeholder="Описание категории..."
                 className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                 rows={3}
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Collection</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("collections")}</label>
               <select
                 value={collectionId}
                 onChange={(e) => setCollectionId(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                 required
               >
-                <option value="" disabled>Select a collection...</option>
+                <option value="" disabled>Выберите коллекцию...</option>
                 {collections.map((col: any) => (
                   <option key={col.id} value={col.id} className="bg-card text-foreground">
                     {col.title?.ru || col.title?.en || col.title || ""}
@@ -361,22 +363,22 @@ export default function AdminCategories() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tags</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tags")}</label>
               <Combobox
                 options={tagOptions}
                 value={selectedTags}
                 onChange={(val) => setSelectedTags(val)}
-                placeholder="Select tags..."
-                searchPlaceholder="Search or type new tag..."
+                placeholder="Выберите теги..."
+                searchPlaceholder="Поиск тегов..."
                 allowCreate
-                createLabel='Add new tag "{search}"'
+                createLabel='Добавить новый тег "{search}"'
                 multiple
                 onCreate={handleCreateTag}
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Custom Color Accent</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Цвет акцента</label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
@@ -394,7 +396,7 @@ export default function AdminCategories() {
               className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
             >
               <Plus size={16} />
-              Create Category
+              {t("add_category")}
             </button>
           </form>
         </div>

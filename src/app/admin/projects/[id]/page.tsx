@@ -293,7 +293,20 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
             <Combobox
               options={categoryOptions}
               value={categoryId}
-              onChange={(val) => setCategoryId(val)}
+             onChange={(val) => {
+                const oldCat = categories.find((cat) => cat.id === categoryId);
+                const oldTags = oldCat?.tagsIds || [];
+
+                setCategoryId(val);
+
+                const newCat = categories.find((cat) => cat.id === val);
+                const newTags = newCat?.tagsIds || [];
+
+                setSelectedTags((prev) => {
+                  const filtered = prev.filter((tId) => !oldTags.includes(tId));
+                  return Array.from(new Set([...filtered, ...newTags]));
+                });
+              }}
               placeholder="Select category..."
               searchPlaceholder="Search categories..."
             />

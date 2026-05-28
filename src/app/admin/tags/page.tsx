@@ -8,8 +8,10 @@ import {
   useUpdateTagMutation,
   useDeleteTagMutation,
 } from "@/store/api";
+import { useTranslation } from "@/i18n";
 
 export default function AdminTags() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [tags, setTags] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -94,7 +96,7 @@ export default function AdminTags() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this tag? It will be removed from all projects.")) return;
+    if (!confirm(t("delete_confirm_tag"))) return;
     try {
       await deleteTag(id).unwrap();
       setPage(1); // Reset to reload list
@@ -106,9 +108,9 @@ export default function AdminTags() {
   return (
     <div className="space-y-6 font-sans">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Tags Manager</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("tags_manager")}</h1>
         <p className="text-sm text-muted-foreground">
-          View all tags in use, rename them, or delete them globally from all projects.
+          {t("tags_subtitle")}
         </p>
       </div>
 
@@ -116,13 +118,13 @@ export default function AdminTags() {
         {/* Tags List */}
         <div className="lg:col-span-8 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
           <div className="p-4 border-b border-border bg-muted/30">
-            <h2 className="text-sm font-semibold text-foreground">All Tags ({tagsResponse?.meta?.totalItems || tags.length})</h2>
+            <h2 className="text-sm font-semibold text-foreground">{t("all_tags")} ({tagsResponse?.meta?.totalItems || tags.length})</h2>
           </div>
           <div className="divide-y divide-border/45">
             {isLoading && page === 1 ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
-                Loading tags...
+                {t("loading_tags")}
               </div>
             ) : tags.length > 0 ? (
               tags.map((tag: any) => (
@@ -175,7 +177,7 @@ export default function AdminTags() {
                             setEditTagName(tagTitle);
                           }}
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
-                          title="Rename Tag"
+                          title={t("rename_tag")}
                         >
                           <Edit size={16} />
                         </button>
@@ -183,7 +185,7 @@ export default function AdminTags() {
                           onClick={() => handleDelete(tag.id)}
                           disabled={isDeleting}
                           className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
-                          title="Delete Tag"
+                          title={t("delete_tag")}
                         >
                           <Trash2 size={16} />
                         </button>
@@ -193,12 +195,12 @@ export default function AdminTags() {
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-sm text-muted-foreground">No tags found.</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">{t("no_tags")}</div>
             )}
             {tags.length > 0 && hasMore && (
               <div ref={loaderRef} className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border/45 bg-muted/5">
                 <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
-                Loading more tags...
+                {t("loading_more_tags")}
               </div>
             )}
           </div>
@@ -206,10 +208,10 @@ export default function AdminTags() {
 
         {/* Add New Tag */}
         <div className="lg:col-span-4 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
-          <h3 className="font-semibold text-sm text-foreground border-b pb-2">Add New Tag</h3>
+          <h3 className="font-semibold text-sm text-foreground border-b pb-2">{t("add_new_tag")}</h3>
           <form onSubmit={handleAdd} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tag Name</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tag_name")}</label>
               <input
                 type="text"
                 value={tagName}
@@ -226,7 +228,7 @@ export default function AdminTags() {
               className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
             >
               <Plus size={16} />
-              Create Tag
+              {t("create_tag")}
             </button>
           </form>
         </div>
