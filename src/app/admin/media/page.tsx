@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Upload, Trash2 } from "lucide-react";
 import { useTranslation } from "@/i18n";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 
 interface MediaItem {
   id: string;
@@ -23,6 +24,8 @@ export default function AdminMedia() {
   const { t } = useTranslation();
   const [media, setMedia] = useState<MediaItem[]>(INITIAL_MEDIA);
   const [dragActive, setDragActive] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState("");
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -51,9 +54,16 @@ export default function AdminMedia() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (!confirm(t("delete_confirm_media"))) return;
-    setMedia(media.filter((item) => item.id !== id));
+  const handleDeleteClick = (id: string) => {
+    setDeleteTargetId(id);
+    setIsDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTargetId) return;
+    setMedia(media.filter((item) => item.id !== deleteTargetId));
+    setIsDeleteOpen(false);
+    setDeleteTargetId("");
   };
 
   return (
@@ -114,7 +124,7 @@ export default function AdminMedia() {
               {/* Overlay Actions */}
               <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button
-                  onClick={() => handleDelete(item.id)}
+                  onClick={() => handleDeleteClick(item.id)}
                   className="p-1.5 rounded-md bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity"
                   title={t("delete")}
                 >
@@ -131,6 +141,16 @@ export default function AdminMedia() {
           </div>
         ))}
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        title={t("media_library")}
+        message={t("delete_confirm_media")}
+        confirmText={t("delete") || "Delete"}
+        cancelText={t("cancel") || "Cancel"}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setIsDeleteOpen(false)}
+      />
     </div>
   );
 }

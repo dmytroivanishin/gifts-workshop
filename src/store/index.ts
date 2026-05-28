@@ -1,12 +1,15 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { api } from "./api";
+import notificationReducer from "./slices/notificationSlice";
+import { notificationMiddleware } from "./middleware/notificationMiddleware";
 
 export const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
+    notifications: notificationReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(api.middleware),
+    getDefaultMiddleware().concat(api.middleware, notificationMiddleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

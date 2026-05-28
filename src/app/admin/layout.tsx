@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { useTranslation } from "@/i18n";
+import { GlobalToaster } from "@/components/shared/GlobalToaster";
 
 export default function AdminLayout({
   children,
@@ -31,7 +32,12 @@ export default function AdminLayout({
   };
 
   if (pathname === "/admin/login") {
-    return <>{children}</>;
+    return (
+      <>
+        <GlobalToaster />
+        {children}
+      </>
+    );
   }
 
   if (!authorized) {
@@ -40,6 +46,7 @@ export default function AdminLayout({
 
   return (
     <div className="admin-area min-h-screen flex bg-background text-foreground font-sans">
+      <GlobalToaster />
       {/* Sidebar */}
       <aside className="w-64 border-r bg-secondary flex-shrink-0">
         <div className="p-4 border-b">
@@ -69,6 +76,12 @@ export default function AdminLayout({
             className="text-sm font-medium px-3 py-2 rounded-lg hover:bg-background transition-colors block text-foreground"
           >
             {t("tags_manager")}
+          </Link>
+          <Link
+            href="/admin/colors"
+            className="text-sm font-medium px-3 py-2 rounded-lg hover:bg-background transition-colors block text-foreground"
+          >
+            {t("colors_manager")}
           </Link>
           <Link
             href="/admin/localizations"

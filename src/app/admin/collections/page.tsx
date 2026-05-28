@@ -9,6 +9,7 @@ import {
   useDeleteCollectionMutation,
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 
 export default function AdminCollections() {
   const { t, loc } = useTranslation();
@@ -23,6 +24,8 @@ export default function AdminCollections() {
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState("");
   const [isMain, setIsMain] = useState(false);
 
   const resetForm = () => {
@@ -61,13 +64,20 @@ export default function AdminCollections() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t("delete_confirm_collection"))) return;
+  const handleDeleteClick = (id: string) => {
+    setDeleteTargetId(id);
+    setIsDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
     try {
-      await deleteCollection(id).unwrap();
-      if (isEditing === id) {
+      await deleteCollection(deleteTargetId).unwrap();
+      setIsDeleteOpen(false);
+      if (isEditing === deleteTargetId) {
         resetForm();
       }
+      setDeleteTargetId("");
     } catch (err) {
       console.error("Failed to delete collection", err);
     }
@@ -133,7 +143,7 @@ export default function AdminCollections() {
                       <Edit size={16} />
                     </button>
                     <button
-                      onClick={() => handleDelete(col.id)}
+                      onClick={() => handleDeleteClick(col.id)}
                       disabled={isDeleting}
                       className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
                       title={t("delete_collection")}
@@ -233,6 +243,17 @@ export default function AdminCollections() {
           </form>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        title={t("collections")}
+        message={t("delete_confirm_collection")}
+        confirmText={t("delete") || "Delete"}
+        cancelText={t("cancel") || "Cancel"}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setIsDeleteOpen(false)}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

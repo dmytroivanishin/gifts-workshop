@@ -1,7 +1,10 @@
+import { z } from "zod";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { ICollectionService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
+import { validateRequest } from "@/lib/validateRequest";
+import { collectionSchema } from "@/common/validation/schemas";
 
 export class CollectionController {
   constructor(private collectionService: ICollectionService) {}
@@ -29,11 +32,12 @@ export class CollectionController {
 
   async saveCollection(request: Request, id?: string) {
     try {
-      const body = await request.json();
+      const rawBody = await request.json();
       if (id) {
-        body.id = await resolveId(id, (slug) => this.collectionService.getCollectionBySlug(slug));
+        rawBody.id = await resolveId(id, (slug) => this.collectionService.getCollectionBySlug(slug));
       }
-      const collection = await this.collectionService.saveCollection(body);
+      const body = await validateRequest(collectionSchema.extend({ id: z.string().uuid().optional() }), rawBody);
+      const collection = await this.collectionService.saveCollection(body as any);
       return sendSuccess(collection);
     } catch (error: any) {
       return sendError(error);

@@ -1,6 +1,10 @@
+import { z } from "zod";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { IPostService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
+import { validateRequest } from "@/lib/validateRequest";
+import { postSchema } from "@/common/validation/schemas";
+import { resolveId } from "@/utils/idResolver";
 
 export class PostController {
   constructor(private postService: IPostService) {}
@@ -44,8 +48,9 @@ export class PostController {
 
   async createPost(request: Request) {
     try {
-      const body = await request.json();
-      const post = await this.postService.createPost(body);
+      const rawBody = await request.json();
+      const body = await validateRequest(postSchema, rawBody);
+      const post = await this.postService.createPost(body as any);
       return sendSuccess(post);
     } catch (error: any) {
       return sendError(error);
@@ -54,8 +59,10 @@ export class PostController {
 
   async updatePost(request: Request, id: string) {
     try {
-      const body = await request.json();
-      const post = await this.postService.updatePost(id, body);
+      const rawBody = await request.json();
+      const resolvedId = await resolveId(id, (slug) => this.postService.getPostBySlug(slug));
+      const body = await validateRequest(postSchema.partial(), rawBody);
+      const post = await this.postService.updatePost(resolvedId, body as any);
       if (!post) {
         throw new NotFoundError("Post not found");
       }

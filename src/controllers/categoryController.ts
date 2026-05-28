@@ -1,8 +1,11 @@
+import { z } from "zod";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { ICategoryService } from "@/services/interfaces";
 import { ForbiddenError } from "@/common/errors/forbidden";
 import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
+import { validateRequest } from "@/lib/validateRequest";
+import { categorySchema } from "@/common/validation/schemas";
 
 export class CategoryController {
   constructor(private categoryService: ICategoryService) {}
@@ -39,11 +42,12 @@ export class CategoryController {
 
   async saveCategory(request: Request, id?: string) {
     try {
-      const body = await request.json();
+      const rawBody = await request.json();
       if (id) {
-        body.id = await resolveId(id, (slug) => this.categoryService.getCategoryBySlug(slug));
+        rawBody.id = await resolveId(id, (slug) => this.categoryService.getCategoryBySlug(slug));
       }
-      const category = await this.categoryService.saveCategory(body);
+      const body = await validateRequest(categorySchema.extend({ id: z.string().uuid().optional() }), rawBody);
+      const category = await this.categoryService.saveCategory(body as any);
       const result = await this.categoryService.getAllCategories();
       return sendSuccess(result.data, result.meta);
     } catch (error: any) {

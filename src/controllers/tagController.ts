@@ -1,7 +1,10 @@
+import { z } from "zod";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { ITagService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
+import { validateRequest } from "@/lib/validateRequest";
+import { tagSchema } from "@/common/validation/schemas";
 
 export class TagController {
   constructor(private tagService: ITagService) {}
@@ -35,11 +38,12 @@ export class TagController {
 
   async saveTag(request: Request, id?: string) {
     try {
-      const body = await request.json();
+      const rawBody = await request.json();
       if (id) {
-        body.id = await resolveId(id, (slug) => this.tagService.getTagBySlug(slug));
+        rawBody.id = await resolveId(id, (slug) => this.tagService.getTagBySlug(slug));
       }
-      const tag = await this.tagService.saveTag(body);
+      const body = await validateRequest(tagSchema.extend({ id: z.string().uuid().optional() }), rawBody);
+      const tag = await this.tagService.saveTag(body as any);
       return sendSuccess(tag);
     } catch (error: any) {
       return sendError(error);

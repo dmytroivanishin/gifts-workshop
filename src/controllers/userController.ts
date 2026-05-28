@@ -1,6 +1,9 @@
+import { z } from "zod";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { IUserService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
+import { validateRequest } from "@/lib/validateRequest";
+import { userSchema } from "@/common/validation/schemas";
 
 export class UserController {
   constructor(private userService: IUserService) {}
@@ -28,11 +31,12 @@ export class UserController {
 
   async saveUser(request: Request, id?: string) {
     try {
-      const body = await request.json();
+      const rawBody = await request.json();
       if (id) {
-        body.id = id;
+        rawBody.id = id;
       }
-      const user = await this.userService.saveUser(body);
+      const body = await validateRequest(userSchema.extend({ id: z.string().uuid().optional() }), rawBody);
+      const user = await this.userService.saveUser(body as any);
       return sendSuccess(user);
     } catch (error: any) {
       return sendError(error);
@@ -51,4 +55,5 @@ export class UserController {
     }
   }
 }
+
 

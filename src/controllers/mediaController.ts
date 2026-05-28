@@ -1,6 +1,9 @@
+import { z } from "zod";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { IMediaService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
+import { validateRequest } from "@/lib/validateRequest";
+import { mediaSchema } from "@/common/validation/schemas";
 
 export class MediaController {
   constructor(private mediaService: IMediaService) {}
@@ -28,11 +31,12 @@ export class MediaController {
 
   async saveMedia(request: Request, id?: string) {
     try {
-      const body = await request.json();
+      const rawBody = await request.json();
       if (id) {
-        body.id = id;
+        rawBody.id = id;
       }
-      const media = await this.mediaService.saveMedia(body);
+      const body = await validateRequest(mediaSchema.extend({ id: z.string().uuid().optional() }), rawBody);
+      const media = await this.mediaService.saveMedia(body as any);
       return sendSuccess(media);
     } catch (error: any) {
       return sendError(error);

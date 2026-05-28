@@ -6,6 +6,7 @@ import { useGetPostsQuery, useDeletePostMutation } from "@/store/api";
 import { Post } from "@/types";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 
 export default function AdminDashboard() {
   const { t, loc } = useTranslation();
@@ -13,6 +14,8 @@ export default function AdminDashboard() {
   const [page, setPage] = useState(1);
   const [posts, setPosts] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState("");
 
   const { data: response, isLoading, isFetching } = useGetPostsQuery({
     search: search || undefined,
@@ -20,7 +23,7 @@ export default function AdminDashboard() {
     limit: 10,
     populate: "category,poster",
   });
-  const [deletePost] = useDeletePostMutation();
+  const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
 
   const loaderRef = useRef<HTMLTableRowElement | null>(null);
 
@@ -70,14 +73,20 @@ export default function AdminDashboard() {
     };
   }, [hasMore, isFetching, isLoading]);
 
-  const handleDelete = async (id: string) => {
-    if (confirm(t("delete_confirm"))) {
-      try {
-        await deletePost(id).unwrap();
-        setPage(1); // Reset to page 1 to reload
-      } catch (err) {
-        console.error("Failed to delete project", err);
-      }
+  const handleDeleteClick = (id: string) => {
+    setDeleteTargetId(id);
+    setIsDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    try {
+      await deletePost(deleteTargetId).unwrap();
+      setIsDeleteOpen(false);
+      setDeleteTargetId("");
+      setPage(1); // Reset to page 1 to reload
+    } catch (err) {
+      console.error("Failed to delete project", err);
     }
   };
 
@@ -189,7 +198,7 @@ export default function AdminDashboard() {
                           <Edit size={16} />
                         </Link>
                         <button
-                          onClick={() => handleDelete(post.id)}
+                          onClick={() => handleDeleteClick(post.id)}
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-destructive"
                           title={t("delete")}
                         >
@@ -220,6 +229,17 @@ export default function AdminDashboard() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        title={t("projects")}
+        message={t("delete_confirm")}
+        confirmText={t("delete") || "Delete"}
+        cancelText={t("cancel") || "Cancel"}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setIsDeleteOpen(false)}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

@@ -1,6 +1,9 @@
+import { z } from "zod";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { IColorService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
+import { validateRequest } from "@/lib/validateRequest";
+import { colorSchema } from "@/common/validation/schemas";
 
 export class ColorController {
   constructor(private colorService: IColorService) {}
@@ -28,11 +31,12 @@ export class ColorController {
 
   async saveColor(request: Request, id?: string) {
     try {
-      const body = await request.json();
+      const rawBody = await request.json();
       if (id) {
-        body.id = id;
+        rawBody.id = id;
       }
-      const color = await this.colorService.saveColor(body);
+      const body = await validateRequest(colorSchema.extend({ id: z.string().uuid().optional() }), rawBody);
+      const color = await this.colorService.saveColor(body as any);
       return sendSuccess(color);
     } catch (error: any) {
       return sendError(error);

@@ -9,6 +9,7 @@ import {
   useDeleteTagMutation,
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 
 export default function AdminTags() {
   const { t } = useTranslation();
@@ -23,6 +24,8 @@ export default function AdminTags() {
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [tagName, setTagName] = useState("");
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState("");
   const [editTagName, setEditTagName] = useState("");
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
@@ -95,10 +98,17 @@ export default function AdminTags() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t("delete_confirm_tag"))) return;
+  const handleDeleteClick = (id: string) => {
+    setDeleteTargetId(id);
+    setIsDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
     try {
-      await deleteTag(id).unwrap();
+      await deleteTag(deleteTargetId).unwrap();
+      setIsDeleteOpen(false);
+      setDeleteTargetId("");
       setPage(1); // Reset to reload list
     } catch (err) {
       console.error("Failed to delete tag", err);
@@ -182,7 +192,7 @@ export default function AdminTags() {
                           <Edit size={16} />
                         </button>
                         <button
-                          onClick={() => handleDelete(tag.id)}
+                          onClick={() => handleDeleteClick(tag.id)}
                           disabled={isDeleting}
                           className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
                           title={t("delete_tag")}
@@ -233,6 +243,17 @@ export default function AdminTags() {
           </form>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        title={t("tags")}
+        message={t("delete_confirm_tag")}
+        confirmText={t("delete") || "Delete"}
+        cancelText={t("cancel") || "Cancel"}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setIsDeleteOpen(false)}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

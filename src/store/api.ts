@@ -2,8 +2,11 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { Post, Category, Tag, Collection, Media, PopulatedPost, PopulatedCategory } from "@/types";
 export const api = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({ baseUrl: "/api/v1" }),
-  tagTypes: ["Post", "Category", "Tag", "Collection", "Media"],
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: "/api/v1",
+    credentials: "include" 
+  }),
+  tagTypes: ["Post", "Category", "Tag", "Collection", "Media", "Color"],
   endpoints: (builder) => ({
     getPosts: builder.query<{ data: PopulatedPost[]; meta: any }, { search?: string; category?: string; inStock?: boolean; page?: number; limit?: number; populate?: string } | void>({
       query: (params) => {
@@ -141,6 +144,33 @@ export const api = createApi({
        query: () => "/media",
        providesTags: ["Media"],
      }),
+     getColors: builder.query<{ data: { id: string; color: string }[] }, void>({
+       query: () => "/colors",
+       providesTags: ["Color"],
+     }),
+     createColor: builder.mutation<{ data: { id: string; color: string } }, any>({
+       query: (body) => ({
+         url: "/colors",
+         method: "POST",
+         body,
+       }),
+       invalidatesTags: ["Color"],
+     }),
+     updateColor: builder.mutation<{ data: { id: string; color: string } }, { id: string; color: string }>({
+       query: ({ id, ...body }) => ({
+         url: `/colors/${id}`,
+         method: "PUT",
+         body,
+       }),
+       invalidatesTags: ["Color", "Category"],
+     }),
+     deleteColor: builder.mutation<{ success: boolean }, string>({
+       query: (id) => ({
+         url: `/colors/${id}`,
+         method: "DELETE",
+       }),
+       invalidatesTags: ["Color", "Category"],
+     }),
    }),
  });
  
@@ -162,4 +192,8 @@ export const api = createApi({
    useUpdateCollectionMutation,
    useDeleteCollectionMutation,
    useGetMediaQuery,
+   useGetColorsQuery,
+   useCreateColorMutation,
+   useUpdateColorMutation,
+   useDeleteColorMutation,
  } = api;
