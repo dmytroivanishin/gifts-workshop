@@ -9,7 +9,7 @@ export class MediaService implements IMediaService {
   constructor(
     private mediaRepo: IMediaRepository,
     private postRepo: IPostRepository
-  ) {}
+  ) { }
 
   async getAllMedia(options?: any): Promise<any> {
     const page = options?.page || 1;

@@ -2,12 +2,14 @@
 
 import { useState, useRef, MouseEvent, TouchEvent } from "react";
 import { X, ZoomIn, ZoomOut, Check } from "lucide-react";
+import { Media } from "@/types";
 
 interface ImageCropModalProps {
   imageUrl: string;
   onClose: () => void;
   onSave: (position: { x: number; y: number; zoom: number }) => void;
   initialPosition?: { x: number; y: number; zoom: number };
+  media?: Media;
 }
 
 export default function ImageCropModal({
@@ -15,11 +17,33 @@ export default function ImageCropModal({
   onClose,
   onSave,
   initialPosition,
+  media,
 }: ImageCropModalProps) {
   const [zoom, setZoom] = useState(initialPosition?.zoom || 1);
   const [position, setPosition] = useState({ x: initialPosition?.x || 0, y: initialPosition?.y || 0 });
+  const orientation = media?.orientation;
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
+
+  const constrainPosition = (x: number, y: number, currentZoom: number) => {
+    const imgWidth = media?.width || 300;
+    const imgHeight = media?.height || 300;
+    const isPortrait = orientation === "Portrait";
+    
+    const baseWidth = isPortrait ? 300 : 300 * (imgWidth / imgHeight);
+    const baseHeight = !isPortrait ? 300 : 300 * (imgHeight / imgWidth);
+    
+    const scaledWidth = baseWidth * currentZoom;
+    const scaledHeight = baseHeight * currentZoom;
+    
+    const maxX = Math.max(0, (scaledWidth - 300) / 2);
+    const maxY = Math.max(0, (scaledHeight - 300) / 2);
+    
+    return {
+      x: Math.min(maxX, Math.max(-maxX, x)),
+      y: Math.min(maxY, Math.max(-maxY, y)),
+    };
+  };
 
   const handleMouseDown = (e: MouseEvent) => {
     setIsDragging(true);
@@ -28,10 +52,9 @@ export default function ImageCropModal({
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging) return;
-    setPosition({
-      x: e.clientX - dragStart.current.x,
-      y: e.clientY - dragStart.current.y,
-    });
+    const rawX = e.clientX - dragStart.current.x;
+    const rawY = e.clientY - dragStart.current.y;
+    setPosition(constrainPosition(rawX, rawY, zoom));
   };
 
   const handleMouseUp = () => {
@@ -48,10 +71,9 @@ export default function ImageCropModal({
   const handleTouchMove = (e: TouchEvent) => {
     if (!isDragging) return;
     const touch = e.touches[0];
-    setPosition({
-      x: touch.clientX - dragStart.current.x,
-      y: touch.clientY - dragStart.current.y,
-    });
+    const rawX = touch.clientX - dragStart.current.x;
+    const rawY = touch.clientY - dragStart.current.y;
+    setPosition(constrainPosition(rawX, rawY, zoom));
   };
 
   const handleTouchEnd = () => {
@@ -94,15 +116,14 @@ export default function ImageCropModal({
               alt="Crop workspace"
               className="absolute pointer-events-none transition-transform duration-75"
               style={{
-                transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
-                transformOrigin: "center center",
                 left: "50%",
                 top: "50%",
-                marginLeft: "-150px",
-                marginTop: "-150px",
-                width: "300px",
-                height: "300px",
-                objectFit: "cover",
+                width: orientation === "Portrait" ? "100%" : "auto",
+                height: orientation === "Landscape" ? "100%" : "auto",
+                minWidth: "100%",
+                minHeight: "100%",
+                transformOrigin: "center center",
+                transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px) scale(${zoom})`,
               }}
             />
             {/* Guide Grid Overlays */}
@@ -127,7 +148,11 @@ export default function ImageCropModal({
               max="3"
               step="0.05"
               value={zoom}
-              onChange={(e) => setZoom(parseFloat(e.target.value))}
+              onChange={(e) => {
+                const newZoom = parseFloat(e.target.value);
+                setZoom(newZoom);
+                setPosition((prev) => constrainPosition(prev.x, prev.y, newZoom));
+              }}
               className="flex-1 h-1 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
             />
             <ZoomIn size={16} className="text-muted-foreground" />

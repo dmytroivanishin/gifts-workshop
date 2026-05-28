@@ -30,10 +30,12 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
     }
   }, [post.id]);
 
-  const images = post.media
-    .map((m) => m.media?.originalUrl)
-    .filter((url): url is string => typeof url === "string");
-  const totalImages = images.length;
+  const mediaItems = [...(post.media || [])].sort((a, b) => {
+    if (a.mediaId === post.posterId) return -1;
+    if (b.mediaId === post.posterId) return 1;
+    return a.order - b.order;
+  });
+  const totalImages = mediaItems.length;
   
   const categoryTitle = loc(post.category.title);
   const categoryColor = post.category.color!.color;
@@ -88,17 +90,40 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
         {/* Image Gallery */}
         <div className="relative aspect-square w-full overflow-hidden bg-muted rounded-2xl">
           <AnimatePresence initial={false}>
-            {images.length > 0 ? (
-              <motion.img
-                key={currentImageIndex}
-                src={images[currentImageIndex]}
-                alt={loc(post.title)}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              />
+            {totalImages > 0 ? (
+              (() => {
+                const currentMedia = mediaItems[currentImageIndex];
+                const med = currentMedia?.media;
+                const pos = currentMedia?.position;
+                
+                const isPortrait = med?.orientation === "Portrait" || (med?.height && med?.width && med.height > med.width);
+                const isLandscape = med?.orientation === "Landscape" || (med?.height && med?.width && med.width > med.height);
+
+                return (
+                  <motion.img
+                    key={currentImageIndex}
+                    src={med?.originalUrl || ""}
+                    alt={loc(post.title)}
+                    className="absolute transition-transform duration-700 ease-out group-hover:scale-103"
+                    style={{
+                      left: "50%",
+                      top: "50%",
+                      width: isPortrait ? "100%" : (isLandscape ? "auto" : "100%"),
+                      height: isLandscape ? "100%" : (isPortrait ? "auto" : "100%"),
+                      minWidth: "100%",
+                      minHeight: "100%",
+                      transformOrigin: "center center",
+                      transform: pos 
+                        ? `translate(-50%, -50%) translate(${pos.x}px, ${pos.y}px) scale(${pos.zoom})` 
+                        : 'translate(-50%, -50%) scale(1)'
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                );
+              })()
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                 No Image
@@ -124,7 +149,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
               
               {/* Dots */}
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-1 z-10">
-                {images.map((_, idx) => (
+                {mediaItems.map((_, idx) => (
                   <div
                     key={idx}
                     className={cn(

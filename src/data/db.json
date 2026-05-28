@@ -26,10 +26,10 @@
         "c0300001-beef-4000-8000-000000000009",
         "c0300001-beef-4000-8000-000000000010"
       ],
-      "posterId": "da7a0001-beef-4000-8000-000000000001",
+      "posterId": "da7a0004-beef-4000-8000-000000000004",
       "media": [
         {
-          "id": "m-1779956820766-0",
+          "id": "da7a0001-beef-4000-8000-000000000010",
           "order": 1,
           "mediaId": "da7a0001-beef-4000-8000-000000000001",
           "position": {
@@ -39,7 +39,7 @@
           }
         },
         {
-          "id": "m-1779956820766-1",
+          "id": "da7a0002-beef-4000-8000-000000000011",
           "order": 2,
           "mediaId": "da7a0002-beef-4000-8000-000000000002",
           "position": {
@@ -49,7 +49,7 @@
           }
         },
         {
-          "id": "m-1779956820766-2",
+          "id": "da7a0003-beef-4000-8000-000000000012",
           "order": 3,
           "mediaId": "da7a0003-beef-4000-8000-000000000003",
           "position": {
@@ -59,7 +59,7 @@
           }
         },
         {
-          "id": "m-1779956820766-3",
+          "id": "da7a0004-beef-4000-8000-000000000013",
           "order": 4,
           "mediaId": "da7a0004-beef-4000-8000-000000000004",
           "position": {
@@ -69,7 +69,7 @@
           }
         },
         {
-          "id": "m-1779956820766-4",
+          "id": "da7a0005-beef-4000-8000-000000000014",
           "order": 5,
           "mediaId": "da7a0005-beef-4000-8000-000000000005",
           "position": {
@@ -1246,31 +1246,46 @@
       "id": "da7a0001-beef-4000-8000-000000000001",
       "thumbnailUrl": "/images/image-1.png",
       "originalUrl": "/images/image-1.png",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
+      "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
+      "width": 896,
+      "height": 1195,
+      "orientation": "Portrait"
     },
     {
       "id": "da7a0002-beef-4000-8000-000000000002",
       "thumbnailUrl": "/images/image-2.png",
       "originalUrl": "/images/image-2.png",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
+      "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
+      "width": 896,
+      "height": 1195,
+      "orientation": "Portrait"
     },
     {
       "id": "da7a0003-beef-4000-8000-000000000003",
       "thumbnailUrl": "/images/image-3.png",
       "originalUrl": "/images/image-3.png",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
+      "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
+      "width": 896,
+      "height": 1195,
+      "orientation": "Portrait"
     },
     {
       "id": "da7a0004-beef-4000-8000-000000000004",
       "thumbnailUrl": "/images/image-4.png",
       "originalUrl": "/images/image-4.png",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
+      "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
+      "width": 896,
+      "height": 1195,
+      "orientation": "Portrait"
     },
     {
       "id": "da7a0005-beef-4000-8000-000000000005",
       "thumbnailUrl": "/images/image-5.png",
       "originalUrl": "/images/image-5.png",
-      "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
+      "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
+      "width": 896,
+      "height": 1195,
+      "orientation": "Portrait"
     }
   ],
   "users": [

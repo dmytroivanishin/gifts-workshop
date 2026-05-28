@@ -17,6 +17,9 @@ export interface Media {
   originalUrl: string;
   userId?: string;
   position?: Position;
+  width?: number;
+  height?: number;
+  orientation?: "Portrait" | "Landscape";
 }
 
 export interface Collection {

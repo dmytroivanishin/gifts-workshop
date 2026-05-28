@@ -11,6 +11,7 @@ import {
   useGetCategoriesQuery,
   useGetTagsQuery,
   useCreateTagMutation,
+  useGetMediaQuery,
 } from "@/store/api";
 import ImageCropModal from "@/components/shared/ImageCropModal";
 import MediaPickerModal from "@/components/shared/MediaPickerModal";
@@ -45,6 +46,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
 
   const categories = categoriesResponse?.data || [];
   const allTags = tagsResponse?.data || [];
+  const { data: mediaResponse } = useGetMediaQuery();
+  const mediaList = mediaResponse?.data || [];
 
   // Form State
   const [title, setTitle] = useState("");
@@ -127,10 +130,16 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   const handleSaveCrop = (pos: { x: number; y: number; zoom: number }) => {
     if (activeCropMediaId === "cover") {
       setCoverPosition(pos);
+      setSelectedImages(prev => prev.map(m => 
+        m.mediaId === coverImage ? { ...m, position: pos } : m
+      ));
     } else if (activeCropMediaId) {
       setSelectedImages(prev => prev.map(m => 
         m.mediaId === activeCropMediaId ? { ...m, position: pos } : m
       ));
+      if (activeCropMediaId === coverImage) {
+        setCoverPosition(pos);
+      }
     }
     setActiveCropMediaId(null);
   };
@@ -140,16 +149,18 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     if (!title || !categoryId) return;
 
     // Build media array
-    const media = selectedImages.map((img, index) => ({
-      id: `m-${Date.now()}-${index}`,
-      order: index + 1,
-      media: {
-        id: img.mediaId,
-        thumbnailUrl: img.url,
-        originalUrl: img.url,
-      },
-      position: img.position || undefined,
-    }));
+    const media = selectedImages.map((img, index) => {
+      const existingRelation = postResponse?.data?.media?.find(
+        (m: any) => (m.mediaId || m.media?.id) === img.mediaId
+      );
+
+      return {
+        id: existingRelation?.id || undefined,
+        order: index + 1,
+        mediaId: img.mediaId,
+        position: img.position || undefined,
+      };
+    });
 
     // Build poster with exact image position coordinates
     const coverMedia = selectedImages.find(m => m.mediaId === coverImage);
@@ -177,6 +188,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       status: status as any,
       media,
       poster,
+      posterId: coverImage || undefined,
       tagsIds: selectedTags,
     };
 
@@ -381,6 +393,9 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {selectedImages.map((img) => {
                 const isCover = coverImage === img.mediaId;
+                const mediaItem = mediaList.find(m => m.id === img.mediaId);
+                const isPortrait = mediaItem?.orientation === "Portrait" || (mediaItem?.height && mediaItem?.width && mediaItem.height > mediaItem.width);
+                const isLandscape = mediaItem?.orientation === "Landscape" || (mediaItem?.height && mediaItem?.width && mediaItem.width > mediaItem.height);
 
                 return (
                   <div
@@ -394,10 +409,18 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                     <img
                       src={img.url}
                       alt=""
-                      className="w-full h-full object-cover"
+                      className="absolute"
                       style={{
-                        transform: img.position ? `scale(${img.position.zoom})` : 'scale(1)',
-                        objectPosition: img.position ? `${img.position.x}px ${img.position.y}px` : 'center'
+                        left: "50%",
+                        top: "50%",
+                        width: isPortrait ? "100%" : (isLandscape ? "auto" : "100%"),
+                        height: isLandscape ? "100%" : (isPortrait ? "auto" : "100%"),
+                        minWidth: "100%",
+                        minHeight: "100%",
+                        transformOrigin: "center center",
+                        transform: img.position 
+                          ? `translate(-50%, -50%) translate(${img.position.x}px, ${img.position.y}px) scale(${img.position.zoom})` 
+                          : 'translate(-50%, -50%) scale(1)'
                       }}
                     />
                     
@@ -487,6 +510,9 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       {/* Modals */}
       {activeCropMediaId && (
         <ImageCropModal
+          media={
+            mediaList.find(m => m.id === (activeCropMediaId === "cover" ? coverImage : activeCropMediaId))
+          }
           imageUrl={
             activeCropMediaId === "cover" 
               ? selectedImages.find(m => m.mediaId === coverImage)?.url || "" 
