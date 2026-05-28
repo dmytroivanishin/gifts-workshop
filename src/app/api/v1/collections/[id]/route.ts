@@ -13,7 +13,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return collectionController.saveCollection(request);
+  return collectionController.saveCollection(request, id);
 }
 
 export async function DELETE(

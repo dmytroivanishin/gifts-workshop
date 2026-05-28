@@ -14,9 +14,24 @@ export class MediaController {
     }
   }
 
-  async saveMedia(request: Request) {
+  async getMediaById(request: Request, id: string) {
+    try {
+      const media = await this.mediaService.getMediaById(id);
+      if (!media) {
+        throw new NotFoundError("Media not found");
+      }
+      return sendSuccess(media);
+    } catch (error: any) {
+      return sendError(error);
+    }
+  }
+
+  async saveMedia(request: Request, id?: string) {
     try {
       const body = await request.json();
+      if (id) {
+        body.id = id;
+      }
       const media = await this.mediaService.saveMedia(body);
       return sendSuccess(media);
     } catch (error: any) {
@@ -36,3 +51,4 @@ export class MediaController {
     }
   }
 }
+

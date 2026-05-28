@@ -14,9 +14,24 @@ export class UserController {
     }
   }
 
-  async saveUser(request: Request) {
+  async getUserById(request: Request, id: string) {
+    try {
+      const user = await this.userService.getUserById(id);
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+      return sendSuccess(user);
+    } catch (error: any) {
+      return sendError(error);
+    }
+  }
+
+  async saveUser(request: Request, id?: string) {
     try {
       const body = await request.json();
+      if (id) {
+        body.id = id;
+      }
       const user = await this.userService.saveUser(body);
       return sendSuccess(user);
     } catch (error: any) {
@@ -36,3 +51,4 @@ export class UserController {
     }
   }
 }
+

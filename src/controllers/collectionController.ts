@@ -1,6 +1,7 @@
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { ICollectionService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
+import { resolveId } from "@/utils/idResolver";
 
 export class CollectionController {
   constructor(private collectionService: ICollectionService) {}
@@ -26,9 +27,12 @@ export class CollectionController {
     }
   }
 
-  async saveCollection(request: Request) {
+  async saveCollection(request: Request, id?: string) {
     try {
       const body = await request.json();
+      if (id) {
+        body.id = await resolveId(id, (slug) => this.collectionService.getCollectionBySlug(slug));
+      }
       const collection = await this.collectionService.saveCollection(body);
       return sendSuccess(collection);
     } catch (error: any) {
@@ -38,7 +42,8 @@ export class CollectionController {
 
   async deleteCollection(request: Request, id: string) {
     try {
-      const success = await this.collectionService.deleteCollection(id);
+      const resolvedId = await resolveId(id, (slug) => this.collectionService.getCollectionBySlug(slug));
+      const success = await this.collectionService.deleteCollection(resolvedId);
       if (!success) {
         throw new NotFoundError("Collection not found");
       }
@@ -48,3 +53,5 @@ export class CollectionController {
     }
   }
 }
+
+

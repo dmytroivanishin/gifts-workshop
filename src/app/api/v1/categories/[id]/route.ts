@@ -5,12 +5,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  try {
-    const category = await categoryController.getCategories(request); // Controller currently lists all or we can fetch directly
-    return category;
-  } catch (error) {
-    return new Response(JSON.stringify({ error: "Failed to get category" }), { status: 500 });
-  }
+  return categoryController.getCategoryById(request, id);
 }
 
 export async function PUT(
@@ -18,7 +13,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return categoryController.saveCategory(request);
+  return categoryController.saveCategory(request, id);
 }
 
 export async function DELETE(
@@ -28,3 +23,4 @@ export async function DELETE(
   const { id } = await params;
   return categoryController.deleteCategory(request, id);
 }
+

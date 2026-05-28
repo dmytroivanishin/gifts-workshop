@@ -14,9 +14,24 @@ export class ColorController {
     }
   }
 
-  async saveColor(request: Request) {
+  async getColorById(request: Request, id: string) {
+    try {
+      const color = await this.colorService.getColorById(id);
+      if (!color) {
+        throw new NotFoundError("Color not found");
+      }
+      return sendSuccess(color);
+    } catch (error: any) {
+      return sendError(error);
+    }
+  }
+
+  async saveColor(request: Request, id?: string) {
     try {
       const body = await request.json();
+      if (id) {
+        body.id = id;
+      }
       const color = await this.colorService.saveColor(body);
       return sendSuccess(color);
     } catch (error: any) {
@@ -36,3 +51,4 @@ export class ColorController {
     }
   }
 }
+
