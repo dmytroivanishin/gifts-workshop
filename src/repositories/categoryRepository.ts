@@ -3,6 +3,8 @@ import { ICategoryRepository, ICollectionRepository } from "./interfaces";
 import { Category, PopulatedCategory, Tag } from "@/types";
 import { NotFoundError } from "@/common/errors/notFound";
 import { ValidationError } from "@/common/errors/validation";
+import { shouldPopulate } from "@/utils/populate";
+
 
 export class CategoryRepository extends BaseRepository<Category, PopulatedCategory> implements ICategoryRepository {
   constructor() {
@@ -26,35 +28,40 @@ export class CategoryRepository extends BaseRepository<Category, PopulatedCatego
       cats,
       options?.populate,
       {
-        color: {
-          repoName: "colors",
-          idExtractor: c => c.colorId,
-          mapper: (cat, colors) => {
-            cat.color = colors.find(c => c.id === cat.colorId);
-          }
-        },
         collection: {
           repoName: "collections",
           idExtractor: c => c.collectionId,
           mapper: (cat, collections) => {
-            cat.collection = collections.find(c => c.id === cat.collectionId)!;
+            cat.collection = collections.find((col: any) => col.id === cat.collectionId)!;
           }
         },
         tags: {
           repoName: "tags",
           idExtractor: c => c.tagsIds,
           mapper: (cat, tags) => {
-            cat.tags = (cat.tagsIds || []).map(tid => tags.find(t => t.id === tid)).filter((t): t is Tag => !!t);
+            cat.tags = (cat.tagsIds || []).map(tid => tags.find((t: any) => t.id === tid)).filter((t): t is Tag => !!t);
           }
         }
       }
     ).then(populatedCats => {
-      // Resolve self-referential parent category from the loaded array
-      return populatedCats.map(cat => {
-        cat.parent = cat.parentId ? populatedCats.find(c => c.id === cat.parentId) : undefined;
-        return cat;
-      });
+      if (shouldPopulate("parent", options?.populate)) {
+        return populatedCats.map(cat => {
+          cat.parent = cat.parentId ? populatedCats.find(c => c.id === cat.parentId) : undefined;
+          return cat;
+        });
+      }
+      return populatedCats;
     });
+  }
+
+  async updateColorInCategories(colorId: string, newHex: string): Promise<void> {
+    const categories = await this.getAll();
+    for (const cat of categories) {
+      if (cat.color && cat.color.id === colorId) {
+        cat.color.color = newHex;
+        await this.save(cat);
+      }
+    }
   }
 
   async save(item: any): Promise<PopulatedCategory> {
@@ -80,19 +87,18 @@ export class CategoryRepository extends BaseRepository<Category, PopulatedCatego
   protected serialize(item: any): Category {
     const raw: any = { ...item };
 
-    const colorId = raw.colorId;
     const collectionId = raw.collectionId;
     const parentId = raw.parentId;
     const tagsIds = raw.tagsIds || [];
+    const color = raw.color;
 
-    delete raw.color;
     delete raw.collection;
     delete raw.parent;
     delete raw.tags;
 
     return {
       ...raw,
-      colorId,
+      color,
       collectionId,
       parentId,
       tagsIds,

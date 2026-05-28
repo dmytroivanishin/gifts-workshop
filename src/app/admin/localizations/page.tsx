@@ -108,7 +108,7 @@ export default function AdminLocalizations() {
           id: selectedEntityId,
           title: { ru: ruTitle, en: enTitle },
           description: { ru: ruDescription, en: enDescription },
-          color: selectedEntity.colorId,
+          color: selectedEntity.color,
           parentId: selectedEntity.parentId,
           collectionId: selectedEntity.collectionId,
           tags: selectedEntity.tagsIds,

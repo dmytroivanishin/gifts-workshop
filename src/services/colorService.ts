@@ -1,4 +1,4 @@
-import { IColorRepository } from "@/repositories/interfaces";
+import { IColorRepository, ICategoryRepository } from "@/repositories/interfaces";
 import { IColorService } from "./interfaces";
 import { Color } from "@/types";
 import { randomUUID } from "crypto";
@@ -6,7 +6,10 @@ import { randomUUID } from "crypto";
 import { paginate } from "./pagination";
 
 export class ColorService implements IColorService {
-  constructor(private colorRepo: IColorRepository) {}
+  constructor(
+    private colorRepo: IColorRepository,
+    private categoryRepo: ICategoryRepository
+  ) {}
 
   async getAllColors(options?: any): Promise<any> {
     const page = options?.page || 1;
@@ -30,7 +33,14 @@ export class ColorService implements IColorService {
       id,
       color: body.color,
     };
-    return this.colorRepo.save(color);
+    const savedColor = await this.colorRepo.save(color);
+
+    // If we're updating an existing color, bulk-update all categories referencing this color ID
+    if (body.id) {
+      await this.categoryRepo.updateColorInCategories(savedColor.id, savedColor.color);
+    }
+
+    return savedColor;
   }
 
   async deleteColor(id: string): Promise<boolean> {

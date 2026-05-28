@@ -43,11 +43,8 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     .map((m) => m.media?.originalUrl)
     .filter((url): url is string => typeof url === "string");
   
-  const categoryObject = typeof post.category !== "string" ? post.category : null;
-  const categoryTitle = categoryObject ? loc(categoryObject.title) : "Uncategorized";
-  const categoryColor = categoryObject && categoryObject.color 
-    ? (typeof categoryObject.color === "object" ? categoryObject.color.color : categoryObject.color)
-    : "#AFAA9E";
+  const categoryTitle = loc(post.category.title);
+  const categoryColor = post.category.color!.color;
 
   return (
     <div className="container mx-auto px-6 py-10 max-w-[1280px] font-sans">

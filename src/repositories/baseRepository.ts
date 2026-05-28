@@ -1,47 +1,12 @@
 import { PaginationOptions } from "@/types";
 import { InternalServerError } from "@/common/errors/internalServer";
+import { shouldPopulate, getSubPopulateString } from "@/utils/populate";
+import { collectUniqueIds } from "@/utils/array";
 
 export const repositoryRegistry: Record<string, any> = {};
 
 export function registerRepository(name: string, repo: any) {
   repositoryRegistry[name] = repo;
-}
-
-export function shouldPopulate(field: string, populateStr?: string): boolean {
-  if (populateStr === undefined) return true;
-  const parts = populateStr.split(",").map(s => s.trim());
-  return parts.some(p => p === field || p.startsWith(`${field}.`));
-}
-
-export function getSubPopulateString(field: string, populateStr?: string): string | undefined {
-  if (populateStr === undefined) return undefined;
-  
-  const parts = populateStr.split(",").map(s => s.trim());
-  const subParts = parts
-    .filter(p => p.startsWith(`${field}.`))
-    .map(p => p.substring(field.length + 1));
-    
-  if (subParts.length > 0) {
-    return subParts.join(",");
-  }
-  
-  return undefined;
-}
-
-export function collectUniqueIds<T>(
-  items: T[],
-  extractor: (item: T) => string | undefined | null | (string | undefined | null)[]
-): string[] {
-  return Array.from(
-    new Set(
-      items
-        .flatMap(item => {
-          const val = extractor(item);
-          return Array.isArray(val) ? val : [val];
-        })
-        .filter((id): id is string => typeof id === "string" && id.length > 0)
-    )
-  );
 }
 
 export async function populateRelations<TItem, TPopulated>(
@@ -65,13 +30,13 @@ export async function populateRelations<TItem, TPopulated>(
   }> = {};
 
   for (const [field, fieldConfig] of Object.entries(config)) {
-    if (shouldPopulate(field, populateStr)) {
-      if (!repoGroups[fieldConfig.repoName]) {
-        repoGroups[fieldConfig.repoName] = { fields: [], idExtractors: [] };
-      }
-      repoGroups[fieldConfig.repoName].fields.push(field);
-      repoGroups[fieldConfig.repoName].idExtractors.push(fieldConfig.idExtractor);
+    if (!shouldPopulate(field, populateStr)) continue;
+
+    if (!repoGroups[fieldConfig.repoName]) {
+      repoGroups[fieldConfig.repoName] = { fields: [], idExtractors: [] };
     }
+    repoGroups[fieldConfig.repoName].fields.push(field);
+    repoGroups[fieldConfig.repoName].idExtractors.push(fieldConfig.idExtractor);
   }
 
   // Fetch all related entities in parallel (grouped by repo to keep queries flat)
@@ -82,16 +47,7 @@ export async function populateRelations<TItem, TPopulated>(
     if (!repo) return { repoName, data: [] };
 
     // Batch extract unique IDs across all fields sharing this repository
-    const allIds = Array.from(
-      new Set(
-        items
-          .flatMap(item => group.idExtractors.flatMap(ext => {
-            const val = ext(item);
-            return Array.isArray(val) ? val : [val];
-          }))
-          .filter((id): id is string => typeof id === "string" && id.length > 0)
-      )
-    );
+    const allIds = collectUniqueIds(items, group.idExtractors);
 
     if (allIds.length === 0) return { repoName, data: [] };
 

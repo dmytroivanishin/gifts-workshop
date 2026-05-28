@@ -11,7 +11,7 @@ function transliterate(text: string): string {
     'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Sch', 'Ь': '', 'Ы': 'Y', 'Ъ': '', 'Э': 'E', 'Ю': 'Yu',
     'Я': 'Ya'
   };
-  return text.split('').map(char => ru[char] !== undefined ? ru[char] : char).join('');
+  return text.split('').map(char => ru[char] ?? char).join('');
 }
 
 export async function translateToEnglish(text: string): Promise<string> {

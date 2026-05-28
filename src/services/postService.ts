@@ -125,14 +125,14 @@ export class PostService implements IPostService {
 
     const flatPost: Post = {
       id,
-      title: body.title !== undefined ? body.title : existing.title,
-      description: body.description !== undefined ? body.description : existing.description,
+      title: body.title ?? existing.title,
+      description: body.description ?? existing.description,
       in_stock: body.in_stock ?? existing.in_stock,
       status: body.status ?? existing.status,
-      collectionId: body.collectionId !== undefined ? body.collectionId : existing.collectionId,
-      categoryId: body.categoryId !== undefined ? body.categoryId : existing.categoryId,
+      collectionId: body.collectionId ?? existing.collectionId,
+      categoryId: body.categoryId ?? existing.categoryId,
       tagsIds: body.tagsIds || existing.tagsIds || [],
-      posterId: body.posterId !== undefined ? body.posterId : existing.posterId,
+      posterId: body.posterId ?? existing.posterId,
       media: body.media || (existing.media ? existing.media.map(m => ({
         id: m.id,
         order: m.order,
@@ -140,7 +140,7 @@ export class PostService implements IPostService {
         position: m.position,
       })) : []),
       slug,
-      userId: body.userId !== undefined ? body.userId : existing.userId,
+      userId: body.userId ?? existing.userId,
     };
 
     return this.postRepo.save(flatPost);

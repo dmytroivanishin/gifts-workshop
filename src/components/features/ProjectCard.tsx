@@ -35,11 +35,8 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
     .filter((url): url is string => typeof url === "string");
   const totalImages = images.length;
   
-  const categoryObject = typeof post.category !== "string" ? post.category : null;
-  const categoryTitle = categoryObject ? loc(categoryObject.title) : "Uncategorized";
-  const categoryColor = categoryObject && categoryObject.color 
-    ? (typeof categoryObject.color === "object" ? categoryObject.color.color : categoryObject.color)
-    : "#AFAA9E";
+  const categoryTitle = loc(post.category.title);
+  const categoryColor = post.category.color!.color;
 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -155,8 +152,8 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (onCategorySelect && categoryObject) {
-                  onCategorySelect(categoryObject.id);
+                if (onCategorySelect) {
+                  onCategorySelect(post.category.id);
                 }
               }}
             >

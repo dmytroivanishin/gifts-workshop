@@ -140,7 +140,7 @@ export default function AdminCategories() {
         id,
         title: { ru: editTitle, en: existingEnTitle || "" },
         description: { ru: editDescription, en: existingEnDesc || "" },
-        color: { id: `color-${Date.now()}`, color: editColor },
+        color: { id: activeCategoryObj?.color?.id || `color-${Date.now()}`, color: editColor },
         collectionId: editCollectionId,
         tagsIds: editSelectedTags,
       }).unwrap();
@@ -157,7 +157,7 @@ export default function AdminCategories() {
     setActiveCategoryObj(cat);
     setEditTitle(typeof cat.title === "string" ? cat.title : cat.title?.ru || "");
     setEditDescription(typeof cat.description === "string" ? cat.description : cat.description?.ru || "");
-    setEditColor(typeof cat.color === "object" ? cat.color?.color : cat.color || "#FFD2D2");
+    setEditColor(cat.color.color);
     setEditCollectionId(cat.collectionId || "");
     setEditSelectedTags(cat.tagsIds || cat.tags?.map((t: any) => t.id) || []);
   };
@@ -185,7 +185,7 @@ export default function AdminCategories() {
               categories.map((cat: any) => {
                 const catTitleRu = typeof cat.title === "string" ? cat.title : cat.title?.ru || "";
                 const catDescRu = typeof cat.description === "string" ? cat.description : cat.description?.ru || "";
-                const catColor = typeof cat.color === "object" ? cat.color?.color : cat.color || "#FFD2D2";
+                const catColor = cat.color.color;
 
                 return (
                   <div key={cat.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
@@ -263,9 +263,7 @@ export default function AdminCategories() {
                           >
                             HEX: {catColor}
                           </span>
-                          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border/40">
-                            Collection: {cat.collection?.title?.ru || cat.collection?.title || ""}
-                          </span>
+
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">{catDescRu}</p>
                       </div>

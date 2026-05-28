@@ -1,4 +1,4 @@
-import { ICategoryRepository, IColorRepository, ITagRepository } from "@/repositories/interfaces";
+import { ICategoryRepository, ITagRepository } from "@/repositories/interfaces";
 import { ICategoryService } from "./interfaces";
 import { Category, PopulatedCategory } from "@/types";
 import { randomUUID } from "crypto";
@@ -11,12 +11,11 @@ import { PaginationOptions } from "@/types";
 export class CategoryService implements ICategoryService {
   constructor(
     private categoryRepo: ICategoryRepository,
-    private colorRepo: IColorRepository,
     private tagRepo: ITagRepository
   ) {}
 
   async getAllCategories(options?: PaginationOptions & { populate?: string }): Promise<any> {
-    const populate = options?.populate !== undefined ? options.populate : "color,collection";
+    const populate = options?.populate;
 
     if (options?.page || options?.limit) {
       const page = options.page || 1;
@@ -74,31 +73,17 @@ export class CategoryService implements ICategoryService {
       slug = await generateUniqueSlug(body.title || existingCategory?.title, id, this.categoryRepo.getBySlug.bind(this.categoryRepo));
     }
 
-    let colorId = body.colorId !== undefined ? body.colorId : existingCategory?.colorId;
-    if (body.color && typeof body.color === "object") {
-      const colorHex = body.color.color || body.color.colorId;
-      if (colorHex) {
-        const savedColor = await this.colorRepo.save({
-          id: body.color.id || `color-${Date.now()}`,
-          color: colorHex
-        });
-        colorId = savedColor.id;
-      }
-    }
+    const embeddedColor = body.color ?? existingCategory?.color;
 
     const category: Category = {
       id,
-      title: body.title !== undefined 
-        ? (typeof body.title === "string" ? { ru: body.title, en: "" } : { ru: body.title?.ru || "", en: body.title?.en || "" }) 
-        : (existingCategory?.title || { ru: "", en: "" }),
-      description: body.description !== undefined 
-        ? (typeof body.description === "string" ? { ru: body.description, en: "" } : { ru: body.description?.ru || "", en: body.description?.en || "" }) 
-        : (existingCategory?.description || { ru: "", en: "" }),
+      title: body.title,
+      description: body.description,
       order: body.order ?? existingCategory?.order ?? categories.length + 1,
-      parentId: body.parentId !== undefined ? body.parentId : existingCategory?.parentId,
-      colorId: colorId || undefined,
+      parentId: body.parentId,
+      color: embeddedColor,
       collectionId: collectionId,
-      tagsIds: Array.isArray(body.tagsIds) ? body.tagsIds : (existingCategory?.tagsIds || []),
+      tagsIds: body.tagsIds || [],
       slug,
     };
 

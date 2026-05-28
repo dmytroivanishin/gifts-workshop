@@ -40,9 +40,11 @@ export interface Category {
   slug: string;
   order: number;
   
+  // Embedded properties
+  color?: Color;
+
   // Foreign Keys
   parentId?: string;
-  colorId?: string;
   collectionId: string;
   tagsIds?: string[];
   userId?: string;
@@ -50,7 +52,6 @@ export interface Category {
 
 export interface PopulatedCategory extends Category {
   parent?: Category;
-  color?: Color;
   collection: Collection;
   tags: Tag[];
 }
