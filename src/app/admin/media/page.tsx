@@ -83,7 +83,7 @@ export default function AdminMedia() {
           <p className="text-xs text-muted-foreground">{t("media_limits")}</p>
         </div>
         <label className="px-4 py-2 bg-secondary border border-border rounded-lg text-sm font-semibold text-foreground hover:bg-secondary/70 transition-colors cursor-pointer">
-          Select Files
+          {t("select_files")}
           <input type="file" className="hidden" onChange={(e) => {
             if (e.target.files && e.target.files[0]) {
               const file = e.target.files[0];
@@ -116,7 +116,7 @@ export default function AdminMedia() {
                 <button
                   onClick={() => handleDelete(item.id)}
                   className="p-1.5 rounded-md bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity"
-                  title="Delete"
+                  title={t("delete")}
                 >
                   <Trash2 size={16} />
                 </button>

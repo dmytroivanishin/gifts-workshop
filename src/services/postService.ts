@@ -3,6 +3,8 @@ import { IPostService } from "./interfaces";
 import { Post, PopulatedPost } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/lib/slug";
+import { isUUID } from "@/lib/utils";
+import { resolveId, resolveMultipleIds } from "@/utils/idResolver";
 
 import { paginate } from "./pagination";
 
@@ -15,44 +17,44 @@ export class PostService implements IPostService {
   ) {}
 
   async getFilteredPosts(filters?: QueryOptions): Promise<any> {
-    const flatFilters: QueryOptions = { ...filters };
+    // 1. Build clean database query options
+    const dbOptions: QueryOptions = {
+      search: filters?.search,
+      inStock: filters?.inStock,
+      status: filters?.status,
+      populate: filters?.populate,
+    };
 
-    // Resolve category slug to ID
+    // 2. Resolve Category Slug/ID
     if (filters?.category) {
-      const cat = await this.categoryRepo.getBySlug(filters.category);
-      if (cat) {
-        flatFilters.categoryId = cat.id;
-      } else {
-        flatFilters.categoryId = filters.category;
-      }
-      delete flatFilters.category;
+      const resolved = await resolveMultipleIds(filters.category, (slug) =>
+        this.categoryRepo.getBySlug(slug)
+      );
+      dbOptions.categoryId = resolved.length === 1 ? resolved[0] : resolved;
     }
 
-    // Resolve collection slug to ID
-    if (filters?.collectionSlug) {
-      const col = await this.collectionRepo.getBySlug(filters.collectionSlug);
-      if (col) {
-        flatFilters.collectionId = col.id;
-      } else {
-        flatFilters.collectionId = filters.collectionSlug;
-      }
-      delete flatFilters.collectionSlug;
+    // 3. Resolve Collection Slug/ID
+    if (filters?.collection) {
+      dbOptions.collectionId = await resolveId(filters.collection, (slug) =>
+        this.collectionRepo.getBySlug(slug)
+      );
     }
 
-    // Resolve tag slug to ID
+    // 4. Resolve Tag Slug/ID
     if (filters?.tag) {
-      const tag = await this.tagRepo.getBySlug(filters.tag);
-      if (tag) {
-        flatFilters.tagsIds = tag.id;
-      } else {
-        flatFilters.tagsIds = filters.tag;
-      }
-      delete flatFilters.tag;
+      dbOptions.tagsIds = await resolveId(filters.tag, (slug) =>
+        this.tagRepo.getBySlug(slug)
+      );
     }
 
-    if (filters?.postSlug) {
-      flatFilters.slug = filters.postSlug;
-      delete flatFilters.postSlug;
+    // 5. Resolve Post Slug/ID
+    if (filters?.post) {
+      const trimmed = filters.post.trim();
+      if (isUUID(trimmed)) {
+        dbOptions.id = trimmed;
+      } else {
+        dbOptions.slug = trimmed;
+      }
     }
 
     if (filters?.page || filters?.limit) {
@@ -60,7 +62,7 @@ export class PostService implements IPostService {
       const limit = filters.limit || 20;
 
       const posts = await this.postRepo.getAll({
-        ...flatFilters,
+        ...dbOptions,
         page,
         limit: limit + 1,
       });
@@ -68,7 +70,7 @@ export class PostService implements IPostService {
       return paginate(posts, { page, limit });
     }
 
-    const posts = await this.postRepo.getAll(flatFilters);
+    const posts = await this.postRepo.getAll(dbOptions);
     return {
       data: posts,
       meta: {
@@ -81,11 +83,10 @@ export class PostService implements IPostService {
   }
 
   async getPostById(id: string, options?: { populate?: string }): Promise<PopulatedPost | undefined> {
-    let post = await this.postRepo.getById(id, options);
-    if (!post) {
-      post = await this.postRepo.getBySlug(id, options);
+    if (isUUID(id)) {
+      return this.postRepo.getById(id, options);
     }
-    return post;
+    return this.postRepo.getBySlug(id, options);
   }
 
   async getPostBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedPost | undefined> {

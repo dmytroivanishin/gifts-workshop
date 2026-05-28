@@ -3,6 +3,7 @@ import { ITagService } from "./interfaces";
 import { Tag } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/lib/slug";
+import { isUUID } from "@/lib/utils";
 
 import { paginate } from "./pagination";
 
@@ -38,7 +39,10 @@ export class TagService implements ITagService {
   }
 
   async getTagById(id: string): Promise<Tag | undefined> {
-    return this.tagRepo.getById(id);
+    if (isUUID(id)) {
+      return this.tagRepo.getById(id);
+    }
+    return this.tagRepo.getBySlug(id);
   }
 
   async getTagBySlug(slug: string): Promise<Tag | undefined> {

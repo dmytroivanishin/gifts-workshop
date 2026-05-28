@@ -14,7 +14,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [authorized, setAuthorized] = useState(false);
-  const { t } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
@@ -89,6 +89,17 @@ export default function AdminLayout({
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b bg-background flex items-center px-6">
           <div className="ml-auto flex items-center space-x-4">
+            {/* Admin Area Locale Selector */}
+            <div className="flex items-center gap-1 border-r pr-4 border-border/80">
+              <button
+                onClick={() => setLocale(locale === "ru" ? "en" : "ru")}
+                className="px-2 py-1 bg-secondary text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-all rounded-md uppercase tracking-wider cursor-pointer"
+                title={locale === "ru" ? "Switch to English" : "Переключить на Русский"}
+              >
+                {locale === "ru" ? "EN" : "RU"}
+              </button>
+            </div>
+
             <span className="text-sm font-medium text-foreground">Admin</span>
             <button
               onClick={handleLogout}

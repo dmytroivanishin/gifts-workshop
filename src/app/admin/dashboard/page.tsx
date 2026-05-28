@@ -177,21 +177,21 @@ export default function AdminDashboard() {
                         <Link
                           href={`/projects/${post.slug || post.id}`}
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                          title="View"
+                          title={t("view")}
                         >
                           <Eye size={16} />
                         </Link>
                         <Link
                           href={`/admin/projects/${post.id}`}
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex items-center justify-center"
-                          title="Edit"
+                          title={t("edit")}
                         >
                           <Edit size={16} />
                         </Link>
                         <button
                           onClick={() => handleDelete(post.id)}
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-destructive"
-                          title="Delete"
+                          title={t("delete")}
                         >
                           <Trash2 size={16} />
                         </button>

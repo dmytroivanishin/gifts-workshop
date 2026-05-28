@@ -16,6 +16,7 @@ import {
 import ImageCropModal from "@/components/shared/ImageCropModal";
 import MediaPickerModal from "@/components/shared/MediaPickerModal";
 import Combobox from "@/components/ui/combobox";
+import { useTranslation } from "@/i18n";
 
 interface SelectedMedia {
   mediaId: string;
@@ -30,6 +31,7 @@ interface ProjectFormPageProps {
 }
 
 export default function ProjectFormPage({ params }: ProjectFormPageProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const { id } = use(params);
   const isEditMode = id !== "new";
@@ -257,10 +259,10 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           </Link>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-foreground">
-              {isEditMode ? "Edit Project" : "Create New Project"}
+              {isEditMode ? t("edit_project") : t("create_project")}
             </h1>
             <p className="text-xs text-muted-foreground">
-              {isEditMode ? "Update details of your existing work." : "Add a new handmade work to your portfolio catalog."}
+              {isEditMode ? t("edit_project_subtitle") : t("create_project_subtitle")}
             </p>
           </div>
         </div>
@@ -273,13 +275,13 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           {/* Title */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              Title
+              {t("title")}
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Project title..."
+              placeholder={t("placeholder_project_title")}
               className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               required
             />
@@ -288,7 +290,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           {/* Category */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              Category
+              {t("category")}
             </label>
             <Combobox
               options={categoryOptions}
@@ -307,20 +309,20 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                   return Array.from(new Set([...filtered, ...newTags]));
                 });
               }}
-              placeholder="Select category..."
-              searchPlaceholder="Search categories..."
+              placeholder={t("placeholder_select_category")}
+              searchPlaceholder={t("placeholder_search_categories")}
             />
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              Description
+              {t("description")}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Project description..."
+              placeholder={t("placeholder_project_desc")}
               rows={4}
               className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               required
@@ -330,16 +332,16 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           {/* Tags Combobox with Chips */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              Tags
+              {t("tags")}
             </label>
             <Combobox
               options={tagOptions}
               value={selectedTags}
               onChange={(val) => setSelectedTags(val)}
-              placeholder="Select tags..."
-              searchPlaceholder="Search or type new tag..."
+              placeholder={t("placeholder_select_tags")}
+              searchPlaceholder={t("placeholder_search_or_type_tag")}
               allowCreate
-              createLabel='Add new tag "{search}"'
+              createLabel={t("add_new_tag_prompt")}
               multiple
               onCreate={handleCreateTag}
             />
@@ -349,7 +351,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-                Availability
+                {t("availability")}
               </label>
               <div className="flex items-center gap-2 min-h-11">
                 <input
@@ -360,23 +362,23 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                   className="rounded border-border bg-transparent text-primary focus:ring-0 w-4 h-4 cursor-pointer"
                 />
                 <label htmlFor="inStock" className="text-sm font-medium text-muted-foreground cursor-pointer">
-                  In Stock (В наличии)
+                  {t("in_stock")}
                 </label>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-                Status
+                {t("status")}
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
               >
-                <option value="Published">Published</option>
-                <option value="Draft">Draft</option>
-                <option value="Archived">Archived</option>
+                <option value="Published">{t("published")}</option>
+                <option value="Draft">{t("draft")}</option>
+                <option value="Archived">{t("archived")}</option>
               </select>
             </div>
           </div>
@@ -387,20 +389,20 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           <div className="flex items-center justify-between border-b pb-2">
             <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
               <ImageIcon size={16} />
-              <span>Project Gallery & Media</span>
+              <span>{t("gallery_and_media")}</span>
             </div>
             <button
               type="button"
               onClick={() => setIsMediaPickerOpen(true)}
               className="text-xs font-semibold px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity"
             >
-              Add Media
+              {t("add_media")}
             </button>
           </div>
 
           {selectedImages.length === 0 ? (
             <div className="py-8 text-center border-2 border-dashed border-border rounded-xl">
-              <p className="text-sm text-muted-foreground">No media selected. Click Add Media to select from library.</p>
+              <p className="text-sm text-muted-foreground">{t("no_media_selected")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -453,7 +455,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                           isCover ? "bg-primary text-primary-foreground" : "bg-white text-black hover:bg-gray-200"
                         }`}
                       >
-                        {isCover ? "Cover" : "Set Cover"}
+                        {isCover ? t("cover") : t("set_cover")}
                       </button>
                       <button
                         type="button"
@@ -461,13 +463,13 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                         className="px-3 py-1.5 bg-white text-black hover:bg-gray-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 justify-center w-3/4"
                       >
                         <Move size={12} />
-                        Position
+                        {t("position")}
                       </button>
                     </div>
 
                     {isCover && (
                       <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">
-                        COVER
+                        {t("cover").toUpperCase()}
                       </div>
                     )}
                   </div>
@@ -485,7 +487,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
               >
                 <Move size={14} />
-                Fine-tune Cover Crop
+                {t("fine_tune_cover")}
               </button>
             </div>
           )}
@@ -497,7 +499,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
             href="/admin/dashboard"
             className="px-5 py-2.5 rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors cursor-pointer"
           >
-            Cancel
+            {t("cancel")}
           </Link>
 
           <button
@@ -508,12 +510,12 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
             {isSaving ? (
               <>
                 <Loader2 className="animate-spin" size={16} />
-                Saving...
+                {t("saving")}
               </>
             ) : (
               <>
                 <Save size={16} />
-                {isEditMode ? "Update Project" : "Save Project"}
+                {isEditMode ? t("save") : t("add_project")}
               </>
             )}
           </button>

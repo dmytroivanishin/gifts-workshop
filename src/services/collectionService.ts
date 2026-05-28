@@ -3,6 +3,7 @@ import { ICollectionService } from "./interfaces";
 import { Collection } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/lib/slug";
+import { isUUID } from "@/lib/utils";
 
 import { paginate } from "./pagination";
 
@@ -24,7 +25,10 @@ export class CollectionService implements ICollectionService {
   }
 
   async getCollectionById(id: string): Promise<Collection | undefined> {
-    return this.collectionRepo.getById(id);
+    if (isUUID(id)) {
+      return this.collectionRepo.getById(id);
+    }
+    return this.collectionRepo.getBySlug(id);
   }
 
   async getCollectionBySlug(slug: string): Promise<Collection | undefined> {

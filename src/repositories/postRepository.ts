@@ -21,11 +21,18 @@ export class PostRepository extends BaseRepository<Post, PopulatedPost> implemen
     const params = new URLSearchParams();
 
     if (options) {
-      const { search, categoryId, collectionId, tagsIds, slug, inStock, status } = options;
+      const { id, search, categoryId, collectionId, tagsIds, slug, inStock, status } = options;
 
+      if (id) params.append("id", id);
       if (status) params.append("status", status);
       if (inStock !== undefined) params.append("in_stock", inStock.toString());
-      if (categoryId) params.append("categoryId", categoryId);
+      if (categoryId) {
+        if (Array.isArray(categoryId)) {
+          categoryId.forEach(id => params.append("categoryId", id));
+        } else {
+          params.append("categoryId", categoryId);
+        }
+      }
       if (collectionId) params.append("collectionId", collectionId);
       if (slug) params.append("slug", slug);
       if (tagsIds) params.append("tagsIds", tagsIds);

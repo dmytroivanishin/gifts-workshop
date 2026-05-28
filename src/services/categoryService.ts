@@ -4,6 +4,7 @@ import { Category, PopulatedCategory } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/lib/slug";
 import { ValidationError } from "@/common/errors/validation";
+import { isUUID } from "@/lib/utils";
 
 import { paginate } from "./pagination";
 import { PaginationOptions } from "@/types";
@@ -44,7 +45,10 @@ export class CategoryService implements ICategoryService {
   }
 
   async getCategoryById(id: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined> {
-    return this.categoryRepo.getById(id, options);
+    if (isUUID(id)) {
+      return this.categoryRepo.getById(id, options);
+    }
+    return this.categoryRepo.getBySlug(id, options);
   }
 
   async getCategoryBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined> {

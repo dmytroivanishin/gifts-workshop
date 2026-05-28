@@ -138,7 +138,7 @@ export default function AdminTags() {
                         type="text"
                         value={editTagName}
                         onChange={(e) => setEditTagName(e.target.value)}
-                        placeholder="Tag name..."
+                        placeholder={t("tag_name_placeholder")}
                         className="w-full max-w-[300px] px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                         autoFocus
                       />
@@ -216,7 +216,7 @@ export default function AdminTags() {
                 type="text"
                 value={tagName}
                 onChange={(e) => setTagName(e.target.value)}
-                placeholder="e.g. vintage"
+                placeholder={t("placeholder_vintage")}
                 className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 required
               />

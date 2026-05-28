@@ -118,11 +118,11 @@ export default function AdminLocalizations() {
         }).unwrap();
       }
 
-      setSaveStatus({ type: "success", message: "Translations updated successfully!" });
+      setSaveStatus({ type: "success", message: t("translations_success") });
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err: any) {
       console.error("Failed to save translations", err);
-      setSaveStatus({ type: "error", message: "Failed to save translations." });
+      setSaveStatus({ type: "error", message: t("translations_error") });
     }
   };
 
@@ -146,7 +146,7 @@ export default function AdminLocalizations() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Тип сущности
+              {t("entity_type")}
             </label>
             <div className="flex bg-secondary rounded-lg p-0.5 border border-border/40">
               <button
@@ -172,11 +172,11 @@ export default function AdminLocalizations() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Выбрать элемент
+              {t("select_item")}
             </label>
             {isLoadingPosts || isLoadingCategories ? (
               <div className="flex items-center h-10 px-3 bg-secondary rounded-lg border border-border/40 text-xs text-muted-foreground">
-                <Loader2 className="animate-spin mr-2" size={14} /> Загрузка списка...
+                <Loader2 className="animate-spin mr-2" size={14} /> {t("loading_list")}
               </div>
             ) : (
               <select
@@ -185,7 +185,7 @@ export default function AdminLocalizations() {
                 className="w-full h-10 px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
               >
                 {entitiesList.length === 0 ? (
-                  <option value="">Элементы не найдены</option>
+                  <option value="">{t("items_not_found")}</option>
                 ) : (
                   entitiesList.map((item) => {
                     const itemTitle = typeof item.title === "string" ? item.title : item.title?.ru || "";
@@ -203,18 +203,18 @@ export default function AdminLocalizations() {
 
         {selectedEntityId && (
           <div className="flex items-center gap-2 text-xs font-medium border-t pt-3">
-            <span className="text-muted-foreground">Статус:</span>
+            <span className="text-muted-foreground">{t("status_label")}</span>
             {isLoadingLocs ? (
               <span className="text-muted-foreground flex items-center gap-1">
-                <Loader2 className="animate-spin" size={12} /> Проверка перевода...
+                <Loader2 className="animate-spin" size={12} /> {t("checking_translation")}
               </span>
             ) : isTranslated ? (
               <span className="text-emerald-600 flex items-center gap-1">
-                <CheckCircle2 size={14} /> Переведено полностью (RU/EN)
+                <CheckCircle2 size={14} /> {t("translated_fully")}
               </span>
             ) : (
               <span className="text-amber-600 flex items-center gap-1">
-                <AlertCircle size={14} /> Отсутствует английский перевод
+                <AlertCircle size={14} /> {t("missing_en_translation")}
               </span>
             )}
           </div>
@@ -232,7 +232,7 @@ export default function AdminLocalizations() {
                 RU
               </div>
               <h3 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2">
-                Русский перевод
+                {t("russian_translation")}
               </h3>
 
               <div className="space-y-1.5">
@@ -243,7 +243,7 @@ export default function AdminLocalizations() {
                   type="text"
                   value={ruTitle}
                   onChange={(e) => setRuTitle(e.target.value)}
-                  placeholder="Название на русском..."
+                  placeholder={t("placeholder_title_ru")}
                   className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
                   required
                 />
@@ -256,7 +256,7 @@ export default function AdminLocalizations() {
                 <textarea
                   value={ruDescription}
                   onChange={(e) => setRuDescription(e.target.value)}
-                  placeholder="Описание на русском..."
+                  placeholder={t("placeholder_desc_ru")}
                   rows={6}
                   className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
                 />
@@ -269,7 +269,7 @@ export default function AdminLocalizations() {
                 EN
               </div>
               <h3 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2">
-                Английский перевод
+                {t("english_translation")}
               </h3>
 
               <div className="space-y-1.5">
@@ -323,7 +323,7 @@ export default function AdminLocalizations() {
               {isSaving ? (
                 <>
                   <Loader2 className="animate-spin" size={16} />
-                  Сохранение...
+                  {t("saving")}
                 </>
               ) : (
                 <>

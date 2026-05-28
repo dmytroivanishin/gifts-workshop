@@ -7,7 +7,7 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const posts = await postService.getFilteredPosts({ collectionSlug: id });
+    const posts = await postService.getFilteredPosts({ collection: id });
     return sendSuccess(posts, {
       page: 1,
       nextPage: null,

@@ -4,13 +4,14 @@ export interface QueryOptions extends PaginationOptions {
   search?: string;
   category?: string;
   tag?: string;
+  collection?: string;
+  post?: string;
   inStock?: boolean;
   status?: string;
-  collectionSlug?: string;
-  postSlug?: string;
   
   // Database-native flat fields for repository querying
-  categoryId?: string;
+  id?: string;
+  categoryId?: string | string[];
   collectionId?: string;
   tagsIds?: string;
   slug?: string;

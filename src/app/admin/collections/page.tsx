@@ -78,7 +78,7 @@ export default function AdminCollections() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("collections")}</h1>
         <p className="text-sm text-muted-foreground">
-          Управление коллекциями работ в каталоге.
+          {t("manage_collections")}
         </p>
       </div>
 
@@ -94,7 +94,7 @@ export default function AdminCollections() {
             {isLoading ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
-                Загрузка коллекций...
+                {t("loading_collections")}
               </div>
             ) : collections.length > 0 ? (
               collections.map((col: any) => (
@@ -115,7 +115,7 @@ export default function AdminCollections() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
-                      {loc(col.description) || "Нет описания"}
+                      {loc(col.description) || t("no_description")}
                     </p>
                     <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5">
                       slug: {col.slug}
@@ -136,7 +136,7 @@ export default function AdminCollections() {
                       onClick={() => handleDelete(col.id)}
                       disabled={isDeleting}
                       className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
-                      title="Удалить коллекцию"
+                      title={t("delete_collection")}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -144,7 +144,7 @@ export default function AdminCollections() {
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-sm text-muted-foreground">Коллекции не найдены.</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">{t("no_projects")}</div>
             )}
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function AdminCollections() {
                 className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
               >
                 <X size={12} />
-                Отменить
+                {t("cancel_action")}
               </button>
             )}
           </div>
@@ -176,7 +176,7 @@ export default function AdminCollections() {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Например: Плюшевые игрушки"
+                placeholder={t("placeholder_collection_title")}
                 className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 required
               />
@@ -190,7 +190,7 @@ export default function AdminCollections() {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Описание коллекции..."
+                placeholder={t("placeholder_collection_desc")}
                 rows={4}
                 className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
@@ -221,7 +221,7 @@ export default function AdminCollections() {
               {isCreating || isUpdating ? (
                 <>
                   <Loader2 className="animate-spin" size={16} />
-                  Сохранение...
+                  {t("saving")}
                 </>
               ) : (
                 <>

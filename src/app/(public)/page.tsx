@@ -69,10 +69,32 @@ function HomeContent() {
   const [posts, setPosts] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
 
+  // Expand parent category selection and strictly resolve slugs to UUIDs on the client!
+  let categoryQueryParam = "";
+  if (activeCategory && dbCategories.length > 0) {
+    const targetCategoryObj = dbCategories.find(
+      (c: any) => c.id === activeCategory || c.slug === activeCategory
+    );
+    if (targetCategoryObj) {
+      if (!targetCategoryObj.parentId) {
+        // It is a parent category! Aggregate its ID and all children's IDs
+        const children = dbCategories.filter((c: any) => c.parentId === targetCategoryObj.id);
+        const resolvedIds = [targetCategoryObj.id, ...children.map((c: any) => c.id)];
+        categoryQueryParam = resolvedIds.join(",");
+      } else {
+        // It is a single child category! Just use its ID
+        categoryQueryParam = targetCategoryObj.id;
+      }
+    } else {
+      // Fallback if not found in dbCategories list yet
+      categoryQueryParam = activeCategory;
+    }
+  }
+
   // Fetch posts using RTK Query
   const { data: response, isLoading, isFetching } = useGetPostsQuery({
     search: search.trim() !== "" ? search : undefined,
-    category: activeCategory || undefined,
+    category: categoryQueryParam || undefined,
     inStock: inStockOnly ? true : undefined,
     page,
     limit: 6,
@@ -226,25 +248,92 @@ function HomeContent() {
             </button>
 
             {/* Dynamic Categories */}
-            {dbCategories.map((cat) => {
-              const localizedTitle = loc(cat.title);
-              const isSelected = activeCategory === cat.id;
+            {dbCategories
+              .filter((cat: any) => !cat.parentId)
+              .map((cat: any) => {
+                const localizedTitle = loc(cat.title);
+                const children = dbCategories.filter((c: any) => c.parentId === cat.id);
+                const hasChildren = children.length > 0;
 
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategorySelect(cat.id)}
-                  className={cn(
-                    "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer",
-                    isSelected
-                      ? "bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3]"
-                      : "bg-transparent text-[#827C6B] border-[#EBE7E3] hover:bg-[#EBE7E3]/45"
-                  )}
-                >
-                  {localizedTitle}
-                </button>
-              );
-            })}
+                const isSelected =
+                  activeCategory === cat.id ||
+                  activeCategory === cat.slug ||
+                  children.some((c: any) => activeCategory === c.id || activeCategory === c.slug);
+
+                if (hasChildren) {
+                  return (
+                    <div key={cat.id} className="relative group">
+                      {/* Parent Category Button */}
+                      <button
+                        onClick={() => handleCategorySelect(cat.slug || cat.id)}
+                        className={cn(
+                          "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer flex items-center gap-1.5",
+                          isSelected
+                            ? "bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3] shadow-sm font-semibold"
+                            : "bg-transparent text-[#827C6B] border-[#EBE7E3] hover:bg-[#EBE7E3]/45"
+                        )}
+                      >
+                        {localizedTitle}
+                        <span className="text-[9px] opacity-60 transition-transform duration-200 group-hover:rotate-180">▼</span>
+                      </button>
+
+                      {/* Glassmorphic Subcategory Hover Dropdown */}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 pt-2.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out scale-95 group-hover:scale-100 origin-top">
+                        <div className="bg-card/95 backdrop-blur-md border border-border shadow-xl rounded-2xl p-2 min-w-[200px] flex flex-col gap-1">
+                          {/* Option to explicitly select only the parent */}
+                          <button
+                            onClick={() => handleCategorySelect(cat.slug || cat.id)}
+                            className={cn(
+                              "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer",
+                              activeCategory === cat.id || activeCategory === cat.slug
+                                ? "bg-secondary text-primary font-bold"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                          >
+                            {t("all")} {localizedTitle}
+                          </button>
+                          <div className="h-[1px] bg-border/60 my-1" />
+                          {children.map((child: any) => {
+                            const isChildSelected = activeCategory === child.id || activeCategory === child.slug;
+                            return (
+                              <button
+                                key={child.id}
+                                onClick={() => handleCategorySelect(child.slug || child.id)}
+                                className={cn(
+                                  "w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer flex items-center justify-between",
+                                  isChildSelected
+                                    ? "bg-primary/10 text-primary font-semibold"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                )}
+                              >
+                                <span>{loc(child.title)}</span>
+                                {isChildSelected && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Normal Button
+                const isDirectlySelected = activeCategory === cat.id || activeCategory === cat.slug;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategorySelect(cat.slug || cat.id)}
+                    className={cn(
+                      "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer",
+                      isDirectlySelected
+                        ? "bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3] shadow-sm font-semibold"
+                        : "bg-transparent text-[#827C6B] border-[#EBE7E3] hover:bg-[#EBE7E3]/45"
+                    )}
+                  >
+                    {localizedTitle}
+                  </button>
+                );
+              })}
           </div>
         </div>
       </div>

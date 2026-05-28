@@ -20,7 +20,7 @@ export class PostController {
       const page = pageStr ? parseInt(pageStr, 10) : undefined;
       const limit = limitStr ? parseInt(limitStr, 10) : undefined;
 
-      const result = await this.postService.getFilteredPosts({ search, category, tag, collectionSlug: collection, inStock, page, limit, populate });
+      const result = await this.postService.getFilteredPosts({ search, category, tag, collection, inStock, page, limit, populate });
 
       return sendSuccess(result.data, result.meta);
     } catch (error: any) {

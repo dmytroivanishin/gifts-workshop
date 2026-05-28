@@ -14,16 +14,14 @@ import { useTranslation } from "@/i18n";
 
 export default function AdminCategories() {
   const { t } = useTranslation();
-  const [page, setPage] = useState(1);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(false);
 
-  const { data: categoriesResponse, isLoading, isFetching } = useGetCategoriesQuery({ page, limit: 10 });
+  const { data: categoriesResponse, isLoading } = useGetCategoriesQuery();
   const { data: tagsResponse } = useGetTagsQuery();
   const { data: collectionsResponse } = useGetCollectionsQuery();
   const [saveCategory, { isLoading: isSaving }] = useCreateCategoryMutation();
   const [createTag] = useCreateTagMutation();
 
+  const categories = categoriesResponse?.data || [];
   const allTags = tagsResponse?.data || [];
   const tagOptions = allTags.map((tag: any) => ({ 
     value: tag.id, 
@@ -38,6 +36,7 @@ export default function AdminCategories() {
   const [color, setColor] = useState("#FFD2D2");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [collectionId, setCollectionId] = useState("");
+  const [parentId, setParentId] = useState("");
 
   const collections = collectionsResponse?.data || [];
 
@@ -46,51 +45,9 @@ export default function AdminCategories() {
   const [editDescription, setEditDescription] = useState("");
   const [editColor, setEditColor] = useState("");
   const [editCollectionId, setEditCollectionId] = useState("");
+  const [editParentId, setEditParentId] = useState("");
   const [editSelectedTags, setEditSelectedTags] = useState<string[]>([]);
   const [activeCategoryObj, setActiveCategoryObj] = useState<any>(null);
-
-  const loaderRef = useRef<HTMLDivElement | null>(null);
-
-  // Sync loaded page chunk to categories list
-  useEffect(() => {
-    if (categoriesResponse?.data) {
-      if (page === 1) {
-        setCategories(categoriesResponse.data);
-      } else {
-        setCategories((prev) => {
-          const existingIds = new Set(prev.map((c) => c.id));
-          const newCats = categoriesResponse.data.filter((c: any) => !existingIds.has(c.id));
-          return [...prev, ...newCats];
-        });
-      }
-      setHasMore(categoriesResponse.meta?.nextPage !== null);
-    }
-  }, [categoriesResponse, page]);
-
-  // IntersectionObserver bottom anchor logic
-  useEffect(() => {
-    if (!hasMore || isFetching || isLoading) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setPage((prev) => prev + 1);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentLoader = loaderRef.current;
-    if (currentLoader) {
-      observer.observe(currentLoader);
-    }
-
-    return () => {
-      if (currentLoader) {
-        observer.unobserve(currentLoader);
-      }
-    };
-  }, [hasMore, isFetching, isLoading]);
 
   const handleCreateTag = async (name: string) => {
     try {
@@ -114,6 +71,7 @@ export default function AdminCategories() {
         description: { ru: description, en: "" },
         color: { id: `color-${Date.now()}`, color: color },
         collectionId: collectionId,
+        parentId: parentId || null,
         tagsIds: selectedTags,
       }).unwrap();
 
@@ -122,7 +80,7 @@ export default function AdminCategories() {
       setColor("#FFD2D2");
       setSelectedTags([]);
       setCollectionId("");
-      setPage(1); // Reset to page 1 to reload
+      setParentId("");
     } catch (err) {
       console.error("Failed to add category", err);
     }
@@ -144,11 +102,11 @@ export default function AdminCategories() {
         description: { ru: editDescription, en: existingEnDesc || "" },
         color: { id: activeCategoryObj?.color?.id || `color-${Date.now()}`, color: editColor },
         collectionId: editCollectionId,
+        parentId: editParentId || null,
         tagsIds: editSelectedTags,
       }).unwrap();
       setIsEditing(null);
       setActiveCategoryObj(null);
-      setPage(1); // Reset to page 1 to reload
     } catch (err) {
       console.error("Failed to save category", err);
     }
@@ -161,6 +119,7 @@ export default function AdminCategories() {
     setEditDescription(typeof cat.description === "string" ? cat.description : cat.description?.ru || "");
     setEditColor(cat.color.color);
     setEditCollectionId(cat.collectionId || "");
+    setEditParentId(cat.parentId || "");
     setEditSelectedTags(cat.tagsIds || cat.tags?.map((t: any) => t.id) || []);
   };
 
@@ -168,7 +127,7 @@ export default function AdminCategories() {
     <div className="space-y-6 font-sans">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("categories")}</h1>
-        <p className="text-sm text-muted-foreground">Управление категориями работ и выбор цветовых акцентов.</p>
+        <p className="text-sm text-muted-foreground">{t("categories_subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -219,7 +178,7 @@ export default function AdminCategories() {
                             className="w-full px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                             required
                           >
-                            <option value="" disabled>Выберите коллекцию...</option>
+                            <option value="" disabled>{t("placeholder_select_collection")}</option>
                             {collections.map((col: any) => (
                               <option key={col.id} value={col.id} className="bg-card text-foreground">
                                 {col.title?.ru || col.title?.en || col.title || ""}
@@ -228,21 +187,38 @@ export default function AdminCategories() {
                           </select>
                         </div>
                         <div className="grid grid-cols-1 gap-2">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("parent_category")}</label>
+                          <select
+                            value={editParentId}
+                            onChange={(e) => setEditParentId(e.target.value)}
+                            className="w-full px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                          >
+                            <option value="">{t("none_main_category")}</option>
+                            {categories
+                              .filter((c: any) => c.id !== cat.id)
+                              .map((c: any) => (
+                                <option key={c.id} value={c.id} className="bg-card text-foreground">
+                                  {c.title?.ru || c.title?.en || c.title || ""}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("tags")}</label>
                           <Combobox
                             options={tagOptions}
                             value={editSelectedTags}
                             onChange={(val) => setEditSelectedTags(val)}
-                            placeholder="Выберите теги..."
-                            searchPlaceholder="Поиск тегов..."
+                            placeholder={t("placeholder_select_tags")}
+                            searchPlaceholder={t("placeholder_search_tags")}
                             allowCreate
-                            createLabel='Добавить новый тег "{search}"'
+                            createLabel={t("add_new_tag_prompt")}
                             multiple
                             onCreate={handleCreateTag}
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <label className="text-xs font-semibold text-muted-foreground">Цвет акцента:</label>
+                          <label className="text-xs font-semibold text-muted-foreground">{t("color_accent")}:</label>
                           <input
                             type="color"
                             value={editColor}
@@ -265,7 +241,19 @@ export default function AdminCategories() {
                           >
                             HEX: {catColor}
                           </span>
-
+                          {cat.parentId && (() => {
+                            const parentCat = categories.find((c: any) => c.id === cat.parentId);
+                            const parentTitle = parentCat
+                              ? (typeof parentCat.title === "string"
+                                ? parentCat.title
+                                : parentCat.title?.ru || parentCat.title?.en || "")
+                              : "";
+                            return parentTitle ? (
+                              <span className="text-[11px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
+                                {t("subcategory_of")} <strong>{parentTitle}</strong>
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">{catDescRu}</p>
                       </div>
@@ -309,12 +297,6 @@ export default function AdminCategories() {
                 {t("no_categories")}
               </div>
             )}
-            {categories.length > 0 && hasMore && (
-              <div ref={loaderRef} className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border/45 bg-muted/5">
-                <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
-                {t("loading_categories")}
-              </div>
-            )}
           </div>
         </div>
 
@@ -328,7 +310,7 @@ export default function AdminCategories() {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Например: Плюшевые истории"
+                placeholder={t("placeholder_category_title")}
                 className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                 required
               />
@@ -339,7 +321,7 @@ export default function AdminCategories() {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Описание категории..."
+                placeholder={t("placeholder_category_desc")}
                 className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                 rows={3}
               />
@@ -353,7 +335,7 @@ export default function AdminCategories() {
                 className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                 required
               >
-                <option value="" disabled>Выберите коллекцию...</option>
+                <option value="" disabled>{t("placeholder_select_collection")}</option>
                 {collections.map((col: any) => (
                   <option key={col.id} value={col.id} className="bg-card text-foreground">
                     {col.title?.ru || col.title?.en || col.title || ""}
@@ -363,22 +345,41 @@ export default function AdminCategories() {
             </div>
 
             <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("parent_category")}</label>
+              <select
+                value={parentId}
+                onChange={(e) => setParentId(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+              >
+                <option value="">{t("none_main_category")}</option>
+                {categories.map((c: any) => {
+                  const titleStr = typeof c.title === "string" ? c.title : c.title?.ru || "";
+                  return (
+                    <option key={c.id} value={c.id} className="bg-card text-foreground">
+                      {titleStr}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tags")}</label>
               <Combobox
                 options={tagOptions}
                 value={selectedTags}
                 onChange={(val) => setSelectedTags(val)}
-                placeholder="Выберите теги..."
-                searchPlaceholder="Поиск тегов..."
+                placeholder={t("placeholder_select_tags")}
+                searchPlaceholder={t("placeholder_search_tags")}
                 allowCreate
-                createLabel='Добавить новый тег "{search}"'
+                createLabel={t("add_new_tag_prompt")}
                 multiple
                 onCreate={handleCreateTag}
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Цвет акцента</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("color_accent")}</label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
