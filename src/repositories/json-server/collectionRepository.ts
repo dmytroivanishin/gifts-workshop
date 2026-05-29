@@ -1,5 +1,5 @@
 import { BaseRepository, registerRepository } from "./baseRepository";
-import { ICollectionRepository } from "./interfaces";
+import { ICollectionRepository } from "../interfaces";
 import { Collection } from "@/types";
 
 export class CollectionRepository extends BaseRepository<Collection> implements ICollectionRepository {

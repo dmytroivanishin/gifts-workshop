@@ -1,5 +1,5 @@
 import { BaseRepository, registerRepository, populateRelations, repositoryRegistry } from "./baseRepository";
-import { ICategoryRepository, ICollectionRepository } from "./interfaces";
+import { ICategoryRepository, ICollectionRepository } from "../interfaces";
 import { Category, PopulatedCategory, Tag } from "@/types";
 import { NotFoundError } from "@/common/errors/notFound";
 import { ValidationError } from "@/common/errors/validation";

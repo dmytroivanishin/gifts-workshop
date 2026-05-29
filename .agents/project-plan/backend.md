@@ -96,23 +96,25 @@
 
 - **User**:
     - `id`, `email`, `name`, `password`.
+- **TokenSession**:
+    - `id` (String / UUID - Primary Key, maps to JTI), `userId` (ref User, onDelete: cascade), `refreshTokenHash` (String), `isUsed` (Boolean), `expiresAt` (Number - Unix timestamp), `tokenFamily` (String).
 - **Collection**:
-    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `user` (ref User).
+    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `main` (Boolean), `userId` (ref User).
 - **Category**:
-    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `order` (Number), `parent` (ref Category / self-referential FK), `color` (ref Color), `collection` (ref Collection), `tags` (Array of Tag IDs), `user` (ref User).
+    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `order` (Number), `parentId` (ref Category / self-referential FK), `colorId` (ref Color), `collectionId` (ref Collection), `userId` (ref User).
 - **Color**:
-    - `id`, `color` (hex/string), `user` (ref User).
+    - `id`, `color` (hex/string), `userId` (ref User).
 - **Media**:
-    - `id`, `thumbnailUrl`, `originalUrl`, `user` (ref User).
+    - `id`, `thumbnailUrl`, `originalUrl`, `width` (Number), `height` (Number), `orientation` (String / Enum), `userId` (ref User).
 - **Tag**:
-    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `user` (ref User).
-    - *Note: Category-Tag relationships are unidirectional and managed inside the `Category` entity.*
+    - `id`, `slug` (String), `name` (localized object `{ ru, en }`), `userId` (ref User), `categoryIds` (Array of Category IDs).
 - **Post**:
-    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `media` (Array of PostMedia), `poster` (PostPoster), `in_stock` (Boolean), `status` (String - Draft/Published/Archived), `collection` (ref Collection), `category` (ref Category), `tags` (Array of Tag IDs), `user` (ref User).
-- **PostMedia**:
-    - `order` (Number), `media` (ref Media), `position` (Position object).
-- **Position**:
+    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `media` (Array of PostMedia - stored as Embedded JSONB column), `posterId` (ref Media), `in_stock` (Boolean), `status` (String - Draft/Published/Archived), `collectionId` (ref Collection), `categoryId` (ref Category), `tagIds` (Array of Tag IDs), `userId` (ref User).
+- **PostMedia (Embedded JSON inside Post.media array)**:
+    - `id` (String / UUID), `order` (Number), `mediaId` (ref Media), `position` (Position object).
+- **Position (Embedded JSON inside PostMedia)**:
     - `x` (Number), `y` (Number), `zoom` (Number).
+
 
 
 > [!NOTE]

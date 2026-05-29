@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { signToken } from "@/lib/jwt";
-import { tokenRepository } from "@/repositories/tokenRepository";
+import { tokenRepository } from "@/repositories/json-server/tokenRepository";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import crypto from "crypto";
 import { cookies } from "next/headers";

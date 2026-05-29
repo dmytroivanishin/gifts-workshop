@@ -23,6 +23,7 @@ export interface IBaseRepository<T, TPopulated = T, TQueryOptions = PaginationOp
   getById(id: string, options?: { populate?: string }): Promise<TPopulated | undefined>;
   getByIds(ids: string[], options?: { populate?: string }): Promise<TPopulated[]>;
   save(item: T): Promise<TPopulated>;
+  saveMany(items: T[]): Promise<TPopulated[]>;
   delete(id: string): Promise<boolean>;
 }
 

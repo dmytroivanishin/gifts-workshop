@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
-import { tokenRepository } from "@/repositories/tokenRepository";
+import { tokenRepository } from "@/repositories/json-server/tokenRepository";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
 import { signToken, verifyToken } from "@/lib/jwt";

@@ -1,5 +1,5 @@
 import { BaseRepository, registerRepository } from "./baseRepository";
-import { ITagRepository } from "./interfaces";
+import { ITagRepository } from "../interfaces";
 import { Tag } from "@/types";
 
 export class TagRepository extends BaseRepository<Tag> implements ITagRepository {

@@ -8,6 +8,7 @@
     "description": {
       "ru": "Здесь собраны все мои работы"
     },
-    "userId": "c0a80101-1111-4444-9999-abcdefabcdef"
+    "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "main": true
   }
 ]

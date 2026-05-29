@@ -1,5 +1,5 @@
 import { BaseRepository, registerRepository } from "./baseRepository";
-import { IUserRepository } from "./interfaces";
+import { IUserRepository } from "../interfaces";
 import { User } from "@/types";
 
 export class UserRepository extends BaseRepository<User> implements IUserRepository {

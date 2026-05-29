@@ -1,6 +1,6 @@
 import { BaseRepository, registerRepository, populateRelations } from "./baseRepository";
 import { randomUUID } from "crypto";
-import { IPostRepository, QueryOptions } from "./interfaces";
+import { IPostRepository, QueryOptions } from "../interfaces";
 import { Post, PopulatedPost, Tag, PostMedia } from "@/types";
 import { NotFoundError } from "@/common/errors/notFound";
 import { InternalServerError } from "@/common/errors/internalServer";

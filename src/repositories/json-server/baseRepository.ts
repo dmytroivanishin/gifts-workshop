@@ -241,6 +241,10 @@ export class BaseRepository<T extends { id: string }, TPopulated = T> {
     return this.populate(savedRaw);
   }
 
+  async saveMany(items: any[]): Promise<TPopulated[]> {
+    return Promise.all(items.map(item => this.save(item)));
+  }
+
   async delete(id: string): Promise<boolean> {
     const res = await fetch(this.getUrl(id), { method: "DELETE" });
     return res.ok;

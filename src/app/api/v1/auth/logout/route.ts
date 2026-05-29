@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { tokenRepository } from "@/repositories/tokenRepository";
+import { tokenRepository } from "@/repositories/json-server/tokenRepository";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 
 export async function POST(request: Request) {

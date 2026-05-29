@@ -1,26 +1,22 @@
-import { Database } from "@/repositories/baseRepository";
+import { drizzleDatabase } from "@/repositories/drizzle/database";
 
-// Initialize Database connection using environment variables
-const dbUri = process.env.DB_URI || "http://localhost";
-const dbPort = process.env.DB_PORT || 3001;
-const dbName = process.env.DB_NAME || "portfolio";
-const dbUser = process.env.DB_USER || "";
-const dbPassword = process.env.DB_PASSWORD || "";
+// Initialize PostgreSQL connection using Drizzle
+const dbUri = process.env.DB_URI;
+if (dbUri) {
+  drizzleDatabase.connect(dbUri).catch(err => {
+    console.error("❌ Failed to connect to PostgreSQL in container initialization:", err);
+  });
+} else {
+  console.warn("⚠️ DB_URI is not set in environment.");
+}
 
-Database.connect(dbUri, {
-  port: dbPort,
-  dbName,
-  user: dbUser,
-  password: dbPassword
-});
-
-import { CategoryRepository } from "@/repositories/categoryRepository";
-import { CollectionRepository } from "@/repositories/collectionRepository";
-import { ColorRepository } from "@/repositories/colorRepository";
-import { MediaRepository } from "@/repositories/mediaRepository";
-import { PostRepository } from "@/repositories/postRepository";
-import { TagRepository } from "@/repositories/tagRepository";
-import { UserRepository } from "@/repositories/userRepository";
+import { categoryRepository } from "@/repositories/drizzle/categoryRepository";
+import { collectionRepository } from "@/repositories/drizzle/collectionRepository";
+import { colorRepository } from "@/repositories/drizzle/colorRepository";
+import { mediaRepository } from "@/repositories/drizzle/mediaRepository";
+import { postRepository } from "@/repositories/drizzle/postRepository";
+import { tagRepository } from "@/repositories/drizzle/tagRepository";
+import { userRepository } from "@/repositories/drizzle/userRepository";
 
 import { CategoryService } from "@/services/categoryService";
 import { CollectionService } from "@/services/collectionService";
@@ -38,14 +34,16 @@ import { PostController } from "@/controllers/postController";
 import { TagController } from "@/controllers/tagController";
 import { UserController } from "@/controllers/userController";
 
-// 1. Instantiating Repositories
-export const categoryRepository = new CategoryRepository();
-export const collectionRepository = new CollectionRepository();
-export const colorRepository = new ColorRepository();
-export const mediaRepository = new MediaRepository();
-export const postRepository = new PostRepository();
-export const tagRepository = new TagRepository();
-export const userRepository = new UserRepository();
+// 1. Repositories are imported directly as singletons from the Drizzle domain layer
+export {
+  categoryRepository,
+  collectionRepository,
+  colorRepository,
+  mediaRepository,
+  postRepository,
+  tagRepository,
+  userRepository
+};
 
 // 2. Instantiating Services and injecting repository/service dependencies
 export const colorService = new ColorService(colorRepository, categoryRepository);
