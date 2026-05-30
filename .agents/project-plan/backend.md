@@ -101,13 +101,13 @@
 - **Collection**:
     - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `main` (Boolean), `userId` (ref User).
 - **Category**:
-    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `order` (Number), `parentId` (ref Category / self-referential FK), `colorId` (ref Color), `collectionId` (ref Collection), `userId` (ref User).
+    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `order` (Number), `parentId` (ref Category / self-referential FK), `colorId` (ref Color), `collectionId` (ref Collection), `userId` (ref User), `tagsIds` (Array of Tag IDs).
 - **Color**:
     - `id`, `color` (hex/string), `userId` (ref User).
 - **Media**:
     - `id`, `thumbnailUrl`, `originalUrl`, `width` (Number), `height` (Number), `orientation` (String / Enum), `userId` (ref User).
 - **Tag**:
-    - `id`, `slug` (String), `name` (localized object `{ ru, en }`), `userId` (ref User), `categoryIds` (Array of Category IDs).
+    - `id`, `slug` (String), `name` (localized object `{ ru, en }`), `userId` (ref User).
 - **Post**:
     - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `media` (Array of PostMedia - stored as Embedded JSONB column), `posterId` (ref Media), `in_stock` (Boolean), `status` (String - Draft/Published/Archived), `collectionId` (ref Collection), `categoryId` (ref Category), `tagIds` (Array of Tag IDs), `userId` (ref User).
 - **PostMedia (Embedded JSON inside Post.media array)**:

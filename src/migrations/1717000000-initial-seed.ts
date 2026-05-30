@@ -6,6 +6,7 @@ import { collectionRepository } from '@/repositories/drizzle/collectionRepositor
 import { categoryRepository } from '@/repositories/drizzle/categoryRepository';
 import { tagRepository } from '@/repositories/drizzle/tagRepository';
 import { userRepository } from '@/repositories/drizzle/userRepository';
+import { categoriesToTags } from '@/repositories/drizzle/schema';
 import "dotenv/config"; // Ensure env vars are loaded
 
 // Polyfill dynamic env loading for standalone scripts
@@ -46,15 +47,37 @@ async function runSeed() {
     const collectionsData = JSON.parse(fs.readFileSync(path.join(dataPath, 'collections.json'), 'utf-8'));
     await collectionRepository.saveMany(collectionsData);
 
-    // 3. Seed Categories
-    console.log("📁 Seeding categories...");
+    // 3. Seed Categories & Tags dynamically mapping connections
+    console.log("📁 Reading categories and tags...");
     const categoriesData = JSON.parse(fs.readFileSync(path.join(dataPath, 'categories.json'), 'utf-8'));
+    const tagsData = JSON.parse(fs.readFileSync(path.join(dataPath, 'tags.json'), 'utf-8'));
+
+    const junctionRows: { categoryId: string; tagId: string }[] = [];
+    
+    tagsData.forEach((tag: any) => {
+      if (tag.categoryIds && Array.isArray(tag.categoryIds)) {
+        tag.categoryIds.forEach((catId: string) => {
+          junctionRows.push({
+            categoryId: catId,
+            tagId: tag.id
+          });
+        });
+      }
+      // Remove legacy categoryIds property to match new schema
+      delete tag.categoryIds;
+    });
+
+    console.log("📁 Seeding categories...");
     await categoryRepository.saveMany(categoriesData);
 
-    // 4. Seed Tags
     console.log("🏷️ Seeding tags...");
-    const tagsData = JSON.parse(fs.readFileSync(path.join(dataPath, 'tags.json'), 'utf-8'));
     await tagRepository.saveMany(tagsData);
+
+    console.log("🔗 Seeding categoriesToTags junction table...");
+    if (junctionRows.length > 0) {
+      const db = drizzleDatabase.getDb();
+      await db.insert(categoriesToTags).values(junctionRows).onConflictDoNothing();
+    }
 
     console.log("✅ Seed completed successfully!");
   } catch (error) {

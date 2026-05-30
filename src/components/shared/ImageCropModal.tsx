@@ -3,6 +3,7 @@
 import { useState, useRef, MouseEvent, TouchEvent } from "react";
 import { X, ZoomIn, ZoomOut, Check } from "lucide-react";
 import { Media } from "@/types";
+import { useTranslation } from "@/i18n";
 
 interface ImageCropModalProps {
   imageUrl: string;
@@ -24,11 +25,12 @@ export default function ImageCropModal({
   const orientation = media?.orientation;
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
+  const { t } = useTranslation();
 
   const constrainPosition = (x: number, y: number, currentZoom: number) => {
     const imgWidth = media?.width || 300;
     const imgHeight = media?.height || 300;
-    const isPortrait = orientation === "Portrait";
+    const isPortrait = imgHeight > imgWidth || orientation === "Portrait";
     
     const baseWidth = isPortrait ? 300 : 300 * (imgWidth / imgHeight);
     const baseHeight = !isPortrait ? 300 : 300 * (imgHeight / imgWidth);
@@ -87,8 +89,8 @@ export default function ImageCropModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b pb-3">
           <div>
-            <h3 className="font-heading text-lg font-semibold text-foreground">Position Cover Image</h3>
-            <p className="text-xs text-muted-foreground">Drag to position, use slider to zoom.</p>
+            <h3 className="font-heading text-lg font-semibold text-foreground">{t("position_cover_image")}</h3>
+            <p className="text-xs text-muted-foreground">{t("drag_to_position")}</p>
           </div>
           <button
             type="button"
@@ -159,7 +161,7 @@ export default function ImageCropModal({
           </div>
 
           <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-2">
-            <span>Zoom: {Math.round(zoom * 100)}%</span>
+            <span>{t("zoom")}: {Math.round(zoom * 100)}%</span>
             <span>X: {Math.round(position.x)}px, Y: {Math.round(position.y)}px</span>
           </div>
         </div>
@@ -171,7 +173,7 @@ export default function ImageCropModal({
             onClick={onClose}
             className="px-4 py-2 border border-border rounded-xl text-sm font-semibold hover:bg-muted/30 transition-colors"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -179,7 +181,7 @@ export default function ImageCropModal({
             className="flex items-center gap-1 px-5 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-xl hover:opacity-95 transition-opacity"
           >
             <Check size={16} />
-            Apply Crop
+            {t("apply_crop")}
           </button>
         </div>
 

@@ -128,6 +128,8 @@
   "tag_name_placeholder": "Имя тега...",
   "placeholder_vintage": "Например: винтаж",
   "placeholder_select_collection": "Выберите коллекцию...",
+  "collection": "Коллекция",
+  "placeholder_search_collections": "Поиск коллекций...",
   "placeholder_category_title": "Например: Плюшевые истории",
   "placeholder_category_desc": "Описание категории...",
   "color_accent": "Цвет акцента",
@@ -161,5 +163,9 @@
   "tag_deleted": "Тег успешно удален!",
   "collection_created": "Коллекция успешно создана!",
   "collection_updated": "Коллекция успешно обновлена!",
-  "collection_deleted": "Коллекция успешно удалена!"
+  "collection_deleted": "Коллекция успешно удалена!",
+  "position_cover_image": "Позиционировать обложку",
+  "drag_to_position": "Перетащите, чтобы изменить положение, используйте ползунок для масштабирования.",
+  "zoom": "Масштаб",
+  "apply_crop": "Применить"
 }

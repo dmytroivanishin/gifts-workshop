@@ -12,6 +12,7 @@ import {
   useGetTagsQuery,
   useCreateTagMutation,
   useGetMediaQuery,
+  useGetCollectionsQuery,
 } from "@/store/api";
 import ImageCropModal from "@/components/shared/ImageCropModal";
 import MediaPickerModal from "@/components/shared/MediaPickerModal";
@@ -44,16 +45,19 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   });
   const { data: categoriesResponse } = useGetCategoriesQuery();
   const { data: tagsResponse } = useGetTagsQuery();
+  const { data: collectionsResponse } = useGetCollectionsQuery();
   const [createTag] = useCreateTagMutation();
 
   const categories = categoriesResponse?.data || [];
   const allTags = tagsResponse?.data || [];
+  const collections = collectionsResponse?.data || [];
   const { data: mediaResponse } = useGetMediaQuery();
   const mediaList = mediaResponse?.data || [];
 
   // Form State
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [collectionId, setCollectionId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [inStock, setInStock] = useState(true);
   const [status, setStatus] = useState("Published");
@@ -89,6 +93,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       
       const cat = typeof post.category !== "string" ? post.category?.id || "" : post.category;
       setCategoryId(cat);
+      const col = typeof post.collection !== "string" ? post.collection?.id || "" : post.collection;
+      setCollectionId(col || post.collectionId || "");
       setInStock(post.in_stock);
       setStatus(post.status);
       
@@ -112,6 +118,22 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       }
     }
   }, [isEditMode, postResponse]);
+
+  // Auto-select defaults when only one option exists (for creation mode)
+  useEffect(() => {
+    if (!isEditMode) {
+      if (!collectionId && collections.length === 1) {
+        setCollectionId(collections[0].id);
+      }
+      if (!categoryId && categories.length === 1) {
+        const defaultCat = categories[0];
+        setCategoryId(defaultCat.id);
+        if (defaultCat.tagsIds && defaultCat.tagsIds.length > 0) {
+          setSelectedTags(defaultCat.tagsIds);
+        }
+      }
+    }
+  }, [isEditMode, collections, categories, collectionId, categoryId]);
 
   const handleMediaSelect = (mediaArray: { mediaId: string; url: string }[]) => {
     const newSelected = mediaArray.map(m => {
@@ -148,7 +170,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !categoryId) return;
+    if (!title || !categoryId || !collectionId) return;
 
     // Build media array
     const media = selectedImages.map((img, index) => {
@@ -186,6 +208,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       title: { ru: title, en: existingEnTitle || "" },
       description: { ru: description, en: existingEnDesc || "" },
       categoryId,
+      collectionId,
       in_stock: inStock,
       status: status as any,
       media,
@@ -221,6 +244,11 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   const isSaving = isCreating || isUpdating;
 
   // Options converters for Combobox
+  const collectionOptions = collections.map((col) => ({
+    value: col.id,
+    label: typeof col.title === "string" ? col.title : col.title?.ru || col.title?.en || "",
+  }));
+
   const categoryOptions = categories.map((cat) => ({
     value: cat.id,
     label: typeof cat.title === "string" ? cat.title : cat.title?.ru || "",
@@ -284,6 +312,20 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
               placeholder={t("placeholder_project_title")}
               className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               required
+            />
+          </div>
+
+          {/* Collection */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+              {t("collection")}
+            </label>
+            <Combobox
+              options={collectionOptions}
+              value={collectionId}
+              onChange={(val) => setCollectionId(val)}
+              placeholder={t("placeholder_select_collection")}
+              searchPlaceholder={t("placeholder_search_collections")}
             />
           </div>
 
@@ -504,7 +546,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
 
           <button
             type="submit"
-            disabled={isSaving || !title || !categoryId}
+            disabled={isSaving || !title || !categoryId || !collectionId}
             className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
           >
             {isSaving ? (

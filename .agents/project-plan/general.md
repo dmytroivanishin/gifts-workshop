@@ -81,4 +81,4 @@ When creating a post, the following information is requested:
 **Tags**
 - CRUD operations for tags (Name, Description).
 - Search and filter capabilities.
-- Tags are linked to specific categories (one-to-many relationship).
+- Tags are associated with categories, and the list of associated tags is stored within each category.

@@ -128,6 +128,8 @@
   "tag_name_placeholder": "Tag name...",
   "placeholder_vintage": "e.g. vintage",
   "placeholder_select_collection": "Select collection...",
+  "collection": "Collection",
+  "placeholder_search_collections": "Search collections...",
   "placeholder_category_title": "e.g., Plush Stories",
   "placeholder_category_desc": "Category description...",
   "color_accent": "Color Accent",
@@ -161,5 +163,9 @@
   "tag_deleted": "Tag successfully deleted!",
   "collection_created": "Collection successfully created!",
   "collection_updated": "Collection successfully updated!",
-  "collection_deleted": "Collection successfully deleted!"
+  "collection_deleted": "Collection successfully deleted!",
+  "position_cover_image": "Position Cover Image",
+  "drag_to_position": "Drag to position, use slider to zoom.",
+  "zoom": "Zoom",
+  "apply_crop": "Apply Crop"
 }

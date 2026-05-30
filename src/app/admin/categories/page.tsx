@@ -232,7 +232,7 @@ export default function AdminCategories() {
               categories.map((cat: any) => {
                 const catTitleRu = typeof cat.title === "string" ? cat.title : cat.title?.ru || "";
                 const catDescRu = typeof cat.description === "string" ? cat.description : cat.description?.ru || "";
-                const catColor = cat.color.color;
+                const catColor = cat.color?.color || "transparent";
 
                 return (
                   <div key={cat.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">

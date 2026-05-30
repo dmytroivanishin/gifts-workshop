@@ -5,6 +5,7 @@ import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest } from "@/lib/validateRequest";
 import { postSchema } from "@/common/validation/schemas";
 import { resolveId } from "@/utils/idResolver";
+import { getUserId } from "@/lib/authUtils";
 
 export class PostController {
   constructor(private postService: IPostService) {}
@@ -50,7 +51,8 @@ export class PostController {
     try {
       const rawBody = await request.json();
       const body = await validateRequest(postSchema, rawBody);
-      const post = await this.postService.createPost(body as any);
+      const userId = await getUserId();
+      const post = await this.postService.createPost({ ...body, userId } as any);
       return sendSuccess(post);
     } catch (error: any) {
       return sendError(error);
@@ -62,7 +64,8 @@ export class PostController {
       const rawBody = await request.json();
       const resolvedId = await resolveId(id, (slug) => this.postService.getPostBySlug(slug));
       const body = await validateRequest(postSchema.partial(), rawBody);
-      const post = await this.postService.updatePost(resolvedId, body as any);
+      const userId = await getUserId();
+      const post = await this.postService.updatePost(resolvedId, { ...body, userId } as any);
       if (!post) {
         throw new NotFoundError("Post not found");
       }

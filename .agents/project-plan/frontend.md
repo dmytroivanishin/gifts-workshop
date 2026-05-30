@@ -49,7 +49,7 @@ Shadcn UI components must be used everywhere in admin panel
     - Date override to manually sort/prioritize posts.
 - **Category & Tag Management**:
     - CRUD operations for categories with color palette selection.
-    - CRUD for tags (linked to categories).
+    - CRUD for tags, with category associations stored directly in the category.
     - Search and filter within management lists.
 - **Media Library**:
     - Centralized library for all uploaded assets.

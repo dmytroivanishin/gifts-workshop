@@ -1,6 +1,6 @@
 import { IPostRepository, ICategoryRepository, ITagRepository, ICollectionRepository, QueryOptions } from "@/repositories/interfaces";
 import { IPostService } from "./interfaces";
-import { Post, PopulatedPost } from "@/types";
+import { Post, PopulatedPost, Category } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/lib/slug";
 import { isUUID } from "@/lib/utils";
@@ -15,6 +15,23 @@ export class PostService implements IPostService {
     private tagRepo: ITagRepository,
     private collectionRepo: ICollectionRepository
   ) {}
+
+  private async syncCategoryTags(categoryId: string | null | undefined, tagsIds: string[] | undefined) {
+    if (!categoryId || !tagsIds || tagsIds.length === 0) return;
+    
+    const category = await this.categoryRepo.getById(categoryId);
+    if (!category) return;
+
+    const existingTags = category.tagsIds || [];
+    const newTags = Array.from(new Set([...existingTags, ...tagsIds]));
+
+    if (newTags.length !== existingTags.length) {
+      await this.categoryRepo.save({
+        ...category,
+        tagsIds: newTags
+      } as Category);
+    }
+  }
 
   async getFilteredPosts(filters?: QueryOptions): Promise<any> {
     // 1. Build clean database query options
@@ -112,7 +129,9 @@ export class PostService implements IPostService {
       userId: body.userId,
     };
 
-    return this.postRepo.save(flatPost);
+    const saved = await this.postRepo.save(flatPost);
+    await this.syncCategoryTags(flatPost.categoryId, flatPost.tagsIds);
+    return saved;
   }
 
   async updatePost(id: string, body: any): Promise<PopulatedPost | undefined> {
@@ -144,7 +163,9 @@ export class PostService implements IPostService {
       userId: body.userId ?? existing.userId,
     };
 
-    return this.postRepo.save(flatPost);
+    const saved = await this.postRepo.save(flatPost);
+    await this.syncCategoryTags(flatPost.categoryId, flatPost.tagsIds);
+    return saved;
   }
 
   async deletePost(id: string): Promise<boolean> {

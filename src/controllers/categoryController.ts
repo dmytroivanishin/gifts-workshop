@@ -6,6 +6,7 @@ import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
 import { validateRequest } from "@/lib/validateRequest";
 import { categorySchema } from "@/common/validation/schemas";
+import { getUserId } from "@/lib/authUtils";
 
 export class CategoryController {
   constructor(private categoryService: ICategoryService) {}
@@ -47,9 +48,9 @@ export class CategoryController {
         rawBody.id = await resolveId(id, (slug) => this.categoryService.getCategoryBySlug(slug));
       }
       const body = await validateRequest(categorySchema.extend({ id: z.string().uuid().optional() }), rawBody);
-      const category = await this.categoryService.saveCategory(body as any);
-      const result = await this.categoryService.getAllCategories();
-      return sendSuccess(result.data, result.meta);
+      const userId = await getUserId();
+      const category = await this.categoryService.saveCategory({ ...body, userId } as any);
+      return sendSuccess(category);
     } catch (error: any) {
       return sendError(error);
     }

@@ -1,3 +1,5 @@
+export type LocalizedText = Record<string, string>;
+
 export interface User {
   readonly id: string;
   email: string;
@@ -24,8 +26,8 @@ export interface Media {
 
 export interface Collection {
   readonly id: string;
-  title: { ru: string; en: string };
-  description: { ru: string; en: string };
+  title: LocalizedText;
+  description: LocalizedText;
   main: boolean;
   slug: string;
   userId?: string;
@@ -38,8 +40,8 @@ export interface Color {
 
 export interface Category {
   readonly id: string;
-  title: { ru: string; en: string };
-  description: { ru: string; en: string };
+  title: LocalizedText;
+  description: LocalizedText;
   slug: string;
   order: number;
   
@@ -49,19 +51,20 @@ export interface Category {
   // Foreign Keys
   parentId?: string;
   collectionId: string;
-  tagsIds?: string[];
   userId?: string;
+  tagsIds?: string[];
 }
 
 export interface PopulatedCategory extends Category {
   parent?: Category;
   collection: Collection;
   tags: Tag[];
+  tagsIds?: string[];
 }
 
 export interface Tag {
   readonly id: string;
-  name: { ru: string; en: string };
+  name: LocalizedText;
   slug: string;
   userId?: string;
 }
@@ -81,8 +84,8 @@ export type PostStatus = "Draft" | "Published" | "Archived";
 
 export interface Post {
   readonly id: string;
-  title: { ru: string; en: string };
-  description: { ru: string; en: string };
+  title: LocalizedText;
+  description: LocalizedText;
   slug: string;
   in_stock: boolean;
   status: PostStatus;
@@ -91,11 +94,11 @@ export interface Post {
   posterId?: string;
   collectionId?: string;
   categoryId: string;
-  tagsIds?: string[];
   userId?: string;
-
+ 
   // Local Relations (unpopulated)
   media: PostMedia[];
+  tagsIds?: string[];
 }
 
 export interface PopulatedPost extends Omit<Post, 'media'> {
@@ -103,6 +106,7 @@ export interface PopulatedPost extends Omit<Post, 'media'> {
   collection?: Collection;
   category: PopulatedCategory;
   tags: Tag[];
+  tagsIds?: string[];
   media: PopulatedPostMedia[];
 }
 

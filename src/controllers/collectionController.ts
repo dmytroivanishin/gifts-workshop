@@ -5,6 +5,7 @@ import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
 import { validateRequest } from "@/lib/validateRequest";
 import { collectionSchema } from "@/common/validation/schemas";
+import { getUserId } from "@/lib/authUtils";
 
 export class CollectionController {
   constructor(private collectionService: ICollectionService) {}
@@ -37,7 +38,8 @@ export class CollectionController {
         rawBody.id = await resolveId(id, (slug) => this.collectionService.getCollectionBySlug(slug));
       }
       const body = await validateRequest(collectionSchema.extend({ id: z.string().uuid().optional() }), rawBody);
-      const collection = await this.collectionService.saveCollection(body as any);
+      const userId = await getUserId();
+      const collection = await this.collectionService.saveCollection({ ...body, userId } as any);
       return sendSuccess(collection);
     } catch (error: any) {
       return sendError(error);
