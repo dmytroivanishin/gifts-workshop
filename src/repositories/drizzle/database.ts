@@ -16,13 +16,15 @@ export class DrizzleDatabase {
     return DrizzleDatabase.instance;
   }
 
-  public async connect(uri: string): Promise<void> {
-    if (this.db) return; // Already connected
+  private initConnection(uri: string): void {
+    if (this.db) return;
+    this.client = postgres(uri, { prepare: false });
+    this.db = drizzle(this.client, { schema });
+  }
 
+  public async connect(uri: string): Promise<void> {
     try {
-      // Disable prefetch for "Transaction" pool mode if using PgBouncer/Serverless
-      this.client = postgres(uri, { prepare: false });
-      this.db = drizzle(this.client, { schema });
+      this.initConnection(uri);
       console.log("✅ Drizzle ORM connected successfully.");
     } catch (error) {
       console.error("❌ Failed to connect Drizzle ORM:", error);
@@ -32,9 +34,19 @@ export class DrizzleDatabase {
 
   public getDb(): PostgresJsDatabase<typeof schema> {
     if (!this.db) {
-      throw new Error("Database not initialized. Call connect() before performing queries.");
+      const dbUri = process.env.DB_URI;
+      if (!dbUri) {
+        throw new Error("Database not initialized. Call connect() before performing queries.");
+      }
+      try {
+        this.initConnection(dbUri);
+        console.log("✅ Drizzle ORM auto-connected successfully.");
+      } catch (error) {
+        console.error("❌ Failed to auto-connect Drizzle ORM:", error);
+        throw error;
+      }
     }
-    return this.db;
+    return this.db!;
   }
 
   public async close(): Promise<void> {
@@ -48,3 +60,12 @@ export class DrizzleDatabase {
 }
 
 export const drizzleDatabase = DrizzleDatabase.getInstance();
+
+// Auto-connect on module load if DB_URI is in env
+const dbUri = process.env.DB_URI;
+if (dbUri) {
+  drizzleDatabase.connect(dbUri).catch(err => {
+    console.error("❌ Failed to auto-connect to PostgreSQL in database module load:", err);
+  });
+}
+

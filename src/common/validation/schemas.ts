@@ -25,6 +25,7 @@ export const positionSchema = z.object({
 export const mediaSchema = z.object({
   thumbnailUrl: z.string().url("Must be a valid URL"),
   originalUrl: z.string().url("Must be a valid URL"),
+  userId: z.string().uuid("User ID must be a valid UUID"),
   position: positionSchema.optional(),
   width: z.number().positive().optional(),
   height: z.number().positive().optional(),
@@ -55,7 +56,7 @@ export const categorySchema = z.object({
 });
 
 export const tagSchema = z.object({
-  title: localizedStringSchema,
+  name: localizedStringSchema,
   slug: z.string().regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens").optional(),
 });
 

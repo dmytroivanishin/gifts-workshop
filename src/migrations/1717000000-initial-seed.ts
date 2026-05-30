@@ -31,7 +31,7 @@ async function runSeed() {
     const adminUser = {
       id: "c0a80101-1111-4444-9999-abcdefabcdef",
       name: "Admin",
-      email: process.env.ADMIN_EMAIL || "dmytroivanishin@gmail.com",
+      email: process.env.ADMIN_EMAIL || "admin@example.com",
       password: "temporary_hashed_password" // Will be overwritten on login or admin change
     };
     await userRepository.save(adminUser);

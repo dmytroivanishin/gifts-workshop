@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, boolean, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, boolean, integer, jsonb, timestamp, bigint } from "drizzle-orm/pg-core";
 
 // --- Users & Auth ---
 export const users = pgTable("users", {
@@ -13,7 +13,7 @@ export const tokenSessions = pgTable("token_sessions", {
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   refreshTokenHash: text("refresh_token_hash").notNull(),
   isUsed: boolean("is_used").default(false).notNull(),
-  expiresAt: integer("expires_at").notNull(), // Unix timestamp
+  expiresAt: timestamp("expires_at", { mode: "date" }).notNull(), // PostgreSQL timestamp
   tokenFamily: varchar("token_family", { length: 255 }).notNull(),
 });
 

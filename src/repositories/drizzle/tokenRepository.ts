@@ -13,6 +13,18 @@ export class TokenRepository extends DrizzleBaseRepository<TokenSession, TokenSe
     return item as TokenSession;
   }
 
+  async getSessionById(id: string): Promise<TokenSession | undefined> {
+    return this.getById(id);
+  }
+
+  async createSession(session: TokenSession): Promise<TokenSession> {
+    return this.save(session);
+  }
+
+  async updateSession(session: TokenSession): Promise<TokenSession> {
+    return this.save(session);
+  }
+
   async revokeFamily(tokenFamily: string): Promise<void> {
     await drizzleDatabase.getDb().update(tokenSessions)
       .set({ isUsed: true })

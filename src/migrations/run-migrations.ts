@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import postgres from 'postgres';
 import { config } from 'dotenv';
 
@@ -13,36 +11,27 @@ async function migrate() {
     process.exit(1);
   }
 
-  console.log("⚙️ Connecting to database to apply migrations...");
+  console.log("⚙️ Connecting to database to fix token_sessions table...");
   const sql = postgres(uri);
 
   try {
-    const migrationFile = path.join(
-      process.cwd(),
-      'src/repositories/drizzle/migrations/0000_cloudy_stardust.sql'
-    );
+    console.log("⚡ Dropping old token_sessions table (if exists)...");
+    await sql.unsafe(`DROP TABLE IF EXISTS "token_sessions" CASCADE;`);
 
-    if (!fs.existsSync(migrationFile)) {
-      throw new Error(`❌ Migration file not found at ${migrationFile}`);
-    }
+    console.log("⚡ Creating token_sessions table with correct types (uuid and timestamp)...");
+    await sql.unsafe(`
+      CREATE TABLE "token_sessions" (
+        "id" uuid PRIMARY KEY NOT NULL,
+        "user_id" uuid NOT NULL,
+        "refresh_token_hash" text NOT NULL,
+        "is_used" boolean DEFAULT false NOT NULL,
+        "expires_at" timestamp NOT NULL,
+        "token_family" varchar(255) NOT NULL,
+        CONSTRAINT "token_sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action
+      );
+    `);
 
-    console.log("📄 Reading migration SQL file...");
-    const sqlContent = fs.readFileSync(migrationFile, 'utf8');
-
-    // Drizzle splits statements using special comments '--> statement-breakpoint'
-    const statements = sqlContent.split('--> statement-breakpoint');
-
-    console.log(`⚡ Found ${statements.length} SQL statements to execute.`);
-
-    for (let i = 0; i < statements.length; i++) {
-      const stmt = statements[i].trim();
-      if (!stmt) continue;
-
-      console.log(`Executing statement [${i + 1}/${statements.length}]...`);
-      await sql.unsafe(stmt);
-    }
-
-    console.log("✅ All migrations applied successfully!");
+    console.log("🎉 token_sessions table successfully recreated with uuid and timestamp types!");
   } catch (error) {
     console.error("❌ Migration failed:", error);
   } finally {

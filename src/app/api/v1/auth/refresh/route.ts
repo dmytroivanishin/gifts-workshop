@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
-import { tokenRepository } from "@/repositories/json-server/tokenRepository";
+import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
 import { signToken, verifyToken } from "@/lib/jwt";
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     }
 
     // Check expiration
-    if (Date.now() > session.expiresAt) {
+    if (new Date() > session.expiresAt) {
       session.isUsed = true;
       await tokenRepository.updateSession(session);
       clearCookies(cookieStore);
@@ -68,7 +68,10 @@ export async function POST(request: Request) {
     session.isUsed = true;
     await tokenRepository.updateSession(session);
 
-    const email = process.env.ADMIN_EMAIL || "admin@example.com";
+    const email = process.env.ADMIN_EMAIL;
+    if (!email) {
+      throw new Error("ADMIN_EMAIL is not defined in environment variables");
+    }
     
     // Generate new pair
     const newJti = crypto.randomUUID();
@@ -81,7 +84,7 @@ export async function POST(request: Request) {
       userId: session.userId,
       refreshTokenHash: newRefreshTokenHash,
       isUsed: false,
-      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       tokenFamily: session.tokenFamily, // Maintain family for chain tracking
     });
 

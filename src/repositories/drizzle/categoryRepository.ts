@@ -11,11 +11,28 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
   }
 
   async populate(item: any, options?: { populate?: string }): Promise<PopulatedCategory> {
-    // In a fully optimized Drizzle setup, we use Drizzle Relations API 
-    // or perform LEFT JOINs in the query itself. 
-    // For interface compatibility, we manually resolve if needed, but ideally 
-    // the getAll/getById overrides will fetch populated data via SQL JOINs.
-    return item as PopulatedCategory;
+    if (!item) return item;
+
+    let colorObj = undefined;
+    if (item.colorId) {
+      const colorRecords = await drizzleDatabase.getDb()
+        .select()
+        .from(colors)
+        .where(eq(colors.id, item.colorId))
+        .limit(1);
+      
+      if (colorRecords.length > 0) {
+        colorObj = {
+          id: colorRecords[0].id,
+          color: colorRecords[0].color,
+        };
+      }
+    }
+
+    return {
+      ...item,
+      color: colorObj,
+    } as PopulatedCategory;
   }
 
   async getBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined> {

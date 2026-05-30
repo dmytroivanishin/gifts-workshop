@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { signToken } from "@/lib/jwt";
-import { tokenRepository } from "@/repositories/json-server/tokenRepository";
+import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
+import { userRepository } from "@/repositories/drizzle/userRepository";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import crypto from "crypto";
 import { cookies } from "next/headers";
@@ -14,8 +15,22 @@ export async function POST() {
 
     const jti = crypto.randomUUID();
     const tokenFamily = crypto.randomUUID();
-    const userId = "admin";
-    const email = process.env.ADMIN_EMAIL || "dev-admin@example.com";
+    const email = process.env.ADMIN_EMAIL;
+    if (!email) {
+      throw new Error("ADMIN_EMAIL is not defined in environment variables");
+    }
+
+    // Find or automatically create the admin user to obtain a valid UUID
+    let user = await userRepository.getByEmail(email);
+    if (!user) {
+      user = await userRepository.save({
+        id: crypto.randomUUID(),
+        email,
+        name: "Admin",
+        password: "admin_hashed_password",
+      });
+    }
+    const userId = user.id;
 
     const accessToken = await signToken({ userId, email, role: "admin" }, "15m");
     const refreshToken = crypto.randomBytes(40).toString("hex");
@@ -27,7 +42,7 @@ export async function POST() {
       userId,
       refreshTokenHash,
       isUsed: false,
-      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       tokenFamily,
     });
 

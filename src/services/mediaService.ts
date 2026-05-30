@@ -4,6 +4,7 @@ import { Media, Post } from "@/types";
 import { randomUUID } from "crypto";
 import { paginate } from "./pagination";
 import { ConflictError } from "@/common/errors/conflict";
+import { storageService } from "@/modules/storage/StorageService";
 
 export class MediaService implements IMediaService {
   constructor(
@@ -23,6 +24,23 @@ export class MediaService implements IMediaService {
     return paginate(mediaList, { page, limit });
   }
 
+  async uploadAndSaveMedia(buffer: Buffer, originalFilename: string, mimeType: string, userId: string): Promise<Media> {
+    const processed = await storageService.uploadImage(buffer, originalFilename, mimeType);
+    
+    const media: Media = {
+      id: randomUUID(),
+      thumbnailUrl: processed.thumbnailUrl,
+      originalUrl: processed.originalUrl,
+      width: processed.width,
+      height: processed.height,
+      orientation: processed.orientation as "Portrait" | "Landscape",
+      userId: userId,
+      position: { x: 0, y: 0, zoom: 1 } // Default positions for posts
+    };
+
+    return this.mediaRepo.save(media);
+  }
+
   async getMediaById(id: string): Promise<Media | undefined> {
     return this.mediaRepo.getById(id);
   }
@@ -34,6 +52,7 @@ export class MediaService implements IMediaService {
       thumbnailUrl: body.thumbnailUrl || body.originalUrl,
       originalUrl: body.originalUrl,
       position: body.position || { x: 0, y: 0, zoom: 1 },
+      userId: body.userId,
     };
     return this.mediaRepo.save(media);
   }

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { decodeJwt } from "jose";
 import { signToken } from "@/lib/jwt";
-import { tokenRepository } from "@/repositories/json-server/tokenRepository";
+import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
+import { userRepository } from "@/repositories/drizzle/userRepository";
 import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
 import crypto from "crypto";
@@ -53,7 +54,18 @@ export async function POST(request: Request) {
     // Generate our own Access and Refresh Tokens
     const jti = crypto.randomUUID();
     const tokenFamily = crypto.randomUUID();
-    const userId = "admin"; // In a full system, you might fetch user ID by email
+    
+    // Find or automatically create the admin user to obtain a valid UUID
+    let user = await userRepository.getByEmail(email);
+    if (!user) {
+      user = await userRepository.save({
+        id: crypto.randomUUID(),
+        email,
+        name: "Admin",
+        password: "admin_hashed_password",
+      });
+    }
+    const userId = user.id;
 
     const accessToken = await signToken({ userId, email, role: "admin" }, "15m");
     const refreshToken = crypto.randomBytes(40).toString("hex");
@@ -66,7 +78,7 @@ export async function POST(request: Request) {
       userId,
       refreshTokenHash,
       isUsed: false,
-      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       tokenFamily,
     });
 

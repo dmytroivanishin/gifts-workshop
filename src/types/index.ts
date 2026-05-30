@@ -2,7 +2,7 @@ export interface User {
   readonly id: string;
   email: string;
   name: string;
-  // password is omitted intentionally in the frontend types
+  password?: string;
 }
 
 export interface Position {
@@ -15,7 +15,7 @@ export interface Media {
   readonly id: string;
   thumbnailUrl: string;
   originalUrl: string;
-  userId?: string;
+  userId: string;
   position?: Position;
   width?: number;
   height?: number;
@@ -61,7 +61,7 @@ export interface PopulatedCategory extends Category {
 
 export interface Tag {
   readonly id: string;
-  title: { ru: string; en: string };
+  name: { ru: string; en: string };
   slug: string;
   userId?: string;
 }

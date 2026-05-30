@@ -16,7 +16,7 @@ import Combobox from "@/components/ui/combobox";
 import { useTranslation } from "@/i18n";
 
 export default function AdminCategories() {
-  const { t } = useTranslation();
+  const { t, loc } = useTranslation();
 
   const { data: categoriesResponse, isLoading } = useGetCategoriesQuery();
   const { data: tagsResponse } = useGetTagsQuery();
@@ -32,7 +32,7 @@ export default function AdminCategories() {
   const colorsList = colorsResponse?.data || [];
   const tagOptions = allTags.map((tag: any) => ({ 
     value: tag.id, 
-    label: tag.title?.ru || tag.title?.en || tag.title || "" 
+    label: loc(tag.name) 
   }));
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
@@ -40,7 +40,7 @@ export default function AdminCategories() {
   // Form State
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [color, setColor] = useState("#FFD2D2");
+  const [color, setColor] = useState("");
   const [selectedColorId, setSelectedColorId] = useState("");
   const [sessionColorId, setSessionColorId] = useState("");
   const [isCreatingColorPending, setIsCreatingColorPending] = useState(false);
@@ -92,6 +92,14 @@ export default function AdminCategories() {
 
     return () => clearTimeout(timer);
   }, [color, colorsList, createColor, updateColor, sessionColorId]);
+
+  // Set default color from loaded list if color state is empty
+  useEffect(() => {
+    if (colorsList.length > 0 && !color) {
+      setColor(colorsList[0].color);
+      setSelectedColorId(colorsList[0].id);
+    }
+  }, [colorsList, color]);
 
   // Auto-create / select color for edit form
   useEffect(() => {

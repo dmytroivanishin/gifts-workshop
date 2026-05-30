@@ -12,7 +12,7 @@ import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 
 export default function AdminTags() {
-  const { t } = useTranslation();
+  const { t, loc } = useTranslation();
   const [page, setPage] = useState(1);
   const [tags, setTags] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -76,7 +76,7 @@ export default function AdminTags() {
     if (!tagName.trim()) return;
 
     try {
-      await createTag({ title: { ru: tagName.trim(), en: "" } }).unwrap();
+      await createTag({ name: { ru: tagName.trim(), en: "" } }).unwrap();
       setTagName("");
       setPage(1); // Reset to page 1 to fetch the latest
     } catch (err) {
@@ -89,7 +89,7 @@ export default function AdminTags() {
     try {
       await updateTag({
         id,
-        title: { ru: editTagName.trim(), en: "" },
+        name: { ru: editTagName.trim(), en: "" },
       }).unwrap();
       setIsEditing(null);
       setPage(1); // Reset to reload updated list
@@ -156,7 +156,7 @@ export default function AdminTags() {
                   ) : (
                     <div className="flex flex-col gap-1">
                       <span className="font-semibold text-sm text-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/60 w-fit">
-                        #{typeof tag.title === "string" ? tag.title : tag.title?.ru || tag.title?.en || ""}
+                        #{loc(tag.name)}
                       </span>
                     </div>
                   )}
@@ -183,7 +183,7 @@ export default function AdminTags() {
                         <button
                           onClick={() => {
                             setIsEditing(tag.id);
-                            const tagTitle = typeof tag.title === "string" ? tag.title : tag.title?.ru || tag.title?.en || "";
+                            const tagTitle = loc(tag.name);
                             setEditTagName(tagTitle);
                           }}
                           className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"

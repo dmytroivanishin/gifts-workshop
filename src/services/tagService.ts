@@ -51,7 +51,7 @@ export class TagService implements ITagService {
 
   async saveTag(body: any): Promise<Tag> {
     const id = body.id || randomUUID();
-    const tName = body.title?.ru || body.title || body.name || "";
+    const tName = body.name?.ru || body.name || body.title?.ru || body.title || "";
     
     let slug = body.slug;
     if (!slug) {
@@ -60,7 +60,7 @@ export class TagService implements ITagService {
 
     const tag: Tag = {
       id,
-      title: typeof body.title === "object" ? body.title : { ru: tName, en: tName },
+      name: typeof body.name === "object" ? body.name : { ru: tName, en: tName },
       slug,
     };
 

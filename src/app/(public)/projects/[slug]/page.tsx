@@ -126,7 +126,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
                 {post.tags.map((tag, index) => {
-                  const name = typeof tag === "string" ? tag : (tag.title?.ru || tag.title?.en || (typeof tag.title === "string" ? tag.title : ""));
+                  const name = loc(tag.name);
                   return (
                     <span
                       key={index}
