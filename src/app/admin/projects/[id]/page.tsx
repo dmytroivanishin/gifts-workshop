@@ -32,7 +32,7 @@ interface ProjectFormPageProps {
 }
 
 export default function ProjectFormPage({ params }: ProjectFormPageProps) {
-  const { t, loc } = useTranslation();
+  const { t, loc, locale } = useTranslation();
   const router = useRouter();
   const { id } = use(params);
   const isEditMode = id !== "new";
@@ -74,7 +74,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   const handleCreateTag = async (name: string) => {
     try {
       const res = await createTag({
-        name: { ru: name, en: "" },
+        name: { [locale]: name },
       }).unwrap();
       return res.data.id;
     } catch (err) {
@@ -88,8 +88,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     if (isEditMode && postResponse?.data) {
       const post = postResponse.data;
       
-      setTitle(typeof post.title === "string" ? post.title : post.title?.ru || "");
-      setDescription(typeof post.description === "string" ? post.description : post.description?.ru || "");
+      setTitle(typeof post.title === "string" ? post.title : post.title?.[locale] || post.title?.ru || "");
+      setDescription(typeof post.description === "string" ? post.description : post.description?.[locale] || post.description?.ru || "");
       
       const cat = typeof post.category !== "string" ? post.category?.id || "" : post.category;
       setCategoryId(cat);
@@ -197,16 +197,12 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
         }
       : undefined;
 
-    const existingEnTitle = postResponse?.data?.title && typeof postResponse.data.title === "object"
-      ? postResponse.data.title.en
-      : "";
-    const existingEnDesc = postResponse?.data?.description && typeof postResponse.data.description === "object"
-      ? postResponse.data.description.en
-      : "";
+    const existingTitle = postResponse?.data?.title && typeof postResponse.data.title === "object" ? postResponse.data.title : {};
+    const existingDesc = postResponse?.data?.description && typeof postResponse.data.description === "object" ? postResponse.data.description : {};
 
     const payload = {
-      title: { ru: title, en: existingEnTitle || "" },
-      description: { ru: description, en: existingEnDesc || "" },
+      title: { ...existingTitle, [locale]: title },
+      description: { ...existingDesc, [locale]: description },
       categoryId,
       collectionId,
       in_stock: inStock,
@@ -436,7 +432,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
             <button
               type="button"
               onClick={() => setIsMediaPickerOpen(true)}
-              className="text-xs font-semibold px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity"
+              className="text-xs font-semibold px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
             >
               {t("add_media")}
             </button>
@@ -493,7 +489,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                             setCoverPosition(null);
                           }
                         }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold w-3/4 ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold w-3/4 cursor-pointer ${
                           isCover ? "bg-primary text-primary-foreground" : "bg-white text-black hover:bg-gray-200"
                         }`}
                       >
@@ -502,7 +498,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                       <button
                         type="button"
                         onClick={() => setActiveCropMediaId(img.mediaId)}
-                        className="px-3 py-1.5 bg-white text-black hover:bg-gray-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 justify-center w-3/4"
+                        className="px-3 py-1.5 bg-white text-black hover:bg-gray-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 justify-center w-3/4 cursor-pointer"
                       >
                         <Move size={12} />
                         {t("position")}
@@ -526,7 +522,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
               <button
                 type="button"
                 onClick={() => setActiveCropMediaId("cover")}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
               >
                 <Move size={14} />
                 {t("fine_tune_cover")}

@@ -20,9 +20,11 @@ export abstract class DrizzleBaseRepository<
     
     if (options?.limit) {
       query = query.limit(options.limit);
-      if (options?.page) {
-        query = query.offset((options.page - 1) * options.limit);
-      }
+    }
+    if (options?.offset !== undefined) {
+      query = query.offset(options.offset);
+    } else if (options?.page && options?.limit) {
+      query = query.offset((options.page - 1) * options.limit);
     }
 
     const records = await query;

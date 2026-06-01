@@ -98,18 +98,22 @@
     - `id`, `email`, `name`, `password`.
 - **TokenSession**:
     - `id` (String / UUID - Primary Key, maps to JTI), `userId` (ref User, onDelete: cascade), `refreshTokenHash` (String), `isUsed` (Boolean), `expiresAt` (Number - Unix timestamp), `tokenFamily` (String).
+- **Language**:
+    - `id` (String - e.g., 'en', 'ru'), `name` (String), `isActive` (Boolean).
+- **SystemText**:
+    - `id` (String - translation key), `content` (localized object `Record<string, string>`).
 - **Collection**:
-    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `main` (Boolean), `userId` (ref User).
+    - `id`, `slug` (String), `title` (localized object `Record<string, string>`), `description` (localized object `Record<string, string>`), `main` (Boolean), `userId` (ref User).
 - **Category**:
-    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `order` (Number), `parentId` (ref Category / self-referential FK), `colorId` (ref Color), `collectionId` (ref Collection), `userId` (ref User), `tagsIds` (Array of Tag IDs).
+    - `id`, `slug` (String), `title` (localized object `Record<string, string>`), `description` (localized object `Record<string, string>`), `order` (Number), `parentId` (ref Category / self-referential FK), `colorId` (ref Color), `collectionId` (ref Collection), `userId` (ref User), `tagsIds` (Array of Tag IDs).
 - **Color**:
     - `id`, `color` (hex/string), `userId` (ref User).
 - **Media**:
     - `id`, `thumbnailUrl`, `originalUrl`, `width` (Number), `height` (Number), `orientation` (String / Enum), `userId` (ref User).
 - **Tag**:
-    - `id`, `slug` (String), `name` (localized object `{ ru, en }`), `userId` (ref User).
+    - `id`, `slug` (String), `name` (localized object `Record<string, string>`), `userId` (ref User).
 - **Post**:
-    - `id`, `slug` (String), `title` (localized object `{ ru, en }`), `description` (localized object `{ ru, en }`), `media` (Array of PostMedia - stored as Embedded JSONB column), `posterId` (ref Media), `in_stock` (Boolean), `status` (String - Draft/Published/Archived), `collectionId` (ref Collection), `categoryId` (ref Category), `tagIds` (Array of Tag IDs), `userId` (ref User).
+    - `id`, `slug` (String), `title` (localized object `Record<string, string>`), `description` (localized object `Record<string, string>`), `media` (Array of PostMedia - stored as Embedded JSONB column), `posterId` (ref Media), `in_stock` (Boolean), `status` (String - Draft/Published/Archived), `collectionId` (ref Collection), `categoryId` (ref Category), `tagIds` (Array of Tag IDs), `userId` (ref User).
 - **PostMedia (Embedded JSON inside Post.media array)**:
     - `id` (String / UUID), `order` (Number), `mediaId` (ref Media), `position` (Position object).
 - **Position (Embedded JSON inside PostMedia)**:
@@ -136,9 +140,9 @@ If an admin deletes a Tag or Category, run a background task to remove that ID f
   "data": [{}],
   "meta": {
     "page": 1,
-    "nextPage": "",
-    "prevPage": "",
-    "totalItems": 0
+    "nextPage": 2, // Number or null
+    "prevPage": null, // Number or null
+    "totalItems": 15
   }
 }
 ```

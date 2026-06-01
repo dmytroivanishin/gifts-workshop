@@ -8,11 +8,11 @@ import {
   useUpdateCollectionMutation,
   useDeleteCollectionMutation,
 } from "@/store/api";
-import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { useTranslation } from "@/i18n";
 
 export default function AdminCollections() {
-  const { t, loc } = useTranslation();
+  const { t, loc, locale } = useTranslation();
   const { data: response, isLoading } = useGetCollectionsQuery();
   const [createCollection, { isLoading: isCreating }] = useCreateCollectionMutation();
   const [updateCollection, { isLoading: isUpdating }] = useUpdateCollectionMutation();
@@ -22,6 +22,7 @@ export default function AdminCollections() {
 
   // Form State
   const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [activeCollectionObj, setActiveCollectionObj] = useState<any>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -30,6 +31,7 @@ export default function AdminCollections() {
 
   const resetForm = () => {
     setIsEditing(null);
+    setActiveCollectionObj(null);
     setTitle("");
     setDescription("");
     setIsMain(false);
@@ -37,8 +39,9 @@ export default function AdminCollections() {
 
   const handleEdit = (col: any) => {
     setIsEditing(col.id);
-    setTitle(typeof col.title === "string" ? col.title : col.title?.ru || "");
-    setDescription(typeof col.description === "string" ? col.description : col.description?.ru || "");
+    setActiveCollectionObj(col);
+    setTitle(typeof col.title === "string" ? col.title : col.title?.[locale] || col.title?.ru || "");
+    setDescription(typeof col.description === "string" ? col.description : col.description?.[locale] || col.description?.ru || "");
     setIsMain(col.main || false);
   };
 
@@ -46,17 +49,23 @@ export default function AdminCollections() {
     e.preventDefault();
     if (!title.trim()) return;
 
-    const payload = {
-      title: { ru: title.trim(), en: "" },
-      description: { ru: description.trim(), en: "" },
-      main: isMain,
-    };
-
     try {
       if (isEditing) {
-        await updateCollection({ id: isEditing, ...payload }).unwrap();
+        const existingTitle = activeCollectionObj?.title && typeof activeCollectionObj.title === "object" ? activeCollectionObj.title : {};
+        const existingDesc = activeCollectionObj?.description && typeof activeCollectionObj.description === "object" ? activeCollectionObj.description : {};
+
+        await updateCollection({ 
+          id: isEditing, 
+          title: { ...existingTitle, [locale]: title.trim() },
+          description: { ...existingDesc, [locale]: description.trim() },
+          main: isMain 
+        }).unwrap();
       } else {
-        await createCollection(payload).unwrap();
+        await createCollection({
+          title: { [locale]: title.trim() },
+          description: { [locale]: description.trim() },
+          main: isMain
+        }).unwrap();
       }
       resetForm();
     } catch (err) {

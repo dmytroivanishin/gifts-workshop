@@ -19,6 +19,7 @@ export class CollectionService implements ICollectionService {
     const collections = await this.collectionRepo.getAll({
       page,
       limit: limit + 1,
+      offset: (page - 1) * limit,
     });
 
     return paginate(collections, { page, limit });

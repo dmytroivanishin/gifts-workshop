@@ -194,7 +194,7 @@ export default function AdminColors() {
                           <button
                             onClick={() => handleDeleteClick(c.id)}
                             disabled={isDeleting}
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-rose-600 disabled:opacity-50 cursor-pointer"
+                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-destructive disabled:opacity-50 cursor-pointer"
                           >
                             <Trash2 size={16} />
                           </button>

@@ -25,6 +25,7 @@ export class CategoryService implements ICategoryService {
       const categories = await this.categoryRepo.getAll({
         page,
         limit: limit + 1,
+        offset: (page - 1) * limit,
         populate,
       });
 

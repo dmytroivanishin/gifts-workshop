@@ -200,7 +200,7 @@ export default function AdminMedia() {
                 <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <button
                     onClick={() => handleDeleteClick(item.id)}
-                    className="p-1.5 rounded-md bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity"
+                    className="p-1.5 rounded-md bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
                     title={t("delete")}
                   >
                     <Trash2 size={16} />

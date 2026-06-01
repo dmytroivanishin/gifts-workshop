@@ -21,6 +21,7 @@ export class TagService implements ITagService {
       const tags = await this.tagRepo.getAll({
         page,
         limit: limit + 1,
+        offset: (page - 1) * limit,
       });
 
       return paginate(tags, { page, limit });

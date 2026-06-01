@@ -8,11 +8,11 @@ import {
   useUpdateTagMutation,
   useDeleteTagMutation,
 } from "@/store/api";
-import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { useTranslation } from "@/i18n";
 
 export default function AdminTags() {
-  const { t, loc } = useTranslation();
+  const { t, loc, locale } = useTranslation();
   const [page, setPage] = useState(1);
   const [tags, setTags] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -23,6 +23,7 @@ export default function AdminTags() {
   const [deleteTag, { isLoading: isDeleting }] = useDeleteTagMutation();
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [activeTagObj, setActiveTagObj] = useState<any>(null);
   const [tagName, setTagName] = useState("");
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState("");
@@ -76,7 +77,7 @@ export default function AdminTags() {
     if (!tagName.trim()) return;
 
     try {
-      await createTag({ name: { ru: tagName.trim(), en: "" } }).unwrap();
+      await createTag({ name: { [locale]: tagName.trim() } }).unwrap();
       setTagName("");
       setPage(1); // Reset to page 1 to fetch the latest
     } catch (err) {
@@ -87,11 +88,14 @@ export default function AdminTags() {
   const handleSave = async (id: string) => {
     if (!editTagName.trim()) return;
     try {
+      const existingName = activeTagObj?.name && typeof activeTagObj.name === "object" ? activeTagObj.name : {};
+      
       await updateTag({
         id,
-        name: { ru: editTagName.trim(), en: "" },
+        name: { ...existingName, [locale]: editTagName.trim() },
       }).unwrap();
       setIsEditing(null);
+      setActiveTagObj(null);
       setPage(1); // Reset to reload updated list
     } catch (err) {
       console.error("Failed to save tag", err);
@@ -183,6 +187,7 @@ export default function AdminTags() {
                         <button
                           onClick={() => {
                             setIsEditing(tag.id);
+                            setActiveTagObj(tag);
                             const tagTitle = loc(tag.name);
                             setEditTagName(tagTitle);
                           }}

@@ -23,6 +23,8 @@ import { mediaRepository } from "@/repositories/drizzle/mediaRepository";
 import { postRepository } from "@/repositories/drizzle/postRepository";
 import { tagRepository } from "@/repositories/drizzle/tagRepository";
 import { userRepository } from "@/repositories/drizzle/userRepository";
+import { languageRepository } from "@/repositories/drizzle/languageRepository";
+import { systemTextRepository } from "@/repositories/drizzle/systemTextRepository";
 
 import { CategoryService } from "@/services/categoryService";
 import { CollectionService } from "@/services/collectionService";
@@ -31,6 +33,8 @@ import { MediaService } from "@/services/mediaService";
 import { PostService } from "@/services/postService";
 import { TagService } from "@/services/tagService";
 import { UserService } from "@/services/userService";
+import { LanguageService } from "@/services/languageService";
+import { SystemTextService } from "@/services/systemTextService";
 
 import { CategoryController } from "@/controllers/categoryController";
 import { CollectionController } from "@/controllers/collectionController";
@@ -39,6 +43,8 @@ import { MediaController } from "@/controllers/mediaController";
 import { PostController } from "@/controllers/postController";
 import { TagController } from "@/controllers/tagController";
 import { UserController } from "@/controllers/userController";
+import { LanguageController } from "@/controllers/languageController";
+import { SystemTextController } from "@/controllers/systemTextController";
 
 // 1. Repositories are imported directly as singletons from the Drizzle domain layer
 export {
@@ -48,7 +54,9 @@ export {
   mediaRepository,
   postRepository,
   tagRepository,
-  userRepository
+  userRepository,
+  languageRepository,
+  systemTextRepository
 };
 
 // 2. Instantiating Services and injecting repository/service dependencies
@@ -59,6 +67,8 @@ export const mediaService = new MediaService(mediaRepository, postRepository);
 export const tagService = new TagService(tagRepository, categoryRepository);
 export const userService = new UserService(userRepository);
 export const postService = new PostService(postRepository, categoryRepository, tagRepository, collectionRepository);
+export const languageService = new LanguageService(languageRepository);
+export const systemTextService = new SystemTextService(systemTextRepository);
 
 // 3. Instantiating Controllers and injecting service dependencies
 export const categoryController = new CategoryController(categoryService);
@@ -68,3 +78,5 @@ export const mediaController = new MediaController(mediaService);
 export const postController = new PostController(postService);
 export const tagController = new TagController(tagService);
 export const userController = new UserController(userService);
+export const languageController = new LanguageController(languageService);
+export const systemTextController = new SystemTextController(systemTextService);

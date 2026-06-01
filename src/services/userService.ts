@@ -15,6 +15,7 @@ export class UserService implements IUserService {
     const users = await this.userRepo.getAll({
       page,
       limit: limit + 1,
+      offset: (page - 1) * limit,
     });
 
     return paginate(users, { page, limit });

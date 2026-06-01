@@ -110,7 +110,19 @@ export interface PopulatedPost extends Omit<Post, 'media'> {
   media: PopulatedPostMedia[];
 }
 
-export type EntityType = "post" | "category" | "collection" | "tag";
+export interface Language {
+  readonly id: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+}
+
+export interface SystemText {
+  readonly id: string;
+  content: LocalizedText;
+}
+
+export type EntityType = "post" | "category" | "collection" | "tag" | "system";
 
 
 export interface PaginatedResult<T> {
@@ -126,4 +138,5 @@ export interface PaginatedResult<T> {
 export interface PaginationOptions {
   page?: number;
   limit?: number;
+  offset?: number;
 }

@@ -19,6 +19,7 @@ export class MediaService implements IMediaService {
     const mediaList = await this.mediaRepo.getAll({
       page,
       limit: limit + 1,
+      offset: (page - 1) * limit,
     });
 
     return paginate(mediaList, { page, limit });

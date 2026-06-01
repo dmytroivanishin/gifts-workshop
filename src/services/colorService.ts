@@ -18,6 +18,7 @@ export class ColorService implements IColorService {
     const colors = await this.colorRepo.getAll({
       page,
       limit: limit + 1,
+      offset: (page - 1) * limit,
     });
 
     return paginate(colors, { page, limit });

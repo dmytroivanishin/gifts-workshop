@@ -82,6 +82,7 @@ export class PostService implements IPostService {
         ...dbOptions,
         page,
         limit: limit + 1,
+        offset: (page - 1) * limit,
       });
 
       return paginate(posts, { page, limit });

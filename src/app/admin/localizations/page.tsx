@@ -1,340 +1,221 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, Loader2, Languages, CheckCircle2, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Loader2, Languages, CheckCircle2, AlertCircle } from "lucide-react";
 import {
   useGetPostsQuery,
   useGetCategoriesQuery,
-  useUpdatePostMutation,
-  useUpdateCategoryMutation,
+  useGetTagsQuery,
+  useGetCollectionsQuery,
+  useGetSystemTextsQuery,
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
 
-type EntityType = "post" | "category";
+type EntityType = "post" | "category" | "tag" | "collection" | "system";
 
 export default function AdminLocalizations() {
-  const { t } = useTranslation();
+  const { t, activeLanguages, locale } = useTranslation();
+  const router = useRouter();
+  
   const [entityType, setEntityType] = useState<EntityType>("post");
-  const [selectedEntityId, setSelectedEntityId] = useState<string>("");
+  const [page, setPage] = useState(1);
+  const limit = 12;
 
-  // Queries to load entities
-  const { data: postsResponse, isLoading: isLoadingPosts } = useGetPostsQuery({});
-  const { data: categoriesResponse, isLoading: isLoadingCategories } = useGetCategoriesQuery();
+  // Track items locally to allow "Load More" appending
+  const [items, setItems] = useState<any[]>([]);
 
-  const posts = postsResponse?.data || [];
-  const categories = categoriesResponse?.data || [];
+  const isPost = entityType === "post";
+  const isCategory = entityType === "category";
+  const isTag = entityType === "tag";
+  const isCollection = entityType === "collection";
+  const isSystem = entityType === "system";
 
-  const entitiesList = entityType === "post" ? posts : categories;
+  const { data: postsRes, isFetching: fetchingPosts } = useGetPostsQuery({ page, limit }, { skip: !isPost });
+  const { data: categoriesRes, isFetching: fetchingCats } = useGetCategoriesQuery({ page, limit }, { skip: !isCategory });
+  const { data: tagsRes, isFetching: fetchingTags } = useGetTagsQuery({ page, limit }, { skip: !isTag });
+  const { data: collectionsRes, isFetching: fetchingCols } = useGetCollectionsQuery({ page, limit }, { skip: !isCollection });
+  const { data: systemRes, isFetching: fetchingSystem } = useGetSystemTextsQuery({ page, limit }, { skip: !isSystem });
 
-  // Set first entity as selected by default when type or lists load
+  const isFetching = fetchingPosts || fetchingCats || fetchingTags || fetchingCols || fetchingSystem;
+  
+  const currentData = isPost ? postsRes : isCategory ? categoriesRes : isTag ? tagsRes : isCollection ? collectionsRes : systemRes;
+  const hasMore = currentData?.meta ? currentData.meta.nextPage !== null : false;
+
+  // Reset list when entity type changes
   useEffect(() => {
-    if (entitiesList.length > 0) {
-      // Keep selected if exists in list, otherwise select first
-      const exists = entitiesList.some((e) => e.id === selectedEntityId);
-      if (!exists) {
-        setSelectedEntityId(entitiesList[0].id);
-      }
-    } else {
-      setSelectedEntityId("");
-    }
-  }, [entityType, postsResponse, categoriesResponse]);
+    setPage(1);
+    setItems([]);
+  }, [entityType]);
 
-  // Form translation state
-  const [ruTitle, setRuTitle] = useState("");
-  const [ruDescription, setRuDescription] = useState("");
-  const [enTitle, setEnTitle] = useState("");
-  const [enDescription, setEnDescription] = useState("");
-
-  const [updatePost, { isLoading: isUpdatingPost }] = useUpdatePostMutation();
-  const [updateCategory, { isLoading: isUpdatingCategory }] = useUpdateCategoryMutation();
-  const isSaving = isUpdatingPost || isUpdatingCategory;
-  const isLoadingLocs = false; // Directly read from pre-loaded entities, no additional loading needed
-
-  const [saveStatus, setSaveStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
-
-  // Sync loaded entity values directly to form state
+  // Append new items when data arrives
   useEffect(() => {
-    setRuTitle("");
-    setRuDescription("");
-    setEnTitle("");
-    setEnDescription("");
-    setSaveStatus(null);
-
-    if (selectedEntityId) {
-      const entity = entitiesList.find((e) => e.id === selectedEntityId);
-      if (entity) {
-        const rawTitle = entity.title;
-        const rawDesc = entity.description;
-
-        setRuTitle(
-          typeof rawTitle === "string"
-            ? rawTitle
-            : rawTitle?.ru || ""
-        );
-        setRuDescription(
-          typeof rawDesc === "string"
-            ? rawDesc
-            : rawDesc?.ru || ""
-        );
-        setEnTitle(
-          typeof rawTitle === "string"
-            ? ""
-            : rawTitle?.en || ""
-        );
-        setEnDescription(
-          typeof rawDesc === "string"
-            ? ""
-            : rawDesc?.en || ""
-        );
-      }
+    if (currentData?.data) {
+      setItems((prev) => {
+        if (page === 1) return currentData.data;
+        
+        // Prevent duplicates just in case
+        const existingIds = new Set(prev.map(i => i.id));
+        const newItems = currentData.data.filter((i: any) => !existingIds.has(i.id));
+        return [...prev, ...newItems];
+      });
     }
-  }, [selectedEntityId, entityType, postsResponse, categoriesResponse]);
+  }, [currentData, page]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedEntityId) return;
+  const handleEntityChange = (type: EntityType) => {
+    if (type === entityType) return;
+    setEntityType(type);
+  };
 
-    setSaveStatus(null);
-    try {
-      if (entityType === "post") {
-        await updatePost({
-          id: selectedEntityId,
-          title: { ru: ruTitle, en: enTitle },
-          description: { ru: ruDescription, en: enDescription },
-        }).unwrap();
-      } else {
-        const selectedEntity = entitiesList.find((e) => e.id === selectedEntityId) as any;
-        if (!selectedEntity) return;
-
-        await updateCategory({
-          id: selectedEntityId,
-          title: { ru: ruTitle, en: enTitle },
-          description: { ru: ruDescription, en: enDescription },
-          color: selectedEntity.color,
-          parentId: selectedEntity.parentId,
-          collectionId: selectedEntity.collectionId,
-          tags: selectedEntity.tagsIds,
-          slug: selectedEntity.slug,
-        }).unwrap();
-      }
-
-      setSaveStatus({ type: "success", message: t("translations_success") });
-      setTimeout(() => setSaveStatus(null), 3000);
-    } catch (err: any) {
-      console.error("Failed to save translations", err);
-      setSaveStatus({ type: "error", message: t("translations_error") });
+  const handleLoadMore = () => {
+    if (!isFetching && hasMore) {
+      setPage(p => p + 1);
     }
   };
 
-  const selectedEntity = entitiesList.find((e) => e.id === selectedEntityId);
-  const isTranslated = ruTitle.trim() !== "" && enTitle.trim() !== "";
+  const getTranslationStatus = (item: any) => {
+    const missing: string[] = [];
+
+    if (isSystem) {
+       const content = item.content || {};
+       activeLanguages.forEach(lang => {
+         if (!content[lang] || content[lang].trim() === "") {
+           missing.push(lang.toUpperCase());
+         }
+       });
+    } else {
+       const rawTitle = item.title || item.name;
+       activeLanguages.forEach(lang => {
+         const text = typeof rawTitle === "string" ? rawTitle : rawTitle?.[lang] || "";
+         if (text.trim() === "") {
+           missing.push(lang.toUpperCase());
+         }
+       });
+    }
+
+    return missing;
+  };
 
   return (
     <div className="space-y-6 font-sans">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <Languages className="text-primary" size={24} />
-          {t("translations_title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("translations_subtitle")}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Languages className="text-primary" size={24} />
+            {t("translations_title") || "Localizations"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t("translations_subtitle") || "Manage content translations"}
+          </p>
+        </div>
+        <button
+          onClick={() => router.push('/admin/languages')}
+          className="px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:bg-primary/90 transition-colors cursor-pointer"
+        >
+          {t("manage_languages") || "Manage Languages"}
+        </button>
       </div>
 
       {/* Select Entity Controls */}
       <div className="bg-card rounded-xl border border-border/40 p-5 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("entity_type")}
-            </label>
-            <div className="flex bg-secondary rounded-lg p-0.5 border border-border/40">
+        <div className="space-y-4">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("entity_type") || "Entity Type"}
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: "post", label: t("projects") || "Projects" },
+              { id: "category", label: t("categories") || "Categories" },
+              { id: "tag", label: t("tags") || "Tags" },
+              { id: "collection", label: t("collections") || "Коллекции" },
+              { id: "system", label: t("system_texts") !== "system_texts" ? t("system_texts") : "Системные тексты" },
+            ].map((type) => (
               <button
+                key={type.id}
                 type="button"
-                onClick={() => setEntityType("post")}
-                className={`flex-1 text-center py-2 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                  entityType === "post" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                onClick={() => handleEntityChange(type.id as EntityType)}
+                className={`px-4 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer border ${
+                  entityType === type.id 
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm" 
+                    : "bg-secondary border-border/40 text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {t("projects")}
+                {type.label}
               </button>
-              <button
-                type="button"
-                onClick={() => setEntityType("category")}
-                className={`flex-1 text-center py-2 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                  entityType === "category" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t("categories")}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("select_item")}
-            </label>
-            {isLoadingPosts || isLoadingCategories ? (
-              <div className="flex items-center h-10 px-3 bg-secondary rounded-lg border border-border/40 text-xs text-muted-foreground">
-                <Loader2 className="animate-spin mr-2" size={14} /> {t("loading_list")}
-              </div>
-            ) : (
-              <select
-                value={selectedEntityId}
-                onChange={(e) => setSelectedEntityId(e.target.value)}
-                className="w-full h-10 px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
-              >
-                {entitiesList.length === 0 ? (
-                  <option value="">{t("items_not_found")}</option>
-                ) : (
-                  entitiesList.map((item) => {
-                    const itemTitle = typeof item.title === "string" ? item.title : item.title?.ru || "";
-                    return (
-                      <option key={item.id} value={item.id}>
-                        {itemTitle}
-                      </option>
-                    );
-                  })
-                )}
-              </select>
-            )}
+            ))}
           </div>
         </div>
-
-        {selectedEntityId && (
-          <div className="flex items-center gap-2 text-xs font-medium border-t pt-3">
-            <span className="text-muted-foreground">{t("status_label")}</span>
-            {isLoadingLocs ? (
-              <span className="text-muted-foreground flex items-center gap-1">
-                <Loader2 className="animate-spin" size={12} /> {t("checking_translation")}
-              </span>
-            ) : isTranslated ? (
-              <span className="text-emerald-600 flex items-center gap-1">
-                <CheckCircle2 size={14} /> {t("translated_fully")}
-              </span>
-            ) : (
-              <span className="text-amber-600 flex items-center gap-1">
-                <AlertCircle size={14} /> {t("missing_en_translation")}
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Translation Forms Grid */}
-      {selectedEntityId && (
-        <form onSubmit={handleSave} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Russian Column */}
-            <div className="bg-card rounded-xl border border-border/40 p-6 shadow-sm space-y-4 relative">
-              <div className="absolute top-4 right-4 bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase">
-                RU
-              </div>
-              <h3 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2">
-                {t("russian_translation")}
-              </h3>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("translation_ru")}
-                </label>
-                <input
-                  type="text"
-                  value={ruTitle}
-                  onChange={(e) => setRuTitle(e.target.value)}
-                  placeholder={t("placeholder_title_ru")}
-                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("description")} (RU)
-                </label>
-                <textarea
-                  value={ruDescription}
-                  onChange={(e) => setRuDescription(e.target.value)}
-                  placeholder={t("placeholder_desc_ru")}
-                  rows={6}
-                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
-                />
-              </div>
-            </div>
-
-            {/* English Column */}
-            <div className="bg-card rounded-xl border border-border/40 p-6 shadow-sm space-y-4 relative">
-              <div className="absolute top-4 right-4 bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase">
-                EN
-              </div>
-              <h3 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2">
-                {t("english_translation")}
-              </h3>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("translation_en")}
-                </label>
-                <input
-                  type="text"
-                  value={enTitle}
-                  onChange={(e) => setEnTitle(e.target.value)}
-                  placeholder="Title in English..."
-                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("description")} (EN)
-                </label>
-                <textarea
-                  value={enDescription}
-                  onChange={(e) => setEnDescription(e.target.value)}
-                  placeholder="Description in English..."
-                  rows={6}
-                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
-                />
-              </div>
-            </div>
+      {/* Entities Grid */}
+      <div className="space-y-6">
+        {items.length === 0 && !isFetching ? (
+          <div className="text-center py-12 text-muted-foreground bg-card rounded-xl border border-border/40">
+            {t("items_not_found") || "No items found"}
           </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {items.map((item) => {
+              const missingLangs = getTranslationStatus(item);
+              const isTranslated = missingLangs.length === 0;
+              
+              let title = "Untitled";
+              if (isSystem) {
+                title = item.content?.[locale] || item.content?.ru || item.id;
+              } else {
+                const rawTitle = item.title || item.name;
+                title = typeof rawTitle === "string" 
+                  ? rawTitle 
+                  : (rawTitle?.[locale] || rawTitle?.ru || "Untitled");
+              }
 
-          {/* Action Row */}
-          <div className="flex items-center justify-between bg-card rounded-xl border border-border/40 px-6 py-4 shadow-sm">
-            <div>
-              {saveStatus && (
+              return (
                 <div
-                  className={`text-xs font-semibold ${
-                    saveStatus.type === "success" ? "text-emerald-600 animate-pulse" : "text-destructive"
-                  }`}
+                  key={item.id}
+                  onClick={() => router.push(`/admin/localizations/${entityType}/${item.id}`)}
+                  className="bg-card rounded-xl border border-border/40 p-5 shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer flex flex-col justify-between min-h-[120px] group"
                 >
-                  {saveStatus.message}
+                  <h3 className="font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                    {title}
+                  </h3>
+                  
+                  <div className="mt-4 flex items-center gap-1.5 text-[11px] font-medium">
+                    {isTranslated ? (
+                      <span className="text-emerald-600 bg-emerald-600/10 px-2 py-1 rounded-md flex items-center gap-1">
+                        <CheckCircle2 size={12} /> {t("translated_fully")}
+                      </span>
+                    ) : (
+                      <span className="text-amber-600 bg-amber-600/10 px-2 py-1 rounded-md flex items-center gap-1">
+                        <AlertCircle size={12} /> {t("missing_translation")}: {missingLangs.join(', ')}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSaving || isLoadingLocs}
-              className="flex items-center gap-1.5 px-6 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="animate-spin" size={16} />
-                  {t("saving")}
-                </>
-              ) : (
-                <>
-                  <Save size={16} />
-                  {t("save")}
-                </>
-              )}
-            </button>
+              );
+            })}
           </div>
-        </form>
-      )}
+        )}
+
+        {/* Load More & Loading State */}
+        <div className="flex justify-center pt-4">
+          {isFetching ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="animate-spin" size={16} /> {t("loading_list")}
+            </div>
+          ) : hasMore ? (
+            <button
+              onClick={handleLoadMore}
+              className="px-6 py-2.5 bg-secondary text-foreground text-sm font-semibold rounded-lg border border-border/40 hover:bg-secondary/80 transition-colors cursor-pointer"
+            >
+              {t("load_more") !== "load_more" ? t("load_more") : "Загрузить еще"}
+            </button>
+          ) : items.length > 0 ? (
+            <div className="text-xs text-muted-foreground">
+              {t("all_items_loaded") !== "all_items_loaded" ? t("all_items_loaded") : "Все элементы загружены"}
+            </div>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

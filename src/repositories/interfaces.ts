@@ -1,4 +1,4 @@
-import { Category, PopulatedCategory, Collection, Color, Media, Post, PopulatedPost, Tag, User, PaginationOptions } from "@/types";
+import { Category, PopulatedCategory, Collection, Color, Media, Post, PopulatedPost, Tag, User, PaginationOptions, Language, SystemText } from "@/types";
 
 export interface QueryOptions extends PaginationOptions {
   search?: string;
@@ -52,3 +52,9 @@ export interface ITagRepository extends IBaseRepository<Tag> {
 export interface IUserRepository extends IBaseRepository<User> {
   getByEmail(email: string): Promise<User | undefined>;
 }
+
+export interface ILanguageRepository extends IBaseRepository<Language> {
+  getByCode(code: string): Promise<Language | undefined>;
+}
+
+export interface ISystemTextRepository extends IBaseRepository<SystemText> {}

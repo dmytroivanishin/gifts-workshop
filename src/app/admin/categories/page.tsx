@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Edit, Save, X, Loader2 } from "lucide-react";
+import { Plus, Edit, Save, X, Loader2, Trash2 } from "lucide-react";
 import { 
   useGetCategoriesQuery, 
   useCreateCategoryMutation, 
@@ -10,19 +10,22 @@ import {
   useGetCollectionsQuery,
   useGetColorsQuery,
   useCreateColorMutation,
-  useUpdateColorMutation
+  useUpdateColorMutation,
+  useDeleteCategoryMutation
 } from "@/store/api";
 import Combobox from "@/components/ui/combobox";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useTranslation } from "@/i18n";
 
 export default function AdminCategories() {
-  const { t, loc } = useTranslation();
+  const { t, loc, locale } = useTranslation();
 
   const { data: categoriesResponse, isLoading } = useGetCategoriesQuery();
   const { data: tagsResponse } = useGetTagsQuery();
   const { data: collectionsResponse } = useGetCollectionsQuery();
   const { data: colorsResponse } = useGetColorsQuery();
   const [saveCategory, { isLoading: isSaving }] = useCreateCategoryMutation();
+  const [deleteCategory] = useDeleteCategoryMutation();
   const [createTag] = useCreateTagMutation();
   const [createColor] = useCreateColorMutation();
   const [updateColor] = useUpdateColorMutation();
@@ -36,6 +39,8 @@ export default function AdminCategories() {
   }));
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState("");
 
   // Form State
   const [title, setTitle] = useState("");
@@ -135,7 +140,7 @@ export default function AdminCategories() {
   const handleCreateTag = async (name: string) => {
     try {
       const res = await createTag({
-        title: { ru: name, en: "" },
+        title: { [locale]: name },
       }).unwrap();
       return res.data.id;
     } catch (err) {
@@ -150,8 +155,8 @@ export default function AdminCategories() {
 
     try {
       await saveCategory({
-        title: { ru: title, en: "" },
-        description: { ru: description, en: "" },
+        title: { [locale]: title },
+        description: { [locale]: description },
         color: { id: selectedColorId, color: color },
         collectionId: collectionId,
         parentId: parentId || null,
@@ -160,7 +165,8 @@ export default function AdminCategories() {
 
       setTitle("");
       setDescription("");
-      setColor("#FFD2D2");
+      setColor("");
+      setSelectedColorId("");
       setSelectedTags([]);
       setCollectionId("");
       setParentId("");
@@ -173,17 +179,13 @@ export default function AdminCategories() {
   const handleSave = async (id: string) => {
     if (!editTitle || !editCollectionId || !editSelectedColorId || isEditingColorPending) return;
     try {
-      const existingEnTitle = activeCategoryObj?.title && typeof activeCategoryObj.title === "object"
-        ? activeCategoryObj.title.en
-        : "";
-      const existingEnDesc = activeCategoryObj?.description && typeof activeCategoryObj.description === "object"
-        ? activeCategoryObj.description.en
-        : "";
+      const existingTitle = activeCategoryObj?.title && typeof activeCategoryObj.title === "object" ? activeCategoryObj.title : {};
+      const existingDesc = activeCategoryObj?.description && typeof activeCategoryObj.description === "object" ? activeCategoryObj.description : {};
 
       await saveCategory({
         id,
-        title: { ru: editTitle, en: existingEnTitle || "" },
-        description: { ru: editDescription, en: existingEnDesc || "" },
+        title: { ...existingTitle, [locale]: editTitle },
+        description: { ...existingDesc, [locale]: editDescription },
         color: { id: editSelectedColorId, color: editColor },
         collectionId: editCollectionId,
         parentId: editParentId || null,
@@ -202,11 +204,28 @@ export default function AdminCategories() {
     setActiveCategoryObj(cat);
     setEditTitle(typeof cat.title === "string" ? cat.title : cat.title?.ru || "");
     setEditDescription(typeof cat.description === "string" ? cat.description : cat.description?.ru || "");
-    setEditColor(cat.color?.color || "#FFD2D2");
-    setEditSelectedColorId(cat.color?.id || "");
+    setEditColor(cat.color?.color || (colorsList.length > 0 ? colorsList[0].color : "#000000"));
+    setEditSelectedColorId(cat.color?.id || (colorsList.length > 0 ? colorsList[0].id : ""));
     setEditCollectionId(cat.collectionId || "");
     setEditParentId(cat.parentId || "");
     setEditSelectedTags(cat.tagsIds || cat.tags?.map((t: any) => t.id) || []);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setDeleteTargetId(id);
+    setIsDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    try {
+      await deleteCategory(deleteTargetId).unwrap();
+    } catch (error) {
+      console.error("Failed to delete category", error);
+    } finally {
+      setIsDeleteOpen(false);
+      setDeleteTargetId("");
+    }
   };
 
   return (
@@ -405,6 +424,13 @@ export default function AdminCategories() {
                           >
                             <Edit size={16} />
                           </button>
+                          <button
+                            onClick={() => handleDeleteClick(cat.id)}
+                            className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer"
+                            title={t("delete")}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </>
                       )}
                     </div>
@@ -555,6 +581,16 @@ export default function AdminCategories() {
           </form>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        title={t("categories")}
+        message={t("delete_confirm_category")}
+        confirmText={t("delete") || "Delete"}
+        cancelText={t("cancel") || "Cancel"}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setIsDeleteOpen(false)}
+      />
     </div>
   );
 }

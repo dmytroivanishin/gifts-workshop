@@ -1,12 +1,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Post, Category, Tag, Collection, Media, PopulatedPost, PopulatedCategory } from "@/types";
+import { Post, Category, Tag, Collection, Media, PopulatedPost, PopulatedCategory, Language, SystemText } from "@/types";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ 
     baseUrl: "/api/v1",
     credentials: "include" 
   }),
-  tagTypes: ["Post", "Category", "Tag", "Collection", "Media", "Color"],
+  tagTypes: ["Post", "Category", "Tag", "Collection", "Media", "Color", "Language", "SystemText"],
   endpoints: (builder) => ({
     getPosts: builder.query<{ data: PopulatedPost[]; meta: any }, { search?: string; category?: string; inStock?: boolean; page?: number; limit?: number; populate?: string } | void>({
       query: (params) => {
@@ -63,6 +63,10 @@ export const api = createApi({
       },
       providesTags: ["Category"],
     }),
+    getCategoryById: builder.query<{ data: PopulatedCategory }, string>({
+      query: (id) => `/categories/${id}`,
+      providesTags: (result, error, id) => [{ type: "Category", id }],
+    }),
     createCategory: builder.mutation<{ data: PopulatedCategory[] }, any>({
       query: (body) => ({
         url: "/categories",
@@ -81,6 +85,10 @@ export const api = createApi({
         };
       },
       providesTags: ["Tag"],
+    }),
+    getTagById: builder.query<{ data: Tag }, string>({
+      query: (id) => `/tags/${id}`,
+      providesTags: (result, error, id) => [{ type: "Tag", id }],
     }),
     createTag: builder.mutation<{ data: Tag }, any>({
       query: (body) => ({
@@ -113,9 +121,27 @@ export const api = createApi({
       }),
       invalidatesTags: ["Category", "Post"],
     }),
-     getCollections: builder.query<{ data: Collection[] }, void>({
-       query: () => "/collections",
+    deleteCategory: builder.mutation<{ success: boolean }, string>({
+      query: (id) => ({
+        url: `/categories/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Category", "Post"],
+    }),
+     getCollections: builder.query<{ data: Collection[]; meta: any }, { page?: number; limit?: number } | void>({
+       query: (params) => {
+         const urlParams = new URLSearchParams();
+         if (params?.page) urlParams.append("page", params.page.toString());
+         if (params?.limit) urlParams.append("limit", params.limit.toString());
+         return {
+           url: `/collections?${urlParams.toString()}`,
+         };
+       },
        providesTags: ["Collection"],
+     }),
+     getCollectionById: builder.query<{ data: Collection }, string>({
+       query: (id) => `/collections/${id}`,
+       providesTags: (result, error, id) => [{ type: "Collection", id }],
      }),
      createCollection: builder.mutation<{ data: Collection }, any>({
        query: (body) => ({
@@ -171,6 +197,82 @@ export const api = createApi({
        }),
        invalidatesTags: ["Color", "Category"],
      }),
+     getLanguages: builder.query<{ data: Language[]; meta: any }, { page?: number; limit?: number } | void>({
+       query: (params) => {
+         const urlParams = new URLSearchParams();
+         if (params?.page) urlParams.append("page", params.page.toString());
+         if (params?.limit) urlParams.append("limit", params.limit.toString());
+         return {
+           url: `/languages?${urlParams.toString()}`,
+         };
+       },
+       providesTags: ["Language"],
+     }),
+     getLanguageById: builder.query<{ data: Language }, string>({
+       query: (id) => `/languages/${id}`,
+       providesTags: (result, error, id) => [{ type: "Language", id }],
+     }),
+     createLanguage: builder.mutation<{ data: Language }, any>({
+       query: (body) => ({
+         url: "/languages",
+         method: "POST",
+         body,
+       }),
+       invalidatesTags: ["Language"],
+     }),
+     updateLanguage: builder.mutation<{ data: Language }, { id: string } & any>({
+       query: ({ id, ...body }) => ({
+         url: `/languages/${id}`,
+         method: "PATCH",
+         body,
+       }),
+       invalidatesTags: (result, error, { id }) => ["Language", { type: "Language", id }],
+     }),
+     deleteLanguage: builder.mutation<{ success: boolean }, string>({
+       query: (id) => ({
+         url: `/languages/${id}`,
+         method: "DELETE",
+       }),
+       invalidatesTags: ["Language"],
+     }),
+     getSystemTexts: builder.query<{ data: SystemText[]; meta: any }, { page?: number; limit?: number } | void>({
+       query: (params) => {
+         const urlParams = new URLSearchParams();
+         if (params?.page) urlParams.append("page", params.page.toString());
+         if (params?.limit) urlParams.append("limit", params.limit.toString());
+         return {
+           url: `/system-texts?${urlParams.toString()}`,
+         };
+       },
+       providesTags: ["SystemText"],
+     }),
+     getSystemTextById: builder.query<{ data: SystemText }, string>({
+       query: (id) => `/system-texts/${id}`,
+       providesTags: (result, error, id) => [{ type: "SystemText", id }],
+     }),
+     createSystemText: builder.mutation<{ data: SystemText }, any>({
+       query: (body) => ({
+         url: "/system-texts",
+         method: "POST",
+         body,
+       }),
+       invalidatesTags: ["SystemText"],
+     }),
+     updateSystemText: builder.mutation<{ data: SystemText }, { id: string } & any>({
+       query: ({ id, ...body }) => ({
+         url: `/system-texts/${id}`,
+         method: "PATCH",
+         body,
+       }),
+       invalidatesTags: (result, error, { id }) => ["SystemText", { type: "SystemText", id }],
+     }),
+     deleteSystemText: builder.mutation<{ success: boolean }, string>({
+       query: (id) => ({
+         url: `/system-texts/${id}`,
+         method: "DELETE",
+       }),
+       invalidatesTags: ["SystemText"],
+     }),
    }),
  });
  
@@ -181,13 +283,17 @@ export const api = createApi({
    useUpdatePostMutation,
    useDeletePostMutation,
    useGetCategoriesQuery,
+   useGetCategoryByIdQuery,
    useCreateCategoryMutation,
    useUpdateCategoryMutation,
+   useDeleteCategoryMutation,
    useGetTagsQuery,
+   useGetTagByIdQuery,
    useCreateTagMutation,
    useUpdateTagMutation,
    useDeleteTagMutation,
    useGetCollectionsQuery,
+   useGetCollectionByIdQuery,
    useCreateCollectionMutation,
    useUpdateCollectionMutation,
    useDeleteCollectionMutation,
@@ -196,4 +302,14 @@ export const api = createApi({
    useCreateColorMutation,
    useUpdateColorMutation,
    useDeleteColorMutation,
+   useGetLanguagesQuery,
+   useGetLanguageByIdQuery,
+   useCreateLanguageMutation,
+   useUpdateLanguageMutation,
+   useDeleteLanguageMutation,
+   useGetSystemTextsQuery,
+   useGetSystemTextByIdQuery,
+   useCreateSystemTextMutation,
+   useUpdateSystemTextMutation,
+   useDeleteSystemTextMutation,
  } = api;

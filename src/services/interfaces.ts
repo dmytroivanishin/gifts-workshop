@@ -1,4 +1,4 @@
-import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions } from "@/types";
+import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText } from "@/types";
 
 import { QueryOptions } from "@/repositories/interfaces";
 
@@ -56,5 +56,20 @@ export interface IPostService {
   createPost(body: any): Promise<Post>;
   updatePost(id: string, body: any): Promise<Post | undefined>;
   deletePost(id: string): Promise<boolean>;
+}
+
+export interface ILanguageService {
+  getAllLanguages(options?: PaginationOptions): Promise<PaginatedResult<Language>>;
+  getLanguageById(id: string): Promise<Language | undefined>;
+  getLanguageByCode(code: string): Promise<Language | undefined>;
+  saveLanguage(body: any): Promise<Language>;
+  deleteLanguage(id: string): Promise<boolean>;
+}
+
+export interface ISystemTextService {
+  getAllSystemTexts(options?: PaginationOptions): Promise<PaginatedResult<SystemText>>;
+  getSystemTextById(id: string): Promise<SystemText | undefined>;
+  saveSystemText(body: any): Promise<SystemText>;
+  deleteSystemText(id: string): Promise<boolean>;
 }
 
