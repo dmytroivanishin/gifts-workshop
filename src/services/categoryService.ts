@@ -4,7 +4,11 @@ import { Category, PopulatedCategory } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/lib/slug";
 import { ValidationError } from "@/common/errors/validation";
+import { ConflictError } from "@/common/errors/conflict";
 import { isUUID } from "@/lib/utils";
+import { drizzleDatabase } from "@/repositories/drizzle/database";
+import { categories as categoriesSchema, posts } from "@/repositories/drizzle/schema";
+import { eq, sql } from "drizzle-orm";
 
 import { paginate } from "./pagination";
 import { PaginationOptions } from "@/types";
@@ -71,7 +75,7 @@ export class CategoryService implements ICategoryService {
       ]);
     }
 
-    const categories = await this.categoryRepo.getAll();
+    const categoriesList = await this.categoryRepo.getAll();
 
     let slug = body.slug;
     if (!slug || (body.title && body.title !== body._originalTitle)) {
@@ -84,7 +88,7 @@ export class CategoryService implements ICategoryService {
       id,
       title: body.title,
       description: body.description,
-      order: body.order ?? existingCategory?.order ?? categories.length + 1,
+      order: body.order ?? existingCategory?.order ?? categoriesList.length + 1,
       parentId: body.parentId,
       color: embeddedColor,
       collectionId: collectionId,
@@ -96,6 +100,26 @@ export class CategoryService implements ICategoryService {
   }
 
   async deleteCategory(id: string): Promise<boolean> {
+    const db = drizzleDatabase.getDb();
+    
+    const [{ childrenCount }] = await db
+      .select({ childrenCount: sql<number>`count(*)` })
+      .from(categoriesSchema)
+      .where(eq(categoriesSchema.parentId, id));
+      
+    if (Number(childrenCount) > 0) {
+      throw new ConflictError("Невозможно удалить родительскую категорию, так как она содержит дочерние.", "CATEGORY_HAS_CHILDREN");
+    }
+    
+    const [{ postCount }] = await db
+      .select({ postCount: sql<number>`count(*)` })
+      .from(posts)
+      .where(eq(posts.categoryId, id));
+      
+    if (Number(postCount) > 0) {
+      throw new ConflictError("Невозможно удалить категорию, так как к ней привязаны посты.", "CATEGORY_HAS_POSTS");
+    }
+
     return this.categoryRepo.delete(id);
   }
 }

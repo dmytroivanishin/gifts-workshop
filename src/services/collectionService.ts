@@ -4,6 +4,10 @@ import { Collection } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/lib/slug";
 import { isUUID } from "@/lib/utils";
+import { ConflictError } from "@/common/errors/conflict";
+import { drizzleDatabase } from "@/repositories/drizzle/database";
+import { posts, categories as categoriesSchema } from "@/repositories/drizzle/schema";
+import { eq, sql } from "drizzle-orm";
 
 import { paginate } from "./pagination";
 
@@ -56,6 +60,26 @@ export class CollectionService implements ICollectionService {
   }
 
   async deleteCollection(id: string): Promise<boolean> {
+    const db = drizzleDatabase.getDb();
+    
+    const [{ postCount }] = await db
+      .select({ postCount: sql<number>`count(*)` })
+      .from(posts)
+      .where(eq(posts.collectionId, id));
+      
+    if (Number(postCount) > 0) {
+      throw new ConflictError("Невозможно удалить коллекцию, так как к ней привязаны посты.", "COLLECTION_HAS_POSTS");
+    }
+    
+    const [{ categoryCount }] = await db
+      .select({ categoryCount: sql<number>`count(*)` })
+      .from(categoriesSchema)
+      .where(eq(categoriesSchema.collectionId, id));
+      
+    if (Number(categoryCount) > 0) {
+      throw new ConflictError("Невозможно удалить коллекцию, так как к ней привязаны категории.", "COLLECTION_HAS_CATEGORIES");
+    }
+
     return this.collectionRepo.delete(id);
   }
 }

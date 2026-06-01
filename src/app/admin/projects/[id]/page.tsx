@@ -18,14 +18,17 @@ import ImageCropModal from "@/components/shared/ImageCropModal";
 import MediaPickerModal from "@/components/shared/MediaPickerModal";
 import Combobox from "@/components/ui/combobox";
 import { useTranslation } from "@/i18n";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { postSchema } from "@/common/validation/schemas";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 interface SelectedMedia {
   mediaId: string;
   url: string;
   position?: { x: number; y: number; zoom: number };
 }
-
-// Removed PRESET_IMAGES
 
 interface ProjectFormPageProps {
   params: Promise<{ id: string }>;
@@ -55,17 +58,26 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   const mediaList = mediaResponse?.data || [];
 
   // Form State
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [collectionId, setCollectionId] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [inStock, setInStock] = useState(true);
-  const [status, setStatus] = useState("Published");
+  const defaultValues = {
+    title: { ru: "", en: "" },
+    description: { ru: "", en: "" },
+    collectionId: undefined as any,
+    categoryId: undefined as any,
+    in_stock: true,
+    status: "Published" as any,
+    tagsIds: [],
+    media: [],
+    posterId: undefined as any,
+  };
+
+  const form = useForm<z.infer<typeof postSchema>>({
+    resolver: zodResolver(postSchema) as any,
+    defaultValues,
+    mode: "onChange"
+  });
+
   const [selectedImages, setSelectedImages] = useState<SelectedMedia[]>([]);
   const [coverImage, setCoverImage] = useState(""); // mediaId of cover
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
-  // Position crop state
   const [coverPosition, setCoverPosition] = useState<{ x: number; y: number; zoom: number } | null>(null);
   
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
@@ -83,20 +95,46 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     }
   };
 
+  // Sync complex states to RHF
+  useEffect(() => {
+    form.setValue("posterId", coverImage || undefined as any, { shouldValidate: true });
+  }, [coverImage, form]);
+
+  useEffect(() => {
+    form.setValue(
+      "media",
+      selectedImages.map((img, i) => ({
+        order: i + 1,
+        mediaId: img.mediaId,
+        position: img.position || undefined,
+      })),
+      { shouldValidate: true }
+    );
+  }, [selectedImages, form]);
+
   // Populate form if in Edit Mode
   useEffect(() => {
     if (isEditMode && postResponse?.data) {
       const post = postResponse.data;
       
-      setTitle(typeof post.title === "string" ? post.title : post.title?.[locale] || post.title?.ru || "");
-      setDescription(typeof post.description === "string" ? post.description : post.description?.[locale] || post.description?.ru || "");
-      
       const cat = typeof post.category !== "string" ? post.category?.id || "" : post.category;
-      setCategoryId(cat);
       const col = typeof post.collection !== "string" ? post.collection?.id || "" : post.collection;
-      setCollectionId(col || post.collectionId || "");
-      setInStock(post.in_stock);
-      setStatus(post.status);
+      
+      form.reset({
+        title: typeof post.title === "string" ? { ru: post.title, en: "" } : { ru: post.title?.ru || "", en: post.title?.en || "" },
+        description: typeof post.description === "string" ? { ru: post.description, en: "" } : { ru: post.description?.ru || "", en: post.description?.en || "" },
+        categoryId: cat,
+        collectionId: col || post.collectionId || "",
+        in_stock: post.in_stock,
+        status: post.status,
+        tagsIds: post.tags ? post.tags.map((t: any) => typeof t === "string" ? t : t.id) : [],
+        posterId: post.poster ? (typeof post.poster === "string" ? post.poster : post.poster.id) : undefined as any,
+        media: post.media ? post.media.map((m: any, i: number) => ({
+          order: i + 1,
+          mediaId: typeof m.media === "string" ? m.media : m.media.id,
+          position: m.position || undefined,
+        })) : []
+      });
       
       const images: SelectedMedia[] = post.media.map((m: any) => ({
         mediaId: typeof m.media === "string" ? m.media : m.media.id,
@@ -111,29 +149,27 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           setCoverPosition(post.poster.position as any);
         }
       }
-
-      if (post.tags) {
-        const tagIds = post.tags.map((t: any) => typeof t === "string" ? t : t.id);
-        setSelectedTags(tagIds);
-      }
     }
-  }, [isEditMode, postResponse]);
+  }, [isEditMode, postResponse, form]);
 
   // Auto-select defaults when only one option exists (for creation mode)
   useEffect(() => {
     if (!isEditMode) {
-      if (!collectionId && collections.length === 1) {
-        setCollectionId(collections[0].id);
+      const currentCollectionId = form.getValues("collectionId");
+      const currentCategoryId = form.getValues("categoryId");
+
+      if (!currentCollectionId && collections.length === 1) {
+        form.setValue("collectionId", collections[0].id, { shouldValidate: true });
       }
-      if (!categoryId && categories.length === 1) {
+      if (!currentCategoryId && categories.length === 1) {
         const defaultCat = categories[0];
-        setCategoryId(defaultCat.id);
+        form.setValue("categoryId", defaultCat.id, { shouldValidate: true });
         if (defaultCat.tagsIds && defaultCat.tagsIds.length > 0) {
-          setSelectedTags(defaultCat.tagsIds);
+          form.setValue("tagsIds", defaultCat.tagsIds, { shouldValidate: true });
         }
       }
     }
-  }, [isEditMode, collections, categories, collectionId, categoryId]);
+  }, [isEditMode, collections, categories, form]);
 
   const handleMediaSelect = (mediaArray: { mediaId: string; url: string }[]) => {
     const newSelected = mediaArray.map(m => {
@@ -168,63 +204,29 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     setActiveCropMediaId(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title || !categoryId || !collectionId) return;
-
-    // Build media array
-    const media = selectedImages.map((img, index) => {
-      const existingRelation = postResponse?.data?.media?.find(
-        (m: any) => (m.mediaId || m.media?.id) === img.mediaId
-      );
-
-      return {
-        id: existingRelation?.id || undefined,
-        order: index + 1,
-        mediaId: img.mediaId,
-        position: img.position || undefined,
-      };
-    });
-
-    // Build poster with exact image position coordinates
-    const coverMedia = selectedImages.find(m => m.mediaId === coverImage);
-    const poster = coverMedia
-      ? {
-          id: coverMedia.mediaId,
-          thumbnailUrl: coverMedia.url,
-          originalUrl: coverMedia.url,
-          position: coverPosition || undefined,
-        }
-      : undefined;
-
-    const existingTitle = postResponse?.data?.title && typeof postResponse.data.title === "object" ? postResponse.data.title : {};
-    const existingDesc = postResponse?.data?.description && typeof postResponse.data.description === "object" ? postResponse.data.description : {};
-
-    const payload = {
-      title: { ...existingTitle, [locale]: title },
-      description: { ...existingDesc, [locale]: description },
-      categoryId,
-      collectionId,
-      in_stock: inStock,
-      status: status as any,
-      media,
-      poster,
-      posterId: coverImage || undefined,
-      tagsIds: selectedTags,
-    };
-
+  const onSubmit = async (values: z.infer<typeof postSchema>) => {
     try {
       if (isEditMode) {
+        const existingTitle = postResponse?.data?.title && typeof postResponse.data.title === "object" ? postResponse.data.title : {};
+        const existingDesc = postResponse?.data?.description && typeof postResponse.data.description === "object" ? postResponse.data.description : {};
+
         await updatePost({
           id,
-          ...payload,
+          ...values,
+          title: { ...existingTitle, ...values.title },
+          description: { ...existingDesc, ...values.description },
         }).unwrap();
       } else {
-        await createPost(payload).unwrap();
+        await createPost(values).unwrap();
       }
 
       router.push("/admin/dashboard");
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.data?.error?.details) {
+        err.data.error.details.forEach((detail: any) => {
+          form.setError(detail.field as any, { type: "server", message: detail.message });
+        });
+      }
       console.error("Failed to save project", err);
     }
   };
@@ -250,7 +252,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     label: typeof cat.title === "string" ? cat.title : cat.title?.ru || "",
   }));
 
-  const activeCategory = categories.find((cat) => cat.id === categoryId);
+  const currentCategoryId = form.watch("categoryId");
+  const activeCategory = categories.find((cat) => cat.id === currentCategoryId);
 
   const tagOptions = [...allTags]
     .sort((a, b) => {
@@ -293,134 +296,189 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-card rounded-xl border border-border/40 p-6 space-y-4 shadow-sm">
-          
-          {/* Title */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              {t("title")}
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t("placeholder_project_title")}
-              className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-              required
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+          <div className="bg-card rounded-xl border border-border/40 p-6 space-y-4 shadow-sm">
+            
+            {/* Title */}
+            <FormField
+              control={form.control}
+              name={`title.${locale}` as any}
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+                    {t("title")}
+                  </FormLabel>
+                  <FormControl>
+                    <input
+                      {...field}
+                      type="text"
+                      placeholder={t("placeholder_project_title")}
+                      className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.title ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {/* Collection */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              {t("collection")}
-            </label>
-            <Combobox
-              options={collectionOptions}
-              value={collectionId}
-              onChange={(val) => setCollectionId(val)}
-              placeholder={t("placeholder_select_collection")}
-              searchPlaceholder={t("placeholder_search_collections")}
+            {/* Collection */}
+            <FormField
+              control={form.control}
+              name="collectionId"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+                    {t("collection")}
+                  </FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={collectionOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={t("placeholder_select_collection")}
+                      searchPlaceholder={t("placeholder_search_collections")}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {/* Category */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              {t("category")}
-            </label>
-            <Combobox
-              options={categoryOptions}
-              value={categoryId}
-             onChange={(val) => {
-                const oldCat = categories.find((cat) => cat.id === categoryId);
-                const oldTags = oldCat?.tagsIds || [];
+            {/* Category */}
+            <FormField
+              control={form.control}
+              name="categoryId"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+                    {t("category")}
+                  </FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={categoryOptions}
+                      value={field.value}
+                      onChange={(val) => {
+                        const oldCat = categories.find((cat) => cat.id === field.value);
+                        const oldTags = oldCat?.tagsIds || [];
 
-                setCategoryId(val);
+                        field.onChange(val);
 
-                const newCat = categories.find((cat) => cat.id === val);
-                const newTags = newCat?.tagsIds || [];
+                        const newCat = categories.find((cat) => cat.id === val);
+                        const newTags = newCat?.tagsIds || [];
 
-                setSelectedTags((prev) => {
-                  const filtered = prev.filter((tId) => !oldTags.includes(tId));
-                  return Array.from(new Set([...filtered, ...newTags]));
-                });
-              }}
-              placeholder={t("placeholder_select_category")}
-              searchPlaceholder={t("placeholder_search_categories")}
+                        const prevTags = form.getValues("tagsIds") || [];
+                        const filtered = prevTags.filter((tId: string) => !oldTags.includes(tId));
+                        form.setValue("tagsIds", Array.from(new Set([...filtered, ...newTags])), { shouldValidate: true });
+                      }}
+                      placeholder={t("placeholder_select_category")}
+                      searchPlaceholder={t("placeholder_search_categories")}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {/* Description */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              {t("description")}
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t("placeholder_project_desc")}
-              rows={4}
-              className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-              required
+            {/* Description */}
+            <FormField
+              control={form.control}
+              name={`description.${locale}` as any}
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+                    {t("description")}
+                  </FormLabel>
+                  <FormControl>
+                    <textarea
+                      {...field}
+                      placeholder={t("placeholder_project_desc")}
+                      rows={4}
+                      className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.description ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {/* Tags Combobox with Chips */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-              {t("tags")}
-            </label>
-            <Combobox
-              options={tagOptions}
-              value={selectedTags}
-              onChange={(val) => setSelectedTags(val)}
-              placeholder={t("placeholder_select_tags")}
-              searchPlaceholder={t("placeholder_search_or_type_tag")}
-              allowCreate
-              createLabel={t("add_new_tag_prompt")}
-              multiple
-              onCreate={handleCreateTag}
+            {/* Tags Combobox */}
+            <FormField
+              control={form.control}
+              name="tagsIds"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+                    {t("tags")}
+                  </FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={tagOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={t("placeholder_select_tags")}
+                      searchPlaceholder={t("placeholder_search_or_type_tag")}
+                      allowCreate
+                      createLabel={t("add_new_tag_prompt")}
+                      multiple
+                      onCreate={handleCreateTag}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {/* Stock & Status Row */}
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-                {t("availability")}
-              </label>
-              <div className="flex items-center gap-2 min-h-11">
-                <input
-                  type="checkbox"
-                  id="inStock"
-                  checked={inStock}
-                  onChange={(e) => setInStock(e.target.checked)}
-                  className="rounded border-border bg-transparent text-primary focus:ring-0 w-4 h-4 cursor-pointer"
-                />
-                <label htmlFor="inStock" className="text-sm font-medium text-muted-foreground cursor-pointer">
-                  {t("in_stock")}
-                </label>
-              </div>
+            {/* Stock & Status Row */}
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <FormField
+                control={form.control}
+                name="in_stock"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+                      {t("availability")}
+                    </FormLabel>
+                    <div className="flex items-center gap-2 min-h-11">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="rounded border-border bg-transparent text-primary focus:ring-0 w-4 h-4 cursor-pointer"
+                        />
+                      </FormControl>
+                      <label className="text-sm font-medium text-muted-foreground cursor-pointer">
+                        {t("in_stock")}
+                      </label>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+                      {t("status")}
+                    </FormLabel>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                      >
+                        <option value="Published">{t("published")}</option>
+                        <option value="Draft">{t("draft")}</option>
+                        <option value="Archived">{t("archived")}</option>
+                      </select>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-                {t("status")}
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
-              >
-                <option value="Published">{t("published")}</option>
-                <option value="Draft">{t("draft")}</option>
-                <option value="Archived">{t("archived")}</option>
-              </select>
-            </div>
           </div>
-        </div>
 
         {/* Media Selector with crop positioning */}
         <div className="bg-card rounded-xl border border-border/40 p-6 space-y-4 shadow-sm">
@@ -529,6 +587,13 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
               </button>
             </div>
           )}
+          
+          {/* Error Message for Poster */}
+          {form.formState.errors.posterId && (
+            <div className="pt-2">
+              <p className="text-[0.8rem] font-medium text-destructive">{t(form.formState.errors.posterId.message as string)}</p>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -542,7 +607,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
 
           <button
             type="submit"
-            disabled={isSaving || !title || !categoryId || !collectionId}
+            disabled={!form.formState.isValid || isSaving}
             className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
           >
             {isSaving ? (
@@ -559,6 +624,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           </button>
         </div>
       </form>
+      </Form>
 
       {/* Modals */}
       {activeCropMediaId && (

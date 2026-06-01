@@ -2,10 +2,11 @@ import { BaseError } from "./base";
 
 export class ConflictError extends BaseError {
   readonly statusCode = 409;
-  readonly errorCode = "CONFLICT";
+  public readonly errorCode: string;
 
-  constructor(message: string = "Resource conflict") {
+  constructor(message: string = "Resource conflict", errorCode: string = "CONFLICT") {
     super(message);
+    this.errorCode = errorCode;
   }
 
   serialize() {

@@ -52,6 +52,10 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
   const [titles, setTitles] = useState<Record<string, string>>({});
   const [descriptions, setDescriptions] = useState<Record<string, string>>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+
+  const getFieldError = (field: string) => serverErrors[field] || serverErrors[`${field}.ru`] || serverErrors[`${field}.en`];
 
   const entity = isPost ? postData?.data : isCategory ? categoryData?.data : isTag ? tagData?.data : isCollection ? collectionData?.data : systemData?.data;
 
@@ -87,6 +91,13 @@ export default function LocalizationDetailPage({ params }: PageProps) {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveStatus(null);
+    setIsSubmitted(true);
+    setServerErrors({});
+
+    const requiredLangs = activeLanguages.filter(l => l === "ru" || l === "en");
+    for (const lang of requiredLangs) {
+      if (!titles[lang] || !titles[lang].trim()) return;
+    }
 
     try {
       if (isSystem) {
@@ -124,6 +135,13 @@ export default function LocalizationDetailPage({ params }: PageProps) {
       setSaveStatus({ type: "success", message: t("translations_success") || "Saved successfully!" });
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err: any) {
+      if (err?.data?.error?.details) {
+        const newErrors: Record<string, string> = {};
+        err.data.error.details.forEach((detail: any) => {
+          newErrors[detail.field] = detail.message;
+        });
+        setServerErrors(newErrors);
+      }
       console.error("Failed to save translations", err);
       setSaveStatus({ type: "error", message: t("translations_error") || "Error saving" });
     }
@@ -132,8 +150,14 @@ export default function LocalizationDetailPage({ params }: PageProps) {
   const updateField = (lang: string, field: "title" | "desc", val: string) => {
     if (field === "title") {
       setTitles(prev => ({ ...prev, [lang]: val }));
+      if (getFieldError(`title.${lang}`) || getFieldError("title")) {
+        setServerErrors(prev => ({ ...prev, [`title.${lang}`]: "", title: "" }));
+      }
     } else {
       setDescriptions(prev => ({ ...prev, [lang]: val }));
+      if (getFieldError(`description.${lang}`) || getFieldError("description")) {
+        setServerErrors(prev => ({ ...prev, [`description.${lang}`]: "", description: "" }));
+      }
     }
   };
 
@@ -174,7 +198,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-6">
+      <form onSubmit={handleSave} className="space-y-6" noValidate>
         <div className={`grid grid-cols-1 md:grid-cols-${Math.min(activeLanguages.length, 3)} gap-6`}>
           {activeLanguages.map((lang) => (
             <div key={lang} className="bg-card rounded-xl border border-border/40 p-6 shadow-sm space-y-4 relative">
@@ -189,15 +213,16 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {isSystem ? "Content" : "Title"} ({lang})
                 </label>
-                <input
-                  type="text"
-                  value={titles[lang] || ""}
-                  onChange={(e) => updateField(lang, "title", e.target.value)}
-                  placeholder="..."
-                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
-                  required={lang === "ru" || lang === "en"} // require base languages usually
-                />
-              </div>
+                  <input
+                    type="text"
+                    value={titles[lang] || ""}
+                    onChange={(e) => updateField(lang, "title", e.target.value)}
+                    placeholder="..."
+                    className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary transition-all ${((lang === "ru" || lang === "en") && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title") ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
+                    required={lang === "ru" || lang === "en"} // require base languages usually
+                  />
+                  {(((lang === "ru" || lang === "en") && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title")) && <p className="text-[0.8rem] font-medium text-destructive mt-1.5">{getFieldError(`title.${lang}`) || getFieldError("title") || t("VALIDATION_ERROR") || "This field is required"}</p>}
+                </div>
 
               {!isTag && !isSystem && (
                 <div className="space-y-1.5">
@@ -209,8 +234,9 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                     onChange={(e) => updateField(lang, "desc", e.target.value)}
                     placeholder="..."
                     rows={6}
-                    className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
+                    className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary transition-all ${getFieldError(`description.${lang}`) || getFieldError("description") ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
                   />
+                  {(getFieldError(`description.${lang}`) || getFieldError("description")) && <p className="text-[0.8rem] font-medium text-destructive mt-1.5">{getFieldError(`description.${lang}`) || getFieldError("description")}</p>}
                 </div>
               )}
             </div>

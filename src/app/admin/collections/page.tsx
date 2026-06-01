@@ -10,6 +10,11 @@ import {
 } from "@/store/api";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useTranslation } from "@/i18n";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { collectionSchema } from "@/common/validation/schemas";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 
 export default function AdminCollections() {
   const { t, loc, locale } = useTranslation();
@@ -21,34 +26,40 @@ export default function AdminCollections() {
   const collections = response?.data || [];
 
   // Form State
+  const defaultValues = {
+    title: { ru: "", en: "" },
+    description: { ru: "", en: "" },
+    main: false,
+  };
+
+  const form = useForm<z.infer<typeof collectionSchema>>({
+    resolver: zodResolver(collectionSchema) as any,
+    defaultValues,
+    mode: "onChange"
+  });
+
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [activeCollectionObj, setActiveCollectionObj] = useState<any>(null);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState("");
-  const [isMain, setIsMain] = useState(false);
 
   const resetForm = () => {
     setIsEditing(null);
     setActiveCollectionObj(null);
-    setTitle("");
-    setDescription("");
-    setIsMain(false);
+    form.reset(defaultValues);
   };
 
   const handleEdit = (col: any) => {
     setIsEditing(col.id);
     setActiveCollectionObj(col);
-    setTitle(typeof col.title === "string" ? col.title : col.title?.[locale] || col.title?.ru || "");
-    setDescription(typeof col.description === "string" ? col.description : col.description?.[locale] || col.description?.ru || "");
-    setIsMain(col.main || false);
+    form.reset({
+      title: typeof col.title === "string" ? { ru: col.title, en: "" } : { ru: col.title?.ru || "", en: col.title?.en || "" },
+      description: typeof col.description === "string" ? { ru: col.description, en: "" } : { ru: col.description?.ru || "", en: col.description?.en || "" },
+      main: col.main || false,
+    });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-
+  const onSubmit = async (values: z.infer<typeof collectionSchema>) => {
     try {
       if (isEditing) {
         const existingTitle = activeCollectionObj?.title && typeof activeCollectionObj.title === "object" ? activeCollectionObj.title : {};
@@ -56,19 +67,20 @@ export default function AdminCollections() {
 
         await updateCollection({ 
           id: isEditing, 
-          title: { ...existingTitle, [locale]: title.trim() },
-          description: { ...existingDesc, [locale]: description.trim() },
-          main: isMain 
+          ...values,
+          title: { ...existingTitle, ...values.title },
+          description: { ...existingDesc, ...values.description },
         }).unwrap();
       } else {
-        await createCollection({
-          title: { [locale]: title.trim() },
-          description: { [locale]: description.trim() },
-          main: isMain
-        }).unwrap();
+        await createCollection(values).unwrap();
       }
       resetForm();
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.data?.error?.details) {
+        err.data.error.details.forEach((detail: any) => {
+          form.setError(detail.field as any, { type: "server", message: detail.message });
+        });
+      }
       console.error("Failed to save collection", err);
     }
   };
@@ -185,71 +197,95 @@ export default function AdminCollections() {
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Title */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t("title")}
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t("placeholder_collection_title")}
-                className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+              
+              {/* Title */}
+              <FormField
+                control={form.control}
+                name={`title.${locale}` as any}
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t("title")}
+                    </FormLabel>
+                    <FormControl>
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder={t("placeholder_collection_title")}
+                        className={`w-full px-3.5 py-2 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.title ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {/* Description */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t("description")}
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t("placeholder_collection_desc")}
-                rows={4}
-                className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              {/* Description */}
+              <FormField
+                control={form.control}
+                name={`description.${locale}` as any}
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t("description")}
+                    </FormLabel>
+                    <FormControl>
+                      <textarea
+                        {...field}
+                        placeholder={t("placeholder_collection_desc")}
+                        rows={4}
+                        className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            {/* Main flag checkbox */}
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="isMain"
-                checked={isMain}
-                onChange={(e) => setIsMain(e.target.checked)}
-                className="rounded border-border bg-transparent text-primary focus:ring-0 w-4 h-4 cursor-pointer"
+              {/* Main flag checkbox */}
+              <FormField
+                control={form.control}
+                name="main"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-2">
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="rounded border-border bg-transparent text-primary focus:ring-0 w-4 h-4 cursor-pointer mt-1"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer select-none">
+                        {t("main_collection")}
+                      </FormLabel>
+                    </div>
+                  </FormItem>
+                )}
               />
-              <label
-                htmlFor="isMain"
-                className="text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer select-none"
+
+              <button
+                type="submit"
+                disabled={!form.formState.isValid || isCreating || isUpdating}
+                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
               >
-                {t("main_collection")}
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isCreating || isUpdating || !title.trim()}
-              className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
-            >
-              {isCreating || isUpdating ? (
-                <>
-                  <Loader2 className="animate-spin" size={16} />
-                  {t("saving")}
-                </>
-              ) : (
-                <>
-                  {isEditing ? <Save size={16} /> : <Plus size={16} />}
-                  {isEditing ? t("save") : t("add_collection")}
-                </>
-              )}
-            </button>
-          </form>
+                {isCreating || isUpdating ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    {t("saving")}
+                  </>
+                ) : (
+                  <>
+                    {isEditing ? <Save size={16} /> : <Plus size={16} />}
+                    {isEditing ? t("save") : t("add_collection")}
+                  </>
+                )}
+              </button>
+            </form>
+          </Form>
         </div>
       </div>
 

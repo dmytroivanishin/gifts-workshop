@@ -5,6 +5,9 @@ import { randomUUID } from "crypto";
 import { paginate } from "./pagination";
 import { ConflictError } from "@/common/errors/conflict";
 import { storageService } from "@/modules/storage/StorageService";
+import { drizzleDatabase } from "@/repositories/drizzle/database";
+import { posts, postsToMedia } from "@/repositories/drizzle/schema";
+import { eq, sql } from "drizzle-orm";
 
 export class MediaService implements IMediaService {
   constructor(
@@ -59,11 +62,24 @@ export class MediaService implements IMediaService {
   }
 
   async deleteMedia(id: string): Promise<boolean> {
-    const posterPosts = await this.postRepo.getByQuery({ poster: id });
-    const mediaPosts = await this.postRepo.getByQuery({ "media.media": id });
-
-    if (posterPosts.length > 0 || mediaPosts.length > 0) {
-      throw new ConflictError("Cannot delete media that is in use by a post.");
+    const db = drizzleDatabase.getDb();
+    
+    const [{ posterCount }] = await db
+      .select({ posterCount: sql<number>`count(*)` })
+      .from(posts)
+      .where(eq(posts.posterId, id));
+      
+    if (Number(posterCount) > 0) {
+      throw new ConflictError("Невозможно удалить медиа, так как оно используется в посте", "MEDIA_IN_USE");
+    }
+    
+    const [{ galleryCount }] = await db
+      .select({ galleryCount: sql<number>`count(*)` })
+      .from(postsToMedia)
+      .where(eq(postsToMedia.mediaId, id));
+      
+    if (Number(galleryCount) > 0) {
+      throw new ConflictError("Невозможно удалить медиа, так как оно используется в посте", "MEDIA_IN_USE");
     }
 
     return this.mediaRepo.delete(id);

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { X, Check, Loader2 } from "lucide-react";
 import { useGetMediaQuery } from "@/store/api";
 
+import { useTranslation } from "@/i18n";
+
 interface MediaPickerModalProps {
   onClose: () => void;
   onSelect: (mediaArray: { mediaId: string; url: string }[]) => void;
@@ -13,6 +15,7 @@ interface MediaPickerModalProps {
 export default function MediaPickerModal({ onClose, onSelect, selectedIds }: MediaPickerModalProps) {
   const { data: mediaResponse, isLoading } = useGetMediaQuery();
   const mediaList = mediaResponse?.data || [];
+  const { t } = useTranslation();
   
   const [currentSelected, setCurrentSelected] = useState<string[]>(selectedIds);
 
@@ -41,8 +44,8 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
         {/* Header */}
         <div className="flex items-center justify-between border-b pb-3">
           <div>
-            <h3 className="font-heading text-lg font-semibold text-foreground">Select Media</h3>
-            <p className="text-xs text-muted-foreground">Choose images from your library to add to this project.</p>
+            <h3 className="font-heading text-lg font-semibold text-foreground">{t("select_media")}</h3>
+            <p className="text-xs text-muted-foreground">{t("select_media_description")}</p>
           </div>
           <button
             type="button"
@@ -61,7 +64,7 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
             </div>
           ) : mediaList.length === 0 ? (
             <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-              No media found in the library. Go to Media manager to upload.
+              {t("no_media_found")}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-1">
@@ -97,20 +100,20 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
         {/* Footer */}
         <div className="border-t pt-4 flex justify-between items-center mt-auto">
           <span className="text-sm font-medium text-muted-foreground">
-            {currentSelected.length} items selected
+            {currentSelected.length} {t("items_selected")}
           </span>
           <div className="flex gap-2">
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted font-medium text-sm transition-colors"
             >
-              Cancel
+              {t("cancel")}
             </button>
             <button
               onClick={handleSave}
               className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
             >
-              Confirm Selection
+              {t("confirm_selection")}
             </button>
           </div>
         </div>

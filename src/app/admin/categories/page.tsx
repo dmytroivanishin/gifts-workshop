@@ -16,6 +16,11 @@ import {
 import Combobox from "@/components/ui/combobox";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useTranslation } from "@/i18n";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { categorySchema } from "@/common/validation/schemas";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 export default function AdminCategories() {
   const { t, loc, locale } = useTranslation();
@@ -43,15 +48,23 @@ export default function AdminCategories() {
   const [deleteTargetId, setDeleteTargetId] = useState("");
 
   // Form State
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const form = useForm<z.infer<typeof categorySchema>>({
+    resolver: zodResolver(categorySchema) as any,
+    defaultValues: {
+      title: { ru: "", en: "" },
+      description: { ru: "", en: "" },
+      collectionId: undefined as any, // So it fails validation if empty
+      parentId: null,
+      tagsIds: [],
+      color: { id: "", color: "" }
+    },
+    mode: "onChange"
+  });
+
   const [color, setColor] = useState("");
   const [selectedColorId, setSelectedColorId] = useState("");
   const [sessionColorId, setSessionColorId] = useState("");
   const [isCreatingColorPending, setIsCreatingColorPending] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [collectionId, setCollectionId] = useState("");
-  const [parentId, setParentId] = useState("");
 
   const collections = collectionsResponse?.data || [];
 
@@ -149,32 +162,37 @@ export default function AdminCategories() {
     }
   };
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title || !collectionId || !selectedColorId || isCreatingColorPending) return;
+  const handleAdd = async (values: z.infer<typeof categorySchema>) => {
+    if (!selectedColorId || isCreatingColorPending) return;
 
     try {
-      await saveCategory({
-        title: { [locale]: title },
-        description: { [locale]: description },
+      // Use the actual selected color details from state
+      const submissionValues = {
+        ...values,
         color: { id: selectedColorId, color: color },
-        collectionId: collectionId,
-        parentId: parentId || null,
-        tagsIds: selectedTags,
-      }).unwrap();
+      };
 
-      setTitle("");
-      setDescription("");
+      await saveCategory(submissionValues).unwrap();
+
+      form.reset();
       setColor("");
       setSelectedColorId("");
-      setSelectedTags([]);
-      setCollectionId("");
-      setParentId("");
       setSessionColorId("");
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.data?.error?.details) {
+        err.data.error.details.forEach((detail: any) => {
+          form.setError(detail.field as any, { type: "server", message: detail.message });
+        });
+      }
       console.error("Failed to add category", err);
     }
   };
+
+  // Sync color state to form to ensure validation passes
+  useEffect(() => {
+    form.setValue("color.id", selectedColorId, { shouldValidate: true });
+    form.setValue("color.color", color || "#000000", { shouldValidate: true });
+  }, [selectedColorId, color, form]);
 
   const handleSave = async (id: string) => {
     if (!editTitle || !editCollectionId || !editSelectedColorId || isEditingColorPending) return;
@@ -448,137 +466,180 @@ export default function AdminCategories() {
         {/* Add New Category */}
         <div className="lg:col-span-4 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
           <h3 className="font-semibold text-sm text-foreground border-b pb-2">{t("add_category")}</h3>
-          <form onSubmit={handleAdd} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("title")}</label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t("placeholder_category_title")}
-                className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-4" noValidate>
+              
+              <FormField
+                control={form.control}
+                name={`title.${locale}` as any}
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("title")}</FormLabel>
+                    <FormControl>
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder={t("placeholder_category_title")}
+                        className={`w-full px-3.5 py-2 rounded-lg border bg-transparent text-sm outline-none focus:border-primary ${form.formState.errors.title ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("description")}</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t("placeholder_category_desc")}
-                className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
-                rows={3}
+              <FormField
+                control={form.control}
+                name={`description.${locale}` as any}
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("description")}</FormLabel>
+                    <FormControl>
+                      <textarea
+                        {...field}
+                        placeholder={t("placeholder_category_desc")}
+                        className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
+                        rows={3}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("collections")}</label>
-              <select
-                value={collectionId}
-                onChange={(e) => setCollectionId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
-                required
+              <FormField
+                control={form.control}
+                name="collectionId"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("collections")}</FormLabel>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className={`w-full px-3.5 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer ${form.formState.errors.collectionId ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
+                      >
+                        <option value="" disabled>{t("placeholder_select_collection")}</option>
+                        {collections.map((col: any) => (
+                          <option key={col.id} value={col.id} className="bg-card text-foreground">
+                            {col.title?.ru || col.title?.en || col.title || ""}
+                          </option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="parentId"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("parent_category")}</FormLabel>
+                    <FormControl>
+                      <select
+                        {...field}
+                        value={field.value || ""}
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                      >
+                        <option value="">{t("none_main_category")}</option>
+                        {categories.map((c: any) => {
+                          const titleStr = typeof c.title === "string" ? c.title : c.title?.ru || "";
+                          return (
+                            <option key={c.id} value={c.id} className="bg-card text-foreground">
+                              {titleStr}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </FormControl>
+                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tagsIds"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tags")}</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        options={tagOptions}
+                        value={field.value || []}
+                        onChange={(val) => field.onChange(val)}
+                        placeholder={t("placeholder_select_tags")}
+                        searchPlaceholder={t("placeholder_search_tags")}
+                        allowCreate
+                        createLabel={t("add_new_tag_prompt")}
+                        multiple
+                        onCreate={handleCreateTag}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  </FormItem>
+                )}
+              />
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("color_accent")}</label>
+                
+                {/* Presets Grid */}
+                {colorsList.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 p-2 rounded-lg bg-muted/30 border border-border/40">
+                    {colorsList.map((c: any) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => {
+                          setColor(c.color);
+                          setSelectedColorId(c.id);
+                        }}
+                        className={`w-6 h-6 rounded-full border transition-all hover:scale-110 cursor-pointer ${
+                          color.toLowerCase() === c.color.toLowerCase()
+                            ? "border-primary ring-2 ring-primary/20 scale-105"
+                            : "border-border/60"
+                        }`}
+                        style={{ backgroundColor: c.color }}
+                        title={c.color}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent"
+                  />
+                  <span className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">{color}</span>
+                  {isCreatingColorPending && (
+                    <span className="text-xs text-muted-foreground animate-pulse flex items-center gap-1">
+                      <Loader2 size={12} className="animate-spin" />
+                      Сохранение цвета...
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={!form.formState.isValid || isSaving || isCreatingColorPending}
+                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
               >
-                <option value="" disabled>{t("placeholder_select_collection")}</option>
-                {collections.map((col: any) => (
-                  <option key={col.id} value={col.id} className="bg-card text-foreground">
-                    {col.title?.ru || col.title?.en || col.title || ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("parent_category")}</label>
-              <select
-                value={parentId}
-                onChange={(e) => setParentId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
-              >
-                <option value="">{t("none_main_category")}</option>
-                {categories.map((c: any) => {
-                  const titleStr = typeof c.title === "string" ? c.title : c.title?.ru || "";
-                  return (
-                    <option key={c.id} value={c.id} className="bg-card text-foreground">
-                      {titleStr}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tags")}</label>
-              <Combobox
-                options={tagOptions}
-                value={selectedTags}
-                onChange={(val) => setSelectedTags(val)}
-                placeholder={t("placeholder_select_tags")}
-                searchPlaceholder={t("placeholder_search_tags")}
-                allowCreate
-                createLabel={t("add_new_tag_prompt")}
-                multiple
-                onCreate={handleCreateTag}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("color_accent")}</label>
-               
-               {/* Presets Grid */}
-               {colorsList.length > 0 && (
-                 <div className="flex flex-wrap gap-1.5 p-2 rounded-lg bg-muted/30 border border-border/40">
-                   {colorsList.map((c: any) => (
-                     <button
-                       key={c.id}
-                       type="button"
-                       onClick={() => {
-                         setColor(c.color);
-                         setSelectedColorId(c.id);
-                       }}
-                       className={`w-6 h-6 rounded-full border transition-all hover:scale-110 cursor-pointer ${
-                         color.toLowerCase() === c.color.toLowerCase()
-                           ? "border-primary ring-2 ring-primary/20 scale-105"
-                           : "border-border/60"
-                       }`}
-                       style={{ backgroundColor: c.color }}
-                       title={c.color}
-                     />
-                   ))}
-                 </div>
-               )}
-
-               <div className="flex items-center gap-3">
-                 <input
-                   type="color"
-                   value={color}
-                   onChange={(e) => setColor(e.target.value)}
-                   className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent"
-                 />
-                 <span className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">{color}</span>
-                 {isCreatingColorPending && (
-                   <span className="text-xs text-muted-foreground animate-pulse flex items-center gap-1">
-                     <Loader2 size={12} className="animate-spin" />
-                     Сохранение цвета...
-                   </span>
-                 )}
-               </div>
-             </div>
-
-             <button
-               type="submit"
-               disabled={isSaving || isCreatingColorPending}
-               className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
-             >
-               {(isSaving || isCreatingColorPending) ? (
-                 <Loader2 size={16} className="animate-spin" />
-               ) : (
-                 <Plus size={16} />
-               )}
-               {t("add_category")}
-             </button>
-          </form>
+                {(isSaving || isCreatingColorPending) ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Plus size={16} />
+                )}
+                {t("add_category")}
+              </button>
+            </form>
+          </Form>
         </div>
       </div>
 

@@ -59,7 +59,8 @@ export class CategoryController {
   async deleteCategory(request: Request, id: string) {
     try {
       const resolvedId = await resolveId(id, (slug) => this.categoryService.getCategoryBySlug(slug));
-      throw new ForbiddenError("Categories cannot be deleted to preserve database integrity");
+      await this.categoryService.deleteCategory(resolvedId);
+      return sendSuccess(null);
     } catch (error: any) {
       return sendError(error);
     }

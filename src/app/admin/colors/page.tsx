@@ -10,6 +10,11 @@ import {
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { colorSchema } from "@/common/validation/schemas";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 export default function AdminColors() {
   const { t } = useTranslation();
@@ -21,8 +26,13 @@ export default function AdminColors() {
 
   const colors = colorsResponse?.data || [];
 
-  // Form State
-  const [newColorHex, setNewColorHex] = useState("#FFD2D2");
+  const defaultValues = { color: "#FFD2D2" };
+
+  const form = useForm<z.infer<typeof colorSchema>>({
+    resolver: zodResolver(colorSchema) as any,
+    defaultValues,
+    mode: "onChange"
+  });
 
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -32,14 +42,16 @@ export default function AdminColors() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState("");
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newColorHex.trim()) return;
-
+  const onSubmit = async (values: z.infer<typeof colorSchema>) => {
     try {
-      await createColor({ color: newColorHex }).unwrap();
-      setNewColorHex("#FFD2D2");
-    } catch (err) {
+      await createColor(values).unwrap();
+      form.reset(defaultValues);
+    } catch (err: any) {
+      if (err?.data?.error?.details) {
+        err.data.error.details.forEach((detail: any) => {
+          form.setError(detail.field as any, { type: "server", message: detail.message });
+        });
+      }
       console.error("Failed to add color", err);
     }
   };
@@ -85,37 +97,46 @@ export default function AdminColors() {
         <div className="p-6 rounded-xl border border-border bg-card shadow-sm space-y-4">
           <h2 className="text-lg font-semibold text-foreground">{t("add_color")}</h2>
           
-          <form onSubmit={handleAdd} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">HEX</label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={newColorHex}
-                  onChange={(e) => setNewColorHex(e.target.value)}
-                  className="w-12 h-12 rounded-lg border border-border cursor-pointer bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={newColorHex}
-                  onChange={(e) => setNewColorHex(e.target.value)}
-                  placeholder="#HEX"
-                  className="flex-1 px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary uppercase transition-colors"
-                  maxLength={7}
-                  required
-                />
-              </div>
-            </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+              <FormField
+                control={form.control}
+                name="color"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">HEX</FormLabel>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="w-12 h-12 rounded-lg border border-border cursor-pointer bg-transparent shrink-0"
+                      />
+                      <FormControl>
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="#HEX"
+                          className={`flex-1 px-3.5 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary uppercase transition-colors ${form.formState.errors.color ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
+                          maxLength={7}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  </FormItem>
+                )}
+              />
 
-            <button
-              type="submit"
-              disabled={isCreating}
-              className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
-            >
-              {isCreating ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-              {t("add_color")}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={!form.formState.isValid || isCreating}
+                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
+              >
+                {isCreating ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                {t("add_color")}
+              </button>
+            </form>
+          </Form>
         </div>
 
         {/* Right column: Color list */}

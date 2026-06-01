@@ -10,6 +10,11 @@ import {
 } from "@/store/api";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useTranslation } from "@/i18n";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { tagSchema } from "@/common/validation/schemas";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 export default function AdminTags() {
   const { t, loc, locale } = useTranslation();
@@ -22,9 +27,18 @@ export default function AdminTags() {
   const [updateTag, { isLoading: isUpdating }] = useUpdateTagMutation();
   const [deleteTag, { isLoading: isDeleting }] = useDeleteTagMutation();
 
+  const defaultValues = {
+    name: { ru: "", en: "" }
+  };
+
+  const form = useForm<z.infer<typeof tagSchema>>({
+    resolver: zodResolver(tagSchema) as any,
+    defaultValues,
+    mode: "onChange"
+  });
+
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [activeTagObj, setActiveTagObj] = useState<any>(null);
-  const [tagName, setTagName] = useState("");
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState("");
   const [editTagName, setEditTagName] = useState("");
@@ -72,15 +86,17 @@ export default function AdminTags() {
     };
   }, [hasMore, isFetching, isLoading]);
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tagName.trim()) return;
-
+  const onSubmit = async (values: z.infer<typeof tagSchema>) => {
     try {
-      await createTag({ name: { [locale]: tagName.trim() } }).unwrap();
-      setTagName("");
+      await createTag(values).unwrap();
+      form.reset(defaultValues);
       setPage(1); // Reset to page 1 to fetch the latest
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.data?.error?.details) {
+        err.data.error.details.forEach((detail: any) => {
+          form.setError(detail.field as any, { type: "server", message: detail.message });
+        });
+      }
       console.error("Failed to add tag", err);
     }
   };
@@ -224,28 +240,37 @@ export default function AdminTags() {
         {/* Add New Tag */}
         <div className="lg:col-span-4 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
           <h3 className="font-semibold text-sm text-foreground border-b pb-2">{t("add_new_tag")}</h3>
-          <form onSubmit={handleAdd} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tag_name")}</label>
-              <input
-                type="text"
-                value={tagName}
-                onChange={(e) => setTagName(e.target.value)}
-                placeholder={t("placeholder_vintage")}
-                className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+              <FormField
+                control={form.control}
+                name={`name.${locale}` as any}
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tag_name")}</FormLabel>
+                    <FormControl>
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder={t("placeholder_vintage")}
+                        className={`w-full px-3.5 py-2 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.name ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <button
-              type="submit"
-              disabled={isCreating}
-              className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
-            >
-              <Plus size={16} />
-              {t("create_tag")}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={!form.formState.isValid || isCreating}
+                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
+              >
+                <Plus size={16} />
+                {t("create_tag")}
+              </button>
+            </form>
+          </Form>
         </div>
       </div>
 
