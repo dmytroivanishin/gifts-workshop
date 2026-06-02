@@ -144,9 +144,9 @@ export default function AdminTags() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Tags List */}
-        <div className="lg:col-span-8 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
+        <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
           <div className="p-4 border-b border-border bg-muted/30">
             <h2 className="text-sm font-semibold text-foreground">{t("all_tags")} ({tagsResponse?.meta?.totalItems || tags.length})</h2>
           </div>
@@ -160,42 +160,42 @@ export default function AdminTags() {
               tags.map((tag: any) => (
                 <div
                   key={tag.id}
-                  className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors"
+                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"
                 >
                   {isEditing === tag.id ? (
-                    <div className="flex-1 mr-4">
+                    <div className="flex-1 w-full sm:mr-4">
                       <input
                         type="text"
                         value={editTagName}
                         onChange={(e) => setEditTagName(e.target.value)}
                         placeholder={t("tag_name_placeholder")}
-                        className="w-full max-w-[300px] px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                        className="w-full sm:max-w-[300px] px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                         autoFocus
                       />
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-1">
-                      <span className="font-semibold text-sm text-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/60 w-fit">
+                    <div className="flex flex-col gap-1 w-full sm:w-auto overflow-hidden">
+                      <span className="font-semibold text-sm text-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/60 w-fit truncate max-w-full">
                         #{loc(tag.name)}
                       </span>
                     </div>
                   )}
 
-                  <div className="flex items-center gap-1.5 ml-4">
+                  <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
                     {isEditing === tag.id ? (
                       <>
                         <button
                           onClick={() => handleSave(tag.id)}
                           disabled={isUpdating}
-                          className="p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
+                          className="p-2 sm:p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
                         >
-                          <Save size={16} />
+                          <Save size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
                         </button>
                         <button
                           onClick={() => setIsEditing(null)}
-                          className="p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+                          className="p-2 sm:p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
                         >
-                          <X size={16} />
+                          <X size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
                         </button>
                       </>
                     ) : (
@@ -207,18 +207,18 @@ export default function AdminTags() {
                             const tagTitle = loc(tag.name);
                             setEditTagName(tagTitle);
                           }}
-                          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
+                          className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
                           title={t("rename_tag")}
                         >
-                          <Edit size={16} />
+                          <Edit size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(tag.id)}
                           disabled={isDeleting}
-                          className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
+                          className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
                           title={t("delete_tag")}
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
                         </button>
                       </>
                     )}
@@ -238,7 +238,7 @@ export default function AdminTags() {
         </div>
 
         {/* Add New Tag */}
-        <div className="lg:col-span-4 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
+        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
           <h3 className="font-semibold text-sm text-foreground border-b pb-2">{t("add_new_tag")}</h3>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>

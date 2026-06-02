@@ -113,9 +113,9 @@ export default function AdminCollections() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Collections List */}
-        <div className="lg:col-span-7 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
+        <div className="lg:col-span-7 order-2 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
           <div className="p-4 border-b border-border bg-muted/30">
             <h2 className="text-sm font-semibold text-foreground">
               {t("collections")} ({collections.length})
@@ -131,9 +131,9 @@ export default function AdminCollections() {
               collections.map((col: any) => (
                 <div
                   key={col.id}
-                  className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors"
+                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"
                 >
-                  <div className="flex-1 min-w-0 pr-4">
+                  <div className="flex-1 min-w-0 pr-0 sm:pr-4">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm text-foreground truncate">
                         {loc(col.title)}
@@ -153,23 +153,23 @@ export default function AdminCollections() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-1.5 ml-4 flex-shrink-0">
+                  <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
                     <button
                       onClick={() => handleEdit(col)}
-                      className={`p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer ${
+                      className={`p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer ${
                         isEditing === col.id ? "bg-muted text-foreground" : ""
                       }`}
                       title={t("edit_collection")}
                     >
-                      <Edit size={16} />
+                      <Edit size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleDeleteClick(col.id)}
                       disabled={isDeleting}
-                      className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
+                      className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
                       title={t("delete_collection")}
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -181,7 +181,7 @@ export default function AdminCollections() {
         </div>
 
         {/* Add / Edit Form */}
-        <div className="lg:col-span-5 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
+        <div className="lg:col-span-5 order-1 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b pb-2">
             <h3 className="font-semibold text-sm text-foreground">
               {isEditing ? t("edit_collection") : t("add_collection")}

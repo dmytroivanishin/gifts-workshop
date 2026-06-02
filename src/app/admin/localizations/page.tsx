@@ -98,19 +98,19 @@ export default function AdminLocalizations() {
 
   return (
     <div className="space-y-6 font-sans">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Languages className="text-primary" size={24} />
             {t("translations_title") || "Localizations"}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-1">
             {t("translations_subtitle") || "Manage content translations"}
           </p>
         </div>
         <button
           onClick={() => router.push('/admin/languages')}
-          className="px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:bg-primary/90 transition-colors cursor-pointer"
+          className="w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:bg-primary/90 transition-colors cursor-pointer text-center"
         >
           {t("manage_languages") || "Manage Languages"}
         </button>
@@ -122,7 +122,7 @@ export default function AdminLocalizations() {
           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {t("entity_type") || "Entity Type"}
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-2">
             {[
               { id: "post", label: t("projects") || "Projects" },
               { id: "category", label: t("categories") || "Categories" },
@@ -134,7 +134,7 @@ export default function AdminLocalizations() {
                 key={type.id}
                 type="button"
                 onClick={() => handleEntityChange(type.id as EntityType)}
-                className={`px-4 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer border ${
+                className={`w-full lg:w-auto px-4 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer border ${
                   entityType === type.id 
                     ? "bg-primary text-primary-foreground border-primary shadow-sm" 
                     : "bg-secondary border-border/40 text-muted-foreground hover:text-foreground"

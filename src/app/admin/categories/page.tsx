@@ -253,9 +253,9 @@ export default function AdminCategories() {
         <p className="text-sm text-muted-foreground">{t("categories_subtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Category List */}
-        <div className="lg:col-span-8 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
+        <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
           <div className="p-4 border-b border-border bg-muted/30">
             <h2 className="text-sm font-semibold text-foreground">{t("categories")}</h2>
           </div>
@@ -272,16 +272,16 @@ export default function AdminCategories() {
                 const catColor = cat.color?.color || "transparent";
 
                 return (
-                  <div key={cat.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
+                  <div key={cat.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/10 transition-colors">
                     {isEditing === cat.id ? (
-                      <div className="flex-1 space-y-3 mr-4">
+                      <div className="flex-1 space-y-4 sm:space-y-3 w-full">
                         <div className="grid grid-cols-1 gap-2">
                           <input
                             type="text"
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
                             placeholder={t("title")}
-                            className="w-full px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
+                            className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                           />
                         </div>
                         <div className="grid grid-cols-1 gap-2">
@@ -289,7 +289,7 @@ export default function AdminCategories() {
                             value={editDescription}
                             onChange={(e) => setEditDescription(e.target.value)}
                             placeholder={t("description")}
-                            className="w-full px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
+                            className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                             rows={2}
                           />
                         </div>
@@ -298,7 +298,7 @@ export default function AdminCategories() {
                           <select
                             value={editCollectionId}
                             onChange={(e) => setEditCollectionId(e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                            className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                             required
                           >
                             <option value="" disabled>{t("placeholder_select_collection")}</option>
@@ -314,7 +314,7 @@ export default function AdminCategories() {
                           <select
                             value={editParentId}
                             onChange={(e) => setEditParentId(e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                            className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                           >
                             <option value="">{t("none_main_category")}</option>
                             {categories
@@ -344,7 +344,7 @@ export default function AdminCategories() {
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("color_accent")}</label>
                           {/* Presets Grid */}
                           {colorsList.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 p-1.5 rounded-lg bg-muted/30 border border-border/40">
+                            <div className="flex flex-wrap gap-2 sm:gap-1.5 p-2 sm:p-1.5 rounded-lg bg-muted/30 border border-border/40">
                               {colorsList.map((c: any) => (
                                 <button
                                   key={c.id}
@@ -353,7 +353,7 @@ export default function AdminCategories() {
                                     setEditColor(c.color);
                                     setEditSelectedColorId(c.id);
                                   }}
-                                  className={`w-5 h-5 rounded-full border transition-all hover:scale-110 cursor-pointer ${
+                                  className={`w-6 h-6 sm:w-5 sm:h-5 rounded-full border transition-all hover:scale-110 cursor-pointer ${
                                     editColor.toLowerCase() === c.color.toLowerCase()
                                       ? "border-primary ring-2 ring-primary/20 scale-105"
                                       : "border-border/60"
@@ -370,7 +370,7 @@ export default function AdminCategories() {
                               type="color"
                               value={editColor}
                               onChange={(e) => setEditColor(e.target.value)}
-                              className="w-8 h-8 rounded-lg border border-border cursor-pointer bg-transparent"
+                              className="w-10 h-10 sm:w-8 sm:h-8 rounded-lg border border-border cursor-pointer bg-transparent"
                             />
                             <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{editColor}</span>
                             {isEditingColorPending && (
@@ -383,9 +383,9 @@ export default function AdminCategories() {
                         </div>
                       </div>
                     ) : (
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-sm text-foreground">{catTitleRu}</span>
+                          <span className="font-semibold text-sm text-foreground truncate">{catTitleRu}</span>
                           <span
                             className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider"
                             style={{
@@ -405,49 +405,49 @@ export default function AdminCategories() {
                               : "";
                             return parentTitle ? (
                               <span className="text-[11px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
-                                {t("subcategory_of")} <strong>{parentTitle}</strong>
+                                {t("subcategory_of")} <strong className="truncate max-w-[100px] sm:max-w-[150px]">{parentTitle}</strong>
                               </span>
                             ) : null;
                           })()}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{catDescRu}</p>
+                        <p className="text-xs text-muted-foreground mt-1.5 sm:mt-0.5 line-clamp-2">{catDescRu}</p>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-1.5 ml-4">
+                    <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
                       {isEditing === cat.id ? (
                         <>
                            <button
                              onClick={() => handleSave(cat.id)}
                              disabled={isEditingColorPending}
-                             className="p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center"
+                             className="p-2 sm:p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center"
                            >
-                             {isEditingColorPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                             {isEditingColorPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                            </button>
                           <button
                             onClick={() => {
                               setIsEditing(null);
                               setActiveCategoryObj(null);
                             }}
-                            className="p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
                           >
-                            <X size={16} />
+                            <X size={18} />
                           </button>
                         </>
                       ) : (
                         <>
                           <button
                             onClick={() => handleStartEdit(cat)}
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
                           >
-                            <Edit size={16} />
+                            <Edit size={18} />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(cat.id)}
-                            className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer"
                             title={t("delete")}
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={18} />
                           </button>
                         </>
                       )}
@@ -464,7 +464,7 @@ export default function AdminCategories() {
         </div>
 
         {/* Add New Category */}
-        <div className="lg:col-span-4 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
+        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
           <h3 className="font-semibold text-sm text-foreground border-b pb-2">{t("add_category")}</h3>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-4" noValidate>

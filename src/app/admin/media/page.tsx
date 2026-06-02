@@ -196,21 +196,22 @@ export default function AdminMedia() {
                   alt={item.name}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
                 />
-                
-                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => handleDeleteClick(item.id)}
-                    className="p-1.5 rounded-md bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
-                    title={t("delete")}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
               </div>
 
-              <div className="p-3 border-t bg-muted/20">
-                <div className="font-semibold text-xs text-foreground truncate">{item.name}</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">{item.size}</div>
+              <div className="p-3 border-t bg-muted/20 space-y-2.5">
+                <div className="min-w-0">
+                  <div className="font-semibold text-xs text-foreground truncate">{item.name}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">{item.size}</div>
+                </div>
+                
+                <button
+                  onClick={() => handleDeleteClick(item.id)}
+                  className="w-full py-2 sm:py-1.5 rounded-lg border border-destructive/20 hover:border-destructive bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                  title={t("delete")}
+                >
+                  <Trash2 size={14} />
+                  {t("delete") || "Delete"}
+                </button>
               </div>
             </div>
           ))}

@@ -92,9 +92,9 @@ export default function AdminColors() {
         <p className="text-sm text-muted-foreground">{t("colors_subtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Left column: Add color form */}
-        <div className="p-6 rounded-xl border border-border bg-card shadow-sm space-y-4">
+        <div className="lg:col-span-4 order-1 p-6 rounded-xl border border-border bg-card shadow-sm space-y-4">
           <h2 className="text-lg font-semibold text-foreground">{t("add_color")}</h2>
           
           <Form {...form}>
@@ -117,7 +117,7 @@ export default function AdminColors() {
                           {...field}
                           type="text"
                           placeholder="#HEX"
-                          className={`flex-1 px-3.5 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary uppercase transition-colors ${form.formState.errors.color ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
+                          className={`flex-1 w-full px-3.5 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary uppercase transition-colors ${form.formState.errors.color ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
                           maxLength={7}
                         />
                       </FormControl>
@@ -140,7 +140,7 @@ export default function AdminColors() {
         </div>
 
         {/* Right column: Color list */}
-        <div className="md:col-span-2 p-6 rounded-xl border border-border bg-card shadow-sm">
+        <div className="lg:col-span-8 order-2 p-6 rounded-xl border border-border bg-card shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">{t("colors_manager")}</h2>
             {isLoading && <Loader2 size={20} className="animate-spin text-muted-foreground" />}
@@ -151,20 +151,20 @@ export default function AdminColors() {
               colors.map((c: any) => {
                 const isEditingThis = editingId === c.id;
                 return (
-                  <div key={c.id} className="py-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
+                  <div key={c.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
                     {isEditingThis ? (
-                      <div className="flex items-center gap-3 flex-1">
+                      <div className="flex items-center gap-3 flex-1 w-full">
                         <input
                           type="color"
                           value={editColorHex}
                           onChange={(e) => setEditColorHex(e.target.value)}
-                          className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent"
+                          className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent flex-shrink-0"
                         />
                         <input
                           type="text"
                           value={editColorHex}
                           onChange={(e) => setEditColorHex(e.target.value)}
-                          className="w-40 px-3 py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary uppercase"
+                          className="w-full sm:w-40 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary uppercase"
                           maxLength={7}
                           required
                         />
@@ -172,7 +172,7 @@ export default function AdminColors() {
                     ) : (
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-10 h-10 rounded-full border border-border/40 shadow-inner flex items-center justify-center"
+                          className="w-10 h-10 rounded-full border border-border/40 shadow-inner flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: c.color }}
                         />
                         <div className="flex flex-col">
@@ -182,23 +182,23 @@ export default function AdminColors() {
                       </div>
                     )}
 
-                    <div className="flex items-center gap-1.5 ml-4">
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
                       {isEditingThis ? (
                         <>
                           <button
                             onClick={() => handleSave(c.id)}
                             disabled={isUpdating}
-                            className="p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center"
+                            className="p-2 sm:p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center"
                           >
-                            {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                            {isUpdating ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                           </button>
                           <button
                             onClick={() => {
                               setEditingId(null);
                             }}
-                            className="p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
                           >
-                            <X size={16} />
+                            <X size={18} />
                           </button>
                         </>
                       ) : (
@@ -208,16 +208,16 @@ export default function AdminColors() {
                               setEditingId(c.id);
                               setEditColorHex(c.color);
                             }}
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
                           >
-                            <Edit size={16} />
+                            <Edit size={18} />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(c.id)}
                             disabled={isDeleting}
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-destructive disabled:opacity-50 cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-destructive disabled:opacity-50 cursor-pointer"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={18} />
                           </button>
                         </>
                       )}
