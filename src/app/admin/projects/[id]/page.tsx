@@ -63,7 +63,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     description: { ru: "", en: "" },
     collectionId: undefined as any,
     categoryId: undefined as any,
-    in_stock: true,
+    inStock: true,
     status: "Published" as any,
     tagsIds: [],
     media: [],
@@ -125,7 +125,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
         description: typeof post.description === "string" ? { ru: post.description, en: "" } : { ru: post.description?.ru || "", en: post.description?.en || "" },
         categoryId: cat,
         collectionId: col || post.collectionId || "",
-        in_stock: post.in_stock,
+        inStock: post.inStock,
         status: post.status,
         tagsIds: post.tags ? post.tags.map((t: any) => typeof t === "string" ? t : t.id) : [],
         posterId: post.poster ? (typeof post.poster === "string" ? post.poster : post.poster.id) : undefined as any,
@@ -433,7 +433,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
             <div className="grid grid-cols-2 gap-4 pt-2">
               <FormField
                 control={form.control}
-                name="in_stock"
+                name="inStock"
                 render={({ field }) => (
                   <FormItem className="space-y-1.5">
                     <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
@@ -442,13 +442,14 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                     <div className="flex items-center gap-2 min-h-11">
                       <FormControl>
                         <input
+                          id="inStockCheckbox"
                           type="checkbox"
                           checked={field.value}
                           onChange={field.onChange}
                           className="rounded border-border bg-transparent text-primary focus:ring-0 w-4 h-4 cursor-pointer"
                         />
                       </FormControl>
-                      <label className="text-sm font-medium text-muted-foreground cursor-pointer">
+                      <label htmlFor="inStockCheckbox" className="text-sm font-medium text-muted-foreground cursor-pointer select-none">
                         {t("in_stock")}
                       </label>
                     </div>

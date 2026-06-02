@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Upload, Trash2, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { useDispatch } from "react-redux";
+import { addNotification } from "@/store/slices/notificationSlice";
 
 interface MediaItem {
   id: string;
@@ -14,6 +16,7 @@ interface MediaItem {
 
 export default function AdminMedia() {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -72,6 +75,14 @@ export default function AdminMedia() {
           if (result.data && result.data.length > 0) {
             newMediaItems.push(...result.data);
           }
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            const errorCode = errorData?.error?.code || errorData?.code || 'UPLOAD_FAILED';
+            dispatch(addNotification({ 
+                type: 'error', 
+                messageKey: errorCode,
+                details: errorData?.error?.message || errorData?.message || 'Upload failed'
+            }));
         }
       }
       
@@ -83,9 +94,11 @@ export default function AdminMedia() {
           size: `${m.width}x${m.height}`
         }));
         setMedia(prev => [...mappedItems, ...prev]);
+        dispatch(addNotification({ type: 'success', messageKey: 'media_uploaded' }));
       }
     } catch (error) {
       console.error("Upload error", error);
+      dispatch(addNotification({ type: 'error', messageKey: 'UNKNOWN_ERROR', details: 'Network error' }));
     } finally {
       setIsUploading(false);
       setUploadStats({ total: 0, current: 0 });
@@ -119,10 +132,22 @@ export default function AdminMedia() {
   const handleConfirmDelete = async () => {
     if (!deleteTargetId) return;
     try {
-      await fetch(`/api/v1/media/${deleteTargetId}`, { method: 'DELETE' });
-      setMedia(media.filter((item) => item.id !== deleteTargetId));
+      const response = await fetch(`/api/v1/media/${deleteTargetId}`, { method: 'DELETE' });
+      if (response.ok) {
+        setMedia(media.filter((item) => item.id !== deleteTargetId));
+        dispatch(addNotification({ type: 'success', messageKey: 'media_deleted' }));
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const errorCode = errorData?.error?.code || errorData?.code || 'DELETE_FAILED';
+        dispatch(addNotification({ 
+          type: 'error', 
+          messageKey: errorCode, 
+          details: errorData?.error?.message || errorData?.message || 'Failed to delete media' 
+        }));
+      }
     } catch (error) {
       console.error("Failed to delete", error);
+      dispatch(addNotification({ type: 'error', messageKey: 'UNKNOWN_ERROR', details: 'Network error' }));
     } finally {
       setIsDeleteOpen(false);
       setDeleteTargetId("");

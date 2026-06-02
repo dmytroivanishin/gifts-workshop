@@ -145,6 +145,19 @@ export default function AdminDashboard() {
                   const categoryTitle = loc(rawCatTitle);
                   const postTitle = loc(post.title);
                   const postDesc = loc(post.description);
+                  
+                  const getStatusClasses = (status: string) => {
+                    switch (status) {
+                      case "Published": return "bg-[#DADFC6] text-[#5C6535]";
+                      case "Draft": return "bg-[#F9E4D3] text-[#904504]";
+                      case "Archived": return "bg-[#E7E7E5] text-[#504E47]";
+                      default: return "bg-secondary text-secondary-foreground";
+                    }
+                  };
+                  const getStockClasses = (inStock: boolean) => {
+                    return inStock ? "bg-[#DADFC6] text-[#5C6535]" : "bg-[#E7E7E5] text-[#504E47]";
+                  };
+
                   return (
                     <tr key={post.id} className="hover:bg-muted/30 transition-colors">
                       <td className="p-4">
@@ -166,17 +179,13 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-4 text-sm text-muted-foreground">{categoryTitle}</td>
                       <td className="p-4">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                          {post.status}
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusClasses(post.status)}`}>
+                          {t(post.status.toLowerCase() as any)}
                         </span>
                       </td>
                       <td className="p-4">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          post.in_stock 
-                            ? "bg-olive-bg text-olive-text" 
-                            : "bg-secondary text-secondary-foreground"
-                        }`}>
-                          {post.in_stock ? t("in_stock") : t("on_request")}
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStockClasses(post.inStock)}`}>
+                          {post.inStock ? t("in_stock") : t("on_request")}
                         </span>
                       </td>
                       <td className="p-4 text-right">
@@ -218,6 +227,19 @@ export default function AdminDashboard() {
                 const categoryTitle = loc(rawCatTitle);
                 const postTitle = loc(post.title);
                 const postDesc = loc(post.description);
+
+                const getStatusClasses = (status: string) => {
+                  switch (status) {
+                    case "Published": return "bg-[#DADFC6] text-[#5C6535]";
+                    case "Draft": return "bg-[#F9E4D3] text-[#904504]";
+                    case "Archived": return "bg-[#E7E7E5] text-[#504E47]";
+                    default: return "bg-secondary text-secondary-foreground";
+                  }
+                };
+                const getStockClasses = (inStock: boolean) => {
+                  return inStock ? "bg-[#DADFC6] text-[#5C6535]" : "bg-[#E7E7E5] text-[#504E47]";
+                };
+
                 return (
                   <div key={`mobile-${post.id}`} className="p-4 space-y-4 hover:bg-muted/10 transition-colors">
                     <div className="flex items-start gap-3">
@@ -240,15 +262,11 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                          {post.status}
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusClasses(post.status)}`}>
+                          {t(post.status.toLowerCase() as any)}
                         </span>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                          post.in_stock 
-                            ? "bg-olive-bg text-olive-text" 
-                            : "bg-secondary text-secondary-foreground"
-                        }`}>
-                          {post.in_stock ? t("in_stock") : t("on_request")}
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStockClasses(post.inStock)}`}>
+                          {post.inStock ? t("in_stock") : t("on_request")}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">

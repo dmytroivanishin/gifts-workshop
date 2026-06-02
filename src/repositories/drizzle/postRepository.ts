@@ -69,7 +69,11 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     return results;
   }
 
-  override async getAll(options?: PaginationOptions & { populate?: string }): Promise<PopulatedPost[]> {
+  override async getAll(options?: QueryOptions): Promise<PopulatedPost[]> {
+    if (options && Object.keys(options).some(k => !['page', 'limit', 'offset', 'populate'].includes(k))) {
+      return this.getByQuery(options, options);
+    }
+
     const db = drizzleDatabase.getDb();
     const queryOptions: any = {
       with: this.getWithRelations()
@@ -116,7 +120,13 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     
     const conditions = [];
 
-    if (query.categoryId) conditions.push(eq(posts.categoryId, query.categoryId));
+    if (query.categoryId) {
+      if (Array.isArray(query.categoryId)) {
+        conditions.push(inArray(posts.categoryId, query.categoryId));
+      } else {
+        conditions.push(eq(posts.categoryId, query.categoryId));
+      }
+    }
     if (query.collectionId) conditions.push(eq(posts.collectionId, query.collectionId));
     if (query.status) conditions.push(eq(posts.status, query.status));
     if (query.inStock !== undefined) conditions.push(eq(posts.inStock, query.inStock));
@@ -135,7 +145,9 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
 
     if (options?.limit) {
       queryOptions.limit = options.limit;
-      if (options?.page) {
+      if (options?.offset !== undefined) {
+        queryOptions.offset = options.offset;
+      } else if (options?.page) {
         queryOptions.offset = (options.page - 1) * options.limit;
       }
     }

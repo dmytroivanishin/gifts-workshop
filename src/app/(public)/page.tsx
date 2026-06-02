@@ -96,6 +96,7 @@ function HomeContent() {
     search: search.trim() !== "" ? search : undefined,
     category: categoryQueryParam || undefined,
     inStock: inStockOnly ? true : undefined,
+    status: "Published",
     page,
     limit: 6,
     populate: "category,media",

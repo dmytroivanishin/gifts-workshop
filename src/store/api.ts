@@ -1,19 +1,60 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { Post, Category, Tag, Collection, Media, PopulatedPost, PopulatedCategory, Language, SystemText } from "@/types";
+
+const baseQuery = fetchBaseQuery({ 
+  baseUrl: "/api/v1",
+  credentials: "include" 
+});
+
+let isRefreshing = false;
+let refreshPromise: Promise<any> | null = null;
+
+const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
+  const result = await baseQuery(args, api, extraOptions);
+  
+  if (!result.error || result.error.status !== 401) {
+    return result;
+  }
+
+  if (isRefreshing) {
+    await refreshPromise;
+    return baseQuery(args, api, extraOptions);
+  }
+
+  isRefreshing = true;
+  refreshPromise = baseQuery({
+    url: '/auth/refresh',
+    method: 'POST',
+  }, api, extraOptions) as Promise<any>;
+  
+  const refreshResult = await refreshPromise;
+  
+  isRefreshing = false;
+  refreshPromise = null;
+
+  if (refreshResult.data) {
+    return baseQuery(args, api, extraOptions);
+  } 
+  
+  if (typeof window !== 'undefined') {
+    window.location.href = '/admin/login';
+  }
+  
+  return result;
+};
+
 export const api = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: "/api/v1",
-    credentials: "include" 
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Post", "Category", "Tag", "Collection", "Media", "Color", "Language", "SystemText"],
   endpoints: (builder) => ({
-    getPosts: builder.query<{ data: PopulatedPost[]; meta: any }, { search?: string; category?: string; inStock?: boolean; page?: number; limit?: number; populate?: string } | void>({
+    getPosts: builder.query<{ data: PopulatedPost[]; meta: any }, { search?: string; category?: string; inStock?: boolean; status?: string; page?: number; limit?: number; populate?: string } | void>({
       query: (params) => {
         const urlParams = new URLSearchParams();
         if (params?.search) urlParams.append("search", params.search);
         if (params?.category) urlParams.append("category", params.category);
         if (params?.inStock) urlParams.append("inStock", "true");
+        if (params?.status) urlParams.append("status", params.status);
         if (params?.page) urlParams.append("page", params.page.toString());
         if (params?.limit) urlParams.append("limit", params.limit.toString());
         if (params?.populate) urlParams.append("populate", params.populate);

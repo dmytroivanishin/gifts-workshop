@@ -70,7 +70,7 @@ export const postSchema = z.object({
   title: localizedStringSchema,
   description: optionalLocalizedStringSchema.optional(),
   slug: z.string().regex(/^[a-z0-9-]+$/, "error_invalid_slug").optional(),
-  in_stock: z.boolean().default(true),
+  inStock: z.boolean().default(true),
   status: z.enum(["Draft", "Published", "Archived"]).default("Draft"),
   posterId: z.string({ message: "error_media_required" }).uuid("error_media_required"),
   collectionId: z.string({ message: "error_collection_required" }).uuid("error_collection_required"),

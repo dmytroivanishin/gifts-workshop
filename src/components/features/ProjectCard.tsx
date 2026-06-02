@@ -136,13 +136,13 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-md z-10"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-md z-10 cursor-pointer"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-md z-10"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-md z-10 cursor-pointer"
               >
                 <ChevronRight size={16} />
               </button>
@@ -187,7 +187,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={toggleLike}
-              className="p-1 -mr-1 z-10"
+              className="p-1 -mr-1 z-10 cursor-pointer"
             >
               <Heart
                 size={22}

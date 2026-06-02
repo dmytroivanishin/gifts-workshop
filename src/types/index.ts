@@ -87,7 +87,7 @@ export interface Post {
   title: LocalizedText;
   description: LocalizedText;
   slug: string;
-  in_stock: boolean;
+  inStock: boolean;
   status: PostStatus;
   
   // Foreign Keys

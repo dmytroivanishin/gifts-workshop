@@ -252,6 +252,7 @@ export default function AdminCollections() {
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-2">
                     <FormControl>
                       <input
+                        id="mainCollectionCheckbox"
                         type="checkbox"
                         checked={field.value}
                         onChange={field.onChange}
@@ -259,7 +260,7 @@ export default function AdminCollections() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer select-none">
+                      <FormLabel htmlFor="mainCollectionCheckbox" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer select-none">
                         {t("main_collection")}
                       </FormLabel>
                     </div>

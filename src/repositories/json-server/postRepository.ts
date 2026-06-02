@@ -25,7 +25,7 @@ export class PostRepository extends BaseRepository<Post, PopulatedPost> implemen
 
       if (id) params.append("id", id);
       if (status) params.append("status", status);
-      if (inStock !== undefined) params.append("in_stock", inStock.toString());
+      if (inStock !== undefined) params.append("inStock", inStock.toString());
       if (categoryId) {
         if (Array.isArray(categoryId)) {
           categoryId.forEach(id => params.append("categoryId", id));

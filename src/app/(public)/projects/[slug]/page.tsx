@@ -101,15 +101,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                 {categoryTitle}
               </span>
               
-              <span
-                style={{
-                  backgroundColor: post.in_stock ? "#DADFC6" : "#E2E8F0",
-                  color: post.in_stock ? "#5C6535" : "#4A5568",
-                }}
-                className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-              >
-                {post.in_stock ? t("in_stock") : t("made_to_order")}
-              </span>
+              <div className={`px-4 py-1.5 rounded-full text-sm font-medium border ${post.inStock ? "bg-[#DADFC6] border-[#DADFC6] text-[#5C6535]" : "bg-white border-[#DADFC6] text-[#5C6535]"}`}>
+                {post.inStock ? t("in_stock") : t("on_request")}
+              </div>
             </div>
 
             {/* Title */}

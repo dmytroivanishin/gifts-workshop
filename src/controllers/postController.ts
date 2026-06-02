@@ -18,6 +18,7 @@ export class PostController {
       const tag = searchParams.get("tag") || undefined;
       const collection = searchParams.get("collection") || undefined;
       const inStock = searchParams.get("inStock") === "true" ? true : undefined;
+      const status = searchParams.get("status") || undefined;
       const populate = searchParams.get("populate") || undefined;
       
       const pageStr = searchParams.get("page");
@@ -25,7 +26,7 @@ export class PostController {
       const page = pageStr ? parseInt(pageStr, 10) : undefined;
       const limit = limitStr ? parseInt(limitStr, 10) : undefined;
 
-      const result = await this.postService.getFilteredPosts({ search, category, tag, collection, inStock, page, limit, populate });
+      const result = await this.postService.getFilteredPosts({ search, category, tag, collection, inStock, status, page, limit, populate });
 
       return sendSuccess(result.data, result.meta);
     } catch (error: any) {
