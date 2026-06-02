@@ -154,6 +154,23 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   poster: one(media, { fields: [posts.posterId], references: [media.id] }),
   postsToTags: many(postsToTags),
   postsToMedia: many(postsToMedia),
+  comments: many(comments),
+}));
+
+export const comments = pgTable("comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  postId: uuid("post_id").references(() => posts.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  text: text("text").notNull(),
+  status: varchar("status", { length: 50 }).default("Review").notNull(),
+  replyId: uuid("reply_id"), // Self-referential FK to comments.id
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+});
+
+export const commentsRelations = relations(comments, ({ one, many }) => ({
+  post: one(posts, { fields: [comments.postId], references: [posts.id] }),
+  parent: one(comments, { fields: [comments.replyId], references: [comments.id], relationName: "parentComment" }),
+  replies: many(comments, { relationName: "parentComment" }),
 }));
 
 export const postsToMedia = pgTable("posts_to_media", {

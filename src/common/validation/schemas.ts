@@ -68,7 +68,7 @@ export const postMediaSchema = z.object({
 
 const optionalUuidSchema = z.preprocess(
   (v) => (v === "" || v === undefined || v === null ? null : v),
-  z.string({ invalid_type_error: "error_invalid_format" })
+  z.string({ message: "error_invalid_format" })
     .uuid("error_invalid_uuid")
     .nullable()
 );
@@ -78,20 +78,20 @@ export const postSchemaBase = z.object({
   description: optionalLocalizedStringSchema,
   slug: z.preprocess(
     (v) => (v === "" || v === undefined || v === null ? null : v),
-    z.string({ invalid_type_error: "error_invalid_format" }).regex(/^[a-z0-9-]+$/, "error_invalid_slug").nullable()
+    z.string({ message: "error_invalid_format" }).regex(/^[a-z0-9-]+$/, "error_invalid_slug").nullable()
   ),
-  inStock: z.boolean({ invalid_type_error: "error_invalid_format" }).default(true),
-  status: z.enum(["Draft", "Published", "Archived"], { invalid_type_error: "error_invalid_format" }).default("Draft"),
+  inStock: z.boolean({ message: "error_invalid_format" }).default(true),
+  status: z.enum(["Draft", "Published", "Archived"], { message: "error_invalid_format" }).default("Draft"),
   posterId: optionalUuidSchema,
   collectionId: optionalUuidSchema,
   categoryId: optionalUuidSchema,
   tagsIds: z.preprocess(
     (v) => (v === null || v === undefined || v === "" ? [] : v),
-    z.array(z.string({ invalid_type_error: "error_invalid_format" }).uuid("error_invalid_uuid"), { invalid_type_error: "error_invalid_format" }).default([])
+    z.array(z.string({ message: "error_invalid_format" }).uuid("error_invalid_uuid")).default([])
   ),
   media: z.preprocess(
     (v) => (v === null || v === undefined || v === "" ? [] : v),
-    z.array(postMediaSchema, { invalid_type_error: "error_invalid_format" }).default([])
+    z.array(postMediaSchema).default([])
   ),
 });
 
@@ -134,3 +134,11 @@ export const userSchema = z.object({
   name: z.string().min(1, "error_required_field"),
   password: z.string().min(6, "error_invalid_password").optional(), // Optional for updates
 });
+
+export const commentSchema = z.object({
+  postId: z.string().uuid("error_invalid_uuid"),
+  name: z.string().trim().min(1, "error_required_field").max(100, "error_name_too_long"),
+  text: z.string().trim().min(1, "error_required_field").max(2000, "error_text_too_long"),
+  replyId: optionalUuidSchema.optional(),
+});
+

@@ -1,4 +1,4 @@
-import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText } from "@/types";
+import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment } from "@/types";
 
 import { QueryOptions } from "@/repositories/interfaces";
 
@@ -73,3 +73,11 @@ export interface ISystemTextService {
   deleteSystemText(id: string): Promise<boolean>;
 }
 
+export interface ICommentService {
+  getFilteredComments(filters?: QueryOptions): Promise<PaginatedResult<Comment>>;
+  getCommentById(id: string, options?: { populate?: string }): Promise<Comment | undefined>;
+  createComment(body: any): Promise<Comment>;
+  updateCommentStatus(id: string, status: "Review" | "Approved" | "Rejected"): Promise<Comment | undefined>;
+  replyToComment(id: string, body: any): Promise<Comment>;
+  deleteComment(id: string): Promise<boolean>;
+}

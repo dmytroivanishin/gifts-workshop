@@ -114,6 +114,8 @@
     - `id`, `slug` (String), `name` (localized object `Record<string, string>`), `userId` (ref User).
 - **Post**:
     - `id`, `slug` (String), `title` (localized object `Record<string, string>`), `description` (localized object `Record<string, string>`), `media` (Array of PostMedia - stored as Embedded JSONB column), `posterId` (ref Media), `in_stock` (Boolean), `status` (String - Draft/Published/Archived), `collectionId` (ref Collection), `categoryId` (ref Category), `tagIds` (Array of Tag IDs), `userId` (ref User).
+- **Comment**:
+    - `id` (String / UUID), `postId` (ref Post, onDelete: cascade), `name` (String), `text` (String), `status` (String - Review/Approved/Rejected), `replyId` (ref Comment / self-referential FK, nullable), `createdAt` (Timestamp).
 - **PostMedia (Embedded JSON inside Post.media array)**:
     - `id` (String / UUID), `order` (Number), `mediaId` (ref Media), `position` (Position object).
 - **Position (Embedded JSON inside PostMedia)**:

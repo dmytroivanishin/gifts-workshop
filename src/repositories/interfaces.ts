@@ -1,4 +1,4 @@
-import { Category, PopulatedCategory, Collection, Color, Media, Post, PopulatedPost, Tag, User, PaginationOptions, Language, SystemText } from "@/types";
+import { Category, PopulatedCategory, Collection, Color, Media, Post, PopulatedPost, Tag, User, PaginationOptions, Language, SystemText, Comment, PopulatedComment } from "@/types";
 
 export interface QueryOptions extends PaginationOptions {
   search?: string;
@@ -8,6 +8,7 @@ export interface QueryOptions extends PaginationOptions {
   post?: string;
   inStock?: boolean;
   status?: string;
+  postId?: string;
   
   // Database-native flat fields for repository querying
   id?: string;
@@ -58,3 +59,8 @@ export interface ILanguageRepository extends IBaseRepository<Language> {
 }
 
 export interface ISystemTextRepository extends IBaseRepository<SystemText> {}
+
+export interface ICommentRepository extends IBaseRepository<Comment, PopulatedComment, QueryOptions> {
+  getByQuery(query: Record<string, any>, options?: PaginationOptions & { populate?: string }): Promise<PopulatedComment[]>;
+}
+

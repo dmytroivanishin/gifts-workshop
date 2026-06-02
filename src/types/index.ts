@@ -140,3 +140,21 @@ export interface PaginationOptions {
   limit?: number;
   offset?: number;
 }
+
+export type CommentStatus = "Review" | "Approved" | "Rejected";
+
+export interface Comment {
+  readonly id: string;
+  postId: string;
+  name: string;
+  text: string;
+  status: CommentStatus;
+  replyId?: string;
+  createdAt: Date;
+}
+
+export interface PopulatedComment extends Comment {
+  post?: Post;
+  parent?: Comment;
+  replies?: Comment[];
+}

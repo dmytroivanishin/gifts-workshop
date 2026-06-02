@@ -6,6 +6,7 @@ import { ChevronLeft, Send, MessageSquare, Mail, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useGetPostByIdQuery } from "@/store/api";
 import { useTranslation } from "@/i18n";
+import { CommentSection } from "@/components/features/comments/CommentSection";
 
 interface ProjectDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -144,7 +145,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   href="https://t.me/dmytro"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground font-sans text-sm font-medium hover:opacity-90 transition-opacity"
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#835952] text-white font-sans text-sm font-medium hover:bg-[#674742] transition-colors"
                 >
                   <Send size={16} />
                   Telegram
@@ -172,6 +173,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Comment Section */}
+      <CommentSection postId={post.id} />
     </div>
   );
 }

@@ -46,7 +46,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Post", "Category", "Tag", "Collection", "Media", "Color", "Language", "SystemText"],
+  tagTypes: ["Post", "Category", "Tag", "Collection", "Media", "Color", "Language", "SystemText", "Comment"],
   endpoints: (builder) => ({
     getPosts: builder.query<{ data: PopulatedPost[]; meta: any }, { search?: string; category?: string; inStock?: boolean; status?: string; page?: number; limit?: number; populate?: string } | void>({
       query: (params) => {
@@ -314,6 +314,59 @@ export const api = createApi({
        }),
        invalidatesTags: ["SystemText"],
      }),
+     getAdminComments: builder.query<{ data: any[]; meta: any }, { page?: number; limit?: number; postId?: string; status?: string } | void>({
+       query: (params) => {
+         const urlParams = new URLSearchParams();
+         if (params?.page) urlParams.append("page", params.page.toString());
+         if (params?.limit) urlParams.append("limit", params.limit.toString());
+         if (params?.postId) urlParams.append("postId", params.postId);
+         if (params?.status) urlParams.append("status", params.status);
+         return {
+           url: `/admin/comments?${urlParams.toString()}`,
+         };
+       },
+       providesTags: ["Comment"],
+     }),
+     updateCommentStatus: builder.mutation<{ data: any }, { id: string; status: string }>({
+       query: ({ id, status }) => ({
+         url: `/admin/comments/${id}/status`,
+         method: "PATCH",
+         body: { status },
+       }),
+       invalidatesTags: ["Comment", "Post"],
+     }),
+     replyToComment: builder.mutation<{ data: any }, { id: string; text: string; name?: string }>({
+       query: ({ id, ...body }) => ({
+         url: `/admin/comments/${id}/reply`,
+         method: "POST",
+         body,
+       }),
+       invalidatesTags: ["Comment", "Post"],
+     }),
+     deleteAdminComment: builder.mutation<{ success: boolean }, string>({
+       query: (id) => ({
+         url: `/admin/comments/${id}`,
+         method: "DELETE",
+       }),
+       invalidatesTags: ["Comment", "Post"],
+     }),
+     createPublicComment: builder.mutation<{ data: any }, { postId: string; name: string; text: string }>({
+       query: ({ postId, ...body }) => ({
+         url: `/posts/${postId}/comments`,
+         method: "POST",
+         body,
+       }),
+     }),
+     getPublicComments: builder.query<{ data: any[]; meta: any }, { postId: string; page?: number; limit?: number }>({
+        query: ({ postId, page, limit }) => {
+          const urlParams = new URLSearchParams();
+          if (page) urlParams.append("page", page.toString());
+          if (limit) urlParams.append("limit", limit.toString());
+          const queryStr = urlParams.toString();
+          return `/posts/${postId}/comments${queryStr ? `?${queryStr}` : ""}`;
+        },
+        providesTags: ["Comment"],
+      }),
    }),
  });
  
@@ -353,4 +406,10 @@ export const api = createApi({
    useCreateSystemTextMutation,
    useUpdateSystemTextMutation,
    useDeleteSystemTextMutation,
+   useGetAdminCommentsQuery,
+   useUpdateCommentStatusMutation,
+   useReplyToCommentMutation,
+   useDeleteAdminCommentMutation,
+   useCreatePublicCommentMutation,
+   useGetPublicCommentsQuery,
  } = api;
