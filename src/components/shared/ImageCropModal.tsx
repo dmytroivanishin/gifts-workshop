@@ -27,11 +27,11 @@ export default function ImageCropModal({
   const dragStart = useRef({ x: 0, y: 0 });
   const { t } = useTranslation();
 
+  const imgWidth = media?.width || 300;
+  const imgHeight = media?.height || 300;
+  const isPortrait = imgHeight > imgWidth || orientation?.toLowerCase() === "portrait";
+
   const constrainPosition = (x: number, y: number, currentZoom: number) => {
-    const imgWidth = media?.width || 300;
-    const imgHeight = media?.height || 300;
-    const isPortrait = imgHeight > imgWidth || orientation === "Portrait";
-    
     const baseWidth = isPortrait ? 300 : 300 * (imgWidth / imgHeight);
     const baseHeight = !isPortrait ? 300 : 300 * (imgHeight / imgWidth);
     
@@ -118,14 +118,16 @@ export default function ImageCropModal({
               alt="Crop workspace"
               className="absolute pointer-events-none transition-transform duration-75"
               style={{
-                left: "50%",
-                top: "50%",
-                width: orientation === "Portrait" ? "100%" : "auto",
-                height: orientation === "Landscape" ? "100%" : "auto",
-                minWidth: "100%",
-                minHeight: "100%",
+                left: `calc(50% + ${position.x / 3}%)`,
+                top: `calc(50% + ${position.y / 3}%)`,
+                width: isPortrait ? "100%" : "auto",
+                height: !isPortrait ? "100%" : "auto",
+                minWidth: isPortrait ? "100%" : "auto",
+                minHeight: !isPortrait ? "100%" : "auto",
+                maxWidth: "none",
+                maxHeight: "none",
                 transformOrigin: "center center",
-                transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+                transform: `translate(-50%, -50%) scale(${zoom})`,
               }}
             />
             {/* Guide Grid Overlays */}

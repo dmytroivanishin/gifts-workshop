@@ -106,15 +106,17 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
                     alt={loc(post.title)}
                     className="absolute transition-transform duration-700 ease-out group-hover:scale-103"
                     style={{
-                      left: "50%",
-                      top: "50%",
+                      left: pos ? `calc(50% + ${pos.x / 3}%)` : "50%",
+                      top: pos ? `calc(50% + ${pos.y / 3}%)` : "50%",
                       width: isPortrait ? "100%" : (isLandscape ? "auto" : "100%"),
                       height: isLandscape ? "100%" : (isPortrait ? "auto" : "100%"),
-                      minWidth: "100%",
-                      minHeight: "100%",
+                      minWidth: isPortrait ? "100%" : "auto",
+                      minHeight: isLandscape ? "100%" : "auto",
+                      maxWidth: "none",
+                      maxHeight: "none",
                       transformOrigin: "center center",
                       transform: pos 
-                        ? `translate(-50%, -50%) translate(${pos.x}px, ${pos.y}px) scale(${pos.zoom})` 
+                        ? `translate(-50%, -50%) scale(${pos.zoom})` 
                         : 'translate(-50%, -50%) scale(1)'
                     }}
                     initial={{ opacity: 0 }}

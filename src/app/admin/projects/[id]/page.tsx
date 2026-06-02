@@ -507,8 +507,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
               {selectedImages.map((img) => {
                 const isCover = coverImage === img.mediaId;
                 const mediaItem = mediaList.find(m => m.id === img.mediaId);
-                const isPortrait = mediaItem?.orientation === "Portrait" || (mediaItem?.height && mediaItem?.width && mediaItem.height > mediaItem.width);
-                const isLandscape = mediaItem?.orientation === "Landscape" || (mediaItem?.height && mediaItem?.width && mediaItem.width > mediaItem.height);
+                const isPortrait = mediaItem?.orientation?.toLowerCase() === "portrait" || (mediaItem?.height && mediaItem?.width && mediaItem.height > mediaItem.width);
+                const isLandscape = mediaItem?.orientation?.toLowerCase() === "landscape" || (mediaItem?.height && mediaItem?.width && mediaItem.width > mediaItem.height);
 
                 return (
                   <div
@@ -524,15 +524,17 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                       alt=""
                       className="absolute"
                       style={{
-                        left: "50%",
-                        top: "50%",
+                        left: img.position ? `calc(50% + ${img.position.x / 3}%)` : "50%",
+                        top: img.position ? `calc(50% + ${img.position.y / 3}%)` : "50%",
                         width: isPortrait ? "100%" : (isLandscape ? "auto" : "100%"),
                         height: isLandscape ? "100%" : (isPortrait ? "auto" : "100%"),
-                        minWidth: "100%",
-                        minHeight: "100%",
+                        minWidth: isPortrait ? "100%" : "auto",
+                        minHeight: isLandscape ? "100%" : "auto",
+                        maxWidth: "none",
+                        maxHeight: "none",
                         transformOrigin: "center center",
                         transform: img.position 
-                          ? `translate(-50%, -50%) translate(${img.position.x}px, ${img.position.y}px) scale(${img.position.zoom})` 
+                          ? `translate(-50%, -50%) scale(${img.position.zoom})` 
                           : 'translate(-50%, -50%) scale(1)'
                       }}
                     />

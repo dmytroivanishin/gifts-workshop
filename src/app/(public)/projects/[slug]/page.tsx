@@ -1,12 +1,13 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Send, MessageSquare, Mail, Loader2 } from "lucide-react";
+import { ChevronLeft, Send, MessageSquare, Mail, Loader2, ZoomIn } from "lucide-react";
 import { motion } from "framer-motion";
 import { useGetPostByIdQuery } from "@/store/api";
 import { useTranslation } from "@/i18n";
 import { CommentSection } from "@/components/features/comments/CommentSection";
+import { FullscreenGallery } from "@/components/shared/FullscreenGallery";
 
 interface ProjectDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -18,6 +19,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   
   const { data: response, isLoading } = useGetPostByIdQuery(slug);
   const post = response?.data;
+
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [initialImageIndex, setInitialImageIndex] = useState(0);
 
   if (isLoading) {
     return (
@@ -47,6 +51,11 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const categoryTitle = loc(post.category.title);
   const categoryColor = post.category.color!.color;
 
+  const handleImageClick = (index: number) => {
+    setInitialImageIndex(index);
+    setGalleryOpen(true);
+  };
+
   return (
     <div className="container mx-auto px-6 py-10 max-w-[1280px] font-sans">
       {/* Back Button */}
@@ -69,13 +78,20 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
                   key={index}
-                  className="mb-4 overflow-hidden rounded-2xl bg-muted"
+                  className="mb-4 overflow-hidden rounded-2xl bg-muted relative group cursor-pointer"
+                  onClick={() => handleImageClick(index)}
                 >
                   <img
                     src={img}
                     alt={`${loc(post.title)} - ${index + 1}`}
-                    className="w-full h-auto object-cover"
+                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  {/* Overlay for hover */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className="bg-white/90 backdrop-blur-sm p-3 rounded-full text-foreground shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                      <ZoomIn size={20} />
+                    </div>
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -176,6 +192,15 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
 
       {/* Comment Section */}
       <CommentSection postId={post.id} />
+
+      {/* Fullscreen Gallery */}
+      <FullscreenGallery
+        images={images}
+        initialIndex={initialImageIndex}
+        isOpen={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
+      />
     </div>
   );
 }
+
