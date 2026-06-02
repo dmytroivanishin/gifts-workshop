@@ -64,7 +64,7 @@ export class PostController {
     try {
       const rawBody = await request.json();
       const resolvedId = await resolveId(id, (slug) => this.postService.getPostBySlug(slug));
-      const body = await validateRequest(postSchema.partial(), rawBody);
+      const body = await validateRequest(postSchema, rawBody);
       const userId = await getUserId();
       const post = await this.postService.updatePost(resolvedId, { ...body, userId } as any);
       if (!post) {

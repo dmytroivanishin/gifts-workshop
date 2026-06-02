@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Save, Loader2, Image as ImageIcon, Move } from "lucide-react";
+import { ChevronLeft, Save, Loader2, Image as ImageIcon, Move, Archive as ArchiveIcon, Send } from "lucide-react";
 import Link from "next/link";
 import {
   useCreatePostMutation,
@@ -206,6 +206,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
 
   const onSubmit = async (values: z.infer<typeof postSchema>) => {
     try {
+      let postId = id;
       if (isEditMode) {
         const existingTitle = postResponse?.data?.title && typeof postResponse.data.title === "object" ? postResponse.data.title : {};
         const existingDesc = postResponse?.data?.description && typeof postResponse.data.description === "object" ? postResponse.data.description : {};
@@ -217,10 +218,17 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           description: { ...existingDesc, ...values.description },
         }).unwrap();
       } else {
-        await createPost(values).unwrap();
+        const res = await createPost(values).unwrap();
+        postId = res.data?.id;
       }
 
-      router.push("/admin/dashboard");
+      if (values.status === "Draft") {
+        if (!isEditMode && postId) {
+          router.replace(`/admin/projects/${postId}`);
+        }
+      } else {
+        router.push("/admin/dashboard");
+      }
     } catch (err: any) {
       if (err?.data?.error?.details) {
         err.data.error.details.forEach((detail: any) => {
@@ -272,6 +280,21 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
         label: isStarred ? `${tagTitle} (★)` : tagTitle,
       };
     });
+
+  const currentTitle = form.watch("title");
+  const hasAnyTitle = currentTitle && Object.values(currentTitle).some((val) => typeof val === "string" && val.trim() !== "");
+
+  const canPublish = !!(
+    hasAnyTitle &&
+    form.watch("collectionId") &&
+    form.watch("categoryId") &&
+    form.watch("posterId")
+  );
+
+  const handleActionClick = (status: "Draft" | "Published" | "Archived") => {
+    form.setValue("status", status);
+    form.handleSubmit(onSubmit)();
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 font-sans">
@@ -334,7 +357,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                   <FormControl>
                     <Combobox
                       options={collectionOptions}
-                      value={field.value}
+                      value={field.value || ""}
                       onChange={field.onChange}
                       placeholder={t("placeholder_select_collection")}
                       searchPlaceholder={t("placeholder_search_collections")}
@@ -357,7 +380,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                   <FormControl>
                     <Combobox
                       options={categoryOptions}
-                      value={field.value}
+                      value={field.value || ""}
                       onChange={(val) => {
                         const oldCat = categories.find((cat) => cat.id === field.value);
                         const oldTags = oldCat?.tagsIds || [];
@@ -429,8 +452,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
               )}
             />
 
-            {/* Stock & Status Row */}
-            <div className="grid grid-cols-2 gap-4 pt-2">
+            {/* Stock Row */}
+            <div className="pt-2">
               <FormField
                 control={form.control}
                 name="inStock"
@@ -453,28 +476,6 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                         {t("in_stock")}
                       </label>
                     </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem className="space-y-1.5">
-                    <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-                      {t("status")}
-                    </FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
-                      >
-                        <option value="Published">{t("published")}</option>
-                        <option value="Draft">{t("draft")}</option>
-                        <option value="Archived">{t("archived")}</option>
-                      </select>
-                    </FormControl>
                   </FormItem>
                 )}
               />
@@ -598,31 +599,65 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3">
-          <Link
-            href="/admin/dashboard"
-            className="px-5 py-2.5 rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors cursor-pointer"
-          >
-            {t("cancel")}
-          </Link>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <button
+              type="button"
+              onClick={() => handleActionClick("Archived")}
+              disabled={isSaving}
+              className="p-2.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+              title={t("archive")}
+            >
+              <ArchiveIcon size={18} />
+            </button>
+          </div>
 
-          <button
-            type="submit"
-            disabled={!form.formState.isValid || isSaving}
-            className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="animate-spin" size={16} />
-                {t("saving")}
-              </>
-            ) : (
-              <>
-                <Save size={16} />
-                {isEditMode ? t("save") : t("add_project")}
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/dashboard"
+              className="px-5 py-2.5 rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors cursor-pointer"
+            >
+              {t("cancel")}
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => handleActionClick("Draft")}
+              disabled={isSaving}
+              className="flex items-center gap-1.5 px-5 py-2.5 bg-[#F9E4D3] text-[#904504] text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {isSaving && form.getValues("status") === "Draft" ? (
+                <>
+                  <Loader2 className="animate-spin" size={16} />
+                  {t("saving")}
+                </>
+              ) : (
+                <>
+                  <Save size={16} />
+                  {t("save_draft") === "save_draft" ? "Сохранить" : t("save_draft")}
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleActionClick("Published")}
+              disabled={!canPublish || isSaving}
+              className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
+            >
+              {isSaving && form.getValues("status") === "Published" ? (
+                <>
+                  <Loader2 className="animate-spin" size={16} />
+                  {t("publishing") === "publishing" ? "Публикация..." : t("publishing")}
+                </>
+              ) : (
+                <>
+                  <Send size={16} />
+                  {t("publish") === "publish" ? "Опубликовать" : t("publish")}
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
       </Form>

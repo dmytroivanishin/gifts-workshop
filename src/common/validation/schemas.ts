@@ -66,17 +66,67 @@ export const postMediaSchema = z.object({
   position: positionSchema.optional(),
 });
 
-export const postSchema = z.object({
-  title: localizedStringSchema,
-  description: optionalLocalizedStringSchema.optional(),
-  slug: z.string().regex(/^[a-z0-9-]+$/, "error_invalid_slug").optional(),
-  inStock: z.boolean().default(true),
-  status: z.enum(["Draft", "Published", "Archived"]).default("Draft"),
-  posterId: z.string({ message: "error_media_required" }).uuid("error_media_required"),
-  collectionId: z.string({ message: "error_collection_required" }).uuid("error_collection_required"),
-  categoryId: z.string({ message: "error_category_required" }).uuid("error_category_required"),
-  tagsIds: z.array(z.string().uuid("error_invalid_uuid")).optional().default([]),
-  media: z.array(postMediaSchema).optional().default([]),
+const optionalUuidSchema = z.preprocess(
+  (v) => (v === "" || v === undefined || v === null ? null : v),
+  z.string({ invalid_type_error: "error_invalid_format" })
+    .uuid("error_invalid_uuid")
+    .nullable()
+);
+
+export const postSchemaBase = z.object({
+  title: optionalLocalizedStringSchema,
+  description: optionalLocalizedStringSchema,
+  slug: z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? null : v),
+    z.string({ invalid_type_error: "error_invalid_format" }).regex(/^[a-z0-9-]+$/, "error_invalid_slug").nullable()
+  ),
+  inStock: z.boolean({ invalid_type_error: "error_invalid_format" }).default(true),
+  status: z.enum(["Draft", "Published", "Archived"], { invalid_type_error: "error_invalid_format" }).default("Draft"),
+  posterId: optionalUuidSchema,
+  collectionId: optionalUuidSchema,
+  categoryId: optionalUuidSchema,
+  tagsIds: z.preprocess(
+    (v) => (v === null || v === undefined || v === "" ? [] : v),
+    z.array(z.string({ invalid_type_error: "error_invalid_format" }).uuid("error_invalid_uuid"), { invalid_type_error: "error_invalid_format" }).default([])
+  ),
+  media: z.preprocess(
+    (v) => (v === null || v === undefined || v === "" ? [] : v),
+    z.array(postMediaSchema, { invalid_type_error: "error_invalid_format" }).default([])
+  ),
+});
+
+export const postSchema = postSchemaBase.superRefine((data, ctx) => {
+  if (data.status === "Published") {
+    const hasAnyTitle = data.title && Object.values(data.title).some(val => typeof val === "string" && val.trim() !== "");
+    if (!hasAnyTitle) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "error_missing_title",
+        path: ["title"],
+      });
+    }
+    if (!data.posterId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "error_missing_poster",
+        path: ["posterId"],
+      });
+    }
+    if (!data.collectionId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "error_missing_collection",
+        path: ["collectionId"],
+      });
+    }
+    if (!data.categoryId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "error_missing_category",
+        path: ["categoryId"],
+      });
+    }
+  }
 });
 
 export const userSchema = z.object({
