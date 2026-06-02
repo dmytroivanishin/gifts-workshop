@@ -35,7 +35,7 @@ export default function ConfirmModal({
             <div className="p-1.5 rounded-full bg-[#F1E7E7] text-[#B87070] flex-shrink-0">
               <AlertTriangle size={18} />
             </div>
-            <h3 className="font-heading text-base font-semibold text-foreground">{title}</h3>
+            <h3 className="text-base font-semibold text-foreground">{title}</h3>
           </div>
           <button
             type="button"

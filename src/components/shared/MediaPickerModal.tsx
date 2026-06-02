@@ -44,7 +44,7 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
         {/* Header */}
         <div className="flex items-center justify-between border-b pb-3">
           <div>
-            <h3 className="font-heading text-lg font-semibold text-foreground">{t("select_media")}</h3>
+            <h3 className="text-lg font-semibold text-foreground">{t("select_media")}</h3>
             <p className="text-xs text-muted-foreground">{t("select_media_description")}</p>
           </div>
           <button

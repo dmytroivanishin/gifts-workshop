@@ -108,7 +108,7 @@ function LoginContent() {
 
       {/* Text */}
       <div className="text-center space-y-2">
-        <h1 className="font-heading text-2xl font-semibold text-foreground">
+        <h1 className="text-2xl font-semibold text-foreground">
           Вход в Панель
         </h1>
         <p className="text-sm text-muted-foreground">

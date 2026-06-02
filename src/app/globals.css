@@ -82,108 +82,108 @@
   --font-heading: 'Playfair Display', Georgia, serif;
 
   /* Base Colors */
-  --background: hsl(30 11% 98%);
-  --foreground: hsl(34 17% 10%);
+  --background: #FAFAF9;
+  --foreground: #1E1D1D;
 
   /* Card & Popover */
-  --card: hsl(30 11% 98%);
-  --card-foreground: hsl(34 17% 10%);
+  --card: #FAFAF9;
+  --card-foreground: #1E1D1D;
   
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(34 17% 10%);
+  --popover: #FFFFFF;
+  --popover-foreground: #1E1D1D;
 
   /* Primary (Core Brand Action) */
-  --primary: hsl(34 17% 10%);
-  --primary-foreground: hsl(30 11% 98%);
+  --primary: #1E1D1D;
+  --primary-foreground: #FAFAF9;
 
   /* Secondary */
-  --secondary: hsl(30 13% 91%);
-  --secondary-foreground: hsl(34 17% 10%);
+  --secondary: #EBE7E3;
+  --secondary-foreground: #1E1D1D;
 
   /* Muted */
-  --muted: hsl(36 10% 93%);
-  --muted-foreground: hsl(45 10% 46%);
+  --muted: #F6F4F3;
+  --muted-foreground: #827C6B;
 
   /* Accent (Hover states) */
-  --accent: hsl(30 13% 91%);
-  --accent-foreground: hsl(34 17% 10%);
+  --accent: #EBE7E3;
+  --accent-foreground: #1E1D1D;
 
   /* Destructive */
-  --destructive: hsl(0 35% 42%);
-  --destructive-foreground: hsl(0 0% 100%);
+  --destructive: #8F4A4A;
+  --destructive-foreground: #FFFFFF;
 
   /* UI Elements */
-  --border: hsl(30 13% 91%);
-  --input: hsl(30 13% 91%);
-  --ring: hsl(34 17% 10%);
+  --border: #EBE7E3;
+  --input: #EBE7E3;
+  --ring: #1E1D1D;
   
   --radius: 0.75rem;
 
   /* --- Custom Category Accents --- */
-  --color-rose-bg: hsl(0 25% 93%);
-  --color-rose-text: hsl(0 32% 42%);
-  --color-rose-muted: hsl(0 35% 58%);
+  --color-rose-bg: #F1E7E7;
+  --color-rose-text: #8F4A4A;
+  --color-rose-muted: #B87070;
   
-  --color-lime-bg: hsl(72 23% 92%);
-  --color-lime-text: hsl(71 31% 30%);
-  --color-lime-active: hsl(72 26% 83%);
+  --color-lime-bg: #EAECE0;
+  --color-lime-text: #5C6535;
+  --color-lime-active: #DADFC6;
   
-  --color-tan-bg: hsl(30 13% 91%);
-  --color-tan-text: hsl(32 22% 32%);
+  --color-tan-bg: #EBE7E3;
+  --color-tan-text: #63523F;
   
-  --color-sand-bg: hsl(38 13% 90%);
-  --color-sand-text: hsl(43 19% 29%);
+  --color-sand-bg: #EAE7E2;
+  --color-sand-text: #59513C;
   
-  --color-brown-bg: hsl(9 17% 92%);
-  --color-brown-text: hsl(9 23% 42%);
+  --color-brown-bg: #EFE9E8;
+  --color-brown-text: #835952;
   
-  --color-orange-bg: hsl(26 71% 91%);
-  --color-orange-text: hsl(28 92% 29%);
+  --color-orange-bg: #F9E4D3;
+  --color-orange-text: #904504;
   
-  --color-teal-bg: hsl(180 34% 90%);
-  --color-teal-text: hsl(180 53% 25%);
+  --color-teal-bg: #D8EFEF;
+  --color-teal-text: #1E6262;
   
-  --color-olive-bg: hsl(60 4% 91%);
-  --color-olive-text: hsl(48 6% 30%);
+  --color-olive-bg: #E7E7E5;
+  --color-olive-text: #504E47;
 
-  --heart-outline: hsl(0 31% 73%);
-  --heart-active: hsl(0 35% 58%);
+  --heart-outline: #D0A3A3;
+  --heart-active: #B87070;
 
   /* Sidebar (Admin defaults mapping) */
-  --sidebar: hsl(30 11% 98%);
-  --sidebar-foreground: hsl(34 17% 10%);
-  --sidebar-primary: hsl(180 53% 25%);
-  --sidebar-primary-foreground: hsl(180 34% 90%);
-  --sidebar-accent: hsl(60 4% 91%);
-  --sidebar-accent-foreground: hsl(48 6% 30%);
-  --sidebar-border: hsl(30 13% 91%);
-  --sidebar-ring: hsl(180 53% 25%);
+  --sidebar: #FAFAF9;
+  --sidebar-foreground: #1E1D1D;
+  --sidebar-primary: #1E6262;
+  --sidebar-primary-foreground: #D8EFEF;
+  --sidebar-accent: #E7E7E5;
+  --sidebar-accent-foreground: #504E47;
+  --sidebar-border: #EBE7E3;
+  --sidebar-ring: #1E6262;
 }
 
 .admin-area {
-  --background: hsl(30 11% 98%);
-  --foreground: hsl(34 17% 10%);
+  --background: #FAFAF9;
+  --foreground: #1E1D1D;
 
-  --primary: hsl(180 53% 25%);
-  --primary-foreground: hsl(180 34% 90%);
+  --primary: #1E6262;
+  --primary-foreground: #D8EFEF;
 
-  --secondary: hsl(60 4% 91%);
-  --secondary-foreground: hsl(48 6% 30%);
+  --secondary: #E7E7E5;
+  --secondary-foreground: #504E47;
 
-  --muted: hsl(60 4% 91%);
-  --muted-foreground: hsl(45 10% 46%);
+  --muted: #E7E7E5;
+  --muted-foreground: #827C6B;
 
-  --accent: hsl(30 13% 91%);
-  --accent-foreground: hsl(34 17% 10%);
+  --accent: #EBE7E3;
+  --accent-foreground: #1E1D1D;
 
-  --success: hsl(71 31% 30%);
-  --warning: hsl(28 92% 29%);
-  --destructive: hsl(0 32% 42%);
-  --info: hsl(45 10% 46%);
+  --success: #5C6535;
+  --warning: #904504;
+  --destructive: #8F4A4A;
+  --info: #827C6B;
   
-  --border: hsl(30 13% 91%);
-  --input: hsl(30 13% 91%);
-  --ring: hsl(180 53% 25%);
+  --border: #EBE7E3;
+  --input: #EBE7E3;
+  --ring: #1E6262;
 }
 
 @layer base {

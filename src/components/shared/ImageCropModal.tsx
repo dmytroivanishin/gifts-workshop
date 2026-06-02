@@ -89,7 +89,7 @@ export default function ImageCropModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b pb-3">
           <div>
-            <h3 className="font-heading text-lg font-semibold text-foreground">{t("position_cover_image")}</h3>
+            <h3 className="text-lg font-semibold text-foreground">{t("position_cover_image")}</h3>
             <p className="text-xs text-muted-foreground">{t("drag_to_position")}</p>
           </div>
           <button
