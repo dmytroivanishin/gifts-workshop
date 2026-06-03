@@ -1,9 +1,4 @@
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Portfolio",
-  description: "Handmade gifts portfolio",
-};
 
 export default function PublicLayout({
   children,
@@ -16,7 +11,7 @@ export default function PublicLayout({
         {children}
       </main>
       <footer className="border-t py-6 text-center text-muted-foreground">
-        © {new Date().getFullYear()} Portfolio. All rights reserved.
+        © {new Date().getFullYear()} {process.env.SITE_FOOTER || "Добрые Подарки | Kind Gifts. Все права защищены / All rights reserved."}
       </footer>
     </div>
   );
