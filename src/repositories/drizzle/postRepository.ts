@@ -2,7 +2,7 @@ import { DrizzleBaseRepository } from "./baseRepository";
 import { posts, postsToTags, tags, media, postsToMedia } from "./schema";
 import { Post, PopulatedPost, PaginationOptions } from "@/types";
 import { drizzleDatabase } from "./database";
-import { eq, and, sql, inArray } from "drizzle-orm";
+import { eq, and, sql, inArray, desc } from "drizzle-orm";
 import { IPostRepository, QueryOptions } from "../interfaces";
 
 type PostRecord = typeof posts.$inferSelect & {
@@ -76,7 +76,8 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
 
     const db = drizzleDatabase.getDb();
     const queryOptions: any = {
-      with: this.getWithRelations()
+      with: this.getWithRelations(),
+      orderBy: [desc(posts.createdAt)]
     };
     
     if (options?.limit) {
@@ -136,7 +137,8 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     }
 
     const queryOptions: any = {
-      with: this.getWithRelations()
+      with: this.getWithRelations(),
+      orderBy: [desc(posts.createdAt)]
     };
 
     if (conditions.length > 0) {

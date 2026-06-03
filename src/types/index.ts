@@ -99,6 +99,7 @@ export interface Post {
   // Local Relations (unpopulated)
   media: PostMedia[];
   tagsIds?: string[];
+  createdAt: Date;
 }
 
 export interface PopulatedPost extends Omit<Post, 'media'> {

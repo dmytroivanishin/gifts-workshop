@@ -93,6 +93,7 @@ export const postSchemaBase = z.object({
     (v) => (v === null || v === undefined || v === "" ? [] : v),
     z.array(postMediaSchema).default([])
   ),
+  createdAt: z.union([z.string(), z.date()]).optional(),
 });
 
 export const postSchema = postSchemaBase.superRefine((data, ctx) => {

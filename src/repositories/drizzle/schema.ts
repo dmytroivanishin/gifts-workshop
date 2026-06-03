@@ -145,6 +145,7 @@ export const posts = pgTable("posts", {
   collectionId: uuid("collection_id").references(() => collections.id, { onDelete: "set null" }),
   categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });
 
 export const postsRelations = relations(posts, ({ one, many }) => ({

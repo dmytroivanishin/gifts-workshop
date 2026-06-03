@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Save, Loader2, Image as ImageIcon, Move, Archive as ArchiveIcon, Send } from "lucide-react";
+import { ChevronLeft, Save, Loader2, Image as ImageIcon, Move, Archive as ArchiveIcon, Send, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
 import {
   useCreatePostMutation,
@@ -24,6 +24,9 @@ import * as z from "zod";
 import { postSchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { SortableMediaGrid } from "@/components/shared/SortableMediaGrid";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface SelectedMedia {
   mediaId: string;
@@ -40,6 +43,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   const router = useRouter();
   const { id } = use(params);
   const isEditMode = id !== "new";
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   // Mutations & Queries
   const [createPost, { isLoading: isCreating }] = useCreatePostMutation();
@@ -69,6 +73,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     tagsIds: [],
     media: [],
     posterId: undefined as any,
+    createdAt: undefined as any,
   };
 
   const form = useForm<z.infer<typeof postSchema>>({
@@ -130,6 +135,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
         status: post.status,
         tagsIds: post.tags ? post.tags.map((t: any) => typeof t === "string" ? t : t.id) : [],
         posterId: post.poster ? (typeof post.poster === "string" ? post.poster : post.poster.id) : undefined as any,
+        createdAt: post.createdAt ? new Date(post.createdAt).toISOString().slice(0, 16) : undefined,
         media: post.media ? post.media.map((m: any, i: number) => ({
           order: i + 1,
           mediaId: typeof m.media === "string" ? m.media : m.media.id,
@@ -453,8 +459,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
               )}
             />
 
-            {/* Stock Row */}
-            <div className="pt-2">
+            {/* Stock Row and Date */}
+            <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="inStock"
@@ -465,18 +471,56 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                     </FormLabel>
                     <div className="flex items-center gap-2 min-h-11">
                       <FormControl>
-                        <input
+                        <Checkbox
                           id="inStockCheckbox"
-                          type="checkbox"
                           checked={field.value}
-                          onChange={field.onChange}
-                          className="rounded border-border bg-transparent text-primary focus:ring-0 w-4 h-4 cursor-pointer"
+                          onCheckedChange={field.onChange}
+                          className="rounded-[6px] border-border/80 w-5 h-5 cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </FormControl>
                       <label htmlFor="inStockCheckbox" className="text-sm font-medium text-muted-foreground cursor-pointer select-none">
                         {t("in_stock")}
                       </label>
                     </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="createdAt"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+                      {t("creation_date") === "creation_date" ? "Дата публикации" : t("creation_date")}
+                    </FormLabel>
+                    <FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border bg-transparent cursor-pointer text-sm transition-all hover:bg-muted/50 ${form.formState.errors.createdAt ? "border-destructive text-destructive" : "border-border hover:border-border/80"}`}
+                          >
+                            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                              <CalendarIcon size={16} />
+                            </div>
+                            <span className={field.value ? "text-foreground font-medium" : "text-muted-foreground"}>
+                              {field.value 
+                                ? new Date(field.value).toLocaleString(locale === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) 
+                                : (locale === 'ru' ? "Выберите дату..." : "Select date...")}
+                            </span>
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-4 rounded-2xl border-border/60 bg-card shadow-xl admin-area font-sans" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value ? new Date(field.value) : undefined}
+                            onSelect={(date) => field.onChange(date ? date.toISOString() : undefined)}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </FormControl>
+                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
                   </FormItem>
                 )}
               />
@@ -556,24 +600,26 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
               {t("cancel")}
             </Link>
 
-            <button
-              type="button"
-              onClick={() => handleActionClick("Draft")}
-              disabled={isSaving}
-              className="flex items-center gap-1.5 px-5 py-2.5 bg-[#F9E4D3] text-[#904504] text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {isSaving && form.getValues("status") === "Draft" ? (
-                <>
-                  <Loader2 className="animate-spin" size={16} />
-                  {t("saving")}
-                </>
-              ) : (
-                <>
-                  <Save size={16} />
-                  {t("save_draft") === "save_draft" ? "Сохранить" : t("save_draft")}
-                </>
-              )}
-            </button>
+            {postResponse?.data?.status !== "Published" && (
+              <button
+                type="button"
+                onClick={() => handleActionClick("Draft")}
+                disabled={isSaving}
+                className="flex items-center gap-1.5 px-5 py-2.5 bg-[#F9E4D3] text-[#904504] text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isSaving && form.getValues("status") === "Draft" ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    {t("saving")}
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} />
+                    {t("save_draft") === "save_draft" ? "Сохранить" : t("save_draft")}
+                  </>
+                )}
+              </button>
+            )}
 
             <button
               type="button"
@@ -584,12 +630,14 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
               {isSaving && form.getValues("status") === "Published" ? (
                 <>
                   <Loader2 className="animate-spin" size={16} />
-                  {t("publishing") === "publishing" ? "Публикация..." : t("publishing")}
+                  {t("saving")}
                 </>
               ) : (
                 <>
                   <Send size={16} />
-                  {t("publish") === "publish" ? "Опубликовать" : t("publish")}
+                  {postResponse?.data?.status === "Published" 
+                    ? (t("update") === "update" ? "Обновить" : t("update"))
+                    : (t("publish") === "publish" ? "Опубликовать" : t("publish"))}
                 </>
               )}
             </button>

@@ -172,5 +172,7 @@
   "drag_to_position": "Drag to position, use slider to zoom.",
   "zoom": "Zoom",
   "apply_crop": "Apply Crop",
-  "manage_languages": "Manage Languages"
+  "manage_languages": "Manage Languages",
+  "update": "Update",
+  "creation_date": "Publication Date"
 }
