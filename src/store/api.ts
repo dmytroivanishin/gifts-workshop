@@ -169,6 +169,14 @@ export const api = createApi({
       }),
       invalidatesTags: ["Category", "Post"],
     }),
+    reorderCategories: builder.mutation<{ success: boolean }, { id: string; order: number }[]>({
+      query: (items) => ({
+        url: `/categories/reorder`,
+        method: "PUT",
+        body: { items },
+      }),
+      invalidatesTags: ["Category"],
+    }),
      getCollections: builder.query<{ data: Collection[]; meta: any }, { page?: number; limit?: number } | void>({
        query: (params) => {
          const urlParams = new URLSearchParams();
@@ -381,6 +389,7 @@ export const api = createApi({
    useCreateCategoryMutation,
    useUpdateCategoryMutation,
    useDeleteCategoryMutation,
+   useReorderCategoriesMutation,
    useGetTagsQuery,
    useGetTagByIdQuery,
    useCreateTagMutation,

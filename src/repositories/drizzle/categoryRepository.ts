@@ -48,7 +48,8 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
     const db = drizzleDatabase.getDb();
     
     const queryOptions: any = {
-      with: this.getWithRelations()
+      with: this.getWithRelations(),
+      orderBy: (categories: any, { asc }: any) => [asc(categories.order)]
     };
     
     if (options?.limit) {
@@ -187,6 +188,27 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
 
   async updateColorInCategories(colorId: string, newHex: string): Promise<void> {
     await drizzleDatabase.getDb().update(colors).set({ color: newHex }).where(eq(colors.id, colorId));
+  }
+
+  async reorderCategories(items: { id: string; order: number }[]): Promise<boolean> {
+    if (!items || items.length === 0) return true;
+    
+    const db = drizzleDatabase.getDb();
+    const sqlChunks: any[] = [];
+    
+    sqlChunks.push(sql`(case`);
+    for (const item of items) {
+      sqlChunks.push(sql`when ${categories.id} = ${item.id} then ${item.order}::integer`);
+    }
+    sqlChunks.push(sql`end)`);
+    
+    const finalSql = sql.join(sqlChunks, sql.raw(' '));
+    
+    await db.update(categories)
+      .set({ order: finalSql as any })
+      .where(inArray(categories.id, items.map(i => i.id)));
+      
+    return true;
   }
 }
 

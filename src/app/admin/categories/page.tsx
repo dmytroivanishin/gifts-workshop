@@ -11,7 +11,8 @@ import {
   useGetColorsQuery,
   useCreateColorMutation,
   useUpdateColorMutation,
-  useDeleteCategoryMutation
+  useDeleteCategoryMutation,
+  useReorderCategoriesMutation
 } from "@/store/api";
 import Combobox from "@/components/ui/combobox";
 import ConfirmModal from "@/components/shared/ConfirmModal";
@@ -21,6 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { categorySchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { SortableCategoryGroup } from "@/components/shared/SortableCategoryTree";
 
 export default function AdminCategories() {
   const { t, loc, locale } = useTranslation();
@@ -30,6 +32,7 @@ export default function AdminCategories() {
   const { data: collectionsResponse } = useGetCollectionsQuery();
   const { data: colorsResponse } = useGetColorsQuery();
   const [saveCategory, { isLoading: isSaving }] = useCreateCategoryMutation();
+  const [reorderCategories] = useReorderCategoriesMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
   const [createTag] = useCreateTagMutation();
   const [createColor] = useCreateColorMutation();
@@ -266,195 +269,215 @@ export default function AdminCategories() {
                 {t("loading_categories")}
               </div>
             ) : categories.length > 0 ? (
-              categories.map((cat: any) => {
-                const catTitleRu = typeof cat.title === "string" ? cat.title : cat.title?.ru || "";
-                const catDescRu = typeof cat.description === "string" ? cat.description : cat.description?.ru || "";
-                const catColor = cat.color?.color || "transparent";
+              <SortableCategoryGroup
+                parentId={null}
+                items={categories}
+                onReorder={async (newItems) => {
+                  const updates = [];
+                  for (let i = 0; i < newItems.length; i++) {
+                    const cat = newItems[i];
+                    if (cat.order !== i) {
+                      updates.push({ id: cat.id, order: i });
+                    }
+                  }
+                  if (updates.length > 0) {
+                    try {
+                      await reorderCategories(updates).unwrap();
+                    } catch (err) {
+                      console.error("Failed to reorder categories", err);
+                    }
+                  }
+                }}
+                renderItem={(cat: any) => {
+                  const catTitleRu = typeof cat.title === "string" ? cat.title : cat.title?.ru || "";
+                  const catDescRu = typeof cat.description === "string" ? cat.description : cat.description?.ru || "";
+                  const catColor = cat.color?.color || "transparent";
 
-                return (
-                  <div key={cat.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/10 transition-colors">
-                    {isEditing === cat.id ? (
-                      <div className="flex-1 space-y-4 sm:space-y-3 w-full">
-                        <div className="grid grid-cols-1 gap-2">
-                          <input
-                            type="text"
-                            value={editTitle}
-                            onChange={(e) => setEditTitle(e.target.value)}
-                            placeholder={t("title")}
-                            className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 gap-2">
-                          <textarea
-                            value={editDescription}
-                            onChange={(e) => setEditDescription(e.target.value)}
-                            placeholder={t("description")}
-                            className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
-                            rows={2}
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 gap-2">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("collections")}</label>
-                          <select
-                            value={editCollectionId}
-                            onChange={(e) => setEditCollectionId(e.target.value)}
-                            className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
-                            required
-                          >
-                            <option value="" disabled>{t("placeholder_select_collection")}</option>
-                            {collections.map((col: any) => (
-                              <option key={col.id} value={col.id} className="bg-card text-foreground">
-                                {col.title?.ru || col.title?.en || col.title || ""}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="grid grid-cols-1 gap-2">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("parent_category")}</label>
-                          <select
-                            value={editParentId}
-                            onChange={(e) => setEditParentId(e.target.value)}
-                            className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
-                          >
-                            <option value="">{t("none_main_category")}</option>
-                            {categories
-                              .filter((c: any) => c.id !== cat.id)
-                              .map((c: any) => (
-                                <option key={c.id} value={c.id} className="bg-card text-foreground">
-                                  {c.title?.ru || c.title?.en || c.title || ""}
+                  return (
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/10 transition-colors w-full">
+                      {isEditing === cat.id ? (
+                        <div className="flex-1 space-y-4 sm:space-y-3 w-full">
+                          <div className="grid grid-cols-1 gap-2">
+                            <input
+                              type="text"
+                              value={editTitle}
+                              onChange={(e) => setEditTitle(e.target.value)}
+                              placeholder={t("title")}
+                              className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 gap-2">
+                            <textarea
+                              value={editDescription}
+                              onChange={(e) => setEditDescription(e.target.value)}
+                              placeholder={t("description")}
+                              className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
+                              rows={2}
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 gap-2">
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("collections")}</label>
+                            <select
+                              value={editCollectionId}
+                              onChange={(e) => setEditCollectionId(e.target.value)}
+                              className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                              required
+                            >
+                              <option value="" disabled>{t("placeholder_select_collection")}</option>
+                              {collections.map((col: any) => (
+                                <option key={col.id} value={col.id} className="bg-card text-foreground">
+                                  {col.title?.ru || col.title?.en || col.title || ""}
                                 </option>
                               ))}
-                          </select>
-                        </div>
-                        <div className="grid grid-cols-1 gap-2">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("tags")}</label>
-                          <Combobox
-                            options={tagOptions}
-                            value={editSelectedTags}
-                            onChange={(val) => setEditSelectedTags(val)}
-                            placeholder={t("placeholder_select_tags")}
-                            searchPlaceholder={t("placeholder_search_tags")}
-                            allowCreate
-                            createLabel={t("add_new_tag_prompt")}
-                            multiple
-                            onCreate={handleCreateTag}
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 gap-2">
-                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("color_accent")}</label>
-                          {/* Presets Grid */}
-                          {colorsList.length > 0 && (
-                            <div className="flex flex-wrap gap-2 sm:gap-1.5 p-2 sm:p-1.5 rounded-lg bg-muted/30 border border-border/40">
-                              {colorsList.map((c: any) => (
-                                <button
-                                  key={c.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setEditColor(c.color);
-                                    setEditSelectedColorId(c.id);
-                                  }}
-                                  className={`w-6 h-6 sm:w-5 sm:h-5 rounded-full border transition-all hover:scale-110 cursor-pointer ${
-                                    editColor.toLowerCase() === c.color.toLowerCase()
-                                      ? "border-primary ring-2 ring-primary/20 scale-105"
-                                      : "border-border/60"
-                                  }`}
-                                  style={{ backgroundColor: c.color }}
-                                  title={c.color}
-                                />
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="color"
-                              value={editColor}
-                              onChange={(e) => setEditColor(e.target.value)}
-                              className="w-10 h-10 sm:w-8 sm:h-8 rounded-lg border border-border cursor-pointer bg-transparent"
+                            </select>
+                          </div>
+                          <div className="grid grid-cols-1 gap-2">
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("parent_category")}</label>
+                            <select
+                              value={editParentId}
+                              onChange={(e) => setEditParentId(e.target.value)}
+                              className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                            >
+                              <option value="">{t("none_main_category")}</option>
+                              {categories
+                                .filter((c: any) => c.id !== cat.id)
+                                .map((c: any) => (
+                                  <option key={c.id} value={c.id} className="bg-card text-foreground">
+                                    {c.title?.ru || c.title?.en || c.title || ""}
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                          <div className="grid grid-cols-1 gap-2">
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("tags")}</label>
+                            <Combobox
+                              options={tagOptions}
+                              value={editSelectedTags}
+                              onChange={(val) => setEditSelectedTags(val)}
+                              placeholder={t("placeholder_select_tags")}
+                              searchPlaceholder={t("placeholder_search_tags")}
+                              allowCreate
+                              createLabel={t("add_new_tag_prompt")}
+                              multiple
+                              onCreate={handleCreateTag}
                             />
-                            <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{editColor}</span>
-                            {isEditingColorPending && (
-                              <span className="text-[10px] text-muted-foreground animate-pulse flex items-center gap-1">
-                                <Loader2 size={10} className="animate-spin" />
-                                Сохранение цвета...
-                              </span>
+                          </div>
+                          <div className="grid grid-cols-1 gap-2">
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("color_accent")}</label>
+                            {/* Presets Grid */}
+                            {colorsList.length > 0 && (
+                              <div className="flex flex-wrap gap-2 sm:gap-1.5 p-2 sm:p-1.5 rounded-lg bg-muted/30 border border-border/40">
+                                {colorsList.map((c: any) => (
+                                  <button
+                                    key={c.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setEditColor(c.color);
+                                      setEditSelectedColorId(c.id);
+                                    }}
+                                    className={`w-6 h-6 sm:w-5 sm:h-5 rounded-full border transition-all hover:scale-110 cursor-pointer ${
+                                      editColor.toLowerCase() === c.color.toLowerCase()
+                                        ? "border-primary ring-2 ring-primary/20 scale-105"
+                                        : "border-border/60"
+                                    }`}
+                                    style={{ backgroundColor: c.color }}
+                                    title={c.color}
+                                  />
+                                ))}
+                              </div>
                             )}
+  
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="color"
+                                value={editColor}
+                                onChange={(e) => setEditColor(e.target.value)}
+                                className="w-10 h-10 sm:w-8 sm:h-8 rounded-lg border border-border cursor-pointer bg-transparent"
+                              />
+                              <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{editColor}</span>
+                              {isEditingColorPending && (
+                                <span className="text-[10px] text-muted-foreground animate-pulse flex items-center gap-1">
+                                  <Loader2 size={10} className="animate-spin" />
+                                  Сохранение цвета...
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-sm text-foreground truncate">{catTitleRu}</span>
-                          <span
-                            className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider"
-                            style={{
-                              backgroundColor: `${catColor}25`,
-                              color: catColor,
-                              border: `1px solid ${catColor}40`,
-                            }}
-                          >
-                            HEX: {catColor}
-                          </span>
-                          {cat.parentId && (() => {
-                            const parentCat = categories.find((c: any) => c.id === cat.parentId);
-                            const parentTitle = parentCat
-                              ? (typeof parentCat.title === "string"
-                                ? parentCat.title
-                                : parentCat.title?.ru || parentCat.title?.en || "")
-                              : "";
-                            return parentTitle ? (
-                              <span className="text-[11px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
-                                {t("subcategory_of")} <strong className="truncate max-w-[100px] sm:max-w-[150px]">{parentTitle}</strong>
-                              </span>
-                            ) : null;
-                          })()}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1.5 sm:mt-0.5 line-clamp-2">{catDescRu}</p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
-                      {isEditing === cat.id ? (
-                        <>
-                           <button
-                             onClick={() => handleSave(cat.id)}
-                             disabled={isEditingColorPending}
-                             className="p-2 sm:p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center"
-                           >
-                             {isEditingColorPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                           </button>
-                          <button
-                            onClick={() => {
-                              setIsEditing(null);
-                              setActiveCategoryObj(null);
-                            }}
-                            className="p-2 sm:p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
-                          >
-                            <X size={18} />
-                          </button>
-                        </>
                       ) : (
-                        <>
-                          <button
-                            onClick={() => handleStartEdit(cat)}
-                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(cat.id)}
-                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer"
-                            title={t("delete")}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-sm text-foreground truncate">{catTitleRu}</span>
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider"
+                              style={{
+                                backgroundColor: `${catColor}25`,
+                                color: catColor,
+                                border: `1px solid ${catColor}40`,
+                              }}
+                            >
+                              HEX: {catColor}
+                            </span>
+                            {cat.parentId && (() => {
+                              const parentCat = categories.find((c: any) => c.id === cat.parentId);
+                              const parentTitle = parentCat
+                                ? (typeof parentCat.title === "string"
+                                  ? parentCat.title
+                                  : parentCat.title?.ru || parentCat.title?.en || "")
+                                : "";
+                              return parentTitle ? (
+                                <span className="text-[11px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
+                                  {t("subcategory_of")} <strong className="truncate max-w-[100px] sm:max-w-[150px]">{parentTitle}</strong>
+                                </span>
+                              ) : null;
+                            })()}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1.5 sm:mt-0.5 line-clamp-2">{catDescRu}</p>
+                        </div>
                       )}
+  
+                      <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+                        {isEditing === cat.id ? (
+                          <>
+                             <button
+                               onClick={() => handleSave(cat.id)}
+                               disabled={isEditingColorPending}
+                               className="p-2 sm:p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center"
+                             >
+                               {isEditingColorPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                             </button>
+                            <button
+                              onClick={() => {
+                                setIsEditing(null);
+                                setActiveCategoryObj(null);
+                              }}
+                              className="p-2 sm:p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+                            >
+                              <X size={18} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleStartEdit(cat)}
+                              className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(cat.id)}
+                              className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer"
+                              title={t("delete")}
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                }}
+              />
             ) : (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 {t("no_categories")}

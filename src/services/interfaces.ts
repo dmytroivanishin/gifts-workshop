@@ -1,13 +1,14 @@
-import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment } from "@/types";
+import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment, PopulatedCategory } from "@/types";
 
 import { QueryOptions } from "@/repositories/interfaces";
 
 export interface ICategoryService {
   getAllCategories(options?: PaginationOptions & { populate?: string }): Promise<PaginatedResult<Category>>;
-  getCategoryById(id: string, options?: { populate?: string }): Promise<Category | undefined>;
-  getCategoryBySlug(slug: string, options?: { populate?: string }): Promise<Category | undefined>;
-  saveCategory(body: any): Promise<Category>;
+  getCategoryById(id: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined>;
+  getCategoryBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined>;
+  saveCategory(category: any): Promise<PopulatedCategory>;
   deleteCategory(id: string): Promise<boolean>;
+  reorderCategories(items: { id: string; order: number }[]): Promise<boolean>;
 }
 
 export interface ICollectionService {

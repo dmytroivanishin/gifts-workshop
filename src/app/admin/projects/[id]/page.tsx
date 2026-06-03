@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { postSchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { SortableMediaGrid } from "@/components/shared/SortableMediaGrid";
 
 interface SelectedMedia {
   mediaId: string;
@@ -503,95 +504,28 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
               <p className="text-sm text-muted-foreground">{t("no_media_selected")}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {selectedImages.map((img) => {
-                const isCover = coverImage === img.mediaId;
-                const mediaItem = mediaList.find(m => m.id === img.mediaId);
-                const isPortrait = mediaItem?.orientation?.toLowerCase() === "portrait" || (mediaItem?.height && mediaItem?.width && mediaItem.height > mediaItem.width);
-                const isLandscape = mediaItem?.orientation?.toLowerCase() === "landscape" || (mediaItem?.height && mediaItem?.width && mediaItem.width > mediaItem.height);
-
-                return (
-                  <div
-                    key={img.mediaId}
-                    className={`group relative aspect-square bg-muted rounded-lg overflow-hidden border-2 transition-all ${
-                      isCover
-                        ? "border-primary ring-2 ring-primary/25"
-                        : "border-border"
-                    }`}
-                  >
-                    <img
-                      src={img.url}
-                      alt=""
-                      className="absolute"
-                      style={{
-                        left: img.position ? `calc(50% + ${img.position.x / 3}%)` : "50%",
-                        top: img.position ? `calc(50% + ${img.position.y / 3}%)` : "50%",
-                        width: isPortrait ? "100%" : (isLandscape ? "auto" : "100%"),
-                        height: isLandscape ? "100%" : (isPortrait ? "auto" : "100%"),
-                        minWidth: isPortrait ? "100%" : "auto",
-                        minHeight: isLandscape ? "100%" : "auto",
-                        maxWidth: "none",
-                        maxHeight: "none",
-                        transformOrigin: "center center",
-                        transform: img.position 
-                          ? `translate(-50%, -50%) scale(${img.position.zoom})` 
-                          : 'translate(-50%, -50%) scale(1)'
-                      }}
-                    />
-                    
-                    {/* Overlay controls */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCoverImage(img.mediaId);
-                          if (img.position) {
-                            setCoverPosition(img.position);
-                          } else {
-                            setCoverPosition(null);
-                          }
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold w-3/4 cursor-pointer ${
-                          isCover ? "bg-primary text-primary-foreground" : "bg-white text-black hover:bg-gray-200"
-                        }`}
-                      >
-                        {isCover ? t("cover") : t("set_cover")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveCropMediaId(img.mediaId)}
-                        className="px-3 py-1.5 bg-white text-black hover:bg-gray-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 justify-center w-3/4 cursor-pointer"
-                      >
-                        <Move size={12} />
-                        {t("position")}
-                      </button>
-                    </div>
-
-                    {isCover && (
-                      <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">
-                        {t("cover").toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <SortableMediaGrid
+              items={selectedImages}
+              mediaList={mediaList}
+              coverImage={coverImage}
+              onReorder={setSelectedImages}
+              onSetCover={(id, position) => {
+                setCoverImage(id);
+                setCoverPosition(position || null);
+              }}
+              onCrop={(id) => setActiveCropMediaId(id)}
+              onRemove={(id) => {
+                const newSelected = selectedImages.filter((img) => img.mediaId !== id);
+                setSelectedImages(newSelected);
+                if (coverImage === id) {
+                  setCoverImage(newSelected.length > 0 ? newSelected[0].mediaId : "");
+                  setCoverPosition(newSelected.length > 0 && newSelected[0].position ? newSelected[0].position : null);
+                }
+              }}
+            />
           )}
 
-          {/* Cover specific crop button (if needed specifically for cover) */}
-          {coverImage && (
-            <div className="pt-4 border-t flex justify-end">
-              <button
-                type="button"
-                onClick={() => setActiveCropMediaId("cover")}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
-              >
-                <Move size={14} />
-                {t("fine_tune_cover")}
-              </button>
-            </div>
-          )}
-          
+
           {/* Error Message for Poster */}
           {form.formState.errors.posterId && (
             <div className="pt-2">

@@ -30,6 +30,7 @@ export const notificationMiddleware: Middleware =
         createCategory: "category_created",
         updateCategory: "category_updated",
         deleteCategory: "category_deleted",
+        reorderCategories: "category_updated",
         createTag: "tag_created",
         updateTag: "tag_updated",
         deleteTag: "tag_deleted",

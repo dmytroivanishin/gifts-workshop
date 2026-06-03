@@ -31,6 +31,7 @@ export interface IBaseRepository<T, TPopulated = T, TQueryOptions = PaginationOp
 export interface ICategoryRepository extends IBaseRepository<Category, PopulatedCategory> {
   getBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined>;
   updateColorInCategories(colorId: string, newHex: string): Promise<void>;
+  reorderCategories(items: { id: string; order: number }[]): Promise<boolean>;
 }
 
 export interface ICollectionRepository extends IBaseRepository<Collection> {

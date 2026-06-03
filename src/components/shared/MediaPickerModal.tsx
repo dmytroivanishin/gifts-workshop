@@ -50,7 +50,7 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-full border border-border hover:bg-muted text-muted-foreground transition-colors"
+            className="p-1 rounded-full border border-border hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -105,13 +105,13 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted font-medium text-sm transition-colors"
+              className="px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted font-medium text-sm transition-colors cursor-pointer"
             >
               {t("cancel")}
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
+              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
             >
               {t("confirm_selection")}
             </button>

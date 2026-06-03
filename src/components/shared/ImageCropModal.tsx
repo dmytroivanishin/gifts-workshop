@@ -95,7 +95,7 @@ export default function ImageCropModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-full border border-border hover:bg-muted text-muted-foreground transition-colors"
+            className="p-1 rounded-full border border-border hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -173,14 +173,14 @@ export default function ImageCropModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-border rounded-xl text-sm font-semibold hover:bg-muted/30 transition-colors"
+            className="px-4 py-2 border border-border rounded-xl text-sm font-semibold hover:bg-muted/30 transition-colors cursor-pointer"
           >
             {t("cancel")}
           </button>
           <button
             type="button"
             onClick={() => onSave({ x: position.x, y: position.y, zoom })}
-            className="flex items-center gap-1 px-5 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-xl hover:opacity-95 transition-opacity"
+            className="flex items-center gap-1 px-5 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-xl hover:opacity-95 transition-opacity cursor-pointer"
           >
             <Check size={16} />
             {t("apply_crop")}

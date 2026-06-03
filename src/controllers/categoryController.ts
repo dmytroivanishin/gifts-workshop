@@ -65,6 +65,21 @@ export class CategoryController {
       return sendError(error);
     }
   }
+
+  async reorderCategories(request: Request) {
+    try {
+      const rawBody = await request.json();
+      const items = z.array(z.object({
+        id: z.string().uuid(),
+        order: z.number().int()
+      })).parse(rawBody.items);
+      
+      const result = await this.categoryService.reorderCategories(items);
+      return sendSuccess(result);
+    } catch (error: any) {
+      return sendError(error);
+    }
+  }
 }
 
 

@@ -122,4 +122,10 @@ export class CategoryService implements ICategoryService {
 
     return this.categoryRepo.delete(id);
   }
+
+  async reorderCategories(items: { id: string; order: number }[]): Promise<boolean> {
+    if (!items || items.length === 0) return true;
+    
+    return this.categoryRepo.reorderCategories(items);
+  }
 }
