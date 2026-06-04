@@ -14,7 +14,7 @@ function LoginContent() {
 
   useEffect(() => {
     // Detect if we are in local development to show the bypass button
-    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
       setIsDev(true);
     }
 
