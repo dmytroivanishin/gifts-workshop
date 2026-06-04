@@ -4,6 +4,7 @@ import { ICommentService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest } from "@/lib/validateRequest";
 import { commentSchema } from "@/common/validation/schemas";
+import { getPaginationParams } from "@/utils/paginationUtils";
 
 export class CommentController {
   constructor(private commentService: ICommentService) {}
@@ -11,10 +12,7 @@ export class CommentController {
   async getComments(request: Request) {
     try {
       const { searchParams } = new URL(request.url);
-      const pageStr = searchParams.get("page");
-      const limitStr = searchParams.get("limit");
-      const page = pageStr ? parseInt(pageStr, 10) : undefined;
-      const limit = limitStr ? parseInt(limitStr, 10) : undefined;
+      const { page, limit } = getPaginationParams(request);
       const status = searchParams.get("status") || undefined;
       const postId = searchParams.get("postId") || undefined;
 

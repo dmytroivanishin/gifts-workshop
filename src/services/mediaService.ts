@@ -45,6 +45,33 @@ export class MediaService implements IMediaService {
     return this.mediaRepo.save(media);
   }
 
+  async uploadMultiple(files: File[], userId: string): Promise<Media[]> {
+    const maxFileSizeBytes = (Number(process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB) || 10) * 1024 * 1024;
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    
+    if (!files || files.length === 0) {
+      throw new ConflictError("No files provided", "VALIDATION_ERROR");
+    }
+
+    const savedMedia: Media[] = [];
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        throw new ConflictError(`Invalid file type: ${file.name}. Only JPG and PNG are allowed.`, "VALIDATION_ERROR");
+      }
+      if (file.size > maxFileSizeBytes) {
+        throw new ConflictError(`File ${file.name} is too large. Max size is ${process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB || 10}MB.`, "VALIDATION_ERROR");
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      const media = await this.uploadAndSaveMedia(buffer, file.name, file.type, userId);
+      savedMedia.push(media);
+    }
+
+    return savedMedia;
+  }
+
   async getMediaById(id: string): Promise<Media | undefined> {
     return this.mediaRepo.getById(id);
   }

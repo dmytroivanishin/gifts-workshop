@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { BaseError } from "@/common/errors/base";
+import { logger } from "@/modules/logger";
 
 export function sendSuccess(data: any, meta?: any) {
   const payload: any = { data };
@@ -11,6 +12,7 @@ export function sendSuccess(data: any, meta?: any) {
 
 export function sendError(error: any) {
   if (error instanceof BaseError) {
+    logger.error(error.message, { code: error.errorCode, stack: error.stack });
     return NextResponse.json(
       {
         data: {},
@@ -21,6 +23,11 @@ export function sendError(error: any) {
   }
 
   // Generic 500 error
+  logger.error(error.message || "An unexpected error occurred", { 
+    code: "INTERNAL_SERVER_ERROR", 
+    stack: error.stack 
+  });
+  
   return NextResponse.json(
     {
       data: {},

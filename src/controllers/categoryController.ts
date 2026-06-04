@@ -7,6 +7,7 @@ import { resolveId } from "@/utils/idResolver";
 import { validateRequest } from "@/lib/validateRequest";
 import { categorySchema } from "@/common/validation/schemas";
 import { getUserId } from "@/lib/authUtils";
+import { getPaginationParams } from "@/utils/paginationUtils";
 
 export class CategoryController {
   constructor(private categoryService: ICategoryService) {}
@@ -14,10 +15,7 @@ export class CategoryController {
   async getCategories(request: Request) {
     try {
       const { searchParams } = new URL(request.url);
-      const pageStr = searchParams.get("page");
-      const limitStr = searchParams.get("limit");
-      const page = pageStr ? parseInt(pageStr, 10) : undefined;
-      const limit = limitStr ? parseInt(limitStr, 10) : undefined;
+      const { page, limit } = getPaginationParams(request);
       const populate = searchParams.get("populate") || undefined;
 
       const result = await this.categoryService.getAllCategories({ page, limit, populate });

@@ -1,6 +1,8 @@
 import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
+import { env } from '@/lib/env';
+import { logger } from '@/modules/logger';
 
 export class DrizzleDatabase {
   private static instance: DrizzleDatabase;
@@ -25,24 +27,24 @@ export class DrizzleDatabase {
   public async connect(uri: string): Promise<void> {
     try {
       this.initConnection(uri);
-      console.log("✅ Drizzle ORM connected successfully.");
-    } catch (error) {
-      console.error("❌ Failed to connect Drizzle ORM:", error);
+      logger.info("Drizzle ORM connected successfully.");
+    } catch (error: any) {
+      logger.error("Failed to connect Drizzle ORM", { code: "DB_CONNECT_ERROR", error: error.message });
       throw error;
     }
   }
 
   public getDb(): PostgresJsDatabase<typeof schema> {
     if (!this.db) {
-      const dbUri = process.env.DB_URI;
+      const dbUri = env.DB_URI;
       if (!dbUri) {
         throw new Error("Database not initialized. Call connect() before performing queries.");
       }
       try {
         this.initConnection(dbUri);
-        console.log("✅ Drizzle ORM auto-connected successfully.");
-      } catch (error) {
-        console.error("❌ Failed to auto-connect Drizzle ORM:", error);
+        logger.info("Drizzle ORM auto-connected successfully.");
+      } catch (error: any) {
+        logger.error("Failed to auto-connect Drizzle ORM", { code: "DB_AUTOCONNECT_ERROR", error: error.message });
         throw error;
       }
     }
@@ -54,7 +56,7 @@ export class DrizzleDatabase {
       await this.client.end();
       this.client = null;
       this.db = null;
-      console.log("💤 Drizzle ORM connection closed.");
+      logger.info("Drizzle ORM connection closed.");
     }
   }
 }
@@ -62,10 +64,10 @@ export class DrizzleDatabase {
 export const drizzleDatabase = DrizzleDatabase.getInstance();
 
 // Auto-connect on module load if DB_URI is in env
-const dbUri = process.env.DB_URI;
+const dbUri = env.DB_URI;
 if (dbUri) {
   drizzleDatabase.connect(dbUri).catch(err => {
-    console.error("❌ Failed to auto-connect to PostgreSQL in database module load:", err);
+    logger.error("Failed to auto-connect to PostgreSQL in database module load", { code: "DB_MODULE_LOAD_ERROR", error: err.message });
   });
 }
 

@@ -7,13 +7,15 @@ import { mediaSchema } from "@/common/validation/schemas";
 import { getUserId } from "@/lib/authUtils";
 import { ValidationError } from "@/common/errors/validation";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
+import { getPaginationParams } from "@/utils/paginationUtils";
 
 export class MediaController {
   constructor(private mediaService: IMediaService) {}
 
   async getMedia(request: Request) {
     try {
-      const result = await this.mediaService.getAllMedia();
+      const { page, limit } = getPaginationParams(request);
+      const result = await this.mediaService.getAllMedia({ page, limit });
       return sendSuccess(result.data, result.meta);
     } catch (error: any) {
       return sendError(error);
@@ -40,36 +42,12 @@ export class MediaController {
         const formData = await request.formData();
         const files = formData.getAll("files") as File[];
         
-        if (!files || files.length === 0) {
-          throw new ValidationError("No files provided");
-        }
-
         const userId = await getUserId();
         if (!userId) {
           throw new UnauthorizedError("Unauthorized");
         }
 
-        const maxFileSizeBytes = (Number(process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB) || 10) * 1024 * 1024;
-        const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
-
-        const savedMedia = [];
-        for (const file of files) {
-          if (!allowedTypes.includes(file.type)) {
-            throw new ValidationError(`Invalid file type: ${file.name}. Only JPG and PNG are allowed.`);
-          }
-          if (file.size > maxFileSizeBytes) {
-            throw new ValidationError(`File ${file.name} is too large. Max size is ${process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB || 10}MB.`);
-          }
-
-          // Convert to buffer
-          const arrayBuffer = await file.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-
-          // Delegate to MediaService for storage and DB saving
-          const media = await this.mediaService.uploadAndSaveMedia(buffer, file.name, file.type, userId);
-          savedMedia.push(media);
-        }
-
+        const savedMedia = await this.mediaService.uploadMultiple(files, userId);
         return sendSuccess(savedMedia);
       } else {
         // Fallback for legacy JSON saving (e.g. updating positions)

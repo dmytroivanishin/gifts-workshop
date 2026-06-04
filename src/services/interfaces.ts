@@ -31,6 +31,7 @@ export interface IMediaService {
   getMediaById(id: string): Promise<Media | undefined>;
   saveMedia(body: any): Promise<Media>;
   uploadAndSaveMedia(buffer: Buffer, originalFilename: string, mimeType: string, userId: string): Promise<Media>;
+  uploadMultiple(files: File[], userId: string): Promise<Media[]>;
   deleteMedia(id: string): Promise<boolean>;
 }
 

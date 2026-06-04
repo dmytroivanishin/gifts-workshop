@@ -3,6 +3,7 @@ import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { ISystemTextService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest } from "@/lib/validateRequest";
+import { getPaginationParams } from "@/utils/paginationUtils";
 
 const systemTextSchema = z.object({
   id: z.string().min(1).max(255), // the key
@@ -14,9 +15,7 @@ export class SystemTextController {
 
   async getSystemTexts(request: Request) {
     try {
-      const url = new URL(request.url);
-      const page = parseInt(url.searchParams.get("page") || "1", 10);
-      const limit = parseInt(url.searchParams.get("limit") || "100", 10);
+      const { page, limit } = getPaginationParams(request, 1, 100);
 
       const result = await this.systemTextService.getAllSystemTexts({ page, limit });
       return sendSuccess(result.data, result.meta);

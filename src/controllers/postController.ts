@@ -6,6 +6,7 @@ import { validateRequest } from "@/lib/validateRequest";
 import { postSchema } from "@/common/validation/schemas";
 import { resolveId } from "@/utils/idResolver";
 import { getUserId } from "@/lib/authUtils";
+import { getPaginationParams } from "@/utils/paginationUtils";
 
 export class PostController {
   constructor(private postService: IPostService) {}
@@ -21,10 +22,7 @@ export class PostController {
       const status = searchParams.get("status") || undefined;
       const populate = searchParams.get("populate") || undefined;
       
-      const pageStr = searchParams.get("page");
-      const limitStr = searchParams.get("limit");
-      const page = pageStr ? parseInt(pageStr, 10) : undefined;
-      const limit = limitStr ? parseInt(limitStr, 10) : undefined;
+      const { page, limit } = getPaginationParams(request);
 
       const result = await this.postService.getFilteredPosts({ search, category, tag, collection, inStock, status, page, limit, populate });
 

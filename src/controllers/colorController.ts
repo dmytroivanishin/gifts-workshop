@@ -4,13 +4,15 @@ import { IColorService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest } from "@/lib/validateRequest";
 import { colorSchema } from "@/common/validation/schemas";
+import { getPaginationParams } from "@/utils/paginationUtils";
 
 export class ColorController {
   constructor(private colorService: IColorService) {}
 
   async getColors(request: Request) {
     try {
-      const result = await this.colorService.getAllColors();
+      const { page, limit } = getPaginationParams(request);
+      const result = await this.colorService.getAllColors({ page, limit });
       return sendSuccess(result.data, result.meta);
     } catch (error: any) {
       return sendError(error);

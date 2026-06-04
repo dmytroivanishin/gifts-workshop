@@ -3,6 +3,7 @@ import { sendSuccess, sendError } from "@/lib/apiResponse";
 import { ILanguageService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest } from "@/lib/validateRequest";
+import { getPaginationParams } from "@/utils/paginationUtils";
 
 const languageSchema = z.object({
   code: z.string().min(2).max(10),
@@ -15,9 +16,7 @@ export class LanguageController {
 
   async getLanguages(request: Request) {
     try {
-      const url = new URL(request.url);
-      const page = parseInt(url.searchParams.get("page") || "1", 10);
-      const limit = parseInt(url.searchParams.get("limit") || "50", 10);
+      const { page, limit } = getPaginationParams(request, 1, 50);
 
       const result = await this.languageService.getAllLanguages({ page, limit });
       return sendSuccess(result.data, result.meta);
