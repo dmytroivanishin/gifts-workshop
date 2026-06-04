@@ -40,11 +40,10 @@ export class SystemTextController {
   async saveSystemText(request: Request, id?: string) {
     try {
       const rawBody = await request.json();
-      const body = await validateRequest(systemTextSchema, rawBody);
-      if (id && body.id !== id) {
-        // Enforce URL id matches body id
-        body.id = id;
+      if (id) {
+        rawBody.id = id;
       }
+      const body = await validateRequest(systemTextSchema, rawBody);
       
       const text = await this.systemTextService.saveSystemText(body);
       return sendSuccess(text);

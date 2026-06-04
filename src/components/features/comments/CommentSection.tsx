@@ -76,7 +76,7 @@ export function CommentSection({ postId }: { postId: string }) {
         
         {isNameSaved && (
           <div className="flex items-center justify-between text-sm text-muted-foreground bg-background/50 px-4 py-2 rounded-lg border border-border/50">
-            <span>Commenting as <strong className="text-foreground">{name}</strong></span>
+            <span>{t("commenting_as") || "Commenting as"} <strong className="text-foreground">{name}</strong></span>
             <button 
               type="button" 
               onClick={() => {
@@ -84,9 +84,9 @@ export function CommentSection({ postId }: { postId: string }) {
                 setIsNameSaved(false);
                 setName("");
               }}
-              className="text-xs hover:text-primary transition-colors underline underline-offset-2"
+              className="text-xs hover:text-primary transition-colors underline underline-offset-2 cursor-pointer"
             >
-              Change
+              {t("change") || "Change"}
             </button>
           </div>
         )}
@@ -146,7 +146,7 @@ export function CommentSection({ postId }: { postId: string }) {
                   <div className="bg-secondary/40 p-4 rounded-2xl border border-border/30 w-full flex flex-col gap-1.5">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm text-foreground">{reply.name}</span>
-                      <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-wider rounded-full border border-primary/20">Admin</span>
+                      <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-wider rounded-full border border-primary/20">{t("admin") || "Admin"}</span>
                       <span className="text-[10px] text-muted-foreground ml-auto">{new Date(reply.createdAt).toLocaleDateString()}</span>
                     </div>
                     <p className="text-sm text-foreground whitespace-pre-wrap">{reply.text}</p>

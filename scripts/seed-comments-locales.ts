@@ -56,6 +56,18 @@ const commentsLocales = [
   {
     id: "error_text_too_long",
     content: { en: "Comment is too long", ru: "Комментарий слишком длинный" }
+  },
+  {
+    id: "commenting_as",
+    content: { en: "Commenting as", ru: "Вы комментируете как" }
+  },
+  {
+    id: "change",
+    content: { en: "Change", ru: "Изменить" }
+  },
+  {
+    id: "admin",
+    content: { en: "Admin", ru: "Админ" }
   }
 ];
 

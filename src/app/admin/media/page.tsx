@@ -52,40 +52,40 @@ export default function AdminMedia() {
 
   const handleFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
-    
+
     setIsUploading(true);
     setUploadStats({ total: files.length, current: 0 });
 
     try {
       const newMediaItems: any[] = [];
-      
+
       // Upload sequentially to show accurate progress bar
       for (let i = 0; i < files.length; i++) {
         setUploadStats({ total: files.length, current: i + 1 });
         const formData = new FormData();
         formData.append("files", files[i]);
-        
+
         const response = await fetch("/api/v1/media", {
           method: "POST",
           body: formData,
         });
-        
+
         if (response.ok) {
           const result = await response.json();
           if (result.data && result.data.length > 0) {
             newMediaItems.push(...result.data);
           }
         } else {
-            const errorData = await response.json().catch(() => ({}));
-            const errorCode = errorData?.error?.code || errorData?.code || 'UPLOAD_FAILED';
-            dispatch(addNotification({ 
-                type: 'error', 
-                messageKey: errorCode,
-                details: errorData?.error?.message || errorData?.message || 'Upload failed'
-            }));
+          const errorData = await response.json().catch(() => ({}));
+          const errorCode = errorData?.error?.code || errorData?.code || 'UPLOAD_FAILED';
+          dispatch(addNotification({
+            type: 'error',
+            messageKey: errorCode,
+            details: errorData?.error?.message || errorData?.message || 'Upload failed'
+          }));
         }
       }
-      
+
       if (newMediaItems.length > 0) {
         const mappedItems = newMediaItems.map((m: any) => ({
           id: m.id,
@@ -139,10 +139,10 @@ export default function AdminMedia() {
       } else {
         const errorData = await response.json().catch(() => ({}));
         const errorCode = errorData?.error?.code || errorData?.code || 'DELETE_FAILED';
-        dispatch(addNotification({ 
-          type: 'error', 
-          messageKey: errorCode, 
-          details: errorData?.error?.message || errorData?.message || 'Failed to delete media' 
+        dispatch(addNotification({
+          type: 'error',
+          messageKey: errorCode,
+          details: errorData?.error?.message || errorData?.message || 'Failed to delete media'
         }));
       }
     } catch (error) {
@@ -167,20 +167,19 @@ export default function AdminMedia() {
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center gap-3 transition-colors ${
-          dragActive
-            ? "border-primary bg-primary/5"
-            : "border-border hover:border-muted-foreground/60 bg-card"
-        }`}
+        className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center gap-3 transition-colors ${dragActive
+          ? "border-primary bg-primary/5"
+          : "border-border hover:border-muted-foreground/60 bg-card"
+          }`}
       >
         <div className="p-3 rounded-full bg-secondary text-muted-foreground">
           <Upload size={24} />
         </div>
         <div className="text-center space-y-1">
           <p className="text-sm font-semibold text-foreground">{t("drag_drop_files")}</p>
-          <p className="text-xs text-muted-foreground">{t("media_limits")}</p>
+          <p className="text-xs text-muted-foreground">{t("media_limits")} {process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB || "10"}MB</p>
         </div>
-        
+
         {isUploading ? (
           <div className="w-full max-w-md space-y-2 mt-4">
             <div className="flex justify-between text-sm text-muted-foreground">
@@ -188,7 +187,7 @@ export default function AdminMedia() {
               <span>{uploadStats.current} / {uploadStats.total}</span>
             </div>
             <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-primary transition-all duration-300"
                 style={{ width: `${(uploadStats.current / uploadStats.total) * 100}%` }}
               />
@@ -228,7 +227,7 @@ export default function AdminMedia() {
                   <div className="font-semibold text-xs text-foreground truncate">{item.name}</div>
                   <div className="text-[10px] text-muted-foreground mt-0.5">{item.size}</div>
                 </div>
-                
+
                 <button
                   onClick={() => handleDeleteClick(item.id)}
                   className="w-full py-2 sm:py-1.5 rounded-lg border border-destructive/20 hover:border-destructive bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"

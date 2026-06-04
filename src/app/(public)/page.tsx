@@ -156,22 +156,7 @@ function HomeContent() {
     : posts;
 
   return (
-    <div className="container mx-auto px-6 py-10 max-w-[1280px] font-sans">
-      
-      {/* Locale Selector */}
-      <div className="flex items-center justify-between mt-2 mb-6">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Globe size={14} />
-          <button
-            onClick={() => setLocale(locale === "ru" ? "en" : "ru")}
-            className="hover:text-foreground font-semibold uppercase tracking-wider transition-colors cursor-pointer"
-          >
-            {locale === "ru" ? "English" : "Русский"}
-          </button>
-        </div>
-        {/* Admin panel link has been removed from the public website for privacy */}
-        <div />
-      </div>
+    <div className="container mx-auto px-6 pb-10 pt-4 max-w-[1280px] font-sans">
 
       {/* Centered Logo */}
       <div className="text-center mb-14 mt-6">

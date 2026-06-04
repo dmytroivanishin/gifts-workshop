@@ -4,6 +4,9 @@ import { IMediaService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest } from "@/lib/validateRequest";
 import { mediaSchema } from "@/common/validation/schemas";
+import { getUserId } from "@/lib/authUtils";
+import { ValidationError } from "@/common/errors/validation";
+import { UnauthorizedError } from "@/common/errors/unauthorized";
 
 export class MediaController {
   constructor(private mediaService: IMediaService) {}
@@ -38,19 +41,24 @@ export class MediaController {
         const files = formData.getAll("files") as File[];
         
         if (!files || files.length === 0) {
-          throw new Error("No files provided");
+          throw new ValidationError("No files provided");
         }
 
-        const maxFileSizeBytes = (Number(process.env.MAX_FILE_SIZE_MB) || 10) * 1024 * 1024;
+        const userId = await getUserId();
+        if (!userId) {
+          throw new UnauthorizedError("Unauthorized");
+        }
+
+        const maxFileSizeBytes = (Number(process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB) || 10) * 1024 * 1024;
         const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 
         const savedMedia = [];
         for (const file of files) {
           if (!allowedTypes.includes(file.type)) {
-            throw new Error(`Invalid file type: ${file.name}. Only JPG and PNG are allowed.`);
+            throw new ValidationError(`Invalid file type: ${file.name}. Only JPG and PNG are allowed.`);
           }
           if (file.size > maxFileSizeBytes) {
-            throw new Error(`File ${file.name} is too large. Max size is ${process.env.MAX_FILE_SIZE_MB}MB.`);
+            throw new ValidationError(`File ${file.name} is too large. Max size is ${process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB || 10}MB.`);
           }
 
           // Convert to buffer
@@ -58,9 +66,7 @@ export class MediaController {
           const buffer = Buffer.from(arrayBuffer);
 
           // Delegate to MediaService for storage and DB saving
-          // Using the default seeded admin UUID for now since auth is not fully hooked up in this controller yet
-          const adminUserId = "c0a80101-1111-4444-9999-abcdefabcdef";
-          const media = await this.mediaService.uploadAndSaveMedia(buffer, file.name, file.type, adminUserId);
+          const media = await this.mediaService.uploadAndSaveMedia(buffer, file.name, file.type, userId);
           savedMedia.push(media);
         }
 
