@@ -101,7 +101,7 @@
 - **Language**:
     - `id` (String - e.g., 'en', 'ru'), `name` (String), `isActive` (Boolean).
 - **SystemText**:
-    - `id` (String - translation key), `content` (localized object `Record<string, string>`).
+    - `id` (String - translation key), `content` (localized object `Record<string, string>`), `area` (String / Enum - 'public', 'admin', 'shared').
 - **Collection**:
     - `id`, `slug` (String), `title` (localized object `Record<string, string>`), `description` (localized object `Record<string, string>`), `main` (Boolean), `userId` (ref User).
 - **Category**:

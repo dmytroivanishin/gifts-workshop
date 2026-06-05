@@ -69,7 +69,7 @@ export interface ILanguageService {
 }
 
 export interface ISystemTextService {
-  getAllSystemTexts(options?: PaginationOptions): Promise<PaginatedResult<SystemText>>;
+  getAllSystemTexts(options?: QueryOptions): Promise<PaginatedResult<SystemText>>;
   getSystemTextById(id: string): Promise<SystemText | undefined>;
   saveSystemText(body: any): Promise<SystemText>;
   deleteSystemText(id: string): Promise<boolean>;

@@ -121,6 +121,7 @@ export interface Language {
 export interface SystemText {
   readonly id: string;
   content: LocalizedText;
+  area: "public" | "admin" | "shared" | string;
 }
 
 export type EntityType = "post" | "category" | "collection" | "tag" | "system";

@@ -52,6 +52,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
   const [titles, setTitles] = useState<Record<string, string>>({});
   const [descriptions, setDescriptions] = useState<Record<string, string>>({});
+  const [area, setArea] = useState<string>("public");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
 
@@ -70,6 +71,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
            newTitles[lang] = rawContent[lang] || "";
          });
          setTitles(newTitles);
+         setArea((entity as any).area || "public");
       } else {
          const rawTitle = (entity as any).title || (entity as any).name;
          const rawDesc = (entity as any).description || {};
@@ -101,7 +103,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
     try {
       if (isSystem) {
-        await updateSystem({ id, content: titles }).unwrap();
+        await updateSystem({ id, content: titles, area }).unwrap();
       } else if (isPost) {
         await updatePost({
           id,
@@ -199,6 +201,26 @@ export default function LocalizationDetailPage({ params }: PageProps) {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6" noValidate>
+        {isSystem && (
+          <div className="bg-card rounded-xl border border-border/40 p-6 shadow-sm space-y-4">
+            <h3 className="font-bold text-sm text-foreground mb-2 uppercase">System Text Area</h3>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Visibility Area
+              </label>
+              <select
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
+              >
+                <option value="public">Public (Visible to everyone)</option>
+                <option value="admin">Admin (Visible only in admin panel)</option>
+                <option value="shared">Shared (Visible in both)</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         <div className={`grid grid-cols-1 md:grid-cols-${Math.min(activeLanguages.length, 3)} gap-6`}>
           {activeLanguages.map((lang) => (
             <div key={lang} className="bg-card rounded-xl border border-border/40 p-6 shadow-sm space-y-4 relative">

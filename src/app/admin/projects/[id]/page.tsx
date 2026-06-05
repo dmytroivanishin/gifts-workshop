@@ -85,7 +85,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   const [selectedImages, setSelectedImages] = useState<SelectedMedia[]>([]);
   const [coverImage, setCoverImage] = useState(""); // mediaId of cover
   const [coverPosition, setCoverPosition] = useState<{ x: number; y: number; zoom: number } | null>(null);
-  
+
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
   const [activeCropMediaId, setActiveCropMediaId] = useState<string | null>(null);
 
@@ -122,10 +122,10 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   useEffect(() => {
     if (isEditMode && postResponse?.data) {
       const post = postResponse.data;
-      
+
       const cat = typeof post.category !== "string" ? post.category?.id || "" : post.category;
       const col = typeof post.collection !== "string" ? post.collection?.id || "" : post.collection;
-      
+
       form.reset({
         title: typeof post.title === "string" ? { ru: post.title, en: "" } : { ru: post.title?.ru || "", en: post.title?.en || "" },
         description: typeof post.description === "string" ? { ru: post.description, en: "" } : { ru: post.description?.ru || "", en: post.description?.en || "" },
@@ -142,14 +142,14 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           position: m.position || undefined,
         })) : []
       });
-      
+
       const images: SelectedMedia[] = post.media.map((m: any) => ({
         mediaId: typeof m.media === "string" ? m.media : m.media.id,
         url: typeof m.media === "string" ? "" : m.media.originalUrl,
         position: m.position,
       }));
       setSelectedImages(images);
-      
+
       if (post.poster) {
         setCoverImage(typeof post.poster === "string" ? post.poster : post.poster.id);
         if (post.poster.position) {
@@ -185,7 +185,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     });
     setSelectedImages(newSelected);
     setIsMediaPickerOpen(false);
-    
+
     if (newSelected.length > 0 && !coverImage) {
       setCoverImage(newSelected[0].mediaId);
     } else if (newSelected.length === 0) {
@@ -197,11 +197,11 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   const handleSaveCrop = (pos: { x: number; y: number; zoom: number }) => {
     if (activeCropMediaId === "cover") {
       setCoverPosition(pos);
-      setSelectedImages(prev => prev.map(m => 
+      setSelectedImages(prev => prev.map(m =>
         m.mediaId === coverImage ? { ...m, position: pos } : m
       ));
     } else if (activeCropMediaId) {
-      setSelectedImages(prev => prev.map(m => 
+      setSelectedImages(prev => prev.map(m =>
         m.mediaId === activeCropMediaId ? { ...m, position: pos } : m
       ));
       if (activeCropMediaId === coverImage) {
@@ -329,7 +329,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
           <div className="bg-card rounded-xl border border-border/40 p-6 space-y-4 shadow-sm">
-            
+
             {/* Title */}
             <FormField
               control={form.control}
@@ -505,8 +505,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                               <CalendarIcon size={16} />
                             </div>
                             <span className={field.value ? "text-foreground font-medium" : "text-muted-foreground"}>
-                              {field.value 
-                                ? new Date(field.value).toLocaleString(locale === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) 
+                              {field.value
+                                ? new Date(field.value).toLocaleString(locale === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })
                                 : (locale === 'ru' ? "Выберите дату..." : "Select date...")}
                             </span>
                           </button>
@@ -527,123 +527,115 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
             </div>
           </div>
 
-        {/* Media Selector with crop positioning */}
-        <div className="bg-card rounded-xl border border-border/40 p-6 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between border-b pb-2">
-            <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
-              <ImageIcon size={16} />
-              <span>{t("gallery_and_media")}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsMediaPickerOpen(true)}
-              className="text-xs font-semibold px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
-            >
-              {t("add_media")}
-            </button>
-          </div>
-
-          {selectedImages.length === 0 ? (
-            <div className="py-8 text-center border-2 border-dashed border-border rounded-xl">
-              <p className="text-sm text-muted-foreground">{t("no_media_selected")}</p>
-            </div>
-          ) : (
-            <SortableMediaGrid
-              items={selectedImages}
-              mediaList={mediaList}
-              coverImage={coverImage}
-              onReorder={setSelectedImages}
-              onSetCover={(id, position) => {
-                setCoverImage(id);
-                setCoverPosition(position || null);
-              }}
-              onCrop={(id) => setActiveCropMediaId(id)}
-              onRemove={(id) => {
-                const newSelected = selectedImages.filter((img) => img.mediaId !== id);
-                setSelectedImages(newSelected);
-                if (coverImage === id) {
-                  setCoverImage(newSelected.length > 0 ? newSelected[0].mediaId : "");
-                  setCoverPosition(newSelected.length > 0 && newSelected[0].position ? newSelected[0].position : null);
-                }
-              }}
-            />
-          )}
-
-
-          {/* Error Message for Poster */}
-          {form.formState.errors.posterId && (
-            <div className="pt-2">
-              <p className="text-[0.8rem] font-medium text-destructive">{t(form.formState.errors.posterId.message as string)}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <button
-              type="button"
-              onClick={() => handleActionClick("Archived")}
-              disabled={isSaving}
-              className="p-2.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
-              title={t("archive")}
-            >
-              <ArchiveIcon size={18} />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin/dashboard"
-              className="px-5 py-2.5 rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors cursor-pointer"
-            >
-              {t("cancel")}
-            </Link>
-
-            {postResponse?.data?.status !== "Published" && (
+          {/* Media Selector with crop positioning */}
+          <div className="bg-card rounded-xl border border-border/40 p-6 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between border-b pb-2">
+              <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
+                <ImageIcon size={16} />
+                <span>{t("gallery_and_media")}</span>
+              </div>
               <button
                 type="button"
-                onClick={() => handleActionClick("Draft")}
-                disabled={isSaving}
-                className="flex items-center gap-1.5 px-5 py-2.5 bg-[#F9E4D3] text-[#904504] text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 cursor-pointer"
+                onClick={() => setIsMediaPickerOpen(true)}
+                className="text-xs font-semibold px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
               >
-                {isSaving && form.getValues("status") === "Draft" ? (
+                {t("add_media")}
+              </button>
+            </div>
+
+            {selectedImages.length === 0 ? (
+              <div className="py-8 text-center border-2 border-dashed border-border rounded-xl">
+                <p className="text-sm text-muted-foreground">{t("no_media_selected")}</p>
+              </div>
+            ) : (
+              <SortableMediaGrid
+                items={selectedImages}
+                mediaList={mediaList}
+                coverImage={coverImage}
+                onReorder={setSelectedImages}
+                onSetCover={(id, position) => {
+                  setCoverImage(id);
+                  setCoverPosition(position || null);
+                }}
+                onCrop={(id) => setActiveCropMediaId(id)}
+                onRemove={(id) => {
+                  const newSelected = selectedImages.filter((img) => img.mediaId !== id);
+                  setSelectedImages(newSelected);
+                  if (coverImage === id) {
+                    setCoverImage(newSelected.length > 0 ? newSelected[0].mediaId : "");
+                    setCoverPosition(newSelected.length > 0 && newSelected[0].position ? newSelected[0].position : null);
+                  }
+                }}
+              />
+            )}
+
+
+            {/* Error Message for Poster */}
+            {form.formState.errors.posterId && (
+              <div className="pt-2">
+                <p className="text-[0.8rem] font-medium text-destructive">{t(form.formState.errors.posterId.message as string)}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <button
+                type="button"
+                onClick={() => handleActionClick("Archived")}
+                disabled={isSaving}
+                className="p-2.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+                title={t("archive")}
+              >
+                <ArchiveIcon size={18} />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {postResponse?.data?.status !== "Published" && (
+                <button
+                  type="button"
+                  onClick={() => handleActionClick("Draft")}
+                  disabled={isSaving}
+                  className="flex items-center gap-1.5 px-5 py-2.5 bg-[#F9E4D3] text-[#904504] text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {isSaving && form.getValues("status") === "Draft" ? (
+                    <>
+                      <Loader2 className="animate-spin" size={16} />
+                      {t("saving")}
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                    </>
+                  )}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => handleActionClick("Published")}
+                disabled={!canPublish || isSaving}
+                className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
+              >
+                {isSaving && form.getValues("status") === "Published" ? (
                   <>
                     <Loader2 className="animate-spin" size={16} />
                     {t("saving")}
                   </>
                 ) : (
                   <>
-                    <Save size={16} />
-                    {t("save_draft") === "save_draft" ? "Сохранить" : t("save_draft")}
+                    <Send size={16} />
+                    {postResponse?.data?.status === "Published"
+                      ? (t("update") === "update" ? "Обновить" : t("update"))
+                      : (t("publish") === "publish" ? "Опубликовать" : t("publish"))}
                   </>
                 )}
               </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() => handleActionClick("Published")}
-              disabled={!canPublish || isSaving}
-              className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
-            >
-              {isSaving && form.getValues("status") === "Published" ? (
-                <>
-                  <Loader2 className="animate-spin" size={16} />
-                  {t("saving")}
-                </>
-              ) : (
-                <>
-                  <Send size={16} />
-                  {postResponse?.data?.status === "Published" 
-                    ? (t("update") === "update" ? "Обновить" : t("update"))
-                    : (t("publish") === "publish" ? "Опубликовать" : t("publish"))}
-                </>
-              )}
-            </button>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
       </Form>
 
       {/* Modals */}
@@ -653,13 +645,13 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
             mediaList.find(m => m.id === (activeCropMediaId === "cover" ? coverImage : activeCropMediaId))
           }
           imageUrl={
-            activeCropMediaId === "cover" 
-              ? selectedImages.find(m => m.mediaId === coverImage)?.url || "" 
+            activeCropMediaId === "cover"
+              ? selectedImages.find(m => m.mediaId === coverImage)?.url || ""
               : selectedImages.find(m => m.mediaId === activeCropMediaId)?.url || ""
           }
           initialPosition={
-            activeCropMediaId === "cover" 
-              ? coverPosition || undefined 
+            activeCropMediaId === "cover"
+              ? coverPosition || undefined
               : selectedImages.find(m => m.mediaId === activeCropMediaId)?.position
           }
           onClose={() => setActiveCropMediaId(null)}

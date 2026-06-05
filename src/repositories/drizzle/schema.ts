@@ -44,6 +44,7 @@ export const languages = pgTable("languages", {
 export const systemTexts = pgTable("system_texts", {
   id: varchar("id", { length: 255 }).primaryKey(), // Key of the text (e.g. 'save', 'cancel')
   content: jsonb("content").$type<Record<string, string>>().notNull(),
+  area: varchar("area", { length: 50 }).default("public").notNull(),
 });
 
 export const colors = pgTable("colors", {

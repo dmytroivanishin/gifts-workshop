@@ -8,6 +8,7 @@ import { getPaginationParams } from "@/utils/paginationUtils";
 const systemTextSchema = z.object({
   id: z.string().min(1).max(255), // the key
   content: z.record(z.string(), z.string()), // { "ru": "...", "en": "..." }
+  area: z.enum(["public", "admin", "shared"]).optional(),
 });
 
 export class SystemTextController {

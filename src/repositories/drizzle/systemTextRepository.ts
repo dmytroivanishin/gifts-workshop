@@ -4,10 +4,18 @@ import { SystemText } from "@/types";
 import { drizzleDatabase } from "./database";
 import { systemTexts } from "./schema";
 
+import { QueryOptions } from "../interfaces";
+
 export class SystemTextRepository implements ISystemTextRepository {
-  async getAll(): Promise<SystemText[]> {
+  async getAll(options?: QueryOptions): Promise<SystemText[]> {
     const db = drizzleDatabase.getDb();
-    const result = await db.select().from(systemTexts).orderBy(systemTexts.id);
+    let query = db.select().from(systemTexts).$dynamic();
+    
+    if (options?.area) {
+      query = query.where(inArray(systemTexts.area, [options.area, 'shared']));
+    }
+    
+    const result = await query.orderBy(systemTexts.id);
     return result as SystemText[];
   }
 

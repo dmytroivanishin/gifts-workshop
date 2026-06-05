@@ -17,6 +17,7 @@ export interface QueryOptions extends PaginationOptions {
   tagsIds?: string;
   slug?: string;
   populate?: string;
+  area?: string;
 }
 
 export interface IBaseRepository<T, TPopulated = T, TQueryOptions = PaginationOptions> {
@@ -59,7 +60,7 @@ export interface ILanguageRepository extends IBaseRepository<Language> {
   getByCode(code: string): Promise<Language | undefined>;
 }
 
-export interface ISystemTextRepository extends IBaseRepository<SystemText> {}
+export interface ISystemTextRepository extends IBaseRepository<SystemText, SystemText, QueryOptions> {}
 
 export interface ICommentRepository extends IBaseRepository<Comment, PopulatedComment, QueryOptions> {
   getByQuery(query: Record<string, any>, options?: PaginationOptions & { populate?: string }): Promise<PopulatedComment[]>;

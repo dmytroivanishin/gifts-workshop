@@ -61,12 +61,65 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // --- LOCALIZATION LOGIC ---
+  if (
+    !pathname.startsWith('/api') &&
+    !pathname.startsWith('/_next') &&
+    !pathname.includes('.')
+  ) {
+    const isAdmin = pathname.startsWith('/admin');
+    const cookieName = isAdmin ? 'admin_locale' : 'NEXT_LOCALE';
+    
+    let locale = request.cookies.get(cookieName)?.value;
+
+    if (!locale) {
+      if (isAdmin) {
+        locale = process.env.NEXT_PUBLIC_DEFAULT_ADMIN_LOCALE || 'ru';
+      } else {
+        const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_APP_LOCALE || 'ru';
+        const acceptLanguage = request.headers.get('accept-language');
+        
+        if (!acceptLanguage) {
+          locale = defaultLocale;
+        } else {
+          const preferred = acceptLanguage.split(',')[0].trim().toLowerCase();
+          if (preferred.startsWith('ru') || preferred.startsWith('be') || preferred.startsWith('uk') || preferred.startsWith('kk')) {
+            locale = 'ru';
+          } else if (preferred.startsWith('en')) {
+            locale = 'en';
+          } else {
+            locale = 'en'; 
+          }
+        }
+      }
+      
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set('x-locale', locale);
+      requestHeaders.set('x-is-admin', isAdmin ? 'true' : 'false');
+      
+      const response = NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        }
+      });
+      response.cookies.set(cookieName, locale, { path: '/', maxAge: 31536000 });
+      return response;
+    }
+
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-locale', locale);
+    requestHeaders.set('x-is-admin', isAdmin ? 'true' : 'false');
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      }
+    });
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/api/v1/:path*"
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|images/|icons/|[^/]+\\.[\\w]+$).*)'],
 };
