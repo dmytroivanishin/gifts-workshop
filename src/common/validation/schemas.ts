@@ -26,7 +26,7 @@ export const mediaSchema = z.object({
   thumbnailUrl: z.string().url("error_invalid_url"),
   originalUrl: z.string().url("error_invalid_url"),
   userId: z.string().uuid("error_invalid_uuid"),
-  position: positionSchema.optional(),
+  position: positionSchema.nullable().optional(),
   width: z.number().positive().optional(),
   height: z.number().positive().optional(),
   orientation: z.enum(["Portrait", "Landscape"]).optional(),
@@ -63,7 +63,7 @@ export const tagSchema = z.object({
 export const postMediaSchema = z.object({
   order: z.number().int().min(0),
   mediaId: z.string().uuid("error_invalid_uuid"),
-  position: positionSchema.optional(),
+  position: positionSchema.nullable().optional(),
 });
 
 const optionalUuidSchema = z.preprocess(

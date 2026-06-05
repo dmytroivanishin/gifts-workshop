@@ -19,8 +19,10 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
   private mapToPopulated(record: CategoryRecord): PopulatedCategory {
     if (!record) return record as any;
     const tagsList = record.categoriesToTags?.map((ct: any) => ct.tag) || [];
+    const { categoriesToTags, ...restRecord } = record as any;
+
     return {
-      ...(record as any),
+      ...restRecord,
       tags: tagsList,
       tagsIds: tagsList.map((t: any) => t.id),
     } as PopulatedCategory;
@@ -37,14 +39,14 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
     };
   }
 
-  async populate(item: any, options?: { populate?: string }): Promise<PopulatedCategory> {
+  async populate(item: any): Promise<PopulatedCategory> {
     if (!item) return item;
-    const results = await this.getById(item.id, options);
+    const results = await this.getById(item.id);
     if (!results) return item;
     return results;
   }
 
-  override async getAll(options?: PaginationOptions & { populate?: string }): Promise<PopulatedCategory[]> {
+  override async getAll(options?: PaginationOptions): Promise<PopulatedCategory[]> {
     const db = drizzleDatabase.getDb();
     
     const queryOptions: any = {
@@ -63,7 +65,7 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
     return records.map(this.mapToPopulated);
   }
 
-  override async getById(id: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined> {
+  override async getById(id: string): Promise<PopulatedCategory | undefined> {
     const record = await drizzleDatabase.getDb().query.categories.findFirst({
       where: eq(categories.id, id),
       with: this.getWithRelations()
@@ -71,7 +73,7 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
     return record ? this.mapToPopulated(record) : undefined;
   }
 
-  override async getByIds(ids: string[], options?: { populate?: string }): Promise<PopulatedCategory[]> {
+  override async getByIds(ids: string[]): Promise<PopulatedCategory[]> {
     if (!ids.length) return [];
     const records = await drizzleDatabase.getDb().query.categories.findMany({
       where: inArray(categories.id, ids),
@@ -80,7 +82,7 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
     return records.map(this.mapToPopulated);
   }
 
-  async getBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined> {
+  async getBySlug(slug: string): Promise<PopulatedCategory | undefined> {
     const record = await drizzleDatabase.getDb().query.categories.findFirst({
       where: eq(categories.slug, slug),
       with: this.getWithRelations()

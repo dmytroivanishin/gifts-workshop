@@ -20,11 +20,9 @@ export class PostController {
       const collection = searchParams.get("collection") || undefined;
       const inStock = searchParams.get("inStock") === "true" ? true : undefined;
       const status = searchParams.get("status") || undefined;
-      const populate = searchParams.get("populate") || undefined;
-      
       const { page, limit } = getPaginationParams(request);
 
-      const result = await this.postService.getFilteredPosts({ search, category, tag, collection, inStock, status, page, limit, populate });
+      const result = await this.postService.getFilteredPosts({ search, category, tag, collection, inStock, status, page, limit });
 
       return sendSuccess(result.data, result.meta);
     } catch (error: any) {
@@ -34,9 +32,7 @@ export class PostController {
 
   async getPostById(request: Request, id: string) {
     try {
-      const { searchParams } = new URL(request.url);
-      const populate = searchParams.get("populate") || undefined;
-      const post = await this.postService.getPostById(id, { populate });
+      const post = await this.postService.getPostById(id);
       if (!post) {
         throw new NotFoundError("Post not found");
       }

@@ -1,11 +1,11 @@
-import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment, PopulatedCategory } from "@/types";
+import { Category, Collection, Color, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment, PopulatedCategory, PopulatedPost } from "@/types";
 
 import { QueryOptions } from "@/repositories/interfaces";
 
 export interface ICategoryService {
-  getAllCategories(options?: PaginationOptions & { populate?: string }): Promise<PaginatedResult<Category>>;
-  getCategoryById(id: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined>;
-  getCategoryBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined>;
+  getAllCategories(options?: PaginationOptions): Promise<PaginatedResult<PopulatedCategory>>;
+  getCategoryById(id: string): Promise<PopulatedCategory | undefined>;
+  getCategoryBySlug(slug: string): Promise<PopulatedCategory | undefined>;
   saveCategory(category: any): Promise<PopulatedCategory>;
   deleteCategory(id: string): Promise<boolean>;
   reorderCategories(items: { id: string; order: number }[]): Promise<boolean>;
@@ -52,9 +52,9 @@ export interface IUserService {
 }
 
 export interface IPostService {
-  getFilteredPosts(filters?: QueryOptions): Promise<PaginatedResult<Post>>;
-  getPostById(id: string, options?: { populate?: string }): Promise<Post | undefined>;
-  getPostBySlug(slug: string, options?: { populate?: string }): Promise<Post | undefined>;
+  getFilteredPosts(options?: QueryOptions): Promise<PaginatedResult<PopulatedPost>>;
+  getPostById(id: string): Promise<PopulatedPost | undefined>;
+  getPostBySlug(slug: string): Promise<PopulatedPost | undefined>;
   createPost(body: any): Promise<Post>;
   updatePost(id: string, body: any): Promise<Post | undefined>;
   deletePost(id: string): Promise<boolean>;
@@ -77,7 +77,7 @@ export interface ISystemTextService {
 
 export interface ICommentService {
   getFilteredComments(filters?: QueryOptions): Promise<PaginatedResult<Comment>>;
-  getCommentById(id: string, options?: { populate?: string }): Promise<Comment | undefined>;
+  getCommentById(id: string): Promise<Comment | undefined>;
   createComment(body: any): Promise<Comment>;
   updateCommentStatus(id: string, status: "Review" | "Approved" | "Rejected"): Promise<Comment | undefined>;
   replyToComment(id: string, body: any): Promise<Comment>;

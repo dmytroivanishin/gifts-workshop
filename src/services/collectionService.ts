@@ -50,8 +50,8 @@ export class CollectionService implements ICollectionService {
 
     const collection: Collection = {
       id,
-      title: typeof body.title === "string" ? { ru: body.title, en: "" } : { ru: body.title?.ru || "", en: body.title?.en || "" },
-      description: typeof body.description === "string" ? { ru: body.description, en: "" } : { ru: body.description?.ru || "", en: body.description?.en || "" },
+      title: body.title,
+      description: body.description,
       main: body.main ?? false,
       slug,
     };
@@ -68,7 +68,7 @@ export class CollectionService implements ICollectionService {
       .where(eq(posts.collectionId, id));
       
     if (Number(postCount) > 0) {
-      throw new ConflictError("Невозможно удалить коллекцию, так как к ней привязаны посты.", "COLLECTION_HAS_POSTS");
+      throw new ConflictError("Cannot delete collection because it is linked to posts.", "COLLECTION_HAS_POSTS");
     }
     
     const [{ categoryCount }] = await db
@@ -77,7 +77,7 @@ export class CollectionService implements ICollectionService {
       .where(eq(categoriesSchema.collectionId, id));
       
     if (Number(categoryCount) > 0) {
-      throw new ConflictError("Невозможно удалить коллекцию, так как к ней привязаны категории.", "COLLECTION_HAS_CATEGORIES");
+      throw new ConflictError("Cannot delete collection because it is linked to categories.", "COLLECTION_HAS_CATEGORIES");
     }
 
     return this.collectionRepo.delete(id);

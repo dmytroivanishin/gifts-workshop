@@ -28,7 +28,7 @@ export class SystemTextService implements ISystemTextService {
   async saveSystemText(body: any): Promise<SystemText> {
     const text: SystemText = {
       id: body.id, // ID must be provided (e.g. 'save', 'cancel')
-      content: typeof body.content === "string" ? { ru: body.content, en: "" } : body.content,
+      content: body.content,
       area: body.area || "public",
     };
     return this.systemTextRepo.save(text);

@@ -40,10 +40,8 @@ export async function translateToEnglish(text: string): Promise<string> {
   return transliterate(text);
 }
 
-export async function generateSlug(text: string): Promise<string> {
-  const englishText = await translateToEnglish(text);
-  
-  return englishText
+export function formatSlug(text: string): string {
+  return text
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
@@ -53,7 +51,12 @@ export async function generateSlug(text: string): Promise<string> {
     .replace(/-+/g, "-");            // Replace multiple hyphens with a single hyphen
 }
 
-export async function generateSlugFromField(field: string | { ru?: string; en?: string } | undefined): Promise<string> {
+export async function generateSlug(text: string): Promise<string> {
+  const englishText = await translateToEnglish(text);
+  return formatSlug(englishText);
+}
+
+export async function generateSlugFromField(field: string | Record<string, any> | undefined): Promise<string> {
   if (!field) return `slug-${Date.now()}`;
   
   if (typeof field === "string") {
@@ -61,12 +64,15 @@ export async function generateSlugFromField(field: string | { ru?: string; en?: 
   }
   
   if (typeof field === "object") {
-    // Prefer English value if provided, otherwise translate Russian
-    if (field.en && field.en.trim().length > 0) {
-      return generateSlug(field.en);
+    // If English is available, skip translation and format directly
+    if ("en" in field && typeof field.en === "string" && field.en.trim().length > 0) {
+      return formatSlug(field.en);
     }
-    if (field.ru && field.ru.trim().length > 0) {
-      return generateSlug(field.ru);
+    
+    // Otherwise, pick the first available string and translate it
+    const availableVal = Object.values(field).find(v => typeof v === "string" && v.trim().length > 0);
+    if (availableVal) {
+      return generateSlug(availableVal as string);
     }
   }
   
@@ -74,7 +80,7 @@ export async function generateSlugFromField(field: string | { ru?: string; en?: 
 }
 
 export async function generateUniqueSlug(
-  field: string | { ru?: string; en?: string } | undefined,
+  field: string | Record<string, any> | undefined,
   currentId: string,
   getBySlug: (slug: string) => Promise<{ id: string } | null | undefined>
 ): Promise<string> {

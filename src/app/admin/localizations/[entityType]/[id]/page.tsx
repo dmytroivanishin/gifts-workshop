@@ -105,10 +105,18 @@ export default function LocalizationDetailPage({ params }: PageProps) {
       if (isSystem) {
         await updateSystem({ id, content: titles, area }).unwrap();
       } else if (isPost) {
+        const post = entity as any;
         await updatePost({
           id,
           title: titles,
           description: descriptions,
+          inStock: post.inStock,
+          status: post.status,
+          collectionId: post.collectionId,
+          categoryId: post.categoryId,
+          tagsIds: post.tagsIds,
+          posterId: post.posterId,
+          media: post.media,
         }).unwrap();
       } else if (isCategory) {
         const cat = entity as any;
@@ -122,15 +130,20 @@ export default function LocalizationDetailPage({ params }: PageProps) {
           tagsIds: cat.tagsIds,
         }).unwrap();
       } else if (isTag) {
+        const tag = entity as any;
         await updateTag({
           id,
-          title: titles, 
+          name: titles,
+          slug: tag.slug,
         }).unwrap();
       } else if (isCollection) {
+        const coll = entity as any;
         await updateCollection({
           id,
           title: titles,
           description: descriptions,
+          main: coll.main,
+          slug: coll.slug,
         }).unwrap();
       }
 
@@ -281,7 +294,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
           <button
             type="submit"
-            disabled={isSaving}
+            disabled={isSaving || activeLanguages.filter(l => l === "ru" || l === "en").some(lang => !titles[lang] || !titles[lang].trim()) || Object.keys(serverErrors).length > 0}
             className="flex items-center gap-1.5 px-6 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
           >
             {isSaving ? (

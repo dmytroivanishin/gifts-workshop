@@ -99,7 +99,6 @@ function HomeContent() {
     status: "Published",
     page,
     limit: 6,
-    populate: "category,media",
   });
 
   const loaderRef = useRef<HTMLDivElement | null>(null);

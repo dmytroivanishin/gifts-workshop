@@ -19,9 +19,7 @@ export class CategoryService implements ICategoryService {
     private tagRepo: ITagRepository
   ) {}
 
-  async getAllCategories(options?: PaginationOptions & { populate?: string }): Promise<any> {
-    const populate = options?.populate;
-
+  async getAllCategories(options?: PaginationOptions): Promise<any> {
     if (options?.page || options?.limit) {
       const page = options.page || 1;
       const limit = options.limit || 20;
@@ -30,13 +28,12 @@ export class CategoryService implements ICategoryService {
         page,
         limit: limit + 1,
         offset: (page - 1) * limit,
-        populate,
       });
 
       return paginate(categories, { page, limit });
     }
 
-    const categories = await this.categoryRepo.getAll({ populate });
+    const categories = await this.categoryRepo.getAll();
     
     return {
       data: categories,
@@ -49,15 +46,15 @@ export class CategoryService implements ICategoryService {
     };
   }
 
-  async getCategoryById(id: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined> {
+  async getCategoryById(id: string): Promise<PopulatedCategory | undefined> {
     if (isUUID(id)) {
-      return this.categoryRepo.getById(id, options);
+      return this.categoryRepo.getById(id);
     }
-    return this.categoryRepo.getBySlug(id, options);
+    return this.categoryRepo.getBySlug(id);
   }
 
-  async getCategoryBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined> {
-    return this.categoryRepo.getBySlug(slug, options);
+  async getCategoryBySlug(slug: string): Promise<PopulatedCategory | undefined> {
+    return this.categoryRepo.getBySlug(slug);
   }
 
   async saveCategory(body: any): Promise<PopulatedCategory> {
@@ -108,7 +105,7 @@ export class CategoryService implements ICategoryService {
       .where(eq(categoriesSchema.parentId, id));
       
     if (Number(childrenCount) > 0) {
-      throw new ConflictError("Невозможно удалить родительскую категорию, так как она содержит дочерние.", "CATEGORY_HAS_CHILDREN");
+      throw new ConflictError("Cannot delete parent category because it contains child categories.", "CATEGORY_HAS_CHILDREN");
     }
     
     const [{ postCount }] = await db
@@ -117,7 +114,7 @@ export class CategoryService implements ICategoryService {
       .where(eq(posts.categoryId, id));
       
     if (Number(postCount) > 0) {
-      throw new ConflictError("Невозможно удалить категорию, так как к ней привязаны посты.", "CATEGORY_HAS_POSTS");
+      throw new ConflictError("Cannot delete category because it is linked to posts.", "CATEGORY_HAS_POSTS");
     }
 
     return this.categoryRepo.delete(id);

@@ -16,21 +16,20 @@ export interface QueryOptions extends PaginationOptions {
   collectionId?: string;
   tagsIds?: string;
   slug?: string;
-  populate?: string;
   area?: string;
 }
 
 export interface IBaseRepository<T, TPopulated = T, TQueryOptions = PaginationOptions> {
-  getAll(options?: TQueryOptions & { populate?: string }): Promise<TPopulated[]>;
-  getById(id: string, options?: { populate?: string }): Promise<TPopulated | undefined>;
-  getByIds(ids: string[], options?: { populate?: string }): Promise<TPopulated[]>;
+  getAll(options?: TQueryOptions): Promise<TPopulated[]>;
+  getById(id: string): Promise<TPopulated | undefined>;
+  getByIds(ids: string[]): Promise<TPopulated[]>;
   save(item: T): Promise<TPopulated>;
   saveMany(items: T[]): Promise<TPopulated[]>;
   delete(id: string): Promise<boolean>;
 }
 
 export interface ICategoryRepository extends IBaseRepository<Category, PopulatedCategory> {
-  getBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedCategory | undefined>;
+  getBySlug(slug: string): Promise<PopulatedCategory | undefined>;
   updateColorInCategories(colorId: string, newHex: string): Promise<void>;
   reorderCategories(items: { id: string; order: number }[]): Promise<boolean>;
 }
@@ -44,8 +43,8 @@ export interface IColorRepository extends IBaseRepository<Color> {}
 export interface IMediaRepository extends IBaseRepository<Media> {}
 
 export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, QueryOptions> {
-  getBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedPost | undefined>;
-  getByQuery(query: Record<string, any>, options?: PaginationOptions & { populate?: string }): Promise<PopulatedPost[]>;
+  getBySlug(slug: string): Promise<PopulatedPost | undefined>;
+  getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedPost[]>;
 }
 
 export interface ITagRepository extends IBaseRepository<Tag> {
@@ -63,6 +62,6 @@ export interface ILanguageRepository extends IBaseRepository<Language> {
 export interface ISystemTextRepository extends IBaseRepository<SystemText, SystemText, QueryOptions> {}
 
 export interface ICommentRepository extends IBaseRepository<Comment, PopulatedComment, QueryOptions> {
-  getByQuery(query: Record<string, any>, options?: PaginationOptions & { populate?: string }): Promise<PopulatedComment[]>;
+  getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedComment[]>;
 }
 

@@ -39,7 +39,6 @@ export class PostService implements IPostService {
       search: filters?.search,
       inStock: filters?.inStock,
       status: filters?.status,
-      populate: filters?.populate,
     };
 
     // 2. Resolve Category Slug/ID
@@ -100,15 +99,15 @@ export class PostService implements IPostService {
     };
   }
 
-  async getPostById(id: string, options?: { populate?: string }): Promise<PopulatedPost | undefined> {
+  async getPostById(id: string): Promise<PopulatedPost | undefined> {
     if (isUUID(id)) {
-      return this.postRepo.getById(id, options);
+      return this.postRepo.getById(id);
     }
-    return this.postRepo.getBySlug(id, options);
+    return this.postRepo.getBySlug(id);
   }
 
-  async getPostBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedPost | undefined> {
-    return this.postRepo.getBySlug(slug, options);
+  async getPostBySlug(slug: string): Promise<PopulatedPost | undefined> {
+    return this.postRepo.getBySlug(slug);
   }
 
   async createPost(body: any): Promise<PopulatedPost> {
@@ -128,6 +127,7 @@ export class PostService implements IPostService {
       media: body.media || [],
       slug,
       userId: body.userId,
+      createdAt: body.createdAt ? new Date(body.createdAt) : new Date(),
     };
 
     const saved = await this.postRepo.save(flatPost);
@@ -162,6 +162,7 @@ export class PostService implements IPostService {
       })) : []),
       slug,
       userId: body.userId ?? existing.userId,
+      createdAt: body.createdAt ? new Date(body.createdAt) : existing.createdAt,
     };
 
     const saved = await this.postRepo.save(flatPost);

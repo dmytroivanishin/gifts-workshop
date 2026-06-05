@@ -21,7 +21,6 @@ export default function AdminDashboard() {
     search: search || undefined,
     page,
     limit: 10,
-    populate: "category,poster",
   });
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
 

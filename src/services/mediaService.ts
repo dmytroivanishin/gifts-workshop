@@ -97,7 +97,7 @@ export class MediaService implements IMediaService {
       .where(eq(posts.posterId, id));
       
     if (Number(posterCount) > 0) {
-      throw new ConflictError("Невозможно удалить медиа, так как оно используется в посте", "MEDIA_IN_USE");
+      throw new ConflictError("Cannot delete media because it is used in a post.", "MEDIA_IN_USE");
     }
     
     const [{ galleryCount }] = await db
@@ -106,7 +106,7 @@ export class MediaService implements IMediaService {
       .where(eq(postsToMedia.mediaId, id));
       
     if (Number(galleryCount) > 0) {
-      throw new ConflictError("Невозможно удалить медиа, так как оно используется в посте", "MEDIA_IN_USE");
+      throw new ConflictError("Cannot delete media because it is used in a post.", "MEDIA_IN_USE");
     }
 
     return this.mediaRepo.delete(id);

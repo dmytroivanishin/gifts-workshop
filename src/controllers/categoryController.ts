@@ -15,10 +15,10 @@ export class CategoryController {
   async getCategories(request: Request) {
     try {
       const { searchParams } = new URL(request.url);
-      const { page, limit } = getPaginationParams(request);
-      const populate = searchParams.get("populate") || undefined;
+      const page = searchParams.get("page") ? parseInt(searchParams.get("page")!) : undefined;
+      const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!) : undefined;
 
-      const result = await this.categoryService.getAllCategories({ page, limit, populate });
+      const result = await this.categoryService.getAllCategories({ page, limit });
       return sendSuccess(result.data, result.meta);
     } catch (error: any) {
       return sendError(error);
@@ -28,8 +28,7 @@ export class CategoryController {
   async getCategoryById(request: Request, id: string) {
     try {
       const { searchParams } = new URL(request.url);
-      const populate = searchParams.get("populate") || undefined;
-      const category = await this.categoryService.getCategoryById(id, { populate });
+      const category = await this.categoryService.getCategoryById(id);
       if (!category) {
         throw new NotFoundError("Category not found");
       }

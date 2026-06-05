@@ -33,9 +33,10 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     })) || [];
     
     mediaList.sort((a: any, b: any) => a.order - b.order);
+    const { postsToTags, postsToMedia, ...restRecord } = record as any;
 
     return {
-      ...(record as any),
+      ...restRecord,
       media: mediaList,
       tags: tagsList,
       tagsIds: tagsList.map((t: any) => t.id),
@@ -62,15 +63,15 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     };
   }
 
-  async populate(item: any, options?: { populate?: string }): Promise<PopulatedPost> {
+  async populate(item: any): Promise<PopulatedPost> {
     if (!item) return item;
-    const results = await this.getById(item.id, options);
+    const results = await this.getById(item.id);
     if (!results) return item;
     return results;
   }
 
   override async getAll(options?: QueryOptions): Promise<PopulatedPost[]> {
-    if (options && Object.keys(options).some(k => !['page', 'limit', 'offset', 'populate'].includes(k))) {
+    if (options && Object.keys(options).some(k => !['page', 'limit', 'offset'].includes(k))) {
       return this.getByQuery(options, options);
     }
 
@@ -91,7 +92,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     return records.map(this.mapToPopulated.bind(this));
   }
 
-  override async getById(id: string, options?: { populate?: string }): Promise<PopulatedPost | undefined> {
+  override async getById(id: string): Promise<PopulatedPost | undefined> {
     const record = await drizzleDatabase.getDb().query.posts.findFirst({
       where: eq(posts.id, id),
       with: this.getWithRelations()
@@ -99,7 +100,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     return record ? this.mapToPopulated(record as any) : undefined;
   }
 
-  override async getByIds(ids: string[], options?: { populate?: string }): Promise<PopulatedPost[]> {
+  override async getByIds(ids: string[]): Promise<PopulatedPost[]> {
     if (!ids.length) return [];
     const records = await drizzleDatabase.getDb().query.posts.findMany({
       where: inArray(posts.id, ids),
@@ -108,7 +109,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     return records.map(this.mapToPopulated.bind(this));
   }
 
-  async getBySlug(slug: string, options?: { populate?: string }): Promise<PopulatedPost | undefined> {
+  async getBySlug(slug: string): Promise<PopulatedPost | undefined> {
     const record = await drizzleDatabase.getDb().query.posts.findFirst({
       where: eq(posts.slug, slug),
       with: this.getWithRelations()
@@ -116,7 +117,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     return record ? this.mapToPopulated(record as any) : undefined;
   }
 
-  async getByQuery(query: Record<string, any>, options?: PaginationOptions & { populate?: string }): Promise<PopulatedPost[]> {
+  async getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedPost[]> {
     const db = drizzleDatabase.getDb();
     
     const conditions = [];

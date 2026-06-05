@@ -52,16 +52,14 @@ export class TagService implements ITagService {
 
   async saveTag(body: any): Promise<Tag> {
     const id = body.id || randomUUID();
-    const tName = body.name?.ru || body.name || body.title?.ru || body.title || "";
-    
     let slug = body.slug;
     if (!slug) {
-      slug = await generateUniqueSlug(tName, id, this.tagRepo.getBySlug.bind(this.tagRepo));
+      slug = await generateUniqueSlug(body.name, id, this.tagRepo.getBySlug.bind(this.tagRepo));
     }
 
     const tag: Tag = {
       id,
-      name: typeof body.name === "object" ? body.name : { ru: tName, en: tName },
+      name: body.name,
       slug,
     };
 

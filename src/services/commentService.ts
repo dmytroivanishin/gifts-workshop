@@ -38,8 +38,8 @@ export class CommentService implements ICommentService {
     };
   }
 
-  async getCommentById(id: string, options?: { populate?: string }): Promise<Comment | undefined> {
-    return this.commentRepo.getById(id, options);
+  async getCommentById(id: string): Promise<Comment | undefined> {
+    return this.commentRepo.getById(id);
   }
 
   async createComment(body: any): Promise<Comment> {

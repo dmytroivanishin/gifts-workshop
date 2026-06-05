@@ -88,6 +88,7 @@ async function run() {
       await db.update(systemTexts)
         .set({ area: "admin" })
         .where(inArray(systemTexts.id, unknownKeys));
+    }
     // 2. Insert missing keys that exist in code but NOT in DB
     const missingFromDb = allKnown.filter(k => !dbKeysSet.has(k));
     if (missingFromDb.length > 0) {

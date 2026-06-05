@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   
   try {
-    const post = await postService.getPostBySlug(slug, { populate: "category,tags,media" });
+    const post = await postService.getPostBySlug(slug);
     
     if (!post) {
       return {

@@ -26,6 +26,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { SortableMediaGrid } from "@/components/shared/SortableMediaGrid";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
+import { ru, enUS } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface SelectedMedia {
@@ -259,12 +260,12 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   // Options converters for Combobox
   const collectionOptions = collections.map((col) => ({
     value: col.id,
-    label: typeof col.title === "string" ? col.title : col.title?.ru || col.title?.en || "",
+    label: loc(col.title),
   }));
 
   const categoryOptions = categories.map((cat) => ({
     value: cat.id,
-    label: typeof cat.title === "string" ? cat.title : cat.title?.ru || "",
+    label: loc(cat.title),
   }));
 
   const currentCategoryId = form.watch("categoryId");
@@ -514,6 +515,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                         <PopoverContent className="w-auto p-4 rounded-2xl border-border/60 bg-card shadow-xl admin-area font-sans" align="start">
                           <Calendar
                             mode="single"
+                            locale={locale === 'ru' ? ru : enUS}
                             selected={field.value ? new Date(field.value) : undefined}
                             onSelect={(date) => field.onChange(date ? date.toISOString() : undefined)}
                           />
