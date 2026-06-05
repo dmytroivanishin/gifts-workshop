@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { env } from "@/lib/env";
 
-const appUrl = env.NEXT_PUBLIC_APP_URL;
+const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export default function robots(): MetadataRoute.Robots {
   return {

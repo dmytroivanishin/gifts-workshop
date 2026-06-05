@@ -5,13 +5,13 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
 const validationTexts = [
-  { id: "error_invalid_format", content: { ru: "Неверный формат данных", en: "Invalid data format" } },
-  { id: "error_missing_title", content: { ru: "Отсутствует название", en: "Title is missing" } },
-  { id: "error_missing_poster", content: { ru: "Отсутствует обложка", en: "Cover image is missing" } },
-  { id: "error_missing_collection", content: { ru: "Отсутствует коллекция", en: "Collection is missing" } },
-  { id: "error_missing_category", content: { ru: "Отсутствует категория", en: "Category is missing" } },
-  { id: "error_invalid_slug", content: { ru: "Неверный формат ссылки", en: "Invalid slug format" } },
-  { id: "error_invalid_uuid", content: { ru: "Неверный ID", en: "Invalid ID format" } }
+  { id: "error_invalid_format", content: { ru: "Неверный формат данных", en: "Invalid data format" }, area: 'shared' as const },
+  { id: "error_missing_title", content: { ru: "Отсутствует название", en: "Title is missing" }, area: 'shared' as const },
+  { id: "error_missing_poster", content: { ru: "Отсутствует обложка", en: "Cover image is missing" }, area: 'shared' as const },
+  { id: "error_missing_collection", content: { ru: "Отсутствует коллекция", en: "Collection is missing" }, area: 'shared' as const },
+  { id: "error_missing_category", content: { ru: "Отсутствует категория", en: "Category is missing" }, area: 'shared' as const },
+  { id: "error_invalid_slug", content: { ru: "Неверный формат ссылки", en: "Invalid slug format" }, area: 'shared' as const },
+  { id: "error_invalid_uuid", content: { ru: "Неверный ID", en: "Invalid ID format" }, area: 'shared' as const }
 ];
 
 async function seedValidationTexts() {

@@ -23,7 +23,8 @@ async function addMissingKey() {
       content: {
         ru: "Управление языками",
         en: "Manage Languages",
-      }
+      },
+      area: "admin"
     });
     console.log("Added manage_languages successfully!");
   } else {

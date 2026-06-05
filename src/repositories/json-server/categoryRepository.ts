@@ -64,6 +64,18 @@ export class CategoryRepository extends BaseRepository<Category, PopulatedCatego
     }
   }
 
+  async reorderCategories(updates: { id: string; order: number }[]): Promise<boolean> {
+    const categories = await this.getAll();
+    for (const update of updates) {
+      const cat = categories.find(c => c.id === update.id);
+      if (cat) {
+        cat.order = update.order;
+        await this.save(cat);
+      }
+    }
+    return true;
+  }
+
   async save(item: any): Promise<PopulatedCategory> {
     const collectionRepo = repositoryRegistry["collections"] as ICollectionRepository;
     const collectionId = item.collectionId;

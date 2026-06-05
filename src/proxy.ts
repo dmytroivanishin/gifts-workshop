@@ -23,21 +23,17 @@ export async function proxy(request: NextRequest) {
     try {
       await jwtVerify(token, getJwtSecret());
     } catch (error) {
-      // Token is invalid or expired. We could redirect to a /refresh page, 
-      // but usually the frontend handles refresh. To be safe, redirect to login.
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }
 
   // 2. Protect Backend API Mutation Routes
   if (pathname.startsWith("/api/v1/")) {
-    // Exclude auth routes from protection
     if (pathname.startsWith("/api/v1/auth/")) {
       return NextResponse.next();
     }
 
     const method = request.method;
-    // Only protect mutating methods. GET requests remain public for the portfolio UI.
     if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
       const token = request.cookies.get("accessToken")?.value;
 
@@ -68,53 +64,81 @@ export async function proxy(request: NextRequest) {
     !pathname.includes('.')
   ) {
     const isAdmin = pathname.startsWith('/admin');
-    const cookieName = isAdmin ? 'admin_locale' : 'NEXT_LOCALE';
     
-    let locale = request.cookies.get(cookieName)?.value;
-
-    if (!locale) {
-      if (isAdmin) {
-        locale = process.env.NEXT_PUBLIC_DEFAULT_ADMIN_LOCALE || 'ru';
-      } else {
-        const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_APP_LOCALE || 'ru';
-        const acceptLanguage = request.headers.get('accept-language');
-        
-        if (!acceptLanguage) {
-          locale = defaultLocale;
-        } else {
-          const preferred = acceptLanguage.split(',')[0].trim().toLowerCase();
-          if (preferred.startsWith('ru') || preferred.startsWith('be') || preferred.startsWith('uk') || preferred.startsWith('kk')) {
-            locale = 'ru';
-          } else if (preferred.startsWith('en')) {
-            locale = 'en';
-          } else {
-            locale = 'en'; 
-          }
-        }
-      }
+    if (isAdmin) {
+      // Admin area locale handling
+      const cookieName = 'admin_locale';
+      let locale = request.cookies.get(cookieName)?.value;
       
+      if (!locale) {
+        locale = process.env.NEXT_PUBLIC_DEFAULT_ADMIN_LOCALE || 'ru';
+        const requestHeaders = new Headers(request.headers);
+        requestHeaders.set('x-locale', locale);
+        requestHeaders.set('x-is-admin', 'true');
+        
+        const response = NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          }
+        });
+        response.cookies.set(cookieName, locale, { path: '/', maxAge: 31536000 });
+        return response;
+      }
+
       const requestHeaders = new Headers(request.headers);
       requestHeaders.set('x-locale', locale);
-      requestHeaders.set('x-is-admin', isAdmin ? 'true' : 'false');
+      requestHeaders.set('x-is-admin', 'true');
+
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        }
+      });
+    } else {
+      // Public area routing
+      const locales = ['ru', 'en'];
+      const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_APP_LOCALE || 'ru';
+      const pathnameHasLocale = locales.some(
+        (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+      );
+      
+      let locale = defaultLocale;
+      if (pathnameHasLocale) {
+         locale = pathname.split('/')[1];
+      } else {
+         const savedLocale = request.cookies.get('NEXT_LOCALE')?.value;
+         if (savedLocale && locales.includes(savedLocale)) {
+           locale = savedLocale;
+         } else {
+           const acceptLanguage = request.headers.get('accept-language');
+           if (acceptLanguage) {
+             const preferred = acceptLanguage.split(',')[0].trim().toLowerCase();
+             if (preferred.startsWith('en')) {
+               locale = 'en';
+             }
+           }
+         }
+      }
+
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set('x-locale', locale);
+      requestHeaders.set('x-is-admin', 'false');
+
+      if (!pathnameHasLocale) {
+        request.nextUrl.pathname = `/${locale}${pathname}`;
+        const response = NextResponse.redirect(request.nextUrl);
+        response.cookies.set('NEXT_LOCALE', locale, { path: '/', maxAge: 31536000 });
+        return response;
+      }
       
       const response = NextResponse.next({
         request: {
           headers: requestHeaders,
         }
       });
-      response.cookies.set(cookieName, locale, { path: '/', maxAge: 31536000 });
+      response.cookies.set('NEXT_LOCALE', locale, { path: '/', maxAge: 31536000 });
       return response;
     }
-
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set('x-locale', locale);
-    requestHeaders.set('x-is-admin', isAdmin ? 'true' : 'false');
-
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      }
-    });
   }
 
   return NextResponse.next();

@@ -13,34 +13,7 @@ const siteName = process.env.SITE_NAME || "Добрые Подарки";
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
-  title: {
-    default: siteTitle,
-    template: siteTemplate
-  },
-  description: siteDescription,
-  openGraph: {
-    title: siteTitle,
-    description: siteDescription,
-    url: appUrl,
-    siteName: siteName,
-    images: [
-      {
-        url: "/images/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: siteName,
-      },
-    ],
-    locale: "ru_RU",
-    alternateLocale: ["en_US"],
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: siteTitle,
-    description: siteDescription,
-    images: ["/images/og-image.png"],
-  },
+  title: "Добрые Подарки | Kind Gifts",
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",

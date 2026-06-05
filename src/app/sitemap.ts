@@ -2,17 +2,26 @@ import { MetadataRoute } from "next";
 import { postService, categoryService } from "@/lib/container";
 import { env } from "@/lib/env";
 
-const appUrl = env.NEXT_PUBLIC_APP_URL;
+const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const sitemapEntries: MetadataRoute.Sitemap = [
-    {
-      url: `${appUrl}`,
+  const locales = ['ru', 'en'];
+  const sitemapEntries: MetadataRoute.Sitemap = [];
+
+  for (const locale of locales) {
+    sitemapEntries.push({
+      url: `${appUrl}/${locale}`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1,
-    },
-  ];
+      alternates: {
+        languages: {
+          'ru': `${appUrl}/ru`,
+          'en': `${appUrl}/en`,
+        }
+      }
+    });
+  }
 
   try {
     // Fetch all published posts
@@ -20,19 +29,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const posts = result.data || result; // Handle both paginated and raw array responses
 
     if (Array.isArray(posts)) {
-      const postEntries: MetadataRoute.Sitemap = posts.map((post: any) => ({
-        url: `${appUrl}/projects/${post.slug}`,
-        lastModified: post.updatedAt ? new Date(post.updatedAt) : new Date(),
-        changeFrequency: "weekly",
-        priority: 0.8,
-      }));
-      sitemapEntries.push(...postEntries);
+      for (const post of posts) {
+        for (const locale of locales) {
+          sitemapEntries.push({
+            url: `${appUrl}/${locale}/projects/${post.id}`,
+            lastModified: post.updatedAt ? new Date(post.updatedAt) : new Date(),
+            changeFrequency: "weekly",
+            priority: 0.8,
+            alternates: {
+              languages: {
+                'ru': `${appUrl}/ru/projects/${post.id}`,
+                'en': `${appUrl}/en/projects/${post.id}`,
+              }
+            }
+          });
+        }
+      }
     }
-    
-    // Optionally fetch categories if they have their own public pages
-    // const categories = await categoryService.getAllCategories();
-    // ... map categories ...
-    
   } catch (error) {
     console.error("Error generating sitemap:", error);
   }
