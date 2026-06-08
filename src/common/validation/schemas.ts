@@ -1,24 +1,28 @@
 import { z } from "zod";
 
-export const localizedStringSchema = z.object({
-  ru: z.union([z.string(), z.null(), z.undefined()])
+export const localizedStringSchema = z.record(
+  z.string(),
+  z.union([z.string(), z.null(), z.undefined()])
     .optional()
-    .transform(val => val ?? ""),
-  en: z.union([z.string(), z.null(), z.undefined()])
-    .optional()
-    .transform(val => val ?? ""),
-}).superRefine((data, ctx) => {
-  if (data.ru.trim() === "" && data.en.trim() === "") {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "error_required_field",
-      path: ["ru"],
-    });
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "error_required_field",
-      path: ["en"],
-    });
+    .transform(val => val ?? "")
+).superRefine((data, ctx) => {
+  const hasValue = Object.values(data).some(val => typeof val === "string" && val.trim() !== "");
+  if (!hasValue) {
+    const keys = Object.keys(data);
+    if (keys.length > 0) {
+      for (const key of keys) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "error_required_field",
+          path: [key],
+        });
+      }
+    } else {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "error_required_field",
+      });
+    }
   }
 });
 
@@ -29,14 +33,12 @@ const optionalUuidSchema = z.preprocess(
     .nullable()
 );
 
-export const optionalLocalizedStringSchema = z.object({
-  ru: z.union([z.string(), z.null(), z.undefined()])
+export const optionalLocalizedStringSchema = z.record(
+  z.string(),
+  z.union([z.string(), z.null(), z.undefined()])
     .optional()
-    .transform(val => val ?? ""),
-  en: z.union([z.string(), z.null(), z.undefined()])
-    .optional()
-    .transform(val => val ?? ""),
-}).default({ ru: "", en: "" });
+    .transform(val => val ?? "")
+).default({});
 
 export const positionSchema = z.object({
   x: z.number(),
