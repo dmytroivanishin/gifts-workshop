@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
-import { sendSuccess, sendError } from "@/lib/apiResponse";
+import { sendSuccess, sendError } from "@/utils/apiResponse";
 
 export async function POST(request: Request) {
   try {

@@ -17,9 +17,9 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
     super(comments as any);
   }
 
-  async populate(item: any, options?: { populate?: string }): Promise<PopulatedComment> {
+  async populate(item: any): Promise<PopulatedComment> {
     if (!item) return item;
-    const results = await this.getById(item.id, options);
+    const results = await this.getById(item.id);
     if (!results) return item;
     return results;
   }
@@ -58,7 +58,7 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
     return records.map(this.mapToPopulated.bind(this));
   }
 
-  override async getById(id: string, options?: { populate?: string }): Promise<PopulatedComment | undefined> {
+  override async getById(id: string): Promise<PopulatedComment | undefined> {
     const record = await drizzleDatabase.getDb().query.comments.findFirst({
       where: eq(comments.id, id),
       with: this.getWithRelations()
@@ -66,7 +66,7 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
     return record ? this.mapToPopulated(record as any) : undefined;
   }
 
-  async getByQuery(query: Record<string, any>, options?: PaginationOptions & { populate?: string }): Promise<PopulatedComment[]> {
+  async getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedComment[]> {
     const db = drizzleDatabase.getDb();
     const conditions = [];
 

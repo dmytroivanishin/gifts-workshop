@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { signToken } from "@/lib/jwt";
+import { signToken } from "@/utils/jwt";
 import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
 import { userRepository } from "@/repositories/drizzle/userRepository";
-import { sendSuccess, sendError } from "@/lib/apiResponse";
+import { sendSuccess, sendError } from "@/utils/apiResponse";
 import crypto from "crypto";
 import { cookies } from "next/headers";
 

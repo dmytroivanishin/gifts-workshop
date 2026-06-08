@@ -1,4 +1,4 @@
-import { isUUID } from "@/lib/utils";
+import { isUUID } from "@/utils/uuid";
 
 /**
  * Resolves an entity's ID from either a UUID or a slug string by calling a database/repository lookup function.

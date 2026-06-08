@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import Image from "next/image";
 import { Heart, Loader2, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import { useGetPostsQuery, useGetCategoriesQuery } from "@/store/api";
 import { ProjectCard } from "@/components/features/ProjectCard";
 import { useTranslation } from "@/i18n";

@@ -1,5 +1,5 @@
 import { Client } from 'minio';
-import { env } from '@/lib/env';
+import { env } from "@/modules/core/env";
 import { logger } from '@/modules/logger';
 
 const endpointUrl = new URL(env.S3_ENDPOINT);

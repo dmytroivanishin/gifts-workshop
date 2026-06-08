@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { InternalServerError } from "@/common/errors/internalServer";
 import { RefreshCcw, Home, Wrench } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
 import { PublicHeader } from "@/components/shared/PublicHeader";

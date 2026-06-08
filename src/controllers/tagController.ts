@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { sendSuccess, sendError } from "@/lib/apiResponse";
+import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { ITagService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
-import { validateRequest } from "@/lib/validateRequest";
+import { validateRequest } from "@/utils/validateRequest";
 import { tagSchema } from "@/common/validation/schemas";
 import { getPaginationParams } from "@/utils/paginationUtils";
 

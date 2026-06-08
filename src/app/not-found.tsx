@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { NotFoundError } from "@/common/errors/notFound";
 import { Home, Compass } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import { useTranslation } from "@/i18n";
 import { PublicHeader } from "@/components/shared/PublicHeader";
 

@@ -13,9 +13,9 @@ export abstract class DrizzleBaseRepository<
   constructor(protected table: PgTable & { id: any }) {}
 
   // Abstract method every concrete repository must implement to map raw DB records to the populated TypeScript model
-  abstract populate(item: any, options?: { populate?: string }): Promise<TPopulated>;
+  abstract populate(item: any): Promise<TPopulated>;
 
-  async getAll(options?: TQueryOptions & { populate?: string }): Promise<TPopulated[]> {
+  async getAll(options?: TQueryOptions): Promise<TPopulated[]> {
     let query = drizzleDatabase.getDb().select().from(this.table).$dynamic();
     
     if (options?.limit) {
@@ -28,19 +28,19 @@ export abstract class DrizzleBaseRepository<
     }
 
     const records = await query;
-    return Promise.all(records.map(r => this.populate(r, options)));
+    return Promise.all(records.map(r => this.populate(r)));
   }
 
-  async getById(id: string, options?: { populate?: string }): Promise<TPopulated | undefined> {
+  async getById(id: string): Promise<TPopulated | undefined> {
     const records = await drizzleDatabase.getDb().select().from(this.table).where(eq(this.table.id, id)).limit(1);
     if (!records.length) return undefined;
-    return this.populate(records[0], options);
+    return this.populate(records[0]);
   }
 
-  async getByIds(ids: string[], options?: { populate?: string }): Promise<TPopulated[]> {
+  async getByIds(ids: string[]): Promise<TPopulated[]> {
     if (!ids.length) return [];
     const records = await drizzleDatabase.getDb().select().from(this.table).where(inArray(this.table.id, ids));
-    return Promise.all(records.map(r => this.populate(r, options)));
+    return Promise.all(records.map(r => this.populate(r)));
   }
 
   async save(item: T): Promise<TPopulated> {

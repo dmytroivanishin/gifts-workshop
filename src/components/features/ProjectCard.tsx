@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Heart, ChevronRight, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import { Post, PopulatedPost } from "@/types";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";

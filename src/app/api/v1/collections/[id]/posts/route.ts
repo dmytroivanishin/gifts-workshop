@@ -1,5 +1,5 @@
-import { sendSuccess, sendError } from "@/lib/apiResponse";
-import { postService } from "@/lib/container";
+import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { postService } from "@/modules/core/container";
 
 export async function GET(
   request: Request,

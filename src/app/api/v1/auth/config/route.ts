@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendSuccess, sendError } from "@/lib/apiResponse";
+import { sendSuccess, sendError } from "@/utils/apiResponse";
 
 export async function GET() {
   try {

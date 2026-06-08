@@ -1,4 +1,4 @@
-import { categoryController } from "@/lib/container";
+import { categoryController } from "@/modules/core/container";
 
 export async function GET(request: Request) {
   return categoryController.getCategories(request);

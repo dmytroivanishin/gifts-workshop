@@ -1,4 +1,4 @@
-import { collectionController } from "@/lib/container";
+import { collectionController } from "@/modules/core/container";
 
 export async function GET(request: Request) {
   return collectionController.getCollections(request);

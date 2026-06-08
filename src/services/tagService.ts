@@ -2,8 +2,8 @@ import { ITagRepository, ICategoryRepository } from "@/repositories/interfaces";
 import { ITagService } from "./interfaces";
 import { Tag } from "@/types";
 import { randomUUID } from "crypto";
-import { generateSlugFromField, generateUniqueSlug } from "@/lib/slug";
-import { isUUID } from "@/lib/utils";
+import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
+import { isUUID } from "@/utils/uuid";
 
 import { paginate } from "./pagination";
 

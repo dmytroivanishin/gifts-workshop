@@ -1,4 +1,4 @@
-import { postController } from "@/lib/container";
+import { postController } from "@/modules/core/container";
 
 export async function GET(
   request: Request,

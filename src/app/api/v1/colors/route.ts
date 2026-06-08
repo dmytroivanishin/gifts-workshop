@@ -1,4 +1,4 @@
-import { colorController } from "@/lib/container";
+import { colorController } from "@/modules/core/container";
 
 export async function GET(request: Request) {
   return colorController.getColors(request);

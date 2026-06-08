@@ -1,4 +1,4 @@
-import { userController } from "@/lib/container";
+import { userController } from "@/modules/core/container";
 
 export async function GET(
   request: Request,

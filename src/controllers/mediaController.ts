@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { sendSuccess, sendError } from "@/lib/apiResponse";
+import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { IMediaService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
-import { validateRequest } from "@/lib/validateRequest";
+import { validateRequest } from "@/utils/validateRequest";
 import { mediaSchema } from "@/common/validation/schemas";
-import { getUserId } from "@/lib/authUtils";
+import { getUserId } from "@/utils/auth";
 import { ValidationError } from "@/common/errors/validation";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
 import { getPaginationParams } from "@/utils/paginationUtils";

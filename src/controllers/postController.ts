@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { sendSuccess, sendError } from "@/lib/apiResponse";
+import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { IPostService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
-import { validateRequest } from "@/lib/validateRequest";
+import { validateRequest } from "@/utils/validateRequest";
 import { postSchema } from "@/common/validation/schemas";
 import { resolveId } from "@/utils/idResolver";
-import { getUserId } from "@/lib/authUtils";
+import { getUserId } from "@/utils/auth";
 import { getPaginationParams } from "@/utils/paginationUtils";
 
 export class PostController {

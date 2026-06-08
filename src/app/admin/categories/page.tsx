@@ -56,7 +56,7 @@ export default function AdminCategories() {
     defaultValues: {
       title: { ru: "", en: "" },
       description: { ru: "", en: "" },
-      collectionId: undefined as any, // So it fails validation if empty
+      collectionId: "", 
       parentId: null,
       tagsIds: [],
       color: { id: "", color: "" }
@@ -121,6 +121,13 @@ export default function AdminCategories() {
       setSelectedColorId(colorsList[0].id);
     }
   }, [colorsList, color]);
+
+  // Set default collection if empty
+  useEffect(() => {
+    if (collections.length > 0 && !form.getValues("collectionId")) {
+      form.setValue("collectionId", collections[0].id, { shouldValidate: true });
+    }
+  }, [collections, form]);
 
   // Auto-create / select color for edit form
   useEffect(() => {

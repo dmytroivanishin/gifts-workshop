@@ -1,4 +1,4 @@
-import { commentController } from "@/lib/container";
+import { commentController } from "@/modules/core/container";
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   // Add postId to search params to let controller filter

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
-import { postService } from "@/lib/container";
-import { extractLocalizedTags } from "@/lib/utils";
+import { postService } from "@/modules/core/container";
+import { extractLocalizedTags } from "@/utils/tags";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 

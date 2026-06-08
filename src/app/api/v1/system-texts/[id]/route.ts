@@ -1,4 +1,4 @@
-import { systemTextController } from "@/lib/container";
+import { systemTextController } from "@/modules/core/container";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;

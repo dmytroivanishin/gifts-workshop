@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
 import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
-import { sendSuccess, sendError } from "@/lib/apiResponse";
+import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
-import { signToken, verifyToken } from "@/lib/jwt";
+import { signToken, verifyToken } from "@/utils/jwt";
 
 export async function POST(request: Request) {
   try {

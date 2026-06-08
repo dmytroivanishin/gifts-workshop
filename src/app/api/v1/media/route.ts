@@ -1,4 +1,4 @@
-import { mediaController } from "@/lib/container";
+import { mediaController } from "@/modules/core/container";
 
 export async function GET(request: Request) {
   return mediaController.getMedia(request);

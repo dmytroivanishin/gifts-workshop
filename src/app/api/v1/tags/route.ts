@@ -1,4 +1,4 @@
-import { tagController } from "@/lib/container";
+import { tagController } from "@/modules/core/container";
 
 export async function GET(request: Request) {
   return tagController.getTags(request);

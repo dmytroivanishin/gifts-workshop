@@ -2,8 +2,8 @@ import { IPostRepository, ICategoryRepository, ITagRepository, ICollectionReposi
 import { IPostService } from "./interfaces";
 import { Post, PopulatedPost, Category } from "@/types";
 import { randomUUID } from "crypto";
-import { generateSlugFromField, generateUniqueSlug } from "@/lib/slug";
-import { isUUID } from "@/lib/utils";
+import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
+import { isUUID } from "@/utils/uuid";
 import { resolveId, resolveMultipleIds } from "@/utils/idResolver";
 
 import { paginate } from "./pagination";

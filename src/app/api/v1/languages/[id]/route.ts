@@ -1,4 +1,4 @@
-import { languageController } from "@/lib/container";
+import { languageController } from "@/modules/core/container";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;

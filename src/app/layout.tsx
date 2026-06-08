@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 import { ReduxProvider } from "@/store/Provider";
 import { I18nProvider } from "@/i18n";
-import { systemTextService, languageService } from "@/lib/container";
+import { systemTextService, languageService } from "@/modules/core/container";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const siteTitle = process.env.SITE_TITLE || "Добрые Подарки (Kind Gifts) | Каталог ручной работы / Handmade Catalog";

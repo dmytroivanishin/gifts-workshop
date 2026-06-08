@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { env } from "@/lib/env";
+import { env } from "@/modules/core/env";
 
 const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 

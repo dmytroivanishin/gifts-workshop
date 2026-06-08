@@ -1,11 +1,33 @@
 import { z } from "zod";
 
 export const localizedStringSchema = z.object({
-  ru: z.string({ message: "error_required_field" }).min(1, "error_required_field"),
+  ru: z.union([z.string(), z.null(), z.undefined()])
+    .optional()
+    .transform(val => val ?? ""),
   en: z.union([z.string(), z.null(), z.undefined()])
     .optional()
     .transform(val => val ?? ""),
+}).superRefine((data, ctx) => {
+  if (data.ru.trim() === "" && data.en.trim() === "") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "error_required_field",
+      path: ["ru"],
+    });
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "error_required_field",
+      path: ["en"],
+    });
+  }
 });
+
+const optionalUuidSchema = z.preprocess(
+  (v) => (v === "" || v === undefined || v === null ? null : v),
+  z.string({ message: "error_invalid_format" })
+    .uuid("error_invalid_uuid")
+    .nullable()
+);
 
 export const optionalLocalizedStringSchema = z.object({
   ru: z.union([z.string(), z.null(), z.undefined()])
@@ -50,7 +72,7 @@ export const categorySchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]+$/, "error_invalid_slug").optional(),
   order: z.number().int().default(0),
   color: colorSchema,
-  parentId: z.string().uuid("error_invalid_uuid").optional().nullable(),
+  parentId: optionalUuidSchema,
   collectionId: z.string({ message: "error_collection_required" }).uuid("error_collection_required"),
   tagsIds: z.array(z.string().uuid("error_invalid_uuid")).optional().default([]),
 });
@@ -66,12 +88,7 @@ export const postMediaSchema = z.object({
   position: positionSchema.nullable().optional(),
 });
 
-const optionalUuidSchema = z.preprocess(
-  (v) => (v === "" || v === undefined || v === null ? null : v),
-  z.string({ message: "error_invalid_format" })
-    .uuid("error_invalid_uuid")
-    .nullable()
-);
+
 
 export const postSchemaBase = z.object({
   title: optionalLocalizedStringSchema,
