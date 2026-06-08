@@ -64,14 +64,16 @@ export async function proxy(request: NextRequest) {
     !pathname.includes('.')
   ) {
     const isAdmin = pathname.startsWith('/admin');
-    
+    const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'ru';
+    const supportedLocales = (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || 'ru,en').split(',').map(l => l.trim());
+
     if (isAdmin) {
       // Admin area locale handling
       const cookieName = 'admin_locale';
       let locale = request.cookies.get(cookieName)?.value;
       
-      if (!locale) {
-        locale = process.env.NEXT_PUBLIC_DEFAULT_ADMIN_LOCALE || 'ru';
+      if (!locale || !supportedLocales.includes(locale)) {
+        locale = defaultLocale;
         const requestHeaders = new Headers(request.headers);
         requestHeaders.set('x-locale', locale);
         requestHeaders.set('x-is-admin', 'true');
@@ -96,10 +98,8 @@ export async function proxy(request: NextRequest) {
       });
     } else {
       // Public area routing
-      const locales = ['ru', 'en'];
-      const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_APP_LOCALE || 'ru';
-      const pathnameHasLocale = locales.some(
-        (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+      const pathnameHasLocale = supportedLocales.some(
+        (loc) => pathname.startsWith(`/${loc}/`) || pathname === `/${loc}`
       );
       
       let locale = defaultLocale;
@@ -107,14 +107,18 @@ export async function proxy(request: NextRequest) {
          locale = pathname.split('/')[1];
       } else {
          const savedLocale = request.cookies.get('NEXT_LOCALE')?.value;
-         if (savedLocale && locales.includes(savedLocale)) {
+         if (savedLocale && supportedLocales.includes(savedLocale)) {
            locale = savedLocale;
          } else {
            const acceptLanguage = request.headers.get('accept-language');
            if (acceptLanguage) {
-             const preferred = acceptLanguage.split(',')[0].trim().toLowerCase();
-             if (preferred.startsWith('en')) {
-               locale = 'en';
+             const preferredLocales = acceptLanguage
+               .split(',')
+               .map(l => l.split(';')[0].trim().substring(0, 2).toLowerCase());
+             
+             const match = preferredLocales.find(l => supportedLocales.includes(l));
+             if (match) {
+               locale = match;
              }
            }
          }

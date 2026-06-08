@@ -5,12 +5,17 @@ import { useTranslation } from "@/i18n";
 import { usePathname, useRouter } from "next/navigation";
 
 export function PublicHeader() {
-  const { locale, setLocale } = useTranslation();
+  const { locale, setLocale, activeLanguages } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
 
+  const currentIndex = activeLanguages.indexOf(locale);
+  const nextLocale = activeLanguages.length > 0 
+    ? activeLanguages[(currentIndex + 1) % activeLanguages.length] 
+    : "en";
+
   const handleLanguageSwitch = () => {
-    const newLocale = locale === "ru" ? "en" : "ru";
+    const newLocale = nextLocale;
     const segments = pathname.split('/');
     
     // Replace the first segment if it matches the current locale
@@ -36,7 +41,7 @@ export function PublicHeader() {
             onClick={handleLanguageSwitch}
             className="hover:text-foreground font-semibold uppercase tracking-wider transition-colors cursor-pointer"
           >
-            {locale === "ru" ? "English" : "Русский"}
+            {nextLocale === "ru" ? "Русский" : nextLocale === "en" ? "English" : nextLocale.toUpperCase()}
           </button>
         </div>
         {/* Placeholder for symmetric spacing if needed later */}

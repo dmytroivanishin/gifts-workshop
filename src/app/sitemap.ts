@@ -5,7 +5,7 @@ import { env } from "@/modules/core/env";
 const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const locales = ['ru', 'en'];
+  const locales = env.SUPPORTED_LOCALES;
   const sitemapEntries: MetadataRoute.Sitemap = [];
 
   for (const locale of locales) {
@@ -15,10 +15,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1,
       alternates: {
-        languages: {
-          'ru': `${appUrl}/ru`,
-          'en': `${appUrl}/en`,
-        }
+        languages: locales.reduce((acc, l) => {
+          acc[l] = `${appUrl}/${l}`;
+          return acc;
+        }, {} as Record<string, string>)
       }
     });
   }
@@ -37,10 +37,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: "weekly",
             priority: 0.8,
             alternates: {
-              languages: {
-                'ru': `${appUrl}/ru/projects/${post.id}`,
-                'en': `${appUrl}/en/projects/${post.id}`,
-              }
+              languages: locales.reduce((acc, l) => {
+                acc[l] = `${appUrl}/${l}/projects/${post.id}`;
+                return acc;
+              }, {} as Record<string, string>)
             }
           });
         }

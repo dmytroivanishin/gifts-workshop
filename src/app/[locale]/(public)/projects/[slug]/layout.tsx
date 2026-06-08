@@ -1,8 +1,10 @@
 import { Metadata } from "next";
 import { postService } from "@/modules/core/container";
 import { extractLocalizedTags } from "@/utils/tags";
+import { getLocalizedField } from "@/utils/localization";
+import { env } from "@/modules/core/env";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 interface ProjectLayoutProps {
   children: React.ReactNode;
@@ -24,11 +26,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       };
     }
 
-    const titleText = isEn ? (post.title.en || post.title.ru || "Project") : (post.title.ru || post.title.en || "Проект");
+    const titleText = getLocalizedField(post.title, locale) || "Project";
     const siteName = isEn ? process.env.SITE_NAME_EN || "Kind Gifts" : process.env.SITE_NAME_RU || "Добрые Подарки";
     const title = `${titleText} | ${siteName}`;
 
-    const description = isEn ? (post.description.en || post.description.ru || "") : (post.description.ru || post.description.en || "");
+    const description = getLocalizedField(post.description, locale);
 
     const allKeywords = extractLocalizedTags(post.tags);
     // Filter tags to only include the current locale if they are formatted properly,
@@ -65,10 +67,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         type: "article",
       },
       alternates: {
-        languages: {
-          'ru': `${appUrl}/ru/projects/${slug}`,
-          'en': `${appUrl}/en/projects/${slug}`,
-        },
+        languages: env.SUPPORTED_LOCALES.reduce((acc, l) => {
+          acc[l] = `${appUrl}/${l}/projects/${slug}`;
+          return acc;
+        }, {} as Record<string, string>)
       },
       twitter: {
         card: "summary_large_image",

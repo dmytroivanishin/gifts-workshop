@@ -27,8 +27,8 @@ export default function AdminCollections() {
 
   // Form State
   const defaultValues = {
-    title: { ru: "", en: "" },
-    description: { ru: "", en: "" },
+    title: {},
+    description: {},
     main: false,
   };
 
@@ -53,8 +53,8 @@ export default function AdminCollections() {
     setIsEditing(col.id);
     setActiveCollectionObj(col);
     form.reset({
-      title: typeof col.title === "string" ? { ru: col.title, en: "" } : { ru: col.title?.ru || "", en: col.title?.en || "" },
-      description: typeof col.description === "string" ? { ru: col.description, en: "" } : { ru: col.description?.ru || "", en: col.description?.en || "" },
+      title: typeof col.title === "string" ? { [locale]: col.title } : col.title || {},
+      description: typeof col.description === "string" ? { [locale]: col.description } : col.description || {},
       main: col.main || false,
     });
   };
@@ -212,6 +212,7 @@ export default function AdminCollections() {
                     <FormControl>
                       <input
                         {...field}
+                        value={field.value || ""}
                         type="text"
                         placeholder={t("placeholder_collection_title")}
                         className={`w-full px-3.5 py-2 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.title ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
@@ -234,6 +235,7 @@ export default function AdminCollections() {
                     <FormControl>
                       <textarea
                         {...field}
+                        value={field.value || ""}
                         placeholder={t("placeholder_collection_desc")}
                         rows={4}
                         className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"

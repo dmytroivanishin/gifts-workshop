@@ -11,9 +11,10 @@ import {
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useTranslation } from "@/i18n";
 import { PopulatedComment } from "@/types";
+import { getLocalizedField } from "@/utils/localization";
 
 export default function AdminComments() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [comments, setComments] = useState<any[]>([]);
@@ -176,7 +177,7 @@ export default function AdminComments() {
         <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
         {!isReply && comment.post && (
           <p className="text-xs text-muted-foreground mt-1">
-            on Post: <span className="font-medium text-primary">{comment.post.title?.ru || comment.post.slug}</span>
+            on Post: <span className="font-medium text-primary">{getLocalizedField(comment.post.title, locale) || comment.post.slug}</span>
           </p>
         )}
       </div>

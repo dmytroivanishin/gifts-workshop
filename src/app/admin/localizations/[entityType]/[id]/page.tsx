@@ -96,10 +96,8 @@ export default function LocalizationDetailPage({ params }: PageProps) {
     setIsSubmitted(true);
     setServerErrors({});
 
-    const requiredLangs = activeLanguages.filter(l => l === "ru" || l === "en");
-    for (const lang of requiredLangs) {
-      if (!titles[lang] || !titles[lang].trim()) return;
-    }
+    const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru";
+    if (!titles[defaultLocale] || !titles[defaultLocale].trim()) return;
 
     try {
       if (isSystem) {
@@ -253,10 +251,10 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                     value={titles[lang] || ""}
                     onChange={(e) => updateField(lang, "title", e.target.value)}
                     placeholder="..."
-                    className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary transition-all ${((lang === "ru" || lang === "en") && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title") ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
-                    required={lang === "ru" || lang === "en"} // require base languages usually
+                    className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary transition-all ${((lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")) && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title") ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
+                    required={lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")}
                   />
-                  {(((lang === "ru" || lang === "en") && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title")) && <p className="text-[0.8rem] font-medium text-destructive mt-1.5">{getFieldError(`title.${lang}`) || getFieldError("title") || t("VALIDATION_ERROR") || "This field is required"}</p>}
+                  {(((lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")) && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title")) && <p className="text-[0.8rem] font-medium text-destructive mt-1.5">{getFieldError(`title.${lang}`) || getFieldError("title") || t("VALIDATION_ERROR") || "This field is required"}</p>}
                 </div>
 
               {!isTag && !isSystem && (
@@ -294,7 +292,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
           <button
             type="submit"
-            disabled={isSaving || activeLanguages.filter(l => l === "ru" || l === "en").some(lang => !titles[lang] || !titles[lang].trim()) || Object.keys(serverErrors).length > 0}
+            disabled={isSaving || !titles[process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru"] || !titles[process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru"].trim() || Object.keys(serverErrors).length > 0}
             className="flex items-center gap-1.5 px-6 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
           >
             {isSaving ? (

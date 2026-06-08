@@ -28,7 +28,7 @@ export default function AdminTags() {
   const [deleteTag, { isLoading: isDeleting }] = useDeleteTagMutation();
 
   const defaultValues = {
-    name: { ru: "", en: "" }
+    name: {}
   };
 
   const form = useForm<z.infer<typeof tagSchema>>({
@@ -251,6 +251,7 @@ export default function AdminTags() {
                     <FormControl>
                       <input
                         {...field}
+                        value={field.value || ""}
                         type="text"
                         placeholder={t("placeholder_vintage")}
                         className={`w-full px-3.5 py-2 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.name ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}

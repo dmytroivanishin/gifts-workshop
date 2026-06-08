@@ -65,8 +65,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
 
   // Form State
   const defaultValues = {
-    title: { ru: "", en: "" },
-    description: { ru: "", en: "" },
+    title: {},
+    description: {},
     collectionId: undefined as any,
     categoryId: undefined as any,
     inStock: true,
@@ -128,8 +128,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       const col = typeof post.collection !== "string" ? post.collection?.id || "" : post.collection;
 
       form.reset({
-        title: typeof post.title === "string" ? { ru: post.title, en: "" } : { ru: post.title?.ru || "", en: post.title?.en || "" },
-        description: typeof post.description === "string" ? { ru: post.description, en: "" } : { ru: post.description?.ru || "", en: post.description?.en || "" },
+        title: typeof post.title === "string" ? { [locale]: post.title } : post.title || {},
+        description: typeof post.description === "string" ? { [locale]: post.description } : post.description || {},
         categoryId: cat,
         collectionId: col || post.collectionId || "",
         inStock: post.inStock,
@@ -343,6 +343,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                   <FormControl>
                     <input
                       {...field}
+                      value={field.value || ""}
                       type="text"
                       placeholder={t("placeholder_project_title")}
                       className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.title ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
@@ -423,6 +424,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                   <FormControl>
                     <textarea
                       {...field}
+                      value={field.value || ""}
                       placeholder={t("placeholder_project_desc")}
                       rows={4}
                       className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.description ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}

@@ -23,7 +23,6 @@ import { mediaRepository } from "@/repositories/drizzle/mediaRepository";
 import { postRepository } from "@/repositories/drizzle/postRepository";
 import { tagRepository } from "@/repositories/drizzle/tagRepository";
 import { userRepository } from "@/repositories/drizzle/userRepository";
-import { languageRepository } from "@/repositories/drizzle/languageRepository";
 import { systemTextRepository } from "@/repositories/drizzle/systemTextRepository";
 import { commentRepository } from "@/repositories/drizzle/commentRepository";
 
@@ -34,7 +33,6 @@ import { MediaService } from "@/services/mediaService";
 import { PostService } from "@/services/postService";
 import { TagService } from "@/services/tagService";
 import { UserService } from "@/services/userService";
-import { LanguageService } from "@/services/languageService";
 import { SystemTextService } from "@/services/systemTextService";
 import { CommentService } from "@/services/commentService";
 
@@ -45,7 +43,6 @@ import { MediaController } from "@/controllers/mediaController";
 import { PostController } from "@/controllers/postController";
 import { TagController } from "@/controllers/tagController";
 import { UserController } from "@/controllers/userController";
-import { LanguageController } from "@/controllers/languageController";
 import { SystemTextController } from "@/controllers/systemTextController";
 import { CommentController } from "@/controllers/commentController";
 
@@ -58,7 +55,6 @@ export {
   postRepository,
   tagRepository,
   userRepository,
-  languageRepository,
   systemTextRepository,
   commentRepository
 };
@@ -71,7 +67,6 @@ export const mediaService = new MediaService(mediaRepository, postRepository);
 export const tagService = new TagService(tagRepository, categoryRepository);
 export const userService = new UserService(userRepository);
 export const postService = new PostService(postRepository, categoryRepository, tagRepository, collectionRepository);
-export const languageService = new LanguageService(languageRepository);
 export const systemTextService = new SystemTextService(systemTextRepository);
 export const commentService = new CommentService(commentRepository);
 
@@ -83,7 +78,6 @@ export const mediaController = new MediaController(mediaService);
 export const postController = new PostController(postService);
 export const tagController = new TagController(tagService);
 export const userController = new UserController(userService);
-export const languageController = new LanguageController(languageService);
 export const systemTextController = new SystemTextController(systemTextService);
 export const commentController = new CommentController(commentService);
 

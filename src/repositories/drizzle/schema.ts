@@ -34,13 +34,6 @@ export const tokenSessionsRelations = relations(tokenSessions, ({ one }) => ({
 }));
 
 // --- Core Models ---
-export const languages = pgTable("languages", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  code: varchar("code", { length: 50 }).notNull().unique(),
-  name: varchar("name", { length: 255 }).notNull(),
-  isActive: boolean("is_active").default(true).notNull(),
-});
-
 export const systemTexts = pgTable("system_texts", {
   id: varchar("id", { length: 255 }).primaryKey(), // Key of the text (e.g. 'save', 'cancel')
   content: jsonb("content").$type<Record<string, string>>().notNull(),

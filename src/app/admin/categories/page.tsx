@@ -23,6 +23,7 @@ import * as z from "zod";
 import { categorySchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { SortableCategoryGroup } from "@/components/shared/SortableCategoryTree";
+import { getLocalizedField } from "@/utils/localization";
 
 export default function AdminCategories() {
   const { t, loc, locale } = useTranslation();
@@ -54,8 +55,8 @@ export default function AdminCategories() {
   const form = useForm<z.infer<typeof categorySchema>>({
     resolver: zodResolver(categorySchema) as any,
     defaultValues: {
-      title: { ru: "", en: "" },
-      description: { ru: "", en: "" },
+      title: {},
+      description: {},
       collectionId: "", 
       parentId: null,
       tagsIds: [],
@@ -230,8 +231,8 @@ export default function AdminCategories() {
   const handleStartEdit = (cat: any) => {
     setIsEditing(cat.id);
     setActiveCategoryObj(cat);
-    setEditTitle(typeof cat.title === "string" ? cat.title : cat.title?.ru || "");
-    setEditDescription(typeof cat.description === "string" ? cat.description : cat.description?.ru || "");
+    setEditTitle(getLocalizedField(cat.title, locale));
+    setEditDescription(getLocalizedField(cat.description, locale));
     setEditColor(cat.color?.color || (colorsList.length > 0 ? colorsList[0].color : "#000000"));
     setEditSelectedColorId(cat.color?.id || (colorsList.length > 0 ? colorsList[0].id : ""));
     setEditCollectionId(cat.collectionId || "");
@@ -296,8 +297,8 @@ export default function AdminCategories() {
                   }
                 }}
                 renderItem={(cat: any) => {
-                  const catTitleRu = typeof cat.title === "string" ? cat.title : cat.title?.ru || "";
-                  const catDescRu = typeof cat.description === "string" ? cat.description : cat.description?.ru || "";
+                  const catTitleLoc = getLocalizedField(cat.title, locale);
+                  const catDescLoc = getLocalizedField(cat.description, locale);
                   const catColor = cat.color?.color || "transparent";
 
                   return (
@@ -333,7 +334,7 @@ export default function AdminCategories() {
                               <option value="" disabled>{t("placeholder_select_collection")}</option>
                               {collections.map((col: any) => (
                                 <option key={col.id} value={col.id} className="bg-card text-foreground">
-                                  {col.title?.ru || col.title?.en || col.title || ""}
+                                  {getLocalizedField(col.title, locale)}
                                 </option>
                               ))}
                             </select>
@@ -350,7 +351,7 @@ export default function AdminCategories() {
                                 .filter((c: any) => c.id !== cat.id)
                                 .map((c: any) => (
                                   <option key={c.id} value={c.id} className="bg-card text-foreground">
-                                    {c.title?.ru || c.title?.en || c.title || ""}
+                                    {getLocalizedField(c.title, locale)}
                                   </option>
                                 ))}
                             </select>
@@ -414,7 +415,7 @@ export default function AdminCategories() {
                       ) : (
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-sm text-foreground truncate">{catTitleRu}</span>
+                            <span className="font-semibold text-sm text-foreground truncate">{catTitleLoc}</span>
                             <span
                               className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider"
                               style={{
@@ -427,11 +428,7 @@ export default function AdminCategories() {
                             </span>
                             {cat.parentId && (() => {
                               const parentCat = categories.find((c: any) => c.id === cat.parentId);
-                              const parentTitle = parentCat
-                                ? (typeof parentCat.title === "string"
-                                  ? parentCat.title
-                                  : parentCat.title?.ru || parentCat.title?.en || "")
-                                : "";
+                              const parentTitle = parentCat ? getLocalizedField(parentCat.title, locale) : "";
                               return parentTitle ? (
                                 <span className="text-[11px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
                                   {t("subcategory_of")} <strong className="truncate max-w-[100px] sm:max-w-[150px]">{parentTitle}</strong>
@@ -439,7 +436,7 @@ export default function AdminCategories() {
                               ) : null;
                             })()}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1.5 sm:mt-0.5 line-clamp-2">{catDescRu}</p>
+                          <p className="text-xs text-muted-foreground mt-1.5 sm:mt-0.5 line-clamp-2">{catDescLoc}</p>
                         </div>
                       )}
   
@@ -508,6 +505,7 @@ export default function AdminCategories() {
                     <FormControl>
                       <input
                         {...field}
+                        value={field.value || ""}
                         type="text"
                         placeholder={t("placeholder_category_title")}
                         className={`w-full px-3.5 py-2 rounded-lg border bg-transparent text-sm outline-none focus:border-primary ${form.formState.errors.title ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
@@ -527,6 +525,7 @@ export default function AdminCategories() {
                     <FormControl>
                       <textarea
                         {...field}
+                        value={field.value || ""}
                         placeholder={t("placeholder_category_desc")}
                         className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                         rows={3}
@@ -551,7 +550,7 @@ export default function AdminCategories() {
                         <option value="" disabled>{t("placeholder_select_collection")}</option>
                         {collections.map((col: any) => (
                           <option key={col.id} value={col.id} className="bg-card text-foreground">
-                            {col.title?.ru || col.title?.en || col.title || ""}
+                            {getLocalizedField(col.title, locale)}
                           </option>
                         ))}
                       </select>
@@ -575,7 +574,7 @@ export default function AdminCategories() {
                       >
                         <option value="">{t("none_main_category")}</option>
                         {categories.map((c: any) => {
-                          const titleStr = typeof c.title === "string" ? c.title : c.title?.ru || "";
+                          const titleStr = getLocalizedField(c.title, locale);
                           return (
                             <option key={c.id} value={c.id} className="bg-card text-foreground">
                               {titleStr}

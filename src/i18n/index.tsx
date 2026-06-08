@@ -30,8 +30,7 @@ export function I18nProvider({ children, systemTexts, initialLocale, activeLangu
   
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
-  const defaultAdmin = process.env.NEXT_PUBLIC_DEFAULT_ADMIN_LOCALE || "ru";
-  const defaultApp = process.env.NEXT_PUBLIC_DEFAULT_APP_LOCALE || "ru";
+  const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru";
 
   const setLocale = (newLocale: Locale) => {
     if (!activeLanguages.includes(newLocale)) return;
@@ -72,8 +71,6 @@ export function I18nProvider({ children, systemTexts, initialLocale, activeLangu
     if (!field) return "";
     if (typeof field === "string") return field;
     if (typeof field === "object") {
-      const isAdmin = typeof window !== "undefined" && pathname?.startsWith("/admin");
-      const defaultLocale = isAdmin ? defaultAdmin : defaultApp;
 
       if (field[locale]) return field[locale];
       if (field[defaultLocale]) return field[defaultLocale];

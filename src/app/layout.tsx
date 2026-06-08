@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import "./globals.css";
 import { ReduxProvider } from "@/store/Provider";
 import { I18nProvider } from "@/i18n";
-import { systemTextService, languageService } from "@/modules/core/container";
+import { systemTextService } from "@/modules/core/container";
+import { env } from "@/modules/core/env";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const siteTitle = process.env.SITE_TITLE || "Добрые Подарки (Kind Gifts) | Каталог ручной работы / Handmade Catalog";
@@ -26,18 +27,15 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const headersList = await headers();
-  const locale = headersList.get('x-locale') || process.env.NEXT_PUBLIC_DEFAULT_APP_LOCALE || "ru";
+  const locale = headersList.get('x-locale') || env.DEFAULT_LOCALE;
   const isAdmin = headersList.get('x-is-admin') === 'true';
 
-  // Fetch locales and available languages on the server
+  // Fetch only system texts on the server
   // If we are in admin, fetch everything (no area filter). 
   // If we are on public, fetch only public (and shared) texts.
-  const [systemTextsRes, languagesRes] = await Promise.all([
-    systemTextService.getAllSystemTexts({ limit: 2000, area: isAdmin ? undefined : 'public' }),
-    languageService.getAllLanguages()
-  ]);
+  const systemTextsRes = await systemTextService.getAllSystemTexts({ limit: 2000, area: isAdmin ? undefined : 'public' });
 
-  const activeLanguages = languagesRes.data?.filter(l => l.isActive).map(l => l.code) || ["ru", "en"];
+  const activeLanguages = env.SUPPORTED_LOCALES;
 
   return (
     <html
