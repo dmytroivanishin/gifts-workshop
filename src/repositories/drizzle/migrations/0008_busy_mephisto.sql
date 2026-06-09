@@ -1,1 +1,0 @@
-ALTER TABLE "system_texts" ADD COLUMN "area" varchar(50) DEFAULT 'public' NOT NULL;
