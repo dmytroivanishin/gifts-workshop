@@ -56,7 +56,8 @@ export class MediaController {
           rawBody.id = id;
         }
         const body = await validateRequest(mediaSchema.extend({ id: z.string().uuid().optional() }), rawBody);
-        const media = await this.mediaService.saveMedia(body as any);
+        const userId = await getUserId();
+        const media = await this.mediaService.saveMedia({ ...body, userId } as any);
         return sendSuccess(media);
       }
     } catch (error: any) {

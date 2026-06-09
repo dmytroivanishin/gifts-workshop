@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  test-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: test_portfolio
+    ports:
+      - "5433:5432" # Use 5433 to avoid conflict with dev DB if running
+    volumes:
+      - test-db-data:/var/lib/postgresql/data
+    networks:
+      - test-network
+
+volumes:
+  test-db-data:
+
+networks:
+  test-network:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16

@@ -28,15 +28,7 @@ export class TagService implements ITagService {
     }
 
     const tags = await this.tagRepo.getAll();
-    return {
-      data: tags,
-      meta: {
-        total: tags.length,
-        page: 1,
-        limit: tags.length,
-        totalPages: 1,
-      }
-    };
+    return paginate(tags, { page: 1, limit: tags.length });
   }
 
   async getTagById(id: string): Promise<Tag | undefined> {

@@ -64,7 +64,7 @@ export async function POST() {
       path: "/api/v1/auth",
     });
 
-    return sendSuccess({ success: true, email });
+    return sendSuccess({ success: true, email, id: userId });
   } catch (error: any) {
     return sendError(error);
   }

@@ -18,10 +18,9 @@ export interface Media {
   thumbnailUrl: string;
   originalUrl: string;
   userId: string;
-  position?: Position;
-  width?: number;
-  height?: number;
-  orientation?: "Portrait" | "Landscape";
+  width: number;
+  height: number;
+  orientation: "Portrait" | "Landscape";
 }
 
 export interface Collection {

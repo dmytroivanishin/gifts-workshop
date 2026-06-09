@@ -1,8 +1,4 @@
 import postgres from 'postgres';
-import { config } from 'dotenv';
-
-// Load variables from .env.local with override
-config({ path: '.env.local', override: true });
 
 async function migrate() {
   const uri = process.env.DB_URI;

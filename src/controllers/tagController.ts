@@ -6,6 +6,7 @@ import { resolveId } from "@/utils/idResolver";
 import { validateRequest } from "@/utils/validateRequest";
 import { tagSchema } from "@/common/validation/schemas";
 import { getPaginationParams } from "@/utils/paginationUtils";
+import { getUserId } from "@/utils/auth";
 
 export class TagController {
   constructor(private tagService: ITagService) {}
@@ -40,7 +41,8 @@ export class TagController {
         rawBody.id = await resolveId(id, (slug) => this.tagService.getTagBySlug(slug));
       }
       const body = await validateRequest(tagSchema.extend({ id: z.string().uuid().optional() }), rawBody);
-      const tag = await this.tagService.saveTag(body as any);
+      const userId = await getUserId();
+      const tag = await this.tagService.saveTag({ ...body, userId } as any);
       return sendSuccess(tag);
     } catch (error: any) {
       return sendError(error);

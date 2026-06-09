@@ -5,6 +5,7 @@ import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest } from "@/utils/validateRequest";
 import { colorSchema } from "@/common/validation/schemas";
 import { getPaginationParams } from "@/utils/paginationUtils";
+import { getUserId } from "@/utils/auth";
 
 export class ColorController {
   constructor(private colorService: IColorService) {}
@@ -38,7 +39,8 @@ export class ColorController {
         rawBody.id = id;
       }
       const body = await validateRequest(colorSchema.extend({ id: z.string().uuid().optional() }), rawBody);
-      const color = await this.colorService.saveColor(body as any);
+      const userId = await getUserId();
+      const color = await this.colorService.saveColor({ ...body, userId } as any);
       return sendSuccess(color);
     } catch (error: any) {
       return sendError(error);

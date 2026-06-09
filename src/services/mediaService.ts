@@ -39,7 +39,6 @@ export class MediaService implements IMediaService {
       height: processed.height,
       orientation: processed.orientation as "Portrait" | "Landscape",
       userId: userId,
-      position: { x: 0, y: 0, zoom: 1 } // Default positions for posts
     };
 
     return this.mediaRepo.save(media);
@@ -82,7 +81,9 @@ export class MediaService implements IMediaService {
       id,
       thumbnailUrl: body.thumbnailUrl || body.originalUrl,
       originalUrl: body.originalUrl,
-      position: body.position || { x: 0, y: 0, zoom: 1 },
+      width: body.width,
+      height: body.height,
+      orientation: body.orientation,
       userId: body.userId,
     };
     return this.mediaRepo.save(media);

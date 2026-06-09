@@ -6,7 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:db:start": "docker-compose -p portfolio_test -f docker-compose.test.yml up -d && sleep 5 && npx drizzle-kit push",
+    "test:db:stop": "docker-compose -p portfolio_test -f docker-compose.test.yml down",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:e2e": "playwright test --project=e2e",
+    "test:e2e:ui": "playwright test --project=e2e --ui",
+    "test:api": "playwright test --project=api",
+    "test:api:ui": "playwright test --project=api --ui"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -43,16 +51,26 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/cookie": "^0.6.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.2",
+    "@vitest/ui": "^4.1.8",
+    "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "jsdom": "^29.1.1",
+    "node-mocks-http": "^1.17.2",
     "tailwindcss": "^4",
     "tsx": "^4.22.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.8"
   }
 }

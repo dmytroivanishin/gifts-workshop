@@ -50,10 +50,9 @@ export const mediaSchema = z.object({
   thumbnailUrl: z.string().url("error_invalid_url"),
   originalUrl: z.string().url("error_invalid_url"),
   userId: z.string().uuid("error_invalid_uuid"),
-  position: positionSchema.nullable().optional(),
-  width: z.number().positive().optional(),
-  height: z.number().positive().optional(),
-  orientation: z.enum(["Portrait", "Landscape"]).optional(),
+  width: z.number().positive(),
+  height: z.number().positive(),
+  orientation: z.enum(["Portrait", "Landscape"]),
 });
 
 export const collectionSchema = z.object({

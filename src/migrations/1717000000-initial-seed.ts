@@ -7,11 +7,6 @@ import { categoryRepository } from '@/repositories/drizzle/categoryRepository';
 import { tagRepository } from '@/repositories/drizzle/tagRepository';
 import { userRepository } from '@/repositories/drizzle/userRepository';
 import { categoriesToTags } from '@/repositories/drizzle/schema';
-import "dotenv/config"; // Ensure env vars are loaded
-
-// Polyfill dynamic env loading for standalone scripts
-import { config } from 'dotenv';
-config({ path: '.env.local', override: true });
 
 async function runSeed() {
   console.log("🌱 Starting initial database seed...");

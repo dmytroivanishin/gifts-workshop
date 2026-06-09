@@ -35,15 +35,7 @@ export class CategoryService implements ICategoryService {
 
     const categories = await this.categoryRepo.getAll();
     
-    return {
-      data: categories,
-      meta: {
-        total: categories.length,
-        page: 1,
-        limit: categories.length,
-        totalPages: 1,
-      }
-    };
+    return paginate(categories, { page: 1, limit: categories.length });
   }
 
   async getCategoryById(id: string): Promise<PopulatedCategory | undefined> {

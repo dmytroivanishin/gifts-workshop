@@ -153,8 +153,8 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
 
       if (post.poster) {
         setCoverImage(typeof post.poster === "string" ? post.poster : post.poster.id);
-        if (post.poster.position) {
-          setCoverPosition(post.poster.position as any);
+        if ((post.poster as any).position) {
+          setCoverPosition((post.poster as any).position as any);
         }
       }
     }

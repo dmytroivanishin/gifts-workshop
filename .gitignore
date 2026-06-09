@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+config/local.env
 
 # vercel
 .vercel
@@ -42,3 +43,7 @@ next-env.d.ts
 
 # docker persistent data
 .docker/
+
+# playwright tests
+playwright-report/
+test-results/
