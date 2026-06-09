@@ -1,0 +1,2054 @@
+[
+  {
+    "id": "5d91b84c-1936-41c9-8ee4-a5f0e2fe6f6f",
+    "content": {
+      "en": "Admin Panel",
+      "ru": "Панель Администратора"
+    },
+    "area": "admin",
+    "code": "admin_panel"
+  },
+  {
+    "id": "fb53f674-57ff-4678-953c-9cada8ab5218",
+    "content": {
+      "en": "Search by title or description...",
+      "ru": "Поиск по названию или описанию..."
+    },
+    "area": "public",
+    "code": "search_placeholder"
+  },
+  {
+    "id": "c4e9019b-33c2-481b-8c42-77b9f5c2288f",
+    "content": {
+      "en": "Made to Order",
+      "ru": "Под заказ"
+    },
+    "area": "public",
+    "code": "made_to_order"
+  },
+  {
+    "id": "95f5e380-4f83-48f6-bc2d-f8ab1e73c14c",
+    "content": {
+      "en": "Back to gallery",
+      "ru": "Назад к галерее"
+    },
+    "area": "public",
+    "code": "back_to_gallery"
+  },
+  {
+    "id": "53c0e638-d943-4ee3-bb81-0e07f29b3746",
+    "content": {
+      "en": "Order or ask about this item:",
+      "ru": "Заказать или спросить о работе:"
+    },
+    "area": "public",
+    "code": "contact_title"
+  },
+  {
+    "id": "680fdaf4-bac6-40bf-9b8b-707f44fc5a32",
+    "content": {
+      "en": "No projects found. Try changing search parameters.",
+      "ru": "Работы не найдены. Попробуйте изменить параметры поиска."
+    },
+    "area": "public",
+    "code": "no_projects_found"
+  },
+  {
+    "id": "06fd2c4b-f2f6-4db5-9566-38a5c8cb0674",
+    "content": {
+      "en": "All",
+      "ru": "Все"
+    },
+    "area": "public",
+    "code": "all"
+  },
+  {
+    "id": "5b17f659-24f0-4dc9-8570-7d53c013c4c8",
+    "content": {
+      "en": "Favorites",
+      "ru": "Избранное"
+    },
+    "area": "public",
+    "code": "favorites"
+  },
+  {
+    "id": "df1f792e-267e-4ab4-97be-48577b073aaa",
+    "content": {
+      "en": "Message",
+      "ru": "Написать"
+    },
+    "area": "public",
+    "code": "send_message"
+  },
+  {
+    "id": "baa467f7-cca0-455a-8675-9dea342a378c",
+    "content": {
+      "en": "In Stock",
+      "ru": "В наличии"
+    },
+    "area": "shared",
+    "code": "in_stock"
+  },
+  {
+    "id": "e8bf9615-6842-4f66-a025-43e3e17b0259",
+    "content": {
+      "en": "View Project",
+      "ru": "Смотреть работу"
+    },
+    "area": "shared",
+    "code": "view_project"
+  },
+  {
+    "id": "503fca71-0b27-4d1a-8183-efcb65f6eba9",
+    "content": {
+      "en": "Cancel",
+      "ru": "Отмена"
+    },
+    "area": "shared",
+    "code": "cancel"
+  },
+  {
+    "id": "622a1e75-7c42-4ff5-b214-ab1af2893ca9",
+    "content": {
+      "en": "On Request",
+      "ru": "Под заказ"
+    },
+    "area": "shared",
+    "code": "on_request"
+  },
+  {
+    "id": "32721aba-9a96-49e6-b1c0-a1a8e05fc497",
+    "content": {
+      "en": "Cover",
+      "ru": "Обложка"
+    },
+    "area": "shared",
+    "code": "cover"
+  },
+  {
+    "id": "343eb996-dc93-4808-9576-32c37b5c2799",
+    "content": {
+      "en": "Set Cover",
+      "ru": "Сделать обложкой"
+    },
+    "area": "shared",
+    "code": "set_cover"
+  },
+  {
+    "id": "505341a8-fc24-4308-a465-78af904cc01e",
+    "content": {
+      "en": "Position",
+      "ru": "Положение"
+    },
+    "area": "shared",
+    "code": "position"
+  },
+  {
+    "id": "8eb81cde-7819-4f59-8c29-eef5abc0d652",
+    "content": {
+      "en": "Color deleted successfully",
+      "ru": "Цвет успешно удален"
+    },
+    "area": "admin",
+    "code": "color_deleted"
+  },
+  {
+    "id": "1f143636-13bf-4c10-9b1e-bb5dc5eb7a5b",
+    "content": {
+      "en": "Translations",
+      "ru": "Переводы"
+    },
+    "area": "admin",
+    "code": "translations"
+  },
+  {
+    "id": "8915f0d5-ec15-4b10-bb91-54f04c588b85",
+    "content": {
+      "en": "Collections",
+      "ru": "Коллекции"
+    },
+    "area": "admin",
+    "code": "collections"
+  },
+  {
+    "id": "5d48d92a-956c-413d-a52f-1911982168c7",
+    "content": {
+      "en": "Add Collection",
+      "ru": "Добавить коллекцию"
+    },
+    "area": "admin",
+    "code": "add_collection"
+  },
+  {
+    "id": "9b7c408c-1a22-41a0-9e5e-d2e0235814b6",
+    "content": {
+      "en": "Authorization required. Please log in again.",
+      "ru": "Необходима авторизация. Пожалуйста, войдите снова."
+    },
+    "area": "shared",
+    "code": "UNAUTHORIZED"
+  },
+  {
+    "id": "4df7b890-d9d5-48a7-a8ba-719e4258f931",
+    "content": {
+      "en": "An unknown error occurred. Please try again.",
+      "ru": "Произошла неизвестная ошибка. Повторите попытку."
+    },
+    "area": "shared",
+    "code": "UNKNOWN_ERROR"
+  },
+  {
+    "id": "bafbcd0a-5e02-41a2-8e60-fbcaeeef7338",
+    "content": {
+      "en": "Position Cover Image",
+      "ru": "Позиционировать обложку"
+    },
+    "area": "shared",
+    "code": "position_cover_image"
+  },
+  {
+    "id": "ee3f23ca-75ce-4484-9b46-389fa05c84ce",
+    "content": {
+      "en": "Drag to position, use slider to zoom.",
+      "ru": "Перетащите, чтобы изменить положение, используйте ползунок для масштабирования."
+    },
+    "area": "shared",
+    "code": "drag_to_position"
+  },
+  {
+    "id": "11147dcd-6293-40b5-bbfa-3298edb4ffa4",
+    "content": {
+      "en": "Zoom",
+      "ru": "Масштаб"
+    },
+    "area": "shared",
+    "code": "zoom"
+  },
+  {
+    "id": "e54b592a-dc60-4108-97a0-0afda552f236",
+    "content": {
+      "en": "Apply Crop",
+      "ru": "Применить"
+    },
+    "area": "shared",
+    "code": "apply_crop"
+  },
+  {
+    "id": "f372bd73-1e52-4536-8b4f-e93cdecaed2a",
+    "content": {
+      "en": "This field is required",
+      "ru": "Поле обязательно для заполнения"
+    },
+    "area": "shared",
+    "code": "error_required_field"
+  },
+  {
+    "id": "2fe946fb-8617-441e-b7bd-8e32debbb602",
+    "content": {
+      "en": "Invalid URL format",
+      "ru": "Некорректная ссылка"
+    },
+    "area": "shared",
+    "code": "error_invalid_url"
+  },
+  {
+    "id": "430f6266-f176-46a9-9355-20db76e54fc5",
+    "content": {
+      "en": "Invalid hex color format (e.g. #FF0000)",
+      "ru": "Неверный формат цвета (например, #FF0000)"
+    },
+    "area": "shared",
+    "code": "error_invalid_hex"
+  },
+  {
+    "id": "80f2b0b4-3a1d-4359-9dec-e5bc9bc867b2",
+    "content": {
+      "en": "Please select a collection",
+      "ru": "Пожалуйста, выберите коллекцию"
+    },
+    "area": "shared",
+    "code": "error_collection_required"
+  },
+  {
+    "id": "d6c38434-5002-42b5-99d6-28f4efa80924",
+    "content": {
+      "en": "Please select a category",
+      "ru": "Пожалуйста, выберите категорию"
+    },
+    "area": "shared",
+    "code": "error_category_required"
+  },
+  {
+    "id": "ed82c539-8cf4-4342-a4d7-5771660b89f8",
+    "content": {
+      "en": "Invalid slug format",
+      "ru": "Неверный формат ссылки"
+    },
+    "area": "shared",
+    "code": "error_invalid_slug"
+  },
+  {
+    "id": "58f316c6-f2f8-4ed7-a42d-2395aad21d5f",
+    "content": {
+      "en": "Media and cover image are required",
+      "ru": "Медиа-файлы и обложка обязательны"
+    },
+    "area": "shared",
+    "code": "error_media_required"
+  },
+  {
+    "id": "c423f906-bb26-4b66-b84e-751f6a524cde",
+    "content": {
+      "en": "Invalid email format",
+      "ru": "Неверный формат почты"
+    },
+    "area": "shared",
+    "code": "error_invalid_email"
+  },
+  {
+    "id": "e38eadad-51bb-406d-b081-01908b838e2d",
+    "content": {
+      "en": "Password must be at least 6 characters",
+      "ru": "Пароль должен быть не менее 6 символов"
+    },
+    "area": "shared",
+    "code": "error_invalid_password"
+  },
+  {
+    "id": "2433f600-d922-4de6-802e-73bd43d2c5df",
+    "content": {
+      "en": "Select Media",
+      "ru": "Выбрать медиа"
+    },
+    "area": "shared",
+    "code": "select_media"
+  },
+  {
+    "id": "a7a91427-307a-4807-86f5-d03ff1dfb79b",
+    "content": {
+      "en": "Dashboard",
+      "ru": "Дашборд"
+    },
+    "area": "admin",
+    "code": "dashboard"
+  },
+  {
+    "id": "45645744-6e69-438a-8c90-57cfa8af2f83",
+    "content": {
+      "en": "Categories",
+      "ru": "Категории"
+    },
+    "area": "admin",
+    "code": "categories"
+  },
+  {
+    "id": "5801d2ff-e1c7-4807-b7ee-f5ba691649fa",
+    "content": {
+      "en": "Media Library",
+      "ru": "Медиа Библиотека"
+    },
+    "area": "admin",
+    "code": "media_library"
+  },
+  {
+    "id": "e647a7cd-e26a-479e-8916-57c49dd37531",
+    "content": {
+      "en": "Tags",
+      "ru": "Теги"
+    },
+    "area": "admin",
+    "code": "tags"
+  },
+  {
+    "id": "e42a796b-1f77-4351-904e-f4283013100c",
+    "content": {
+      "en": "Projects",
+      "ru": "Работы"
+    },
+    "area": "admin",
+    "code": "projects"
+  },
+  {
+    "id": "9232c9ee-475a-4aa2-9863-5a67165e7f56",
+    "content": {
+      "en": "Projects Manager",
+      "ru": "Управление работами"
+    },
+    "area": "admin",
+    "code": "projects_manager"
+  },
+  {
+    "id": "ab264016-3605-4a8c-bae8-67492d090992",
+    "content": {
+      "en": "Tags Manager",
+      "ru": "Управление тегами"
+    },
+    "area": "admin",
+    "code": "tags_manager"
+  },
+  {
+    "id": "ca70aa0f-7332-4823-846d-922059789956",
+    "content": {
+      "en": "Colors Manager",
+      "ru": "Управление цветами"
+    },
+    "area": "admin",
+    "code": "colors_manager"
+  },
+  {
+    "id": "577a4f1b-8c97-4332-b2b7-19aeb5975d03",
+    "content": {
+      "en": "Colors",
+      "ru": "Цвета"
+    },
+    "area": "admin",
+    "code": "colors"
+  },
+  {
+    "id": "721ca381-0670-4cb0-bf40-31893584f39f",
+    "content": {
+      "en": "Manage color palette for categories",
+      "ru": "Управление цветовой палитрой для категорий"
+    },
+    "area": "admin",
+    "code": "colors_subtitle"
+  },
+  {
+    "id": "90039a06-bf31-4359-ac0b-da5115813dc1",
+    "content": {
+      "en": "Add Color",
+      "ru": "Добавить цвет"
+    },
+    "area": "admin",
+    "code": "add_color"
+  },
+  {
+    "id": "a60ea7a9-4b7f-492f-b1ca-ec52816119f4",
+    "content": {
+      "en": "Edit Color",
+      "ru": "Редактировать цвет"
+    },
+    "area": "admin",
+    "code": "edit_color"
+  },
+  {
+    "id": "2fb1fd99-460e-495b-90ee-9cda4c5e5022",
+    "content": {
+      "en": "Are you sure you want to delete this color?",
+      "ru": "Вы уверены, что хотите удалить этот цвет?"
+    },
+    "area": "admin",
+    "code": "delete_confirm_color"
+  },
+  {
+    "id": "b849c390-cd51-4226-8dc7-2264a79f0768",
+    "content": {
+      "en": "Color saved successfully",
+      "ru": "Цвет успешно сохранен"
+    },
+    "area": "admin",
+    "code": "color_saved"
+  },
+  {
+    "id": "73298006-1c92-468a-83c5-8d02ef41b29f",
+    "content": {
+      "en": "Update",
+      "ru": "Обновить"
+    },
+    "area": "admin",
+    "code": "update"
+  },
+  {
+    "id": "62302a3e-f529-468b-8998-8e8197f349e2",
+    "content": {
+      "en": "Publication Date",
+      "ru": "Дата публикации"
+    },
+    "area": "admin",
+    "code": "creation_date"
+  },
+  {
+    "id": "400528e7-718c-4f52-8a0c-244e2e617bd8",
+    "content": {
+      "en": "Manage user comments and replies.",
+      "ru": "Управление комментариями и ответами пользователей."
+    },
+    "area": "admin",
+    "code": "comments_subtitle"
+  },
+  {
+    "id": "4f507492-5089-4616-9304-fbbcd111963d",
+    "content": {
+      "en": "All Statuses",
+      "ru": "Все статусы"
+    },
+    "area": "admin",
+    "code": "all_statuses"
+  },
+  {
+    "id": "67dbb9be-59a5-47f3-91b1-ecd364dc354d",
+    "content": {
+      "en": "items selected",
+      "ru": "элементов выбрано"
+    },
+    "area": "shared",
+    "code": "items_selected"
+  },
+  {
+    "id": "abd7323c-6605-4d8f-9023-ee9d0a015bdb",
+    "content": {
+      "en": "Change",
+      "ru": "Изменить"
+    },
+    "area": "shared",
+    "code": "change"
+  },
+  {
+    "id": "e88c519c-1c9d-4c30-8bd3-bf5aa1080d34",
+    "content": {
+      "en": "Edit Collection",
+      "ru": "Редактировать коллекцию"
+    },
+    "area": "admin",
+    "code": "edit_collection"
+  },
+  {
+    "id": "8e89716e-977b-4d21-addd-7bc70cbf1a30",
+    "content": {
+      "en": "Collection Title",
+      "ru": "Название коллекции"
+    },
+    "area": "admin",
+    "code": "collection_title"
+  },
+  {
+    "id": "cec11c46-be09-4982-8065-00c00f5fdfc4",
+    "content": {
+      "en": "Collection Description",
+      "ru": "Описание коллекции"
+    },
+    "area": "admin",
+    "code": "collection_description"
+  },
+  {
+    "id": "ae553cd2-0e50-46e7-a5d3-388b7ef97d90",
+    "content": {
+      "en": "Collection Slug",
+      "ru": "Слаг коллекции"
+    },
+    "area": "admin",
+    "code": "collection_slug"
+  },
+  {
+    "id": "79a0b695-53ad-4379-8f5a-ca9e523f8cf8",
+    "content": {
+      "en": "Main Collection",
+      "ru": "Основная коллекция"
+    },
+    "area": "admin",
+    "code": "main_collection"
+  },
+  {
+    "id": "a02db47f-9f8d-4ddf-99ac-a5e0dfbba3cd",
+    "content": {
+      "en": "Save",
+      "ru": "Сохранить"
+    },
+    "area": "admin",
+    "code": "save"
+  },
+  {
+    "id": "865ec29d-11dc-438d-aa8b-54d6dd387089",
+    "content": {
+      "en": "Are you sure you want to delete this collection?",
+      "ru": "Вы уверены, что хотите удалить эту коллекцию?"
+    },
+    "area": "admin",
+    "code": "delete_confirm_collection"
+  },
+  {
+    "id": "8a229401-321d-4bdf-8e65-7913b02baf78",
+    "content": {
+      "en": "Actions",
+      "ru": "Действия"
+    },
+    "area": "admin",
+    "code": "actions"
+  },
+  {
+    "id": "86f5adda-e6f0-4123-87d9-147fdc7bedac",
+    "content": {
+      "en": "Title",
+      "ru": "Название"
+    },
+    "area": "admin",
+    "code": "title"
+  },
+  {
+    "id": "460265c5-04f7-4a0b-bf7a-c40923b73f54",
+    "content": {
+      "en": "Description",
+      "ru": "Описание"
+    },
+    "area": "admin",
+    "code": "description"
+  },
+  {
+    "id": "db74df1c-9cc1-4d15-8ddb-bd6c88b0f321",
+    "content": {
+      "en": "Main",
+      "ru": "Главная"
+    },
+    "area": "admin",
+    "code": "main"
+  },
+  {
+    "id": "1a7f335a-75cf-49c2-bef5-d8a739ddcb99",
+    "content": {
+      "en": "Slug",
+      "ru": "Слаг"
+    },
+    "area": "admin",
+    "code": "slug"
+  },
+  {
+    "id": "e8c230a3-115f-43a2-b2f8-ad5a3160eb19",
+    "content": {
+      "en": "Add Project",
+      "ru": "Добавить работу"
+    },
+    "area": "admin",
+    "code": "add_project"
+  },
+  {
+    "id": "3b2a7cf4-f70c-45c8-9bb4-5326528d00f8",
+    "content": {
+      "en": "Search projects...",
+      "ru": "Поиск работ..."
+    },
+    "area": "admin",
+    "code": "search_projects"
+  },
+  {
+    "id": "9a51b806-cec3-44e2-bb2e-a7caecaa6b15",
+    "content": {
+      "en": "Category",
+      "ru": "Категория"
+    },
+    "area": "admin",
+    "code": "category"
+  },
+  {
+    "id": "036a7310-68b3-4aef-9e52-31a5dc9f710c",
+    "content": {
+      "en": "Status",
+      "ru": "Статус"
+    },
+    "area": "admin",
+    "code": "status"
+  },
+  {
+    "id": "4ec359c6-a345-4c75-baff-a903f1b98905",
+    "content": {
+      "en": "Availability",
+      "ru": "Наличие"
+    },
+    "area": "admin",
+    "code": "availability"
+  },
+  {
+    "id": "7f8bd8df-af49-4a54-bc3a-ab872d3e290d",
+    "content": {
+      "en": "Loading projects...",
+      "ru": "Загрузка работ..."
+    },
+    "area": "admin",
+    "code": "loading_projects"
+  },
+  {
+    "id": "048abf46-b239-49dc-8a83-3d03a40a898d",
+    "content": {
+      "en": "No projects found.",
+      "ru": "Работы не найдены."
+    },
+    "area": "admin",
+    "code": "no_projects"
+  },
+  {
+    "id": "bc5da684-4757-49ee-ab90-ef3d356fe3a3",
+    "content": {
+      "en": "Are you sure you want to delete this project?",
+      "ru": "Вы уверены, что хотите удалить эту работу?"
+    },
+    "area": "admin",
+    "code": "delete_confirm"
+  },
+  {
+    "id": "78676ca4-3265-4203-bbe9-13543ccb50df",
+    "content": {
+      "en": "Loading more projects...",
+      "ru": "Загрузка работ..."
+    },
+    "area": "admin",
+    "code": "loading_more_projects"
+  },
+  {
+    "id": "4165f0ed-a8bb-4db0-8b4b-c8132e14d29b",
+    "content": {
+      "en": "View all tags in use, rename them, or delete them globally from all projects.",
+      "ru": "Просмотр всех используемых тегов, их переименование или глобальное удаление."
+    },
+    "area": "admin",
+    "code": "tags_subtitle"
+  },
+  {
+    "id": "52ca53ee-4282-42d6-a3db-da99fd6fa700",
+    "content": {
+      "en": "All Tags",
+      "ru": "Все теги"
+    },
+    "area": "admin",
+    "code": "all_tags"
+  },
+  {
+    "id": "70f05048-9809-45b3-b652-9206b480709c",
+    "content": {
+      "en": "Loading tags...",
+      "ru": "Загрузка тегов..."
+    },
+    "area": "admin",
+    "code": "loading_tags"
+  },
+  {
+    "id": "a92512c9-8483-46c8-b49c-516fc2d46673",
+    "content": {
+      "en": "No tags found.",
+      "ru": "Теги не найдены."
+    },
+    "area": "admin",
+    "code": "no_tags"
+  },
+  {
+    "id": "39e3d359-4ce0-4042-a883-d20e9acf4ce3",
+    "content": {
+      "en": "Loading more tags...",
+      "ru": "Загрузка тегов..."
+    },
+    "area": "admin",
+    "code": "loading_more_tags"
+  },
+  {
+    "id": "621df084-cae5-4957-90f0-d34e8f42dab3",
+    "content": {
+      "en": "Add New Tag",
+      "ru": "Добавить тег"
+    },
+    "area": "admin",
+    "code": "add_new_tag"
+  },
+  {
+    "id": "fbee9195-e8eb-4243-8671-a4f06ce5df97",
+    "content": {
+      "en": "Tag Name",
+      "ru": "Имя тега"
+    },
+    "area": "admin",
+    "code": "tag_name"
+  },
+  {
+    "id": "81745a3b-1ec3-4190-a249-da4fcf0777d1",
+    "content": {
+      "en": "Create Tag",
+      "ru": "Создать тег"
+    },
+    "area": "admin",
+    "code": "create_tag"
+  },
+  {
+    "id": "cc02648f-76a7-438b-9d3d-416d0bd137c9",
+    "content": {
+      "en": "Are you sure you want to delete this tag? It will be removed from all projects.",
+      "ru": "Вы уверены, что хотите удалить этот тег? Он будет удален из всех проектов."
+    },
+    "area": "admin",
+    "code": "delete_confirm_tag"
+  },
+  {
+    "id": "2377cf2e-9d7c-464c-a1f8-277b7b12c2e9",
+    "content": {
+      "en": "Rename Tag",
+      "ru": "Переименовать тег"
+    },
+    "area": "admin",
+    "code": "rename_tag"
+  },
+  {
+    "id": "49f42a29-a208-47b0-9323-05d0309fa2dd",
+    "content": {
+      "en": "Delete Tag",
+      "ru": "Удалить тег"
+    },
+    "area": "admin",
+    "code": "delete_tag"
+  },
+  {
+    "id": "9d27030d-7312-4826-9190-58ac0310b641",
+    "content": {
+      "en": "Upload and manage visual assets for your projects.",
+      "ru": "Загрузка визуальных ресурсов для ваших работ и управление ими."
+    },
+    "area": "admin",
+    "code": "media_subtitle"
+  },
+  {
+    "id": "17746a37-cda8-424c-8112-6fc1cfc0094a",
+    "content": {
+      "en": "Drag and drop your files here, or click to browse",
+      "ru": "Перетащите файлы сюда или кликните для выбора"
+    },
+    "area": "admin",
+    "code": "drag_drop_files"
+  },
+  {
+    "id": "2a100b35-d369-4684-b6c3-62c1255432d6",
+    "content": {
+      "en": "Loading media library...",
+      "ru": "Загрузка медиа-библиотеки..."
+    },
+    "area": "admin",
+    "code": "loading_media"
+  },
+  {
+    "id": "a480a546-14b5-44e1-9344-ebe47aa9a5d1",
+    "content": {
+      "en": "No media assets found.",
+      "ru": "Медиафайлы не найдены."
+    },
+    "area": "admin",
+    "code": "no_media"
+  },
+  {
+    "id": "04d34299-50c8-46ea-b989-e5ef0d78e2ef",
+    "content": {
+      "en": "Are you sure you want to delete this media asset?",
+      "ru": "Вы уверены, что хотите удалить этот файл?"
+    },
+    "area": "admin",
+    "code": "delete_confirm_media"
+  },
+  {
+    "id": "fd1208c7-a7fc-4afb-8308-192c626e3ed7",
+    "content": {
+      "en": "Aspect Ratio",
+      "ru": "Соотношение сторон"
+    },
+    "area": "admin",
+    "code": "aspect_ratio"
+  },
+  {
+    "id": "293220c1-1bfd-4627-9ee7-417a2e0e561e",
+    "content": {
+      "en": "Orientation",
+      "ru": "Ориентация"
+    },
+    "area": "admin",
+    "code": "orientation"
+  },
+  {
+    "id": "df7872a7-63cc-4896-8189-c4531652b2b2",
+    "content": {
+      "en": "Uploading...",
+      "ru": "Загрузка..."
+    },
+    "area": "admin",
+    "code": "uploading"
+  },
+  {
+    "id": "465d9c15-7337-4c3a-a488-9d04f958d284",
+    "content": {
+      "en": "Parent Category",
+      "ru": "Родительская категория"
+    },
+    "area": "admin",
+    "code": "parent_category"
+  },
+  {
+    "id": "11cda7fe-2126-474f-b207-bf805b95e3e7",
+    "content": {
+      "en": "None (main category)",
+      "ru": "Нет (главная категория)"
+    },
+    "area": "admin",
+    "code": "none_main_category"
+  },
+  {
+    "id": "4b140a14-c9f0-4003-ab58-1ba84f8c31ef",
+    "content": {
+      "en": "None",
+      "ru": "Нет"
+    },
+    "area": "admin",
+    "code": "none"
+  },
+  {
+    "id": "c57f42f8-5805-4b9f-b095-9972653163a5",
+    "content": {
+      "en": "Color",
+      "ru": "Цвет"
+    },
+    "area": "admin",
+    "code": "color"
+  },
+  {
+    "id": "12af25b0-d4f1-475d-9717-1fe5306a1efd",
+    "content": {
+      "en": "Recommended Tags (auto-populated on category selection)",
+      "ru": "Рекомендуемые теги (выбираются авто-при выборе категории)"
+    },
+    "area": "admin",
+    "code": "recommended_tags"
+  },
+  {
+    "id": "d7a51645-4992-4e3b-8a14-22ef9599536f",
+    "content": {
+      "en": "Order",
+      "ru": "Порядок"
+    },
+    "area": "admin",
+    "code": "order"
+  },
+  {
+    "id": "ec308a6f-f824-47e3-88b7-0b5d199ef9e7",
+    "content": {
+      "en": "Add Category",
+      "ru": "Добавить категорию"
+    },
+    "area": "admin",
+    "code": "add_category"
+  },
+  {
+    "id": "262555b1-f7c3-489e-a864-0282ea14ca1e",
+    "content": {
+      "en": "Edit Category",
+      "ru": "Редактировать категорию"
+    },
+    "area": "admin",
+    "code": "edit_category"
+  },
+  {
+    "id": "c6a38d42-5333-4d55-9807-29f72c9b466c",
+    "content": {
+      "en": "Are you sure you want to delete this category? All subcategories will be detached.",
+      "ru": "Вы уверены, что хотите удалить эту категорию? Все подкатегории будут отвязаны."
+    },
+    "area": "admin",
+    "code": "delete_confirm_category"
+  },
+  {
+    "id": "1b41e928-bd0c-46f8-b699-719981e14b8f",
+    "content": {
+      "en": "Loading categories...",
+      "ru": "Загрузка категорий..."
+    },
+    "area": "admin",
+    "code": "loading_categories"
+  },
+  {
+    "id": "a6d8df4e-8faf-445c-b300-96e5f821e9b1",
+    "content": {
+      "en": "No categories found.",
+      "ru": "Категории не найдены."
+    },
+    "area": "admin",
+    "code": "no_categories"
+  },
+  {
+    "id": "bc6d9d20-a116-4e62-a95d-28be9973393a",
+    "content": {
+      "en": "Translation & Localization Manager",
+      "ru": "Менеджер локализации"
+    },
+    "area": "admin",
+    "code": "translations_title"
+  },
+  {
+    "id": "fb6c9ea1-c433-48c4-a526-7211e1fe4570",
+    "content": {
+      "en": "Edit system text labels and localized dictionaries for Russian and English languages.",
+      "ru": "Редактирование системных текстовых строк для русского и английского языков."
+    },
+    "area": "admin",
+    "code": "translations_subtitle"
+  },
+  {
+    "id": "1ce86d14-a385-4ce2-8734-9e6c607058be",
+    "content": {
+      "en": "Translation Key",
+      "ru": "Ключ перевода"
+    },
+    "area": "admin",
+    "code": "key"
+  },
+  {
+    "id": "829816ca-559a-4c29-a54c-eba5cd97c2e3",
+    "content": {
+      "en": "Translation (RU)",
+      "ru": "Перевод (RU)"
+    },
+    "area": "admin",
+    "code": "translation_ru"
+  },
+  {
+    "id": "45d5baec-d8b6-4906-a5a3-359887b4b6f5",
+    "content": {
+      "en": "Translation (EN)",
+      "ru": "Перевод (EN)"
+    },
+    "area": "admin",
+    "code": "translation_en"
+  },
+  {
+    "id": "b4a78a9e-d35f-42d2-bf40-adce8bbb0cc3",
+    "content": {
+      "en": "Loading translations...",
+      "ru": "Загрузка переводов..."
+    },
+    "area": "admin",
+    "code": "loading_translations"
+  },
+  {
+    "id": "3b88438b-fe57-4f00-8aca-a174a046c378",
+    "content": {
+      "en": "No translation keys found.",
+      "ru": "Строки переводов не найдены."
+    },
+    "area": "admin",
+    "code": "no_translations"
+  },
+  {
+    "id": "3a7c24e3-b593-46cd-849e-967ae4c48dbc",
+    "content": {
+      "en": "Manage catalog collections.",
+      "ru": "Управление коллекциями работ в каталоге."
+    },
+    "area": "admin",
+    "code": "manage_collections"
+  },
+  {
+    "id": "6f0d958f-9bec-4396-8dd5-b673e55fca68",
+    "content": {
+      "en": "Loading collections...",
+      "ru": "Загрузка коллекций..."
+    },
+    "area": "admin",
+    "code": "loading_collections"
+  },
+  {
+    "id": "3eec992b-02be-4038-ad8b-9ad1be9a017c",
+    "content": {
+      "en": "No description",
+      "ru": "Нет описания"
+    },
+    "area": "admin",
+    "code": "no_description"
+  },
+  {
+    "id": "5324f8b1-7970-4219-96ed-1b5504c75801",
+    "content": {
+      "en": "Delete collection",
+      "ru": "Удалить коллекцию"
+    },
+    "area": "admin",
+    "code": "delete_collection"
+  },
+  {
+    "id": "9325a7db-47fb-4ec4-8ac0-78d0fc54b361",
+    "content": {
+      "en": "Cancel",
+      "ru": "Отменить"
+    },
+    "area": "admin",
+    "code": "cancel_action"
+  },
+  {
+    "id": "8acea2b0-3eee-437d-829f-d605d7958867",
+    "content": {
+      "en": "Saving...",
+      "ru": "Сохранение..."
+    },
+    "area": "admin",
+    "code": "saving"
+  },
+  {
+    "id": "303802b6-bb1d-4aee-b32d-fc7ab2dd64df",
+    "content": {
+      "en": "e.g., Plush Toys",
+      "ru": "Например: Плюшевые игрушки"
+    },
+    "area": "admin",
+    "code": "placeholder_collection_title"
+  },
+  {
+    "id": "2f82c4f5-6342-44e0-bbab-d15fe523fd79",
+    "content": {
+      "en": "Collection description...",
+      "ru": "Описание коллекции..."
+    },
+    "area": "admin",
+    "code": "placeholder_collection_desc"
+  },
+  {
+    "id": "d987d6e1-a6fa-4e87-bb7b-e03f778381fd",
+    "content": {
+      "en": "Collection slug...",
+      "ru": "Слаг коллекции..."
+    },
+    "area": "admin",
+    "code": "placeholder_collection_slug"
+  },
+  {
+    "id": "a311a706-dbce-4f1c-8c1a-db550b8586b2",
+    "content": {
+      "en": "Select Files",
+      "ru": "Выберите файлы"
+    },
+    "area": "admin",
+    "code": "select_files"
+  },
+  {
+    "id": "3789d3a0-5677-438f-8531-35d57938e681",
+    "content": {
+      "en": "Delete",
+      "ru": "Удалить"
+    },
+    "area": "admin",
+    "code": "delete"
+  },
+  {
+    "id": "aed53dd5-c8ab-4d13-92b3-0fd1cd1b3ea8",
+    "content": {
+      "en": "View",
+      "ru": "Смотреть"
+    },
+    "area": "admin",
+    "code": "view"
+  },
+  {
+    "id": "9bed9215-fcef-4b4b-bc5b-f8700a8df88a",
+    "content": {
+      "en": "Edit",
+      "ru": "Редактировать"
+    },
+    "area": "admin",
+    "code": "edit"
+  },
+  {
+    "id": "ad5deec8-0c83-4637-ae34-78a809ca22ad",
+    "content": {
+      "en": "Edit Project",
+      "ru": "Редактировать проект"
+    },
+    "area": "admin",
+    "code": "edit_project"
+  },
+  {
+    "id": "d0f5ba08-71fd-42a5-b8a3-a3f1012d05db",
+    "content": {
+      "en": "Create Project",
+      "ru": "Создать проект"
+    },
+    "area": "admin",
+    "code": "create_project"
+  },
+  {
+    "id": "83a1099e-9712-4783-9278-72da3ababdd5",
+    "content": {
+      "en": "Update details of your existing work.",
+      "ru": "Изменение деталей существующего проекта."
+    },
+    "area": "admin",
+    "code": "edit_project_subtitle"
+  },
+  {
+    "id": "2db735fa-cffe-4a62-8070-c0377594ea68",
+    "content": {
+      "en": "Add a new handmade work to your portfolio catalog.",
+      "ru": "Добавление новой работы ручной работы в каталог портфолио."
+    },
+    "area": "admin",
+    "code": "create_project_subtitle"
+  },
+  {
+    "id": "75f7e2cf-0157-4e07-9075-543b638f7a2f",
+    "content": {
+      "en": "Project title...",
+      "ru": "Название проекта..."
+    },
+    "area": "admin",
+    "code": "placeholder_project_title"
+  },
+  {
+    "id": "ec3e28ec-db41-424c-9ff8-93b289ca4372",
+    "content": {
+      "en": "Select category...",
+      "ru": "Выберите категорию..."
+    },
+    "area": "admin",
+    "code": "placeholder_select_category"
+  },
+  {
+    "id": "33e0cc1f-3962-4c9d-8e0c-e218f4ec29e5",
+    "content": {
+      "en": "Search categories...",
+      "ru": "Поиск категорий..."
+    },
+    "area": "admin",
+    "code": "placeholder_search_categories"
+  },
+  {
+    "id": "64f64377-2192-40ca-ba2b-1a81ff0b759d",
+    "content": {
+      "en": "Project description...",
+      "ru": "Описание проекта..."
+    },
+    "area": "admin",
+    "code": "placeholder_project_desc"
+  },
+  {
+    "id": "55fecccb-b89b-45d2-b605-e897a67d9d99",
+    "content": {
+      "en": "Select tags...",
+      "ru": "Выберите теги..."
+    },
+    "area": "admin",
+    "code": "placeholder_select_tags"
+  },
+  {
+    "id": "ae95d014-a372-4997-8c55-0d03e618a746",
+    "content": {
+      "en": "Search tags...",
+      "ru": "Поиск тегов..."
+    },
+    "area": "admin",
+    "code": "placeholder_search_tags"
+  },
+  {
+    "id": "fd4af6e0-0bac-4f9b-9558-016bad66ccd3",
+    "content": {
+      "en": "Search or type new tag...",
+      "ru": "Поиск или ввод нового тега..."
+    },
+    "area": "admin",
+    "code": "placeholder_search_or_type_tag"
+  },
+  {
+    "id": "5f5bc45a-2e7f-4b7c-a647-c983a2c47545",
+    "content": {
+      "en": "Add new tag \"{search}\"",
+      "ru": "Добавить новый тег \"{search}\""
+    },
+    "area": "admin",
+    "code": "add_new_tag_prompt"
+  },
+  {
+    "id": "072b2393-5979-4abe-a7c0-eb2d186ea007",
+    "content": {
+      "en": "In Stock",
+      "ru": "В наличии"
+    },
+    "area": "admin",
+    "code": "in_stock_label"
+  },
+  {
+    "id": "8b77d942-e5e6-4539-b372-0ac9348845d9",
+    "content": {
+      "en": "Published",
+      "ru": "Опубликовано"
+    },
+    "area": "admin",
+    "code": "published"
+  },
+  {
+    "id": "28dacc09-585c-411b-9d6a-291788c6ebb8",
+    "content": {
+      "en": "Draft",
+      "ru": "Черновик"
+    },
+    "area": "admin",
+    "code": "draft"
+  },
+  {
+    "id": "3a6a0d63-cd42-4cee-b168-657b47b769c6",
+    "content": {
+      "en": "Archived",
+      "ru": "В архиве"
+    },
+    "area": "admin",
+    "code": "archived"
+  },
+  {
+    "id": "8c8b26d0-d49b-4fa2-9e8e-6257f989e7fb",
+    "content": {
+      "en": "Project Gallery & Media",
+      "ru": "Галерея и медиафайлы проекта"
+    },
+    "area": "admin",
+    "code": "gallery_and_media"
+  },
+  {
+    "id": "b116c06f-7f98-4ee4-8db3-152e88143681",
+    "content": {
+      "en": "Add Media",
+      "ru": "Добавить медиа"
+    },
+    "area": "admin",
+    "code": "add_media"
+  },
+  {
+    "id": "7d6044fa-efc1-4f2e-9a00-5169dc5a9a4f",
+    "content": {
+      "en": "No media selected. Click Add Media to select from library.",
+      "ru": "Медиафайлы не выбраны. Нажмите «Добавить медиа», чтобы выбрать из библиотеки."
+    },
+    "area": "admin",
+    "code": "no_media_selected"
+  },
+  {
+    "id": "e43ca7fd-cbad-4504-a540-1c6f13b8adbc",
+    "content": {
+      "en": "Fine-tune Cover Crop",
+      "ru": "Настройка обрезки обложки"
+    },
+    "area": "admin",
+    "code": "fine_tune_cover"
+  },
+  {
+    "id": "860a6feb-047b-4fdc-ba0c-e7facee7e4b7",
+    "content": {
+      "en": "Tag name...",
+      "ru": "Имя тега..."
+    },
+    "area": "admin",
+    "code": "tag_name_placeholder"
+  },
+  {
+    "id": "675154a2-506f-43ed-8e6a-40f7f83f94cb",
+    "content": {
+      "en": "e.g. vintage",
+      "ru": "Например: винтаж"
+    },
+    "area": "admin",
+    "code": "placeholder_vintage"
+  },
+  {
+    "id": "0a01c1aa-8ccc-43f4-bedb-81b87f856ad7",
+    "content": {
+      "en": "Select collection...",
+      "ru": "Выберите коллекцию..."
+    },
+    "area": "admin",
+    "code": "placeholder_select_collection"
+  },
+  {
+    "id": "d9995c01-848f-44a2-9eed-76452236d761",
+    "content": {
+      "en": "Collection",
+      "ru": "Коллекция"
+    },
+    "area": "admin",
+    "code": "collection"
+  },
+  {
+    "id": "e85e5580-e7a5-41d5-9b87-e963e4513871",
+    "content": {
+      "en": "Search collections...",
+      "ru": "Поиск коллекций..."
+    },
+    "area": "admin",
+    "code": "placeholder_search_collections"
+  },
+  {
+    "id": "96c70f16-13ae-4093-9a98-4d61cca678ed",
+    "content": {
+      "en": "e.g., Plush Stories",
+      "ru": "Например: Плюшевые истории"
+    },
+    "area": "admin",
+    "code": "placeholder_category_title"
+  },
+  {
+    "id": "4d71ca3c-ddca-404d-ad54-3abed94c10ec",
+    "content": {
+      "en": "Category description...",
+      "ru": "Описание категории..."
+    },
+    "area": "admin",
+    "code": "placeholder_category_desc"
+  },
+  {
+    "id": "45318558-b26a-463e-8bc6-2fbe2389102f",
+    "content": {
+      "en": "Color Accent",
+      "ru": "Цвет акцента"
+    },
+    "area": "admin",
+    "code": "color_accent"
+  },
+  {
+    "id": "80a70e28-d244-473f-a118-5bcf06bf1142",
+    "content": {
+      "en": "Manage work categories and configure color accents.",
+      "ru": "Управление категориями работ и выбор цветовых акцентов."
+    },
+    "area": "admin",
+    "code": "categories_subtitle"
+  },
+  {
+    "id": "b0d21744-4c2e-436f-b579-ae5380fcaf07",
+    "content": {
+      "en": "↳ Subcategory of:",
+      "ru": "↳ Подкатегория для:"
+    },
+    "area": "admin",
+    "code": "subcategory_of"
+  },
+  {
+    "id": "3f87ad6c-4594-4035-8c84-99f2c0100db0",
+    "content": {
+      "en": "Entity Type",
+      "ru": "Тип сущности"
+    },
+    "area": "admin",
+    "code": "entity_type"
+  },
+  {
+    "id": "c168bc2f-3d7e-4a81-88fa-a5acdf04bfc4",
+    "content": {
+      "en": "Select Item",
+      "ru": "Выбрать элемент"
+    },
+    "area": "admin",
+    "code": "select_item"
+  },
+  {
+    "id": "d266efad-e926-4a6f-b6f7-86d0d954e5c1",
+    "content": {
+      "en": "Loading list...",
+      "ru": "Загрузка списка..."
+    },
+    "area": "admin",
+    "code": "loading_list"
+  },
+  {
+    "id": "434ecb3f-d3ec-4a7e-8b25-a4cf4d82630e",
+    "content": {
+      "en": "No items found",
+      "ru": "Элементы не найдены"
+    },
+    "area": "admin",
+    "code": "items_not_found"
+  },
+  {
+    "id": "8f976779-548f-4a8a-b8d6-e2781a28ab7f",
+    "content": {
+      "en": "Status:",
+      "ru": "Статус:"
+    },
+    "area": "admin",
+    "code": "status_label"
+  },
+  {
+    "id": "eb089b8f-e217-403c-8c0f-5c424ff7c359",
+    "content": {
+      "en": "Checking translation...",
+      "ru": "Проверка перевода..."
+    },
+    "area": "admin",
+    "code": "checking_translation"
+  },
+  {
+    "id": "738db2ed-9214-42d8-ac10-d008766137e5",
+    "content": {
+      "en": "Fully translated (RU/EN)",
+      "ru": "Переведено полностью (RU/EN)"
+    },
+    "area": "admin",
+    "code": "translated_fully"
+  },
+  {
+    "id": "cd041c85-aa70-418d-b806-d458f64ff4db",
+    "content": {
+      "en": "Missing English translation",
+      "ru": "Отсутствует английский перевод"
+    },
+    "area": "admin",
+    "code": "missing_en_translation"
+  },
+  {
+    "id": "a3824713-5b36-4d58-a2db-63f1ab404b8e",
+    "content": {
+      "en": "Russian translation",
+      "ru": "Русский перевод"
+    },
+    "area": "admin",
+    "code": "russian_translation"
+  },
+  {
+    "id": "5fa07472-cabc-4fde-8ceb-f019097afa0d",
+    "content": {
+      "en": "Title in Russian...",
+      "ru": "Название на русском..."
+    },
+    "area": "admin",
+    "code": "placeholder_title_ru"
+  },
+  {
+    "id": "cd540dad-ff22-4f52-8e72-be78adab9ee2",
+    "content": {
+      "en": "Description in Russian...",
+      "ru": "Описание на русском..."
+    },
+    "area": "admin",
+    "code": "placeholder_desc_ru"
+  },
+  {
+    "id": "34fb1119-cb9a-42d0-9525-7127bd5b6ae8",
+    "content": {
+      "en": "English translation",
+      "ru": "Английский перевод"
+    },
+    "area": "admin",
+    "code": "english_translation"
+  },
+  {
+    "id": "c21a3bc3-5423-41a1-bc6b-5de176219fb0",
+    "content": {
+      "en": "Translations updated successfully!",
+      "ru": "Переводы успешно обновлены!"
+    },
+    "area": "admin",
+    "code": "translations_success"
+  },
+  {
+    "id": "fc400532-1b85-4edb-bda6-012b1b4cd118",
+    "content": {
+      "en": "Failed to save translations.",
+      "ru": "Не удалось сохранить переводы."
+    },
+    "area": "admin",
+    "code": "translations_error"
+  },
+  {
+    "id": "1891f5a9-c55e-4a69-b665-b5597c0a5c53",
+    "content": {
+      "en": "Data validation failed. Please check the fields and try again.",
+      "ru": "Ошибка проверки данных. Проверьте правильность заполнения полей."
+    },
+    "area": "admin",
+    "code": "VALIDATION_ERROR"
+  },
+  {
+    "id": "ba86e1bd-0e97-4112-b86f-4616d3ba6b0d",
+    "content": {
+      "en": "Project successfully created!",
+      "ru": "Работа успешно добавлена!"
+    },
+    "area": "admin",
+    "code": "post_created"
+  },
+  {
+    "id": "14862204-6eba-47ef-afc1-ef7104d1632e",
+    "content": {
+      "en": "Project successfully updated!",
+      "ru": "Работа успешно обновлена!"
+    },
+    "area": "admin",
+    "code": "post_updated"
+  },
+  {
+    "id": "6a039132-c409-464b-a40a-066b1cca0eb3",
+    "content": {
+      "en": "Project successfully deleted!",
+      "ru": "Работа успешно удалена!"
+    },
+    "area": "admin",
+    "code": "post_deleted"
+  },
+  {
+    "id": "81c1f25b-fcbf-48dd-8131-336573d351b8",
+    "content": {
+      "en": "Category successfully created!",
+      "ru": "Категория успешно создана!"
+    },
+    "area": "admin",
+    "code": "category_created"
+  },
+  {
+    "id": "10e97bc5-2b3e-477e-9ea0-3b45eb17746c",
+    "content": {
+      "en": "Category successfully updated!",
+      "ru": "Категория успешно обновлена!"
+    },
+    "area": "admin",
+    "code": "category_updated"
+  },
+  {
+    "id": "563f04be-f260-4188-bb72-8f7830fc9845",
+    "content": {
+      "en": "Category successfully deleted!",
+      "ru": "Категория успешно удалена!"
+    },
+    "area": "admin",
+    "code": "category_deleted"
+  },
+  {
+    "id": "b0bf32b5-397c-49ba-ae6e-7d8e9a84b7c8",
+    "content": {
+      "en": "Tag successfully created!",
+      "ru": "Тег успешно создан!"
+    },
+    "area": "admin",
+    "code": "tag_created"
+  },
+  {
+    "id": "0fbba5e5-3779-4e6e-91cf-27eab5c4c58c",
+    "content": {
+      "en": "Tag successfully updated!",
+      "ru": "Тег успешно обновлен!"
+    },
+    "area": "admin",
+    "code": "tag_updated"
+  },
+  {
+    "id": "0d2f8d7d-50bc-41c8-b3d7-33b5b4169a45",
+    "content": {
+      "en": "Tag successfully deleted!",
+      "ru": "Тег успешно удален!"
+    },
+    "area": "admin",
+    "code": "tag_deleted"
+  },
+  {
+    "id": "4fa289f6-c53e-4f72-852c-23cef5b44f7f",
+    "content": {
+      "en": "Collection successfully created!",
+      "ru": "Коллекция успешно создана!"
+    },
+    "area": "admin",
+    "code": "collection_created"
+  },
+  {
+    "id": "758e7a91-3493-417b-a03c-59885d94ff3f",
+    "content": {
+      "en": "Collection successfully updated!",
+      "ru": "Коллекция успешно обновлена!"
+    },
+    "area": "admin",
+    "code": "collection_updated"
+  },
+  {
+    "id": "243dd700-339d-486f-a6df-949033893640",
+    "content": {
+      "en": "Collection successfully deleted!",
+      "ru": "Коллекция успешно удалена!"
+    },
+    "area": "admin",
+    "code": "collection_deleted"
+  },
+  {
+    "id": "345a5b83-0188-4ad9-bacf-efb70e385f0d",
+    "content": {
+      "en": "Load more",
+      "ru": "Загрузить еще"
+    },
+    "area": "admin",
+    "code": "load_more"
+  },
+  {
+    "id": "6f21a430-1c65-4a86-9359-55ccaf3b0207",
+    "content": {
+      "en": "All items loaded",
+      "ru": "Все элементы загружены"
+    },
+    "area": "admin",
+    "code": "all_items_loaded"
+  },
+  {
+    "id": "8d7a62a7-b88d-47a3-b680-00e05525d2a1",
+    "content": {
+      "en": "System Texts",
+      "ru": "Системные тексты"
+    },
+    "area": "admin",
+    "code": "system_texts"
+  },
+  {
+    "id": "cc087a7c-451c-466a-a3ef-82c9ae8d29fb",
+    "content": {
+      "en": "Missing translation",
+      "ru": "Отсутствует перевод"
+    },
+    "area": "admin",
+    "code": "missing_translation"
+  },
+  {
+    "id": "975dd285-c5d0-4990-90f8-bb1a37f57d57",
+    "content": {
+      "en": "Manage Languages",
+      "ru": "Управление языками"
+    },
+    "area": "admin",
+    "code": "manage_languages"
+  },
+  {
+    "id": "f981ad71-9b93-4fda-a6b0-eb8258182bf2",
+    "content": {
+      "en": "Loading...",
+      "ru": "Загрузка..."
+    },
+    "area": "admin",
+    "code": "loading"
+  },
+  {
+    "id": "75e8d2fd-a02a-4c08-b3ec-53f9d7e50470",
+    "content": {
+      "en": "No comments found",
+      "ru": "Комментарии не найдены"
+    },
+    "area": "admin",
+    "code": "no_comments"
+  },
+  {
+    "id": "95425ebf-0e9d-4195-9631-8ce2da3f9f95",
+    "content": {
+      "en": "PNG, JPG or GIF up to",
+      "ru": "PNG, JPG или GIF до"
+    },
+    "area": "admin",
+    "code": "media_limits"
+  },
+  {
+    "id": "373f5e71-e06c-43a0-9af1-440a78c2fdbb",
+    "content": {
+      "en": "Choose images from your library to add to this project.",
+      "ru": "Выберите изображения из библиотеки для добавления в проект."
+    },
+    "area": "shared",
+    "code": "select_media_description"
+  },
+  {
+    "id": "77474812-35c5-4218-8e7d-2250635b0fd4",
+    "content": {
+      "en": "No media found in the library. Go to Media manager to upload.",
+      "ru": "В библиотеке нет файлов. Перейдите в Медиа для загрузки."
+    },
+    "area": "shared",
+    "code": "no_media_found"
+  },
+  {
+    "id": "913d38a2-3d0e-4613-81e7-c1ec5b2b9df1",
+    "content": {
+      "en": "Confirm Selection",
+      "ru": "Подтвердить выбор"
+    },
+    "area": "shared",
+    "code": "confirm_selection"
+  },
+  {
+    "id": "4f0eabb9-ba74-45af-bdd6-3a8236b36be9",
+    "content": {
+      "en": "Invalid data format",
+      "ru": "Неверный формат данных"
+    },
+    "area": "shared",
+    "code": "error_invalid_format"
+  },
+  {
+    "id": "fe03dfb0-fc25-4bad-9b8d-3087f5f44ac4",
+    "content": {
+      "en": "Title is missing",
+      "ru": "Отсутствует название"
+    },
+    "area": "shared",
+    "code": "error_missing_title"
+  },
+  {
+    "id": "981d70ea-d809-4cf1-bb5b-6b88374ab217",
+    "content": {
+      "en": "Cover image is missing",
+      "ru": "Отсутствует обложка"
+    },
+    "area": "shared",
+    "code": "error_missing_poster"
+  },
+  {
+    "id": "455e8701-f42f-4628-b463-136d87612321",
+    "content": {
+      "en": "Collection is missing",
+      "ru": "Отсутствует коллекция"
+    },
+    "area": "shared",
+    "code": "error_missing_collection"
+  },
+  {
+    "id": "09d1b70c-90fc-4ac1-b0c0-b0f12c790497",
+    "content": {
+      "en": "Category is missing",
+      "ru": "Отсутствует категория"
+    },
+    "area": "shared",
+    "code": "error_missing_category"
+  },
+  {
+    "id": "46013420-1093-4a3e-89e4-02f2a9f9801a",
+    "content": {
+      "en": "Invalid ID format",
+      "ru": "Неверный ID"
+    },
+    "area": "shared",
+    "code": "error_invalid_uuid"
+  },
+  {
+    "id": "a8bdc7c9-8e43-4b41-90d8-4f83fc23fd26",
+    "content": {
+      "en": "Oops! The page is lost",
+      "ru": "Упс! Страница потерялась"
+    },
+    "area": "shared",
+    "code": "error_404_title"
+  },
+  {
+    "id": "228f706a-8944-4b2b-8a5f-05efb8027f43",
+    "content": {
+      "en": "It seems you wandered into a corner of the workshop that doesn't exist.",
+      "ru": "Кажется, вы забрели в уголок мастерской, которого не существует."
+    },
+    "area": "shared",
+    "code": "error_404_desc"
+  },
+  {
+    "id": "0ad21381-7a6a-456e-ac49-621fd2de9f6a",
+    "content": {
+      "en": "Return to main page",
+      "ru": "Вернуться на главную"
+    },
+    "area": "shared",
+    "code": "error_404_back"
+  },
+  {
+    "id": "4ef1c79a-7d37-44e8-922c-f2dbfaa36beb",
+    "content": {
+      "en": "Something went wrong",
+      "ru": "Что-то пошло не так"
+    },
+    "area": "shared",
+    "code": "error_500_title"
+  },
+  {
+    "id": "370357b4-1dec-4182-bea9-27db3eb0f953",
+    "content": {
+      "en": "Our threads got tangled or we accidentally pricked the server with a needle. Sorry for the temporary inconvenience, we're already fixing it.",
+      "ru": "У нас запутались ниточки или мы случайно укололи сервер иголочкой. Извините за временные неудобства, мы уже всё чиним."
+    },
+    "area": "shared",
+    "code": "error_500_desc"
+  },
+  {
+    "id": "a1680983-afa0-4b3e-8098-56b97c64f9f7",
+    "content": {
+      "en": "Try again",
+      "ru": "Попробовать снова"
+    },
+    "area": "shared",
+    "code": "error_500_retry"
+  },
+  {
+    "id": "2a48c214-dc61-4885-a2e0-3b66432f4a10",
+    "content": {
+      "en": "To main page",
+      "ru": "На главную"
+    },
+    "area": "shared",
+    "code": "error_500_back"
+  },
+  {
+    "id": "62ce02f4-2fc6-4433-9870-d5e1cadb2fd6",
+    "content": {
+      "en": "Comments",
+      "ru": "Комментарии"
+    },
+    "area": "shared",
+    "code": "comments"
+  },
+  {
+    "id": "6908e077-6f99-4c3c-b051-49f016f13a1e",
+    "content": {
+      "en": "Leave a comment",
+      "ru": "Оставить комментарий"
+    },
+    "area": "shared",
+    "code": "leave_comment"
+  },
+  {
+    "id": "7f6a39b7-67ee-498b-ad3f-172b6e5e88d4",
+    "content": {
+      "en": "Your name",
+      "ru": "Ваше имя"
+    },
+    "area": "shared",
+    "code": "your_name"
+  },
+  {
+    "id": "cfcbebe6-cd0b-48f3-913b-f8318a3e91ef",
+    "content": {
+      "en": "Write your comment here...",
+      "ru": "Напишите ваш комментарий здесь..."
+    },
+    "area": "shared",
+    "code": "write_comment"
+  },
+  {
+    "id": "5df00dd7-5b45-4f1d-aee8-51ccc36b1997",
+    "content": {
+      "en": "Your comment has been submitted and is awaiting moderation.",
+      "ru": "Ваш комментарий отправлен и ожидает модерации."
+    },
+    "area": "shared",
+    "code": "comment_submitted"
+  },
+  {
+    "id": "baa31768-4847-415e-9947-09be37222b71",
+    "content": {
+      "en": "Post Comment",
+      "ru": "Отправить"
+    },
+    "area": "shared",
+    "code": "post_comment"
+  },
+  {
+    "id": "5bcc86ac-653f-40da-ae78-4a77bee03f6f",
+    "content": {
+      "en": "No comments yet. Be the first to share your thoughts!",
+      "ru": "Пока нет комментариев. Будьте первыми!"
+    },
+    "area": "shared",
+    "code": "no_comments_yet"
+  },
+  {
+    "id": "949cd11e-4cb1-4123-8536-a09a8170d369",
+    "content": {
+      "en": "Name is too long",
+      "ru": "Имя слишком длинное"
+    },
+    "area": "shared",
+    "code": "error_name_too_long"
+  },
+  {
+    "id": "7cc9aa9f-a2df-4734-8ea3-d1c839db26c5",
+    "content": {
+      "en": "Comment is too long",
+      "ru": "Комментарий слишком длинный"
+    },
+    "area": "shared",
+    "code": "error_text_too_long"
+  },
+  {
+    "id": "875cef24-bc37-49d7-9354-5bca60fb72fe",
+    "content": {
+      "en": "Commenting as",
+      "ru": "Вы комментируете как"
+    },
+    "area": "shared",
+    "code": "commenting_as"
+  },
+  {
+    "id": "e5df5ab0-ac8d-4ad8-bf16-f2a101c45eb0",
+    "content": {
+      "en": "Admin",
+      "ru": "Админ"
+    },
+    "area": "shared",
+    "code": "admin"
+  },
+  {
+    "id": "419c3103-cae5-46eb-8459-14a1a389183a",
+    "content": {
+      "en": "Archive",
+      "ru": "Archive"
+    },
+    "area": "admin",
+    "code": "archive"
+  },
+  {
+    "id": "97e9fe20-d172-4ad2-bb3c-f316537f60e1",
+    "content": {
+      "en": "Drag To Reorder",
+      "ru": "Drag To Reorder"
+    },
+    "area": "admin",
+    "code": "drag_to_reorder"
+  },
+  {
+    "id": "05648f0b-d5f4-478c-92c0-5df4fd10bd71",
+    "content": {
+      "en": "Publish",
+      "ru": "Опубликовать"
+    },
+    "area": "admin",
+    "code": "publish"
+  },
+  {
+    "id": "7c9acbeb-6701-4936-9b2e-96b807261e60",
+    "content": {
+      "en": "Remove",
+      "ru": "Удалить"
+    },
+    "area": "admin",
+    "code": "remove"
+  },
+  {
+    "id": "c9e190ac-5a28-49f3-96e8-f5617c513b78",
+    "content": {
+      "en": "Save Draft",
+      "ru": "Сохранить Черновик"
+    },
+    "area": "admin",
+    "code": "save_draft"
+  },
+  {
+    "id": "aaf8d533-5486-43fa-bbf6-8ef7eff110fc",
+    "content": {
+      "ru": "Ресурс уже существует или возник конфликт.",
+      "en": "Resource already exists or there is a conflict."
+    },
+    "area": "shared",
+    "code": "CONFLICT"
+  },
+  {
+    "id": "4c90fe65-39e4-4d46-81ce-a6b04734b0c1",
+    "content": {
+      "ru": "Произошла непредвиденная ошибка сервера.",
+      "en": "An unexpected server error occurred."
+    },
+    "area": "shared",
+    "code": "INTERNAL_SERVER_ERROR"
+  },
+  {
+    "id": "47a5e26d-aba5-4003-a43d-7cfbb5a679f7",
+    "content": {
+      "ru": "Запрошенный ресурс не найден.",
+      "en": "The requested resource was not found."
+    },
+    "area": "shared",
+    "code": "NOT_FOUND"
+  },
+  {
+    "id": "7c7651b4-5c26-45c8-8982-f520b49b84c6",
+    "content": {
+      "ru": "У вас нет прав для выполнения этого действия.",
+      "en": "You do not have permission to perform this action."
+    },
+    "area": "shared",
+    "code": "FORBIDDEN"
+  }
+]

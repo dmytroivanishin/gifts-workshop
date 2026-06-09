@@ -119,6 +119,7 @@ export interface Language {
 
 export interface SystemText {
   readonly id: string;
+  code: string;
   content: LocalizedText;
   area: "public" | "admin" | "shared" | string;
 }

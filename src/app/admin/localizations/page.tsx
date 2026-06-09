@@ -161,7 +161,7 @@ export default function AdminLocalizations() {
               
               let title = "Untitled";
               if (isSystem) {
-                title = item.content?.[locale] || item.content?.ru || item.id;
+                title = item.content?.[locale] || item.content?.ru || item.code || item.id;
               } else {
                 const rawTitle = item.title || item.name;
                 title = typeof rawTitle === "string" 

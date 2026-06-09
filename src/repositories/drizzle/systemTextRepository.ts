@@ -35,7 +35,11 @@ export class SystemTextRepository implements ISystemTextRepository {
   async save(item: SystemText): Promise<SystemText> {
     const db = drizzleDatabase.getDb();
     
-    const existing = await this.getById(item.id);
+    let existing;
+    if (item.id) {
+      existing = await this.getById(item.id);
+    }
+    
     let result;
     
     if (existing) {

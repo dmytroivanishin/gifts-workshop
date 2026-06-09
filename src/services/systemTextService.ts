@@ -26,12 +26,15 @@ export class SystemTextService implements ISystemTextService {
   }
 
   async saveSystemText(body: any): Promise<SystemText> {
-    const text: SystemText = {
-      id: body.id, // ID must be provided (e.g. 'save', 'cancel')
+    const text: any = {
       content: body.content,
-      area: body.area || "public",
+      code: body.code,
+      area: body.area || "admin",
     };
-    return this.systemTextRepo.save(text);
+    if (body.id) {
+      text.id = body.id;
+    }
+    return this.systemTextRepo.save(text as SystemText);
   }
 
   async deleteSystemText(id: string): Promise<boolean> {

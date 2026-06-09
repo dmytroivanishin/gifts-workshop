@@ -54,7 +54,7 @@ export function I18nProvider({ children, systemTexts, initialLocale, activeLangu
     const dicts: Record<string, Record<string, string>> = {};
     if (systemTexts) {
       systemTexts.forEach(text => {
-        dicts[text.id] = text.content;
+        dicts[text.code] = text.content;
       });
     }
     return dicts;

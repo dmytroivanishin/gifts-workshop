@@ -35,9 +35,10 @@ export const tokenSessionsRelations = relations(tokenSessions, ({ one }) => ({
 
 // --- Core Models ---
 export const systemTexts = pgTable("system_texts", {
-  id: varchar("id", { length: 255 }).primaryKey(), // Key of the text (e.g. 'save', 'cancel')
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: varchar("code", { length: 255 }).notNull().unique(),
   content: jsonb("content").$type<Record<string, string>>().notNull(),
-  area: varchar("area", { length: 50 }).default("public").notNull(),
+  area: varchar("area", { length: 50 }).default("admin").notNull(),
 });
 
 export const colors = pgTable("colors", {
