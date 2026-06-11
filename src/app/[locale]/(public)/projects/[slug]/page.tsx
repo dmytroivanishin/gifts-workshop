@@ -78,7 +78,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
                   key={index}
-                  className="mb-4 overflow-hidden rounded-2xl bg-muted relative group cursor-pointer"
+                  className="mb-4 overflow-hidden rounded-2xl bg-muted relative group cursor-pointer break-inside-avoid"
                   onClick={() => handleImageClick(index)}
                 >
                   <img

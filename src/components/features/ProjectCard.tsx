@@ -82,13 +82,13 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
       whileHover={{ y: -6 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
       className={cn(
-        "group relative flex flex-col overflow-hidden cursor-pointer mb-10 break-inside-avoid bg-transparent",
+        "group relative flex flex-col overflow-hidden cursor-pointer h-full bg-transparent",
         className
       )}
     >
-      <Link href={`/projects/${post.slug || post.id}`} className="block">
+      <Link href={`/projects/${post.slug || post.id}`} className="flex flex-col h-full">
         {/* Image Gallery */}
-        <div className="relative aspect-square w-full overflow-hidden bg-muted rounded-2xl">
+        <div className="relative aspect-square w-full overflow-hidden bg-muted rounded-2xl shrink-0">
           <AnimatePresence initial={false}>
             {totalImages > 0 ? (
               (() => {
@@ -168,7 +168,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
         {/* Content */}
         <div className="pt-5 flex flex-col flex-1">
           {/* Meta row: Category Badge & Like Button */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 shrink-0">
             <span
               style={{
                 backgroundColor: `${categoryColor}15`,
@@ -202,10 +202,10 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
           </div>
 
           {/* Title & Description */}
-          <h3 className="font-serif text-[22px] font-medium leading-tight mb-2 text-foreground group-hover:text-primary transition-colors">
-            {loc(post.title)}
+          <h3 className="font-serif text-[22px] font-medium leading-tight mb-2 text-foreground group-hover:text-primary transition-colors truncate shrink-0">
+            {loc(post.title) || '\u00A0'}
           </h3>
-          <p className="font-sans text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
+          <p className="font-sans text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2 min-h-[46px] shrink-0">
             {loc(post.description)}
           </p>
 

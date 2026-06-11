@@ -323,14 +323,14 @@ function HomeContent() {
         </div>
       </div>
 
-      {/* Masonry Grid */}
+      {/* Grid Layout */}
       {isLoading && page === 1 ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="animate-spin text-muted-foreground" size={32} />
         </div>
       ) : displayedPosts.length > 0 ? (
         <>
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-[30px] pb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px] pb-10">
             <AnimatePresence mode="popLayout">
               {displayedPosts.map((post) => (
                 <motion.div
@@ -340,7 +340,6 @@ function HomeContent() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.3 }}
-                  className="break-inside-avoid"
                 >
                   <ProjectCard
                     post={post}
