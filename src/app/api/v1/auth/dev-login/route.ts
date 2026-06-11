@@ -5,6 +5,7 @@ import { userRepository } from "@/repositories/drizzle/userRepository";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 import crypto from "crypto";
 import { cookies } from "next/headers";
+import { env } from "@/modules/core/env";
 
 export async function POST() {
   try {
@@ -15,9 +16,9 @@ export async function POST() {
 
     const jti = crypto.randomUUID();
     const tokenFamily = crypto.randomUUID();
-    const email = process.env.ADMIN_EMAIL;
+    const email = env.ADMIN_EMAILS[0];
     if (!email) {
-      throw new Error("ADMIN_EMAIL is not defined in environment variables");
+      throw new Error("ADMIN_EMAILS is not defined or empty");
     }
 
     // Find or automatically create the admin user to obtain a valid UUID
@@ -32,7 +33,7 @@ export async function POST() {
     }
     const userId = user.id;
 
-    const accessToken = await signToken({ userId, email, role: "admin" }, "15m");
+    const accessToken = await signToken({ userId, role: "admin" }, "15m");
     const refreshToken = crypto.randomBytes(40).toString("hex");
     const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 

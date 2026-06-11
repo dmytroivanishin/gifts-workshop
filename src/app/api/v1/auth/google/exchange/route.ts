@@ -7,6 +7,7 @@ import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
 import crypto from "crypto";
 import { cookies } from "next/headers";
+import { env } from "@/modules/core/env";
 
 export async function POST(request: Request) {
   try {
@@ -18,9 +19,9 @@ export async function POST(request: Request) {
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const adminEmail = process.env.ADMIN_EMAIL;
+    const allowedEmails = env.ADMIN_EMAILS.map(e => e.toLowerCase());
 
-    if (!clientId || !clientSecret || !adminEmail) {
+    if (!clientId || !clientSecret || allowedEmails.length === 0) {
       throw new Error("Server OAuth configuration is missing");
     }
 
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
     const decodedIdToken = decodeJwt(tokenData.id_token);
     const email = decodedIdToken.email as string;
 
-    if (!email || email.toLowerCase() !== adminEmail.toLowerCase()) {
+    if (!email || !allowedEmails.includes(email.toLowerCase())) {
       throw new UnauthorizedError("Unauthorized email address");
     }
 
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
     }
     const userId = user.id;
 
-    const accessToken = await signToken({ userId, email, role: "admin" }, "15m");
+    const accessToken = await signToken({ userId, role: "admin" }, "15m");
     const refreshToken = crypto.randomBytes(40).toString("hex");
 
     const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");

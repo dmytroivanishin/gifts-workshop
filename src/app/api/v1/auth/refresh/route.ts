@@ -68,14 +68,9 @@ export async function POST(request: Request) {
     session.isUsed = true;
     await tokenRepository.updateSession(session);
 
-    const email = process.env.ADMIN_EMAIL;
-    if (!email) {
-      throw new Error("ADMIN_EMAIL is not defined in environment variables");
-    }
-    
     // Generate new pair
     const newJti = crypto.randomUUID();
-    const newAccessToken = await signToken({ userId: session.userId, email, role: "admin" }, "15m");
+    const newAccessToken = await signToken({ userId: session.userId, role: "admin" }, "15m");
     const newRefreshToken = crypto.randomBytes(40).toString("hex");
     const newRefreshTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
 
