@@ -2,7 +2,9 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Send, MessageSquare, Mail, Loader2, ZoomIn } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+import { ChevronLeft, Loader2, ZoomIn } from "lucide-react";
+import { FaTelegramPlane, FaInstagram, FaVk, FaEnvelope, FaPinterest, FaWhatsapp, FaFacebook, FaLinkedin } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useGetPostByIdQuery } from "@/store/api";
 import { useTranslation } from "@/i18n";
@@ -54,6 +56,24 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const handleImageClick = (index: number) => {
     setInitialImageIndex(index);
     setGalleryOpen(true);
+  };
+
+  let socialLinks: Array<{name: string, link: string, icon: string}> = [];
+  try {
+    socialLinks = JSON.parse(process.env.NEXT_PUBLIC_SOCIAL_LINKS || '[]');
+  } catch (e) {
+    console.error("Failed to parse NEXT_PUBLIC_SOCIAL_LINKS");
+  }
+
+  const ICON_MAP: Record<string, any> = {
+    telegram: FaTelegramPlane,
+    instagram: FaInstagram,
+    vk: FaVk,
+    email: FaEnvelope,
+    pinterest: FaPinterest,
+    whatsapp: FaWhatsapp,
+    facebook: FaFacebook,
+    linkedin: FaLinkedin,
   };
 
   return (
@@ -156,34 +176,23 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                 {t("contact_title")}
               </h3>
               
-              <div className="flex flex-col sm:flex-row gap-3">
-                <a
-                  href="https://t.me/dmytro"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#835952] text-white font-sans text-sm font-medium hover:bg-[#674742] transition-colors"
-                >
-                  <Send size={16} />
-                  Telegram
-                </a>
-                
-                <a
-                  href="https://wa.me/380000000000"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-secondary border border-border text-foreground font-sans text-sm font-medium hover:bg-secondary/70 transition-colors"
-                >
-                  <MessageSquare size={16} />
-                  WhatsApp
-                </a>
-
-                <a
-                  href="mailto:example@example.com"
-                  className="p-3 rounded-full bg-secondary border border-border text-foreground hover:bg-secondary/70 transition-colors flex items-center justify-center"
-                  title="Send Email"
-                >
-                  <Mail size={16} />
-                </a>
+              <div className="flex flex-wrap gap-3">
+                {socialLinks.map((social, idx) => {
+                  const iconKey = social.icon.toLowerCase();
+                  const IconComponent = ICON_MAP[iconKey] || (LucideIcons as any)[social.icon] || LucideIcons.Link;
+                  return (
+                    <a
+                      key={idx}
+                      href={social.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={social.name}
+                      className="w-12 h-12 flex items-center justify-center rounded-full bg-secondary border border-border text-foreground hover:bg-secondary/70 transition-colors shrink-0"
+                    >
+                      <IconComponent size={20} />
+                    </a>
+                  );
+                })}
               </div>
             </div>
           </div>
