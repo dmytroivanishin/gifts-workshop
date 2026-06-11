@@ -95,7 +95,7 @@ export default function AdminLayout({
                 onClick={() => setLocale(locale === "ru" ? "en" : "ru")}
                 className="px-2 py-1 bg-secondary text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-all rounded-md uppercase tracking-wider cursor-pointer"
               >
-                {locale === "ru" ? "EN" : "RU"}
+                {locale.toUpperCase()}
               </button>
             </div>
             <button
@@ -118,7 +118,7 @@ export default function AdminLayout({
                 className="px-2 py-1 bg-secondary text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-all rounded-md uppercase tracking-wider cursor-pointer"
                 title={locale === "ru" ? "Switch to English" : "Переключить на Русский"}
               >
-                {locale === "ru" ? "EN" : "RU"}
+                {locale.toUpperCase()}
               </button>
             </div>
 

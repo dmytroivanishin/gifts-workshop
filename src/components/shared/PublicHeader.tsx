@@ -41,7 +41,7 @@ export function PublicHeader() {
             onClick={handleLanguageSwitch}
             className="hover:text-foreground font-semibold uppercase tracking-wider transition-colors cursor-pointer"
           >
-            {nextLocale === "ru" ? "Русский" : nextLocale === "en" ? "English" : nextLocale.toUpperCase()}
+            {locale === "ru" ? "Русский" : locale === "en" ? "English" : locale.toUpperCase()}
           </button>
         </div>
         {/* Placeholder for symmetric spacing if needed later */}
