@@ -31,7 +31,8 @@ const requiredEnvVars = [
   "SITE_PROJECT_NOT_FOUND_EN",
   "SITE_PROJECT_DEFAULT_RU",
   "SITE_PROJECT_DEFAULT_EN",
-  "NEXT_PUBLIC_DEV_MODE"
+  "NEXT_PUBLIC_DEV_MODE",
+  "NEXT_PUBLIC_SOCIAL_LINKS"
 ];
 
 const missingVars: string[] = [];
@@ -78,5 +79,6 @@ export const env = {
   SITE_PROJECT_NOT_FOUND_EN: process.env.SITE_PROJECT_NOT_FOUND_EN!,
   SITE_PROJECT_DEFAULT_RU: process.env.SITE_PROJECT_DEFAULT_RU!,
   SITE_PROJECT_DEFAULT_EN: process.env.SITE_PROJECT_DEFAULT_EN!,
-  NEXT_PUBLIC_DEV_MODE: process.env.NEXT_PUBLIC_DEV_MODE === "true"
+  NEXT_PUBLIC_DEV_MODE: process.env.NEXT_PUBLIC_DEV_MODE === "true",
+  NEXT_PUBLIC_SOCIAL_LINKS: JSON.parse(process.env.NEXT_PUBLIC_SOCIAL_LINKS || '[]') as Array<{name: string, link: string, icon: string}>
 };
