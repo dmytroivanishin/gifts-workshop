@@ -170,7 +170,7 @@ function HomeContent() {
       </div>
 
       {/* Controls: Search & Filters */}
-      <div className="flex flex-col items-center gap-6 mb-10 pb-10 border-b border-border">
+      <section aria-label="Search and filters" className="flex flex-col items-center gap-6 mb-10 pb-10 border-b border-border">
         {/* Search Input */}
         <input
           type="text"
@@ -321,7 +321,7 @@ function HomeContent() {
               })}
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Grid Layout */}
       {isLoading && page === 1 ? (
@@ -330,7 +330,7 @@ function HomeContent() {
         </div>
       ) : displayedPosts.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px] pb-10">
+          <section aria-label="Projects grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px] pb-10">
             <AnimatePresence mode="popLayout">
               {displayedPosts.map((post) => (
                 <motion.div
@@ -349,12 +349,12 @@ function HomeContent() {
                 </motion.div>
               ))}
             </AnimatePresence>
-          </div>
+          </section>
           {hasMore && (
             <div ref={loaderRef} className="flex items-center justify-center py-10 pb-20">
               <Loader2 className="animate-spin text-[#7D8945] mr-2" size={24} />
               <span className="text-sm text-muted-foreground font-sans">
-                {locale === "ru" ? "Загружаем ещё красоты..." : "Loading more beautiful works..."}
+                {t('loading_more')}
               </span>
             </div>
           )}

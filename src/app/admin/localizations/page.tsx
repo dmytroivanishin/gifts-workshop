@@ -108,12 +108,14 @@ export default function AdminLocalizations() {
             {t("translations_subtitle") || "Manage content translations"}
           </p>
         </div>
-        <button
-          onClick={() => router.push('/admin/languages')}
-          className="w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:bg-primary/90 transition-colors cursor-pointer text-center"
-        >
-          {t("manage_languages") || "Manage Languages"}
-        </button>
+        {isSystem && (
+          <button
+            onClick={() => router.push('/admin/localizations/system/new')}
+            className="w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:bg-primary/90 transition-colors cursor-pointer text-center"
+          >
+            {t("add_system_text") || "Add System Text"}
+          </button>
+        )}
       </div>
 
       {/* Select Entity Controls */}

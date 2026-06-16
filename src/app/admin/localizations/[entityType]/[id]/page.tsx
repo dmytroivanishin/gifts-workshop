@@ -14,6 +14,7 @@ import {
   useUpdateTagMutation,
   useUpdateCollectionMutation,
   useUpdateSystemTextMutation,
+  useCreateSystemTextMutation,
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
 
@@ -37,16 +38,17 @@ export default function LocalizationDetailPage({ params }: PageProps) {
   const { data: categoryData, isLoading: isLoadingCategory } = useGetCategoryByIdQuery(id, { skip: !isCategory });
   const { data: tagData, isLoading: isLoadingTag } = useGetTagByIdQuery(id, { skip: !isTag });
   const { data: collectionData, isLoading: isLoadingCollection } = useGetCollectionByIdQuery(id, { skip: !isCollection });
-  const { data: systemData, isLoading: isLoadingSystem } = useGetSystemTextByIdQuery(id, { skip: !isSystem });
+  const { data: systemData, isLoading: isLoadingSystem } = useGetSystemTextByIdQuery(id, { skip: !isSystem || id === "new" });
 
   const [updatePost, { isLoading: isUpdatingPost }] = useUpdatePostMutation();
   const [updateCategory, { isLoading: isUpdatingCategory }] = useUpdateCategoryMutation();
   const [updateTag, { isLoading: isUpdatingTag }] = useUpdateTagMutation();
   const [updateCollection, { isLoading: isUpdatingCollection }] = useUpdateCollectionMutation();
   const [updateSystem, { isLoading: isUpdatingSystem }] = useUpdateSystemTextMutation();
+  const [createSystemText, { isLoading: isCreatingSystem }] = useCreateSystemTextMutation();
 
-  const isSaving = isUpdatingPost || isUpdatingCategory || isUpdatingTag || isUpdatingCollection || isUpdatingSystem;
-  const isLoadingEntity = isLoadingPost || isLoadingCategory || isLoadingTag || isLoadingCollection || isLoadingSystem;
+  const isSaving = isUpdatingPost || isUpdatingCategory || isUpdatingTag || isUpdatingCollection || isUpdatingSystem || isCreatingSystem;
+  const isLoadingEntity = (isLoadingPost || isLoadingCategory || isLoadingTag || isLoadingCollection || isLoadingSystem) && id !== "new";
 
   const [saveStatus, setSaveStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -89,8 +91,16 @@ export default function LocalizationDetailPage({ params }: PageProps) {
          setTitles(newTitles);
          setDescriptions(newDescs);
       }
+    } else if (id === "new" && isSystem) {
+       const newTitles: Record<string, string> = {};
+       activeLanguages.forEach(lang => {
+         newTitles[lang] = "";
+       });
+       setTitles(newTitles);
+       setArea("public");
+       setCode("");
     }
-  }, [entity, activeLanguages, isSystem]);
+  }, [entity, activeLanguages, isSystem, id]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +113,14 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
     try {
       if (isSystem) {
-        await updateSystem({ id, content: titles, area, code }).unwrap();
+        if (id === "new") {
+          const res = await createSystemText({ content: titles, area, code }).unwrap();
+          setSaveStatus({ type: "success", message: t("translations_success") || "Saved successfully!" });
+          setTimeout(() => router.push(`/admin/localizations/system/${res.data.id}`), 1000);
+          return;
+        } else {
+          await updateSystem({ id, content: titles, area, code }).unwrap();
+        }
       } else if (isPost) {
         const post = entity as any;
         await updatePost({
@@ -184,7 +201,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
     );
   }
 
-  if (!entity) {
+  if (!entity && id !== "new") {
     return (
       <div className="text-center py-20 text-muted-foreground">
         {t("items_not_found") || "Entity not found"}
@@ -216,12 +233,12 @@ export default function LocalizationDetailPage({ params }: PageProps) {
       <form onSubmit={handleSave} className="space-y-6" noValidate>
         {isSystem && (
           <div className="bg-card rounded-xl border border-border/40 p-6 shadow-sm space-y-4">
-            <h3 className="font-bold text-sm text-foreground mb-2 uppercase">System Text Settings</h3>
+            <h3 className="font-bold text-sm text-foreground mb-2 uppercase">{t("system_text_settings") || "System Text Settings"}</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Text Code / Key
+                  {t("text_code_key") || "Text Code / Key"}
                 </label>
                 <input
                   type="text"
@@ -235,16 +252,16 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Visibility Area
+                  {t("visibility_area") || "Visibility Area"}
                 </label>
                 <select
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
                 >
-                  <option value="public">Public (Visible to everyone)</option>
-                  <option value="admin">Admin (Visible only in admin panel)</option>
-                  <option value="shared">Shared (Visible in both)</option>
+                  <option value="public">{t("area_public") || "Public (Visible to everyone)"}</option>
+                  <option value="admin">{t("area_admin") || "Admin (Visible only in admin panel)"}</option>
+                  <option value="shared">{t("area_shared") || "Shared (Visible in both)"}</option>
                 </select>
               </div>
             </div>
@@ -263,7 +280,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {isSystem ? "Content" : "Title"} ({lang})
+                  {isSystem ? (t("content_label") || "Content") : (t("title") || "Title")} ({lang})
                 </label>
                   <input
                     type="text"

@@ -26,8 +26,10 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { SortableMediaGrid } from "@/components/shared/SortableMediaGrid";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
-import { ru, enUS } from "date-fns/locale";
+import { ru, enUS, Locale } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+const dateLocales: Record<string, Locale> = { ru, en: enUS };
 
 interface SelectedMedia {
   mediaId: string;
@@ -509,15 +511,15 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                             </div>
                             <span className={field.value ? "text-foreground font-medium" : "text-muted-foreground"}>
                               {field.value
-                                ? new Date(field.value).toLocaleString(locale === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })
-                                : (locale === 'ru' ? "Выберите дату..." : "Select date...")}
+                                ? new Date(field.value).toLocaleString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+                                : t("select_date")}
                             </span>
                           </button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-4 rounded-2xl border-border/60 bg-card shadow-xl admin-area font-sans" align="start">
                           <Calendar
                             mode="single"
-                            locale={locale === 'ru' ? ru : enUS}
+                            locale={dateLocales[locale] || enUS}
                             selected={field.value ? new Date(field.value) : undefined}
                             onSelect={(date) => field.onChange(date ? date.toISOString() : undefined)}
                           />

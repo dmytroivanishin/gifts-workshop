@@ -16,7 +16,7 @@ interface ProjectDetailPageProps {
 }
 
 export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
-  const { t, loc } = useTranslation();
+  const { t, loc, locale } = useTranslation();
   const { slug } = use(params);
   
   const { data: response, isLoading } = useGetPostByIdQuery(slug);
@@ -36,11 +36,15 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   if (!post) {
     return (
       <div className="container mx-auto px-6 py-20 text-center max-w-[600px]">
-        <h2 className="font-heading text-2xl font-semibold mb-4">Работа не найдена</h2>
-        <p className="text-muted-foreground mb-8">Запрошенный проект не существует или был удален.</p>
+        <h2 className="font-heading text-2xl font-semibold mb-4">
+          {t('project_not_found')}
+        </h2>
+        <p className="text-muted-foreground mb-8">
+          {t('project_not_found_desc')}
+        </p>
         <Link href="/" className="inline-flex items-center text-primary font-medium hover:underline">
           <ChevronLeft size={20} className="mr-1" />
-          Вернуться на главную
+          {t('back_to_home')}
         </Link>
       </div>
     );
@@ -77,7 +81,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   };
 
   return (
-    <div className="container mx-auto px-6 py-10 max-w-[1280px] font-sans">
+    <article className="container mx-auto px-6 py-10 max-w-[1280px] font-sans">
       {/* Back Button */}
       <Link
         href="/"
@@ -117,7 +121,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             </div>
           ) : (
             <div className="aspect-video w-full rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
-              Нет изображений
+              {t('no_images')}
             </div>
           )}
         </div>
@@ -149,32 +153,32 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             </h1>
 
             {/* Description */}
-            <div className="font-sans text-base text-muted-foreground leading-relaxed whitespace-pre-line">
+            <p className="font-sans text-base text-muted-foreground leading-relaxed whitespace-pre-line">
               {loc(post.description)}
-            </div>
+            </p>
 
             {/* Tags (if any) */}
             {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-2">
+              <ul className="flex flex-wrap gap-2 pt-2" aria-label="Tags">
                 {post.tags.map((tag, index) => {
                   const name = loc(tag.name);
                   return (
-                    <span
+                    <li
                       key={index}
                       className="px-2.5 py-1 bg-secondary text-secondary-foreground rounded-full text-xs font-medium"
                     >
                       #{name}
-                    </span>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             )}
 
             {/* Contact Panel */}
-            <div className="pt-8 border-t border-border space-y-4">
-              <h3 className="font-heading text-lg font-semibold text-foreground">
+            <aside className="pt-8 border-t border-border space-y-4">
+              <h2 className="font-heading text-lg font-semibold text-foreground">
                 {t("contact_title")}
-              </h3>
+              </h2>
               
               <div className="flex flex-wrap gap-3">
                 {socialLinks.map((social, idx) => {
@@ -194,7 +198,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   );
                 })}
               </div>
-            </div>
+            </aside>
           </div>
         </div>
       </div>
@@ -209,7 +213,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
         isOpen={galleryOpen}
         onClose={() => setGalleryOpen(false)}
       />
-    </div>
+    </article>
   );
 }
 

@@ -14,7 +14,12 @@ const siteName = process.env.SITE_NAME || "Добрые Подарки";
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
-  title: "Добрые Подарки | Kind Gifts",
+  title: {
+    default: siteTitle,
+    template: siteTemplate,
+  },
+  description: siteDescription,
+  applicationName: siteName,
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",

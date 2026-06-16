@@ -2050,5 +2050,140 @@
     },
     "area": "shared",
     "code": "FORBIDDEN"
+  },
+  {
+    "id": "c5dcb023-7a83-4ce4-8cf7-82015aa29714",
+    "content": {
+      "ru": "Работа не найдена",
+      "en": "Project not found"
+    },
+    "area": "public",
+    "code": "project_not_found"
+  },
+  {
+    "id": "ee0869c9-9081-445f-a493-ddb79710b661",
+    "content": {
+      "ru": "Запрошенный проект не существует или был удален.",
+      "en": "The requested project does not exist or has been deleted."
+    },
+    "area": "public",
+    "code": "project_not_found_desc"
+  },
+  {
+    "id": "ad21477c-6cb8-4294-ab9f-745ab02b39da",
+    "content": {
+      "ru": "Вернуться на главную",
+      "en": "Back to home"
+    },
+    "area": "public",
+    "code": "back_to_home"
+  },
+  {
+    "id": "e613b8c1-6e6b-4833-b7d8-0ffa430b052e",
+    "content": {
+      "ru": "Нет изображений",
+      "en": "No images"
+    },
+    "area": "public",
+    "code": "no_images"
+  },
+  {
+    "id": "c538e81f-12b9-4746-8ee4-8cd141a813d4",
+    "content": {
+      "ru": "Загружаем ещё красоты...",
+      "en": "Loading more beautiful works..."
+    },
+    "area": "public",
+    "code": "loading_more"
+  },
+  {
+    "id": "833e58d3-3628-4e7d-834c-cec2ab01366f",
+    "content": {
+      "ru": "Выберите дату...",
+      "en": "Select date..."
+    },
+    "area": "admin",
+    "code": "select_date"
+  },
+  {
+    "id": "9890decd-ba0f-40e0-b118-84953bfc609d",
+    "content": {
+      "ru": "Переключить язык",
+      "en": "Switch language"
+    },
+    "area": "admin",
+    "code": "switch_language"
+  },
+  {
+    "id": "c79f5228-8653-4c9e-81c1-cf4cb1a93c48",
+    "content": {
+      "ru": "Добавить системный текст",
+      "en": "Add System Text"
+    },
+    "area": "admin",
+    "code": "add_system_text"
+  },
+  {
+    "id": "efdfa69e-1fb5-4629-9c77-36019c8cda1f",
+    "content": {
+      "ru": "Настройки системного текста",
+      "en": "System Text Settings"
+    },
+    "area": "admin",
+    "code": "system_text_settings"
+  },
+  {
+    "id": "64c919bd-7099-4e9e-8a4b-d9eef8b2525c",
+    "content": {
+      "ru": "Код / Ключ текста",
+      "en": "Text Code / Key"
+    },
+    "area": "admin",
+    "code": "text_code_key"
+  },
+  {
+    "id": "e28a6357-7ece-47e4-bfec-488558b203e5",
+    "content": {
+      "ru": "Область видимости",
+      "en": "Visibility Area"
+    },
+    "area": "admin",
+    "code": "visibility_area"
+  },
+  {
+    "id": "8b0567cf-65d3-431b-9fde-284d14e940bc",
+    "content": {
+      "ru": "Публичная (Видно всем)",
+      "en": "Public (Visible to everyone)"
+    },
+    "area": "admin",
+    "code": "area_public"
+  },
+  {
+    "id": "d8b491a7-2cd0-4468-85be-c652e05d2581",
+    "content": {
+      "ru": "Админка (Только в панели управления)",
+      "en": "Admin (Visible only in admin panel)"
+    },
+    "area": "admin",
+    "code": "area_admin"
+  },
+  {
+    "id": "5ff1a174-e351-4255-9e5b-306e2c2cae2c",
+    "content": {
+      "ru": "Общая (Видно везде)",
+      "en": "Shared (Visible in both)"
+    },
+    "area": "admin",
+    "code": "area_shared"
+  },
+  {
+    "id": "4049e5ee-95e6-47cf-96c7-02377304ef3e",
+    "content": {
+      "ru": "Содержимое",
+      "en": "Content"
+    },
+    "area": "admin",
+    "code": "content_label"
   }
 ]

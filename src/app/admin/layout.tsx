@@ -15,7 +15,15 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [authorized, setAuthorized] = useState(false);
-  const { t, locale, setLocale } = useTranslation();
+  const { t, locale, setLocale, activeLanguages } = useTranslation();
+
+  const handleLanguageSwitch = () => {
+    const currentIndex = activeLanguages.indexOf(locale);
+    const nextLocale = activeLanguages.length > 0 
+      ? activeLanguages[(currentIndex + 1) % activeLanguages.length] 
+      : "en";
+    setLocale(nextLocale);
+  };
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
@@ -92,7 +100,7 @@ export default function AdminLayout({
           <div className="flex items-center space-x-3">
             <div className="flex items-center gap-1 border-r pr-3 border-border/80">
               <button
-                onClick={() => setLocale(locale === "ru" ? "en" : "ru")}
+                onClick={handleLanguageSwitch}
                 className="px-2 py-1 bg-secondary text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-all rounded-md uppercase tracking-wider cursor-pointer"
               >
                 {locale.toUpperCase()}
@@ -114,9 +122,9 @@ export default function AdminLayout({
             {/* Admin Area Locale Selector */}
             <div className="flex items-center gap-1 border-r pr-4 border-border/80">
               <button
-                onClick={() => setLocale(locale === "ru" ? "en" : "ru")}
+                onClick={handleLanguageSwitch}
                 className="px-2 py-1 bg-secondary text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-all rounded-md uppercase tracking-wider cursor-pointer"
-                title={locale === "ru" ? "Switch to English" : "Переключить на Русский"}
+                title={t('switch_language')}
               >
                 {locale.toUpperCase()}
               </button>
