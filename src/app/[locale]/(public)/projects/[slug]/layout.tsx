@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     }
 
     return {
-      title: title,
+      title: titleText,
       description: description,
       keywords: keywords,
       openGraph: {
