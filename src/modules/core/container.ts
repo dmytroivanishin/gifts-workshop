@@ -1,20 +1,6 @@
 import { drizzleDatabase } from "@/repositories/drizzle/database";
 import { initializeBucket } from "@/modules/storage/minioClient";
 
-// Initialize PostgreSQL connection using Drizzle
-const dbUri = process.env.DB_URI;
-if (dbUri) {
-  drizzleDatabase.connect(dbUri).catch(err => {
-    console.error("❌ Failed to connect to PostgreSQL in container initialization:", err);
-  });
-} else {
-  console.warn("⚠️ DB_URI is not set in environment.");
-}
-
-// Initialize MinIO Bucket
-initializeBucket().catch(err => {
-  console.error("❌ Failed to initialize MinIO Bucket:", err);
-});
 
 import { categoryRepository } from "@/repositories/drizzle/categoryRepository";
 import { collectionRepository } from "@/repositories/drizzle/collectionRepository";

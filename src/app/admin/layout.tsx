@@ -25,18 +25,19 @@ export default function AdminLayout({
     setLocale(nextLocale);
   };
 
+  // Remove admin_logged_in from localStorage if it exists to cleanup legacy
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
-    if (!isLoggedIn && pathname !== "/admin/login") {
-      router.push("/admin/login");
-    } else {
-      setAuthorized(true);
-    }
-  }, [pathname, router]);
-
-  const handleLogout = () => {
     localStorage.removeItem("admin_logged_in");
-    router.push("/admin/login");
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/v1/auth/logout', { method: 'POST' });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      router.push("/admin/login");
+    }
   };
 
   if (pathname === "/admin/login") {
@@ -46,10 +47,6 @@ export default function AdminLayout({
         {children}
       </>
     );
-  }
-
-  if (!authorized) {
-    return <div className="min-h-screen bg-[#FDFBF7]" />;
   }
 
   const navLinks = [

@@ -65,7 +65,53 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "categories_parent_id_idx": {
+          "name": "categories_parent_id_idx",
+          "columns": [
+            {
+              "expression": "parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "categories_collection_id_idx": {
+          "name": "categories_collection_id_idx",
+          "columns": [
+            {
+              "expression": "collection_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "categories_user_id_idx": {
+          "name": "categories_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "categories_color_id_colors_id_fk": {
           "name": "categories_color_id_colors_id_fk",
@@ -138,7 +184,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "categories_to_tags_tag_id_idx": {
+          "name": "categories_to_tags_tag_id_idx",
+          "columns": [
+            {
+              "expression": "tag_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "categories_to_tags_category_id_categories_id_fk": {
           "name": "categories_to_tags_category_id_categories_id_fk",
@@ -224,7 +286,23 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "collections_user_id_idx": {
+          "name": "collections_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "collections_user_id_users_id_fk": {
           "name": "collections_user_id_users_id_fk",
@@ -278,7 +356,23 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "colors_user_id_idx": {
+          "name": "colors_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "colors_user_id_users_id_fk": {
           "name": "colors_user_id_users_id_fk",
@@ -350,7 +444,38 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "comments_post_id_idx": {
+          "name": "comments_post_id_idx",
+          "columns": [
+            {
+              "expression": "post_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comments_reply_id_idx": {
+          "name": "comments_reply_id_idx",
+          "columns": [
+            {
+              "expression": "reply_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "comments_post_id_posts_id_fk": {
           "name": "comments_post_id_posts_id_fk",
@@ -420,7 +545,23 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "media_user_id_idx": {
+          "name": "media_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "media_user_id_users_id_fk": {
           "name": "media_user_id_users_id_fk",
@@ -517,7 +658,68 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "posts_collection_id_idx": {
+          "name": "posts_collection_id_idx",
+          "columns": [
+            {
+              "expression": "collection_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "posts_category_id_idx": {
+          "name": "posts_category_id_idx",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "posts_user_id_idx": {
+          "name": "posts_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "posts_status_idx": {
+          "name": "posts_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "posts_poster_id_media_id_fk": {
           "name": "posts_poster_id_media_id_fk",
@@ -616,7 +818,23 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "posts_to_media_media_id_idx": {
+          "name": "posts_to_media_media_id_idx",
+          "columns": [
+            {
+              "expression": "media_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "posts_to_media_post_id_posts_id_fk": {
           "name": "posts_to_media_post_id_posts_id_fk",
@@ -676,7 +894,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "posts_to_tags_tag_id_idx": {
+          "name": "posts_to_tags_tag_id_idx",
+          "columns": [
+            {
+              "expression": "tag_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "posts_to_tags_post_id_posts_id_fk": {
           "name": "posts_to_tags_post_id_posts_id_fk",
@@ -725,8 +959,15 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "varchar(255)",
+          "type": "uuid",
           "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(255)",
+          "primaryKey": false,
           "notNull": true
         },
         "content": {
@@ -740,13 +981,21 @@
           "type": "varchar(50)",
           "primaryKey": false,
           "notNull": true,
-          "default": "'public'"
+          "default": "'admin'"
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "system_texts_code_unique": {
+          "name": "system_texts_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "code"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -781,7 +1030,23 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "tags_user_id_idx": {
+          "name": "tags_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "tags_user_id_users_id_fk": {
           "name": "tags_user_id_users_id_fk",
@@ -853,7 +1118,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "token_sessions_user_id_idx": {
+          "name": "token_sessions_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "token_sessions_user_id_users_id_fk": {
           "name": "token_sessions_user_id_users_id_fk",

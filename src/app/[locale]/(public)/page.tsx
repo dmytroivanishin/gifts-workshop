@@ -9,6 +9,7 @@ import { useGetPostsQuery, useGetCategoriesQuery } from "@/store/api";
 import { ProjectCard } from "@/components/features/ProjectCard";
 import { useTranslation } from "@/i18n";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 function HomeContent() {
   const router = useRouter();
@@ -61,12 +62,21 @@ function HomeContent() {
     }
   };
 
+  const getCategoryUrl = (categoryId?: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (!categoryId) {
+      params.delete("category");
+    } else {
+      params.set("category", categoryId);
+    }
+    return params.toString() ? `/?${params.toString()}` : "/";
+  };
+
   // Fetch categories from DB
   const { data: categoriesResponse } = useGetCategoriesQuery();
   const dbCategories = categoriesResponse?.data || [];
 
   const [page, setPage] = useState(1);
-  const [posts, setPosts] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
 
   // Expand parent category selection and strictly resolve slugs to UUIDs on the client!
@@ -108,21 +118,12 @@ function HomeContent() {
     setPage(1);
   }, [search, activeCategory, inStockOnly, favoritesOnly]);
 
-  // Sync loaded page chunk to accumulated posts list
+  // Sync hasMore state
   useEffect(() => {
-    if (response?.data) {
-      if (page === 1) {
-        setPosts(response.data);
-      } else {
-        setPosts((prev) => {
-          const existingIds = new Set(prev.map((p) => p.id));
-          const newPosts = response.data.filter((p: any) => !existingIds.has(p.id));
-          return [...prev, ...newPosts];
-        });
-      }
+    if (response) {
       setHasMore(response.meta?.nextPage !== null);
     }
-  }, [response, page]);
+  }, [response]);
 
   // IntersectionObserver bottom anchor logic
   useEffect(() => {
@@ -150,8 +151,9 @@ function HomeContent() {
   }, [hasMore, isFetching, isLoading]);
 
   // Client-side filtering for favorites
+  const posts = response?.data || [];
   const displayedPosts = favoritesOnly
-    ? posts.filter((post) => likedIds.includes(post.id))
+    ? posts.filter((post: any) => likedIds.includes(post.id))
     : posts;
 
   return (
@@ -220,8 +222,8 @@ function HomeContent() {
             <span className="w-[1px] h-6 bg-border mx-1" />
 
             {/* "All" Button */}
-            <button
-              onClick={() => handleCategorySelect(undefined)}
+            <Link
+              href={getCategoryUrl(undefined)}
               className={cn(
                 "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer",
                 !activeCategory
@@ -230,7 +232,7 @@ function HomeContent() {
               )}
             >
               {t("all")}
-            </button>
+            </Link>
 
             {/* Dynamic Categories */}
             {dbCategories
@@ -249,8 +251,8 @@ function HomeContent() {
                   return (
                     <div key={cat.id} className="relative group">
                       {/* Parent Category Button */}
-                      <button
-                        onClick={() => handleCategorySelect(cat.slug || cat.id)}
+                      <Link
+                        href={getCategoryUrl(cat.slug || cat.id)}
                         className={cn(
                           "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer flex items-center gap-1.5",
                           isSelected
@@ -260,30 +262,30 @@ function HomeContent() {
                       >
                         {localizedTitle}
                         <span className="text-[9px] opacity-60 transition-transform duration-200 group-hover:rotate-180">▼</span>
-                      </button>
+                      </Link>
 
                       {/* Glassmorphic Subcategory Hover Dropdown */}
                       <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 pt-2.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out scale-95 group-hover:scale-100 origin-top">
                         <div className="bg-card/95 backdrop-blur-md border border-border shadow-xl rounded-2xl p-2 min-w-[200px] flex flex-col gap-1">
                           {/* Option to explicitly select only the parent */}
-                          <button
-                            onClick={() => handleCategorySelect(cat.slug || cat.id)}
+                          <Link
+                            href={getCategoryUrl(cat.slug || cat.id)}
                             className={cn(
-                              "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer",
+                              "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer block",
                               activeCategory === cat.id || activeCategory === cat.slug
                                 ? "bg-secondary text-primary font-bold"
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                           >
                             {t("all")} {localizedTitle}
-                          </button>
+                          </Link>
                           <div className="h-[1px] bg-border/60 my-1" />
                           {children.map((child: any) => {
                             const isChildSelected = activeCategory === child.id || activeCategory === child.slug;
                             return (
-                              <button
+                              <Link
                                 key={child.id}
-                                onClick={() => handleCategorySelect(child.slug || child.id)}
+                                href={getCategoryUrl(child.slug || child.id)}
                                 className={cn(
                                   "w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer flex items-center justify-between",
                                   isChildSelected
@@ -293,7 +295,7 @@ function HomeContent() {
                               >
                                 <span>{loc(child.title)}</span>
                                 {isChildSelected && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
-                              </button>
+                              </Link>
                             );
                           })}
                         </div>
@@ -305,18 +307,18 @@ function HomeContent() {
                 // Normal Button
                 const isDirectlySelected = activeCategory === cat.id || activeCategory === cat.slug;
                 return (
-                  <button
+                  <Link
                     key={cat.id}
-                    onClick={() => handleCategorySelect(cat.slug || cat.id)}
+                    href={getCategoryUrl(cat.slug || cat.id)}
                     className={cn(
-                      "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer",
+                      "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer block",
                       isDirectlySelected
                         ? "bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3] shadow-sm font-semibold"
                         : "bg-transparent text-[#827C6B] border-[#EBE7E3] hover:bg-[#EBE7E3]/45"
                     )}
                   >
                     {localizedTitle}
-                  </button>
+                  </Link>
                 );
               })}
           </div>

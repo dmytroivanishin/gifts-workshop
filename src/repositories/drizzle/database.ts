@@ -63,11 +63,3 @@ export class DrizzleDatabase {
 
 export const drizzleDatabase = DrizzleDatabase.getInstance();
 
-// Auto-connect on module load if DB_URI is in env
-const dbUri = env.DB_URI;
-if (dbUri) {
-  drizzleDatabase.connect(dbUri).catch(err => {
-    logger.error("Failed to auto-connect to PostgreSQL in database module load", { code: "DB_MODULE_LOAD_ERROR", error: err.message });
-  });
-}
-

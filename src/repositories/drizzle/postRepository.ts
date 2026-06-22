@@ -63,6 +63,20 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     };
   }
 
+  private getListRelations() {
+    return {
+      poster: true as const,
+      category: {
+        with: {
+          color: true as const,
+        }
+      },
+      postsToMedia: {
+        with: { media: true as const }
+      }
+    };
+  }
+
   async populate(item: any): Promise<PopulatedPost> {
     if (!item) return item;
     const results = await this.getById(item.id);
@@ -77,7 +91,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
 
     const db = drizzleDatabase.getDb();
     const queryOptions: any = {
-      with: this.getWithRelations(),
+      with: this.getListRelations(),
       orderBy: [desc(posts.createdAt)]
     };
     
@@ -138,7 +152,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     }
 
     const queryOptions: any = {
-      with: this.getWithRelations(),
+      with: this.getListRelations(),
       orderBy: [desc(posts.createdAt)]
     };
 

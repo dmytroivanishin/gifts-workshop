@@ -5,7 +5,10 @@ import { UnauthorizedError } from "@/common/errors/unauthorized";
 
 // Get secret key for JWT verification in Edge
 const getJwtSecret = () => {
-  const secret = process.env.JWT_SECRET || "default_super_secret_key_change_me_in_prod";
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET is missing in environment variables.");
+  }
   return new TextEncoder().encode(secret);
 };
 
@@ -34,6 +37,12 @@ export async function proxy(request: NextRequest) {
     }
 
     const method = request.method;
+    
+    // Exception for public comments: allow POST /api/v1/posts/:id/comments
+    if (method === "POST" && pathname.match(/^\/api\/v1\/posts\/[a-zA-Z0-9_-]+\/comments$/)) {
+      return NextResponse.next();
+    }
+
     if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
       const token = request.cookies.get("accessToken")?.value;
 

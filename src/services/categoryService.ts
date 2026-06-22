@@ -66,6 +66,31 @@ export class CategoryService implements ICategoryService {
 
     const categoriesList = await this.categoryRepo.getAll();
 
+    if (body.parentId) {
+      if (body.parentId === id) {
+        throw new ValidationError("Category cannot be its own parent", [
+          { field: "parentId", message: "Self-referencing parent is not allowed" }
+        ]);
+      }
+      
+      let currentParentId = body.parentId;
+      const visited = new Set<string>();
+      
+      while (currentParentId) {
+        if (visited.has(currentParentId)) break;
+        visited.add(currentParentId);
+        
+        if (currentParentId === id) {
+          throw new ValidationError("Circular dependency detected", [
+            { field: "parentId", message: "Parent category cannot be a descendant of the current category" }
+          ]);
+        }
+        
+        const parentCategory = categoriesList.find((c: any) => c.id === currentParentId);
+        currentParentId = parentCategory?.parentId;
+      }
+    }
+
     let slug = body.slug;
     if (!slug || (body.title && body.title !== body._originalTitle)) {
       slug = await generateUniqueSlug(body.title || existingCategory?.title, id, this.categoryRepo.getBySlug.bind(this.categoryRepo));

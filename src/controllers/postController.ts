@@ -7,7 +7,7 @@ import { postSchema } from "@/common/validation/schemas";
 import { resolveId } from "@/utils/idResolver";
 import { getUserId } from "@/utils/auth";
 import { getPaginationParams } from "@/utils/paginationUtils";
-
+import { isUUID } from "@/utils/uuid";
 export class PostController {
   constructor(private postService: IPostService) {}
 
@@ -32,7 +32,13 @@ export class PostController {
 
   async getPostById(request: Request, id: string) {
     try {
-      const post = await this.postService.getPostById(id);
+      let post;
+      if (isUUID(id)) {
+        post = await this.postService.getPostById(id);
+      } else {
+        post = await this.postService.getPostBySlug(id);
+      }
+
       if (!post) {
         throw new NotFoundError("Post not found");
       }

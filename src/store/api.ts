@@ -62,6 +62,26 @@ export const api = createApi({
           url: `/posts?${urlParams.toString()}`,
         };
       },
+      serializeQueryArgs: ({ queryArgs }) => {
+        if (!queryArgs) return {};
+        const { page, ...rest } = queryArgs;
+        return rest; // Group cache by filters, ignoring page number
+      },
+      merge: (currentCache, newItems, { arg }) => {
+        if (!arg || !arg.page || arg.page === 1) {
+          return newItems;
+        }
+        
+        // Prevent duplicates when merging
+        const existingIds = new Set(currentCache.data.map((p) => p.id));
+        const uniqueNewItems = newItems.data.filter((p) => !existingIds.has(p.id));
+        
+        currentCache.data.push(...uniqueNewItems);
+        currentCache.meta = newItems.meta;
+      },
+      forceRefetch({ currentArg, previousArg }) {
+        return currentArg?.page !== previousArg?.page;
+      },
       providesTags: ["Post"],
     }),
     getPostById: builder.query<{ data: PopulatedPost }, string>({

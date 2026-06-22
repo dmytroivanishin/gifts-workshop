@@ -1,7 +1,10 @@
 import { SignJWT, jwtVerify, JWTPayload } from "jose";
 
 const getJwtSecret = () => {
-  const secret = process.env.JWT_SECRET || "default_super_secret_key_change_me_in_prod";
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET is missing in environment variables. Default fallback is removed for security.");
+  }
   return new TextEncoder().encode(secret);
 };
 

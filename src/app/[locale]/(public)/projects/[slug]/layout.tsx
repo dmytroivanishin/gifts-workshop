@@ -3,6 +3,8 @@ import { postService } from "@/modules/core/container";
 import { extractLocalizedTags } from "@/utils/tags";
 import { getLocalizedField } from "@/utils/localization";
 import { env } from "@/modules/core/env";
+import { redirect } from "next/navigation";
+import { isUUID } from "@/utils/uuid";
 
 const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -16,9 +18,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const isEn = locale === 'en';
   
   try {
-    // We use getPostById since the slug parameter actually contains the ID from the URL
-    // (as seen in the client component useGetPostByIdQuery)
-    const post = await postService.getPostById(slug);
+    // We use getPostById or getPostBySlug depending on whether the slug is a UUID
+    const post = isUUID(slug) ? await postService.getPostById(slug) : await postService.getPostBySlug(slug);
     
     if (!post) {
       return {
@@ -46,6 +47,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       }
     }
 
+    const projectSlug = post.slug || slug;
+
     return {
       title: titleText,
       description: description,
@@ -53,7 +56,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       openGraph: {
         title: title,
         description: description,
-        url: `${appUrl}/${locale}/projects/${slug}`,
+        url: `${appUrl}/${locale}/projects/${projectSlug}`,
         siteName: siteName,
         images: [
           {
@@ -68,7 +71,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       },
       alternates: {
         languages: env.SUPPORTED_LOCALES.reduce((acc, l) => {
-          acc[l] = `${appUrl}/${l}/projects/${slug}`;
+          acc[l] = `${appUrl}/${l}/projects/${projectSlug}`;
           return acc;
         }, {} as Record<string, string>)
       },
@@ -85,6 +88,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   }
 }
 
-export default function ProjectLayout({ children }: ProjectLayoutProps) {
+export default async function ProjectLayout({ children, params }: ProjectLayoutProps) {
+  const { locale, slug } = await params;
+  if (isUUID(slug)) {
+    const post = await postService.getPostById(slug);
+    if (post && post.slug) {
+      redirect(`/${locale}/projects/${post.slug}`);
+    }
+  }
   return <>{children}</>;
 }

@@ -41,7 +41,6 @@ function LoginContent() {
         throw new Error(data.error?.message || "Failed to authenticate with Google");
       }
 
-      localStorage.setItem("admin_logged_in", "true");
       router.push("/admin/dashboard");
     } catch (err: any) {
       console.error(err);
@@ -85,7 +84,6 @@ function LoginContent() {
         throw new Error(data.error?.message || "Developer login failed");
       }
 
-      localStorage.setItem("admin_logged_in", "true");
       router.push("/admin/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Bypass failed");
