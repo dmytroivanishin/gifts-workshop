@@ -3,6 +3,12 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
 const eslintConfig = defineConfig([
+  {
+    ignores: [
+      ".docker/**",
+      "**/db-data/**",
+    ]
+  },
   ...nextVitals,
   ...nextTs,
   // Override default ignores of eslint-config-next.
@@ -13,6 +19,9 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    files: ["src/**/*.{ts,tsx,js,jsx}"]
+  }
 ]);
 
 export default eslintConfig;
