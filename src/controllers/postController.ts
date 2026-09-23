@@ -21,7 +21,8 @@ export class PostController {
       const collection = searchParams.get("collection") || undefined;
       const inStock = searchParams.get("inStock") === "true" ? true : undefined;
       const status = await resolveStatusFilter(searchParams.get("status") || undefined);
-      const { page, limit } = getPaginationParams(request);
+      // Posts are the heaviest list (full relations), so a request without paging gets one page instead of everything
+      const { page, limit } = getPaginationParams(request, 1, 20);
 
       const result = await this.postService.getFilteredPosts({ search, category, tag, collection, inStock, status, page, limit });
 

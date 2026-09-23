@@ -14,9 +14,7 @@ export class CategoryController {
 
   async getCategories(request: Request) {
     try {
-      const { searchParams } = new URL(request.url);
-      const page = searchParams.get("page") ? parseInt(searchParams.get("page")!) : undefined;
-      const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!) : undefined;
+      const { page, limit } = getPaginationParams(request);
 
       const result = await this.categoryService.getAllCategories({ page, limit });
       return sendSuccess(result.data, result.meta);

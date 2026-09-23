@@ -2,6 +2,19 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
+import { TooManyRequestsError } from "@/common/errors/tooManyRequests";
+import { RATE_LIMITS, checkRateLimit, getClientKey, type RateLimitRule } from "@/utils/rateLimit";
+
+const PUBLIC_COMMENT_POST = /^\/api\/v1\/posts\/[a-zA-Z0-9_-]+\/comments$/;
+const MEDIA_UPLOAD = /^\/api\/v1\/media\/?$/;
+
+// Only the routes that are public or expensive: login, the anonymous comment form and uploads
+function resolveRateLimitRule(method: string, pathname: string): RateLimitRule | undefined {
+  if (pathname.startsWith("/api/v1/auth/")) return RATE_LIMITS.auth;
+  if (method === "POST" && PUBLIC_COMMENT_POST.test(pathname)) return RATE_LIMITS.comment;
+  if (method === "POST" && MEDIA_UPLOAD.test(pathname)) return RATE_LIMITS.upload;
+  return undefined;
+}
 
 // Get secret key for JWT verification in Edge
 const getJwtSecret = () => {
@@ -32,14 +45,26 @@ export async function proxy(request: NextRequest) {
 
   // 2. Protect Backend API Mutation Routes
   if (pathname.startsWith("/api/v1/")) {
+    const rateLimitRule = resolveRateLimitRule(request.method, pathname);
+    if (rateLimitRule) {
+      const result = await checkRateLimit(rateLimitRule, getClientKey(request.headers));
+      if (!result.allowed) {
+        const error = new TooManyRequestsError();
+        return NextResponse.json(
+          { data: {}, error: error.serialize() },
+          { status: error.statusCode, headers: { "Retry-After": String(result.retryAfterSeconds) } }
+        );
+      }
+    }
+
     if (pathname.startsWith("/api/v1/auth/")) {
       return NextResponse.next();
     }
 
     const method = request.method;
-    
+
     // Exception for public comments: allow POST /api/v1/posts/:id/comments
-    if (method === "POST" && pathname.match(/^\/api\/v1\/posts\/[a-zA-Z0-9_-]+\/comments$/)) {
+    if (method === "POST" && PUBLIC_COMMENT_POST.test(pathname)) {
       return NextResponse.next();
     }
 
