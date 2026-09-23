@@ -28,9 +28,9 @@ Arguments received: `$ARGUMENTS`
    |--------------|--------------------|
    | `schema.ts`, `src/migrations/sql` | table list and columns (`CLAUDE.md` §5), table/index/migration counts (13 tables, 17 indexes, 1 migration), FK notes, `DEVIATIONS.md` → Database |
    | `src/app/api/v1/**`, `controllers`, `services` | access rules (§7), endpoint counts, `DEVIATIONS.md` → Backend, blockers B1–B4 status |
-   | `src/proxy.ts`, `auth/**`, `utils/{auth,jwt}.ts` | §6 (guard rules, cookies, refresh heuristic, dev-login), B5–B7, B10 |
-   | `modules/core/{container,env}.ts` | §2 wiring, §9 variable names, B5 |
-   | `modules/storage` | §8 (sizes, formats, bucket init), B9 |
+   | `src/proxy.ts`, `auth/**`, `utils/{auth,jwt,googleOAuth,rateLimit,paginationUtils}.ts` | §6 (guard rules, rate limits, login flow, cookies, refresh heuristic, dev-login), §2 pagination, B5–B7, B10 |
+   | `modules/core/{container,env}.ts` | §2 wiring, §9 variable names and the count of required variables, B5, B9 |
+   | `modules/storage` | §8 (sizes, formats, public URL, `ensureBucket()`), B9 |
    | `store/api.ts` | endpoint count (42 at last count), tag types |
    | `package.json`, lockfile | versions in §1, scripts in §3, dependency section |
    | `docker-compose*.yml`, Dockerfile, `next.config.ts` | §9, §12, deployment checklist (a Dockerfile appearing closes part of B8) |
