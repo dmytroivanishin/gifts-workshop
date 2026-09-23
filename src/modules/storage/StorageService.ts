@@ -1,7 +1,12 @@
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
 import path from 'path';
-import { minioClient, BUCKET_NAME } from './minioClient';
+import { env } from "@/modules/core/env";
+import { minioClient, BUCKET_NAME, ensureBucket } from './minioClient';
+
+// S3_ENDPOINT is the address the server connects to (an internal host inside Docker or Coolify), not necessarily one
+// a browser can reach, and the stored URL ends up in the database, so the public address is a separate variable.
+const PUBLIC_BASE_URL = `${new URL(env.S3_PUBLIC_URL).href.replace(/\/+$/, "")}/${BUCKET_NAME}`;
 
 export interface ProcessedImageResult {
   originalUrl: string;
@@ -65,6 +70,7 @@ export class StorageService {
     const orientation = finalWidth >= finalHeight ? 'landscape' : 'portrait';
 
     // Upload to MinIO
+    await ensureBucket();
     await minioClient.putObject(BUCKET_NAME, uniqueOriginalName, originalBuffer, originalBuffer.length, {
       'Content-Type': mimeType
     });
@@ -73,13 +79,9 @@ export class StorageService {
       'Content-Type': mimeType
     });
 
-    // Construct public URLs
-    const endpoint = process.env.S3_ENDPOINT || 'http://localhost:9000';
-    const baseUrl = `${endpoint}/${BUCKET_NAME}`;
-
     return {
-      originalUrl: `${baseUrl}/${uniqueOriginalName}`,
-      thumbnailUrl: `${baseUrl}/${uniqueThumbnailName}`,
+      originalUrl: `${PUBLIC_BASE_URL}/${uniqueOriginalName}`,
+      thumbnailUrl: `${PUBLIC_BASE_URL}/${uniqueThumbnailName}`,
       width: finalWidth,
       height: finalHeight,
       orientation

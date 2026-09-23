@@ -3,6 +3,7 @@ import { logger } from "@/modules/logger";
 const requiredEnvVars = [
   "DB_URI",
   "S3_ENDPOINT",
+  "S3_PUBLIC_URL",
   "S3_ACCESS_KEY",
   "S3_SECRET_KEY",
   "S3_BUCKET_NAME",
@@ -53,6 +54,8 @@ if (missingVars.length > 0) {
 export const env = {
   DB_URI: process.env.DB_URI!,
   S3_ENDPOINT: process.env.S3_ENDPOINT!,
+  // Where browsers load images from; S3_ENDPOINT is only what the server connects to
+  S3_PUBLIC_URL: process.env.S3_PUBLIC_URL!,
   S3_ACCESS_KEY: process.env.S3_ACCESS_KEY!,
   S3_SECRET_KEY: process.env.S3_SECRET_KEY!,
   S3_BUCKET_NAME: process.env.S3_BUCKET_NAME!,

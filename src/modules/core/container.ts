@@ -1,6 +1,4 @@
 import { drizzleDatabase } from "@/repositories/drizzle/database";
-import { initializeBucket } from "@/modules/storage/minioClient";
-
 
 import { categoryRepository } from "@/repositories/drizzle/categoryRepository";
 import { collectionRepository } from "@/repositories/drizzle/collectionRepository";

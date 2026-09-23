@@ -14,31 +14,54 @@ export const minioClient = new Client({
 
 export const BUCKET_NAME = env.S3_BUCKET_NAME;
 
-// Ensure bucket exists on startup
-export const initializeBucket = async () => {
-  try {
-    const exists = await minioClient.bucketExists(BUCKET_NAME);
-    if (!exists) {
-      await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
-      logger.info(`MinIO Bucket '${BUCKET_NAME}' created successfully.`);
-      
-      // Make bucket public
-      const policy = {
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Sid: "PublicRead",
-            Effect: "Allow",
-            Principal: "*",
-            Action: ["s3:GetObject"],
-            Resource: [`arn:aws:s3:::${BUCKET_NAME}/*`]
-          }
-        ]
-      };
-      await minioClient.setBucketPolicy(BUCKET_NAME, JSON.stringify(policy));
-      logger.info(`MinIO Bucket '${BUCKET_NAME}' policy set to public read.`);
+const publicReadPolicy = JSON.stringify({
+  Version: "2012-10-17",
+  Statement: [
+    {
+      Sid: "PublicRead",
+      Effect: "Allow",
+      Principal: "*",
+      Action: ["s3:GetObject"],
+      Resource: [`arn:aws:s3:::${BUCKET_NAME}/*`]
     }
-  } catch (error: any) {
-    logger.error("Failed to initialize MinIO bucket", { code: "MINIO_INIT_FAILED", error: error.message });
+  ]
+});
+
+async function hasBucketPolicy(): Promise<boolean> {
+  try {
+    await minioClient.getBucketPolicy(BUCKET_NAME);
+    return true;
+  } catch (error: unknown) {
+    if (error instanceof Error && "code" in error && error.code === "NoSuchBucketPolicy") return false;
+    throw error;
   }
-};
+}
+
+async function prepareBucket(): Promise<void> {
+  if (!(await minioClient.bucketExists(BUCKET_NAME))) {
+    await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
+    logger.info(`MinIO Bucket '${BUCKET_NAME}' created successfully.`);
+  }
+
+  // Checked separately from creation: a bucket made by hand has no policy and its images would answer 403.
+  // An existing policy is left alone so a stricter one set on purpose is not overwritten.
+  if (!(await hasBucketPolicy())) {
+    await minioClient.setBucketPolicy(BUCKET_NAME, publicReadPolicy);
+    logger.info(`MinIO Bucket '${BUCKET_NAME}' policy set to public read.`);
+  }
+}
+
+let bucketReady: Promise<void> | undefined;
+
+// Called before the first upload of a process; a failure is not cached, so the next upload tries again
+export function ensureBucket(): Promise<void> {
+  bucketReady ??= prepareBucket().catch((error: unknown) => {
+    bucketReady = undefined;
+    logger.error("Failed to prepare MinIO bucket", {
+      code: "MINIO_INIT_FAILED",
+      error: error instanceof Error ? error.message : String(error)
+    });
+    throw error;
+  });
+  return bucketReady;
+}
