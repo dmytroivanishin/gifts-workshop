@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { ShieldAlert, Loader2, KeyRound } from "lucide-react";
@@ -11,6 +11,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [isDev, setIsDev] = useState(false);
+  const exchangeStarted = useRef(false);
 
   useEffect(() => {
     // Detect if we are in local development to show the bypass button
@@ -18,22 +19,22 @@ function LoginContent() {
       setIsDev(true);
     }
 
-    // Capture OAuth code from URL parameter
+    // Google sends the user back with ?code=...&state=...; a code works once and React StrictMode runs effects twice in dev
     const code = searchParams.get("code");
-    if (code) {
-      handleCodeExchange(code);
+    if (code && !exchangeStarted.current) {
+      exchangeStarted.current = true;
+      handleCodeExchange(code, searchParams.get("state") ?? "");
     }
   }, [searchParams]);
 
   // Exchange Google Authorization Code for JWT Access/Refresh tokens
-  const handleCodeExchange = async (code: string) => {
+  const handleCodeExchange = async (code: string, state: string) => {
     setIsLoading(true);
     try {
-      const redirectUri = window.location.origin + window.location.pathname;
       const res = await fetch("/api/v1/auth/google/exchange", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, redirectUri }),
+        body: JSON.stringify({ code, state }),
       });
 
       const data = await res.json();
@@ -45,25 +46,24 @@ function LoginContent() {
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Authentication error occurred");
+      // Drops the used code and state from the address bar
+      router.replace("/admin/login");
       setIsLoading(false);
     }
   };
 
-  // Standard Google login flow initiation
+  // Standard Google login flow initiation: the server builds the authorize URL and remembers state and PKCE verifier
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const configRes = await fetch("/api/v1/auth/config");
-      const configData = await configRes.json();
-      const clientId = configData.data?.clientId;
+      const res = await fetch("/api/v1/auth/google/start", { method: "POST" });
+      const data = await res.json();
+      const googleAuthUrl: unknown = data.data?.url;
 
-      if (!clientId) {
-        throw new Error("Google Client ID is not configured on the server. Please check your .env file or use Developer Bypass.");
+      if (!res.ok || typeof googleAuthUrl !== "string") {
+        throw new Error(data.error?.message || "Google login is not configured on the server. Use Developer Bypass or check the server settings.");
       }
 
-      const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20email%20profile`;
-      
       window.location.href = googleAuthUrl;
     } catch (err: any) {
       toast.error(err.message || "Failed to start Google login");

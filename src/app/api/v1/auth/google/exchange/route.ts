@@ -1,20 +1,36 @@
-import { NextResponse } from "next/server";
-import { decodeJwt } from "jose";
 import { signToken } from "@/utils/jwt";
 import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
 import { userRepository } from "@/repositories/drizzle/userRepository";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
+import { googleExchangeSchema } from "@/common/validation/schemas";
+import {
+  OAUTH_STATE_COOKIE,
+  OAUTH_STATE_COOKIE_PATH,
+  decodeOAuthCookie,
+  googleRedirectUri,
+  statesMatch,
+  verifyGoogleIdToken,
+} from "@/utils/googleOAuth";
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { env } from "@/modules/core/env";
+import { logger } from "@/modules/logger";
 
 export async function POST(request: Request) {
   try {
-    const { code, redirectUri } = await request.json();
+    const parsed = googleExchangeSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      throw new UnauthorizedError("Code and state are required");
+    }
+    const { code, state } = parsed.data;
 
-    if (!code || !redirectUri) {
-      throw new UnauthorizedError("Code and redirectUri are required");
+    const cookieStore = await cookies();
+    const saved = decodeOAuthCookie(cookieStore.get(OAUTH_STATE_COOKIE)?.value);
+    // Single use: removed whatever the outcome of this attempt
+    cookieStore.delete({ name: OAUTH_STATE_COOKIE, path: OAUTH_STATE_COOKIE_PATH });
+    if (!saved || !statesMatch(saved.state, state)) {
+      throw new UnauthorizedError("Login session is invalid or has expired. Start the login again.");
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -33,7 +49,8 @@ export async function POST(request: Request) {
         code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: redirectUri,
+        redirect_uri: googleRedirectUri(),
+        code_verifier: saved.verifier,
         grant_type: "authorization_code",
       }),
     });
@@ -44,11 +61,9 @@ export async function POST(request: Request) {
       throw new UnauthorizedError("Failed to exchange code for Google tokens");
     }
 
-    // Decode ID token to get email
-    const decodedIdToken = decodeJwt(tokenData.id_token);
-    const email = decodedIdToken.email as string;
+    const { email } = await verifyGoogleIdToken(tokenData.id_token, clientId);
 
-    if (!email || !allowedEmails.includes(email.toLowerCase())) {
+    if (!allowedEmails.includes(email.toLowerCase())) {
       throw new UnauthorizedError("Unauthorized email address");
     }
 
@@ -84,7 +99,6 @@ export async function POST(request: Request) {
     });
 
     // Set Cookies
-    const cookieStore = await cookies();
     cookieStore.set("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -102,8 +116,11 @@ export async function POST(request: Request) {
     });
 
     return sendSuccess({ success: true, email });
-  } catch (error: any) {
-    console.error("Google Exchange Error:", error);
+  } catch (error: unknown) {
+    logger.error("Google login failed", {
+      code: "GOOGLE_LOGIN_FAILED",
+      error: error instanceof Error ? error.message : String(error),
+    });
     if (error instanceof UnauthorizedError) {
       return sendError(error);
     }
