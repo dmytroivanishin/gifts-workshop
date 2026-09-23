@@ -22,7 +22,7 @@ Verification scope: all of `src/app/api`, `proxy.ts`, controllers/services/repos
   - `CategoryService` (`deleteCategory`) and `MediaService` (`deleteMedia`) import `drizzleDatabase` + schema tables and run queries themselves, bypassing the repository interfaces the plan requires for DB swappability.
   - `collections/[id]/posts/route.ts` and `posts/[id]/comments/route.ts` contain logic (query rewriting, response shaping) instead of delegating.
 - **[quality]** Storage: plan requires an Adapter/Strategy interface so the backend can swap Local/S3/Cloudinary. Actual: concrete `StorageService` using the MinIO client directly, no interface. `MediaService` imports the singleton.
-- **[quality]** `initializeBucket()` (creates bucket + public-read policy) is imported in `container.ts` but **never called**. The bucket must exist and be public before first upload.
+- **[fixed 2026-09-23]** `initializeBucket()` was imported in `container.ts` but never called, so the bucket had to be created by hand. Now `ensureBucket()` (`minioClient.ts`) runs before the first upload of a process: it creates the bucket if missing and sets public read only when the bucket has no policy. `initializeBucket()` is removed.
 - **[intentional]** DI is manual in `src/modules/core/container.ts` (repositories → services → controllers). Repositories are module-level singletons.
 
 ### Auth
@@ -30,10 +30,10 @@ Verification scope: all of `src/app/api`, `proxy.ts`, controllers/services/repos
 - **[intentional]** "Single hardcoded admin email" → `ADMIN_EMAILS` (comma list). The allowlist is checked only at Google login; `proxy.ts` verifies JWT signature/expiry, not email or role. The user row is auto-created with a placeholder password (`"admin_hashed_password"`).
 - **[intentional]** Refresh tokens: session table + hash + `isUsed` + `tokenFamily` rotation and reuse detection, as planned.
 - **[added]** "Premature refresh" heuristic: refreshing while the access token has >2 min left revokes the whole family. Not in the plan, and it can log out a legitimate admin (multi-tab, retries).
-- **[quality]** `GOOGLE_CALLBACK_URL` is a required env var but is unused; the redirect URI is taken from the client (`origin + /admin/login`).
-- **[added]** `POST /auth/dev-login` bypass, gated by `NEXT_PUBLIC_DEV_MODE` and, since 2026-09-19, refused when `NODE_ENV=production`. `GET /auth/config` exposes the Google client id.
-- **[quality]** OAuth code flow has no `state`/PKCE. The client sends `redirectUri`. The ID token is decoded with `decodeJwt` (no signature, `aud` or `email_verified` check).
-- **[quality]** Auth endpoints differ from the plan (`sign-in`/`sign-out`/`refresh` → `google/exchange`/`logout`/`refresh`). That is fine; see the routing note below.
+- **[quality]** `GOOGLE_CALLBACK_URL` is a required env var but is unused (its local value is a placeholder). Since 2026-09-23 the redirect address is fixed on the server as `NEXT_PUBLIC_APP_URL` + `/admin/login` and the client no longer sends it.
+- **[added]** `POST /auth/dev-login` bypass, gated by `NEXT_PUBLIC_DEV_MODE` and, since 2026-09-19, refused when `NODE_ENV=production`.
+- **[added]** OAuth code flow with `state` and PKCE (S256), since 2026-09-23: `POST /auth/google/start` builds the Google URL and keeps both values in a single-use HttpOnly cookie (`oauthState`, SameSite=Lax, path `/api/v1/auth`); `google/exchange` checks them, sends `code_verifier`, and verifies the ID token with `jwtVerify` against Google's keys (RS256, issuer, audience = `GOOGLE_CLIENT_ID`, expiry) and requires `email_verified`. The old `GET /auth/config` (exposed the client id) was removed. Code: `utils/googleOAuth.ts`.
+- **[quality]** Auth endpoints differ from the plan (`sign-in`/`sign-out`/`refresh` → `google/start` + `google/exchange`/`logout`/`refresh`). That is fine; see the routing note below.
 
 ### Routing / API surface
 The endpoint table in `backend.md` stays valid as a target. Differences in the code:
@@ -50,12 +50,12 @@ The endpoint table in `backend.md` stays valid as a target. Differences in the c
 - **[quality]** `sendError()` used to return the **raw `error.message`** for non-`BaseError` failures (Drizzle messages include the SQL and parameters). Fixed 2026-09-19: the response is the generic `InternalServerError`, details go to the log only. Invalid UUIDs and malformed JSON still end in 500 instead of 4xx.
 - **[quality]** `meta.totalItems` is the size of the current page (`services/pagination.ts`), not the total, and there is no total-count query. Plan contract implies the real total.
 - **[quality]** `GET /collections/:id/posts` double-wraps (`data: {data, meta}`) and reports `totalItems: undefined`. `/auth/dev-login` returns `{error: "string"}` outside the contract.
-- **[quality]** 41 `console.*` calls bypass the winston logger the plan mandates (`refresh`, `google/exchange`, `tagService`, `sitemap`, …).
+- **[quality]** 40 `console.*` calls bypass the winston logger the plan mandates (`refresh`, `tagService`, `sitemap`, …); the Google login routes use the logger since 2026-09-23.
 
 ### Media
 - **[quality]** Plan: convert everything to JPG; thumbnail 300×300, original 1200×1200 fitted. Actual: format preserved (JPEG/PNG only), original max 1000×1000, thumbnail max 320×320 (`fit: inside`). The WebP branch in `StorageService` is unreachable because uploads allow only JPEG/PNG.
 - **[quality]** MIME check uses the client-supplied `file.type`. `sharp` re-encoding is the only real validation (bad files surface as 500). Stored `orientation` is lowercase (`"landscape"`), while the type/Zod enum is `"Portrait" | "Landscape"`.
-- **[quality]** Public URLs are built from `S3_ENDPOINT` and stored absolute in the DB. If that endpoint is an internal Docker hostname in production, stored URLs are unreachable from browsers.
+- **[fixed 2026-09-23]** Public URLs were built from `S3_ENDPOINT` (the address the server connects to, an internal host in Docker) and stored absolute in the DB. They now come from the required `S3_PUBLIC_URL`: `${S3_PUBLIC_URL}/${bucket}/${object}`. They are still stored absolute, so changing that variable later needs a SQL `replace()` on `media`. `MediaService.deleteMedia` still leaves the two objects in the bucket, and `S3_FORCE_PATH_STYLE` is required but unused (both in `CHANGE-PLAN.md` CP-6).
 - **[intentional]** Integrity check on delete (blocked when used as poster or gallery item) is implemented as planned.
 
 ### Data consistency on delete
@@ -86,7 +86,7 @@ The endpoint table in `backend.md` stays valid as a target. Differences in the c
 - **[gap]** Multi-select category filter: only a single `?category=` selection (a parent expands to its children).
 - **[intentional]** Category navigation uses `<Link href>` (old audit claim about `<button>` is obsolete). Likes persist in `localStorage`. Project page: CSS-columns masonry, contact icons from `NEXT_PUBLIC_SOCIAL_LINKS`, fullscreen gallery.
 - **[added]** Public comments with moderation (`CommentSection`).
-- **[quality]** Public pages are client components fetching via RTK Query; only metadata, sitemap and robots are server-rendered. Project not-found is a client-side message (HTTP 200, no `notFound()`), and drafts are reachable by slug.
+- **[quality]** Public pages are client components fetching via RTK Query; only metadata, sitemap and robots are server-rendered. Project not-found is a client-side message (HTTP 200, no `notFound()`); since 2026-09-19 unpublished posts are no longer served to anonymous readers (the API answers 404).
 - **[quality]** `app/layout.tsx` calls `headers()` and loads up to 2000 `system_texts` from the DB on **every** request, which makes every route dynamic. It also reads `SITE_TITLE`, `SITE_TEMPLATE`, `SITE_DESCRIPTION`, `SITE_NAME` (without a locale suffix), which are not in the env whitelist, so the hardcoded fallbacks always apply.
 - **[quality]** Rules say `next/image` and `next/font`. Actual: 7 raw `<img>` (incl. the public project gallery), fonts pulled with a CSS `@import` from Google Fonts. `next.config.ts` is empty (no `images.remotePatterns`, headers, or `output`).
 - **[quality]** `frontend.md` says default exports, one component per file; shared/feature components use named exports. RTK Query lives in one 442-line `src/store/api.ts`.
@@ -106,13 +106,14 @@ The endpoint table in `backend.md` stays valid as a target. Differences in the c
 ## Testing & Tooling
 
 - **[gap]** Plan: Vitest (unit/component/coverage), Playwright (E2E), Prettier. Actual: scripts, dependencies and `docker-compose.test.yml` + `config/test.env` exist, but there is **no** `vitest.config`, `playwright.config`, or test file, and no Prettier config.
-- **[quality]** Against the "zero `any`" rule: 321 ESLint `no-explicit-any` errors (283 source lines). `npm run lint` fails overall with 425 problems (348 errors, 77 warnings; also 19 `set-state-in-effect`, 3 `no-require-imports`, 3 `no-empty-object-type`). `strict: true` is on, `tsc --noEmit` and `next build` pass. No `eslint-disable` / `@ts-ignore` anywhere.
+- **[quality]** Against the "zero `any`" rule: 318 ESLint `no-explicit-any` errors (about 280 source lines). `npm run lint` fails overall with 418 problems (345 errors, 73 warnings; also 19 `set-state-in-effect`, 3 `no-require-imports`, 3 `no-empty-object-type`), counted on 2026-09-23. `strict: true` is on, `tsc --noEmit` and `next build` pass. No `eslint-disable` / `@ts-ignore` anywhere.
 
 ## Infrastructure
 
 - **[intentional]** `docker-compose.yml`: postgres 16, minio (pinned release), pgweb; fixed subnet; bind mounts under `.docker/` (git-ignored).
 - **[gap]** No `app` service, no `Dockerfile`, no `.dockerignore`, no CI, no healthchecks, no `output: "standalone"`. Nothing in the repo describes the Coolify deployment. Decision (2026-09-19): deploy from a Dockerfile; Coolify is not set up yet and nothing is deployed.
-- **[quality]** `/sitemap.xml` is prerendered at build time from the DB (static in the build output), so it goes stale and would be nearly empty in a Docker build.
+- **[fixed 2026-09-23]** `/sitemap.xml` was prerendered at build time from the DB (static in the build output), so it went stale and would be nearly empty in a Docker build. It now exports `dynamic = "force-dynamic"` and is built on each request; `next build` passes without a reachable database.
+- **[added]** Rate limiting (2026-09-23), not in the plan: `proxy.ts` + `utils/rateLimit.ts` (`rate-limiter-flexible`, in memory, per client address): `/api/v1/auth/*` 20 per minute, public comment POST 5 per 10 minutes, `POST /media` 30 per minute; 429 `TOO_MANY_REQUESTS` with `Retry-After`. `limit` is capped at 100 and `GET /posts` defaults to 20 per page. Single instance only; ordinary GETs are not limited.
 - **[quality]** `next@16.2.6` / `sharp@0.34.5` carry `npm audit` advisories (1 critical); the `shadcn` CLI is in `dependencies`. See `PRODUCTION-READINESS.md`.
 - **[quality]** Dev credentials are hardcoded in compose, and pgweb (8081) and the MinIO console (9001) are exposed. These are fine for local use only.
 
