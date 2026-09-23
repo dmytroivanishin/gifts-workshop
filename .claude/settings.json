@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(npm install *)",
+      "Bash(npm i *)",
+      "Bash(npm add *)",
+      "Bash(npm uninstall *)",
+      "Bash(npm remove *)",
+      "Bash(npm update *)"
+    ],
+    "deny": [
+      "Bash(npm audit fix*)",
+      "Bash(npm * --force*)"
+    ]
+  }
+}
