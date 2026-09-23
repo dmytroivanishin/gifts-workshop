@@ -4,6 +4,9 @@ import { env } from "@/modules/core/env";
 
 const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+// Cached by default, so it would be built once with the DB state (or an unreachable DB) of `next build`
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const locales = env.SUPPORTED_LOCALES;
   const sitemapEntries: MetadataRoute.Sitemap = [];
