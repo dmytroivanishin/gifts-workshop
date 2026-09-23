@@ -7,7 +7,7 @@ allowed-tools: Read Grep Glob
 
 # Portfolio API Exposure Check
 
-The proxy in this repo (`src/proxy.ts`) decides access **by HTTP method, not by resource**: `POST/PUT/PATCH/DELETE` need a valid `accessToken` cookie, `/api/v1/auth/*` is open, and every `GET` is public. That design already produced three release blockers (B1 `GET /users` returning the `password` column, B2 public `GET /admin/comments`, B3 drafts/archived posts readable anonymously). This skill re-derives the exposure from the code so such cases are caught the moment a route is added. Read-only.
+The proxy in this repo (`src/proxy.ts`) decides access **mostly by HTTP method**: `POST/PUT/PATCH/DELETE` need a valid `accessToken` cookie, `/api/v1/auth/*` is open, and every other `GET` is public. Since 2026-09-19 one path rule is added on top: every method on `/api/v1/users/**` and `/api/v1/admin/**` also needs a token (`isAdminOnlyResource`). The method-only design had produced three release blockers, now fixed and awaiting manual verification (B1 `GET /users` returning the `password` column, B2 public `GET /admin/comments`, B3 drafts/archived posts readable anonymously). What an anonymous `GET` returns is therefore decided in **two places**: the proxy, and filters in code (posts go through `utils/postVisibility.ts`, the public comments route forces `Approved`). This skill re-derives the exposure from the code so such cases are caught the moment a route is added. Read-only.
 
 ## Trigger words
 
@@ -21,17 +21,18 @@ Arguments received: `$ARGUMENTS`
 
 ## Process
 
-1. **Read the gate.** Open `src/proxy.ts` and restate the rules from the code, not from memory: which paths and methods need a token, the public exception (currently `POST /api/v1/posts/:id/comments` by regex), what `/api/v1/auth/` skips, and the `config.matcher` exclusions. If the rules differ from the description above, use the code and say so.
+1. **Read the gate.** Open `src/proxy.ts` and restate the rules from the code, not from memory: which paths and methods need a token (mutating methods, plus every method under `/api/v1/users` and `/api/v1/admin`), the public exception (currently `POST /api/v1/posts/:id/comments` by regex), what `/api/v1/auth/` skips, and the `config.matcher` exclusions. If the rules differ from the description above, use the code and say so.
 2. **Enumerate routes.** `Glob src/app/api/v1/**/route.ts`. For each file list the exported HTTP methods (`export async function GET|POST|PUT|PATCH|DELETE`).
-3. **Classify access** per route × method: `public` (no token), `token` (proxy checks a valid JWT, signature/expiry only: no email/role check), `open at proxy, self-checked` (routes under `/api/v1/auth/`: read each handler to see what it verifies, including `dev-login` and `NEXT_PUBLIC_DEV_MODE`).
+3. **Classify access** per route × method: `public` (no token, full data), `public, filtered` (no token, but the code narrows the result for anonymous callers: `Published` posts via `resolveStatusFilter` / `visibleToViewer`, comments forced to `Approved`), `token` (proxy checks a valid JWT, signature/expiry only: no email/role check), `open at proxy, self-checked` (routes under `/api/v1/auth/`: read each handler to see what it verifies, including `dev-login` and `NEXT_PUBLIC_DEV_MODE`).
 4. **Trace the response of every public route** (with `--method GET`: all `GET`). Follow route → controller → service → repository and write down what is returned:
    - sensitive columns: `users.password`, emails, token/session data;
-   - content by status: `posts.status` (`Draft` / `Published` / `Archived`) and `comments.status` (`Review` / `Approved` / `Rejected`): is a default filter applied, and can a caller widen it with `?status=`;
-   - admin-purpose resources: `/users`, `/admin/*`, `/media` internals, `/system-texts` (public area vs admin area texts);
+   - content by status: `posts.status` (`Draft` / `Published` / `Archived`) and `comments.status` (`Review` / `Approved` / `Rejected`): is a default filter applied for anonymous callers, can a caller widen it with `?status=`, and does **every** path that returns the data use it: controllers, route handlers that call a service directly (`collections/[id]/posts/route.ts`), and server-rendered code such as `generateMetadata` and layouts (`projects/[slug]/layout.tsx` once leaked draft titles this way), plus `sitemap.ts`;
+   - admin-purpose resources: `/users`, `/admin/*` (both gated by the proxy path rule: confirm it still matches every route under them), `/media` internals (public `GET /media` lists every file, including images of unpublished posts: known, `CHANGE-PLAN.md` CP-6), `/system-texts` (public area vs admin area texts);
+   - field allowlists: repositories that return raw rows (`select()` mapped as is) versus explicit fields (`UserRepository.populate()` returns only `id`, `email`, `name`);
    - nested and alternative access paths to the same data: `/posts/:slug`, `/collections/:id/posts`, `/categories` with posts, comment listings.
-5. **Parameter safety on public routes:** `limit` cap (`getPaginationParams` has none), `page`, `search`, `status`, `category`, `:id` non-UUID, malformed JSON: do they reach Postgres and return 500 with a raw `error.message` (`sendError` in `src/utils/apiResponse.ts`)?
-6. **Write access review** (`--method all`): every mutating route is covered by the proxy rule; the public comment `POST` is limited to creating a `Review` comment; nothing writes without validation (`validateRequest`); no route bypasses the proxy through a path the matcher excludes (paths ending in a file extension such as `/x.json` are excluded from the proxy: check that no API route can be reached that way).
-7. **Compare with the last known state** (`PRODUCTION-READINESS.md` B1–B4). Report each as `still open`, `fixed` or `regressed`, and list anything new.
+5. **Parameter safety on public routes:** `limit` cap (`getPaginationParams` has none), `page`, `search`, `status`, `category`, `:id` non-UUID, malformed JSON: do they reach Postgres and end in a 500? Since 2026-09-19 `sendError` (`src/utils/apiResponse.ts`) returns a generic message, so check that it stays generic (no raw `error.message`, no SQL or parameters) and note the inputs that should be 4xx instead (bad id, malformed JSON: `CHANGE-PLAN.md` CP-6).
+6. **Write access review** (`--method all`): every mutating route is covered by the proxy rule; the public comment `POST` is limited to creating a `Review` comment; nothing writes without validation (`validateRequest`); no route bypasses the proxy through a path the matcher excludes (paths ending in a file extension such as `/x.json` are excluded from the proxy: check that no API route can be reached that way). Controllers do not re-check the token (only the media upload does), so the proxy is the single gate for writes: list the routes a proxy bypass would expose (`CHANGE-PLAN.md` CP-5).
+7. **Compare with the last known state** (`PRODUCTION-READINESS.md` → "Fixed in code", B1–B4). They are fixed since 2026-09-19 but still awaiting manual verification (CP-4): report each as `still fixed` or `regressed`, and list anything new.
 
 ## Output
 
@@ -40,8 +41,8 @@ Arguments received: `$ARGUMENTS`
    | Route | Method | Access | Returns | Sensitive? | Finding |
    |-------|--------|--------|---------|------------|---------|
 
-2. **Findings** (`HIGH` when anonymous callers can read admin data, secrets or unpublished content; `MEDIUM` for unvalidated params and information leaks; `LOW` otherwise), each with `file:line`, evidence and the smallest fix. Typical fixes: gate the `GET` in `proxy.ts` (path-based rule) or check the token in the controller; default `status=Published` for anonymous callers; strip `password` in the repository/service mapping; generic 500 message; cap `limit`.
-3. **Status vs. B1–B4.**
+2. **Findings** (`HIGH` when anonymous callers can read admin data, secrets or unpublished content; `MEDIUM` for unvalidated params and information leaks; `LOW` otherwise), each with `file:line`, evidence and the smallest fix. Typical fixes: add the resource path to the `isAdminOnlyResource` pattern in `proxy.ts`, or check the token in the controller; route status-carrying reads through the visibility helpers (`utils/postVisibility.ts`, `isAdminRequest()` in `utils/auth.ts`); return an explicit field allowlist from the repository; keep the 500 message generic; cap `limit`.
+3. **Status vs. B1–B4** (`still fixed` / `regressed`) and the known gaps (public `GET /media`, no second auth layer).
 
 No files are modified. Changes to `src/proxy.ts` or controllers are made only when the user asks.
 

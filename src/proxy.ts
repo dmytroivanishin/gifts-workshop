@@ -43,7 +43,10 @@ export async function proxy(request: NextRequest) {
       return NextResponse.next();
     }
 
-    if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
+    // These resources hold admin-only data, so even GET needs a token; every other GET stays public
+    const isAdminOnlyResource = /^\/api\/v1\/(users|admin)(\/|$)/.test(pathname);
+
+    if (isAdminOnlyResource || ["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
       const token = request.cookies.get("accessToken")?.value;
 
       if (!token) {

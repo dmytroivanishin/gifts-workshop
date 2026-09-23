@@ -11,7 +11,8 @@ export class UserRepository extends DrizzleBaseRepository<User, User> implements
   }
 
   async populate(item: any): Promise<User> {
-    return item as User;
+    // Explicit allowlist: the password column must never leave the repository
+    return { id: item.id, email: item.email, name: item.name };
   }
 
   async getByEmail(email: string): Promise<User | undefined> {

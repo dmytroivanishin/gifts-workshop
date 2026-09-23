@@ -9,8 +9,8 @@ import { env } from "@/modules/core/env";
 
 export async function POST() {
   try {
-    // Only allow dev login in dev mode
-    if (env.NEXT_PUBLIC_DEV_MODE !== true) {
+    // The flag is inlined at build time, so a mis-set production build would otherwise issue admin sessions
+    if (env.NEXT_PUBLIC_DEV_MODE !== true || process.env.NODE_ENV === "production") {
       return NextResponse.json({ error: "Not allowed in production or without dev mode" }, { status: 403 });
     }
 

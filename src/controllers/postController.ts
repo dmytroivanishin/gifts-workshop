@@ -8,6 +8,7 @@ import { resolveId } from "@/utils/idResolver";
 import { getUserId } from "@/utils/auth";
 import { getPaginationParams } from "@/utils/paginationUtils";
 import { isUUID } from "@/utils/uuid";
+import { resolveStatusFilter, visibleToViewer } from "@/utils/postVisibility";
 export class PostController {
   constructor(private postService: IPostService) {}
 
@@ -19,7 +20,7 @@ export class PostController {
       const tag = searchParams.get("tag") || undefined;
       const collection = searchParams.get("collection") || undefined;
       const inStock = searchParams.get("inStock") === "true" ? true : undefined;
-      const status = searchParams.get("status") || undefined;
+      const status = await resolveStatusFilter(searchParams.get("status") || undefined);
       const { page, limit } = getPaginationParams(request);
 
       const result = await this.postService.getFilteredPosts({ search, category, tag, collection, inStock, status, page, limit });
@@ -38,6 +39,9 @@ export class PostController {
       } else {
         post = await this.postService.getPostBySlug(id);
       }
+
+      // 404 rather than 401/403 so the response does not reveal that an unpublished post exists
+      post = await visibleToViewer(post);
 
       if (!post) {
         throw new NotFoundError("Post not found");

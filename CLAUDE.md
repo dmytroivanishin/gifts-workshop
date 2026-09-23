@@ -33,6 +33,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Core feature set is implemented: public catalog + project pages, admin CMS (projects, categories, collections, tags, colors, media, comments, localization), Google login, uploads, i18n, SEO metadata/sitemap.
 - **Not production-ready**: security blockers, no deployment config, no tests. See §11–12.
 - Checked 2026-09-19: `next build` passes, `tsc --noEmit` is clean, `npm run lint` fails (348 errors, 77 warnings), `npm audit` reports 20 findings (1 critical, on Next).
+- 2026-09-19: blockers B1–B6 (anonymous reads of admin data, unpublished posts, leaking 500s, `JWT_SECRET` and dev-login guards) are fixed in code but not yet verified by hand (`CHANGE-PLAN.md` CP-4). `tsc --noEmit` is clean after the changes; build and lint were not re-run.
 - Not implemented from the plans: users/profile UI, SEO settings page, dedicated archive view, multi-select category filter, tests/Prettier. See `DEVIATIONS.md`.
 
 ---
@@ -55,7 +56,7 @@ src/repositories/drizzle/*   Drizzle queries; contracts in repositories/interfac
 - **Errors:** throw subclasses of `BaseError` (`src/common/errors/*`, each with `statusCode`, `errorCode`, `serialize()`); controllers catch and return `sendError`. Envelope: `{ data, meta? }` on success, `{ data: {}, error: { code, message, details? } }` on failure.
 - **Slug-or-UUID:** most `:id` routes accept either; `utils/idResolver.ts` (`resolveId`, `resolveMultipleIds`) resolves slugs.
 - **Pagination:** `getPaginationParams` reads `?page&limit`; services fetch `limit + 1` and `services/pagination.ts` builds `meta` (`totalItems` is the current page size, not a total).
-- **Config/env:** `src/modules/core/env.ts` validates required env vars at import and throws if any is missing (note: `JWT_SECRET` is not on that list).
+- **Config/env:** `src/modules/core/env.ts` validates required env vars at import and throws if any is missing (`JWT_SECRET` is on the list since 2026-09-19).
 - **Auth boundary:** `src/proxy.ts` (see §6). Locale routing is also handled there.
 - **Frontend:** `src/app/[locale]/(public)` public site (client components fetching through RTK Query; server side only for metadata, sitemap, robots); `src/app/admin/*` CMS (client components, shadcn-heavy). Components: `components/ui` (shadcn primitives), `components/shared`, `components/features`.
 - **i18n (custom, `src/i18n/index.tsx`):** UI strings come from the `system_texts` table (loaded in the root layout, `t(key)`); entity fields are JSONB `{locale: text}` resolved with `loc(field)` / `utils/localization.ts`. Public locale is in the URL (`/ru`, `/en`); admin locale is in the `admin_locale` cookie.
@@ -123,7 +124,7 @@ Schema: `src/repositories/drizzle/schema.ts`. One migration: `src/migrations/sql
 
 | Table | Key columns / notes |
 |-------|--------------------|
-| `users` | `email` (unique), `name`, `password` (NOT NULL; placeholder string for admin) |
+| `users` | `email` (unique), `name`, `password` (NOT NULL; constant placeholder string for admin; never returned, `UserRepository.populate()` exposes only id/email/name) |
 | `token_sessions` | refresh sessions: `id`=JTI, `user_id`→users (cascade), `refresh_token_hash`, `is_used`, `expires_at`, `token_family` |
 | `system_texts` | `code` (unique key), `content` JSONB, `area` = `public`/`admin`/`shared` |
 | `colors` | `color` hex; `user_id` |
@@ -146,9 +147,10 @@ Ownership FKs (`user_id`) are `ON DELETE SET NULL`. Repositories re-expose `tags
 - **Login:** `/admin/login` → Google authorize URL (`response_type=code`, scope `openid email profile`, redirect `origin + /admin/login`, no `state`/PKCE) → `POST /api/v1/auth/google/exchange {code, redirectUri}`. The server exchanges the code with Google, decodes the ID token, and allows only emails in `ADMIN_EMAILS` (comma list, case-insensitive). It then finds/creates the `users` row and issues cookies.
 - **Tokens:** `accessToken` JWT (HS256, 15 min, payload `{userId, role:"admin"}`, cookie path `/`) and `refreshToken` (`<jti>.<random>`, hash stored in `token_sessions`, 7 days, cookie path `/api/v1/auth`). Both HttpOnly, SameSite=Strict, `Secure` in production.
 - **Refresh:** `POST /api/v1/auth/refresh` rotates the token; reuse of a used token, or refreshing while the access token has >2 min left, revokes the whole `token_family`. `store/api.ts` performs a silent refresh on 401 and redirects to `/admin/login` on failure.
-- **Dev bypass:** `POST /api/v1/auth/dev-login` when `NEXT_PUBLIC_DEV_MODE=true` (build-time flag; must be `false` in production).
-- **Guard (`src/proxy.ts`):** `/admin/*` (except `/admin/login`) needs a valid `accessToken` cookie, otherwise redirect to login. `/api/v1/*`: `/auth/*` is open; any `POST/PUT/PATCH/DELETE` needs a valid JWT, except public `POST /api/v1/posts/:id/comments`; **all `GET` are unauthenticated at the proxy** (see §11). The proxy verifies signature/expiry only, not email or role.
-- `utils/auth.ts → getUserId()` reads the cookie in controllers to stamp `userId` on created entities.
+- **Dev bypass:** `POST /api/v1/auth/dev-login` when `NEXT_PUBLIC_DEV_MODE=true` (build-time flag; must be `false` in production; the route also answers 403 when `NODE_ENV=production`).
+- **Guard (`src/proxy.ts`):** `/admin/*` (except `/admin/login`) needs a valid `accessToken` cookie, otherwise redirect to login. `/api/v1/*`: `/auth/*` is open; any `POST/PUT/PATCH/DELETE` needs a valid JWT, except public `POST /api/v1/posts/:id/comments`; every method on `/api/v1/users/**` and `/api/v1/admin/**` needs a JWT too; all other `GET` are unauthenticated at the proxy. The proxy verifies signature/expiry only, not email or role. Controllers do not re-check (only the media upload does), so the proxy is the single gate for writes (`CHANGE-PLAN.md` CP-5).
+- `utils/auth.ts → getUserId()` reads the cookie in controllers to stamp `userId` on created entities; `isAdminRequest()` (signature + `role === "admin"`, no DB lookup) decides what a reader may see.
+- **Post visibility:** anonymous readers get only `Published` posts. `utils/postVisibility.ts` (`resolveStatusFilter`, `visibleToViewer`) is used by `GET /posts`, `GET /posts/:slugOrId` (404 for unpublished), `GET /collections/:id/posts` and the server-rendered metadata and UUID→slug redirect in `projects/[slug]/layout.tsx`. A valid admin cookie sees every status. Known limit: after the 15-minute access token expires, the admin dashboard silently lists only published posts until the page is reloaded. New code that returns posts must go through the same helpers.
 - No rate limiting, no CSRF token (SameSite=Strict only), no CORS headers (same-origin).
 
 ---
@@ -156,8 +158,8 @@ Ownership FKs (`user_id`) are `ON DELETE SET NULL`. Repositories re-expose `tags
 ## 7. API
 
 - Base path `/api/v1`. Full route list and target contracts: `.agents/project-plan/backend.md` and `diagram.jpg` (the code implements the same resources at `/api/v1/<resource>`, uses `PUT` for updates, and has no `/admin/` segment except `/admin/comments/*`; see `DEVIATIONS.md`).
-- Public site reads: `GET /posts?search&category&tag&collection&inStock&status&page&limit` (`category` is comma-separated slugs/UUIDs), `GET /posts/:slugOrId`, `/categories`, `/collections`, `/tags`, `/colors`, `/system-texts`, `GET/POST /posts/:id/comments` (GET returns only `Approved`).
-- Writes require the admin cookie (see §6). Media upload is `POST /media` as `multipart/form-data` with `files`.
+- Public site reads: `GET /posts?search&category&tag&collection&inStock&status&page&limit` (`category` is comma-separated slugs/UUIDs; anonymous callers always get `Published`, `status` matters only with the admin cookie), `GET /posts/:slugOrId` (404 for unpublished unless admin), `/categories`, `/collections`, `/tags`, `/colors`, `/system-texts`, `GET/POST /posts/:id/comments` (GET returns only `Approved`).
+- Writes require the admin cookie (see §6); so does every method on `/users/**` and `/admin/**`. Media upload is `POST /media` as `multipart/form-data` with `files`.
 - Client code calls the API through RTK Query endpoints in `src/store/api.ts`; add an endpoint there when adding a route.
 
 ---
@@ -176,7 +178,7 @@ Ownership FKs (`user_id`) are `ON DELETE SET NULL`. Repositories re-expose `tags
 
 `docker-compose.yml` (local dev only): `postgres` (16-alpine, db `portfolio`, :5432, data in `./.docker/db-data`), `minio` (pinned release, :9000 API / :9001 console, data in `./.docker/minio-data`), `pgweb` (:8081). Fixed subnet `10.10.10.0/24`, `restart: always`, no healthchecks, dev credentials hardcoded. `docker-compose.test.yml`: Postgres 15 on :5433 for tests. **No app service, no Dockerfile, no CI.**
 
-**Environment variable names** (values live in `config/local.env`, git-ignored; `config/test.env` holds mock values; all listed are required by `env.ts` except `JWT_SECRET`):
+**Environment variable names** (values live in `config/local.env`, git-ignored; `config/test.env` holds mock values; all listed are required by `env.ts`, including `JWT_SECRET` since 2026-09-19; `config/test.env` still lacks it, CP-4):
 
 ```
 DB_URI
@@ -206,12 +208,14 @@ Full detail with file references: `PRODUCTION-READINESS.md`. Summary:
 
 | Problem | Status | Priority |
 |---------|--------|----------|
-| Public `GET /users` (incl. `password` column) and `GET /admin/comments`: the proxy protects only mutating methods | Open | HIGH |
-| Draft/Archived posts readable anonymously (no default `status` filter on `GET /posts`, `/posts/:slug`, `/collections/:id/posts`) | Open | HIGH |
-| HTTP 500 returns raw `error.message`; invalid UUIDs/JSON/`limit` reach it | Open | HIGH |
-| `JWT_SECRET` not in the required-env list; `NEXT_PUBLIC_DEV_MODE` (dev-login) is a build-time flag | Open | HIGH |
+| Public `GET /users` and `GET /admin/comments` (proxy guarded only mutating methods): now JWT-gated for every method; `UserRepository` never returns `password` (it was a constant placeholder) | Fixed 2026-09-19, verify by hand (CP-4) | – |
+| Draft/Archived posts readable anonymously (list, by slug, collection posts, page metadata): anonymous callers now get only `Published` | Fixed 2026-09-19, verify by hand (CP-4) | – |
+| HTTP 500 returned raw `error.message` (Drizzle errors carry the SQL and parameters): now a generic message, details in the log | Fixed 2026-09-19 | – |
+| `JWT_SECRET` not in the required-env list; `dev-login` guarded only by a build-time flag: `JWT_SECRET` is required now and `dev-login` refuses `NODE_ENV=production` (`NEXT_PUBLIC_DEV_MODE` must still be `false` in the production build) | Fixed 2026-09-19 | – |
+| `proxy.ts` is the only gate for writes; controllers do not re-check (only the media upload does) | Open, deferred until the Next upgrade (CP-5) | MEDIUM |
+| Invalid UUIDs / malformed JSON end in 500 (generic text); public `GET /media` lists images of unpublished posts; the admin dashboard lists only published posts after the 15-minute token expires | Open | LOW |
 | No rate limiting (auth, upload, public comments); `limit` uncapped | Open | HIGH |
-| `next@16.2.6`: critical advisories incl. Middleware/Proxy bypass (`proxy.ts` is the only auth gate); `sharp@0.34.5` high. Fix: next ≥16.3.5, sharp 0.35.4; never `npm audit fix --force` (downgrades `minio`); move `shadcn` to devDependencies | Open | HIGH |
+| `next@16.2.6`: critical advisories (the Middleware/Proxy bypass GHSA-6gpp-xcg3-4w24 needs Turbopack and a single `config.i18n.locales` entry, so it most likely does not apply here, CP-1; `proxy.ts` is still the only auth gate); `sharp@0.34.5` high. Fix: next ≥16.3.5, sharp 0.35.4; never `npm audit fix --force` (downgrades `minio`); move `shadcn` to devDependencies | Open | HIGH |
 | OAuth: no `state`/PKCE; ID token not verified for `aud`/`email_verified` | Open | MEDIUM |
 | "Premature refresh" heuristic can log the admin out | Open | MEDIUM |
 | Services bypass repositories (`CategoryService.deleteCategory`, `MediaService.deleteMedia`); auth logic lives in route handlers (copied 3×) | Open | MEDIUM |

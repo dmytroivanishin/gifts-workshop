@@ -1,5 +1,6 @@
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { postService } from "@/modules/core/container";
+import { resolveStatusFilter } from "@/utils/postVisibility";
 
 export async function GET(
   request: Request,
@@ -7,7 +8,8 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const posts = await postService.getFilteredPosts({ collection: id });
+    const status = await resolveStatusFilter(undefined);
+    const posts = await postService.getFilteredPosts({ collection: id, status });
     return sendSuccess(posts, {
       page: 1,
       nextPage: null,

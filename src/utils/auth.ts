@@ -22,3 +22,17 @@ export async function getUserId(): Promise<string | undefined> {
     return undefined;
   }
 }
+
+// Signature check only (no DB lookup): used to decide what a reader may see, not to authorize writes
+export async function isAdminRequest(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("accessToken")?.value;
+    if (!token) return false;
+
+    const payload = await verifyToken(token);
+    return payload?.role === "admin";
+  } catch {
+    return false;
+  }
+}

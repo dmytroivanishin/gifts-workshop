@@ -5,6 +5,7 @@ import { getLocalizedField } from "@/utils/localization";
 import { env } from "@/modules/core/env";
 import { redirect } from "next/navigation";
 import { isUUID } from "@/utils/uuid";
+import { visibleToViewer } from "@/utils/postVisibility";
 
 const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -19,8 +20,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   
   try {
     // We use getPostById or getPostBySlug depending on whether the slug is a UUID
-    const post = isUUID(slug) ? await postService.getPostById(slug) : await postService.getPostBySlug(slug);
-    
+    // The page metadata is server-rendered into the HTML, so unpublished posts must be filtered here as well
+    const post = await visibleToViewer(isUUID(slug) ? await postService.getPostById(slug) : await postService.getPostBySlug(slug));
+
     if (!post) {
       return {
         title: isEn ? process.env.SITE_PROJECT_NOT_FOUND_EN || "Project not found" : process.env.SITE_PROJECT_NOT_FOUND_RU || "Проект не найден",
@@ -91,7 +93,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function ProjectLayout({ children, params }: ProjectLayoutProps) {
   const { locale, slug } = await params;
   if (isUUID(slug)) {
-    const post = await postService.getPostById(slug);
+    const post = await visibleToViewer(await postService.getPostById(slug));
     if (post && post.slug) {
       redirect(`/${locale}/projects/${post.slug}`);
     }

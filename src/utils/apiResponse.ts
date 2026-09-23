@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { BaseError } from "@/common/errors/base";
+import { InternalServerError } from "@/common/errors/internalServer";
 import { logger } from "@/modules/logger";
 
 export function sendSuccess(data: any, meta?: any) {
@@ -28,14 +29,13 @@ export function sendError(error: any) {
     stack: error.stack 
   });
   
+  // The raw message stays in the log only: Drizzle errors carry the SQL text and bound parameters
+  const internalError = new InternalServerError();
   return NextResponse.json(
     {
       data: {},
-      error: {
-        code: "INTERNAL_SERVER_ERROR",
-        message: error.message || "An unexpected error occurred",
-      },
+      error: internalError.serialize(),
     },
-    { status: 500 }
+    { status: internalError.statusCode }
   );
 }

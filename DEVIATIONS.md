@@ -31,23 +31,23 @@ Verification scope: all of `src/app/api`, `proxy.ts`, controllers/services/repos
 - **[intentional]** Refresh tokens: session table + hash + `isUsed` + `tokenFamily` rotation and reuse detection, as planned.
 - **[added]** "Premature refresh" heuristic: refreshing while the access token has >2 min left revokes the whole family. Not in the plan, and it can log out a legitimate admin (multi-tab, retries).
 - **[quality]** `GOOGLE_CALLBACK_URL` is a required env var but is unused; the redirect URI is taken from the client (`origin + /admin/login`).
-- **[added]** `POST /auth/dev-login` bypass, gated by `NEXT_PUBLIC_DEV_MODE`. `GET /auth/config` exposes the Google client id.
+- **[added]** `POST /auth/dev-login` bypass, gated by `NEXT_PUBLIC_DEV_MODE` and, since 2026-09-19, refused when `NODE_ENV=production`. `GET /auth/config` exposes the Google client id.
 - **[quality]** OAuth code flow has no `state`/PKCE. The client sends `redirectUri`. The ID token is decoded with `decodeJwt` (no signature, `aud` or `email_verified` check).
 - **[quality]** Auth endpoints differ from the plan (`sign-in`/`sign-out`/`refresh` → `google/exchange`/`logout`/`refresh`). That is fine; see the routing note below.
 
 ### Routing / API surface
 The endpoint table in `backend.md` stays valid as a target. Differences in the code:
-- **[intentional]** Resources live at `/api/v1/<resource>` (no `/admin/` segment); protection is by HTTP method in `proxy.ts` (all `POST/PUT/PATCH/DELETE` need a valid JWT, except public `POST /posts/:id/comments`). Only admin comment moderation is under `/api/v1/admin/comments`.
+- **[intentional]** Resources live at `/api/v1/<resource>` (no `/admin/` segment); protection is by HTTP method in `proxy.ts` (all `POST/PUT/PATCH/DELETE` need a valid JWT, except public `POST /posts/:id/comments`; since 2026-09-19 every method on `/api/v1/users/**` and `/api/v1/admin/**` needs one too). Only admin comment moderation is under `/api/v1/admin/comments`.
 - **[intentional]** Updates use `PUT` (not `PATCH`), except `system-texts/:id` and `admin/comments/:id/status`.
 - **[intentional]** `GET /collections/:collection_slug/posts/:post_slug` is not implemented; posts are fetched via `GET /posts/:slugOrId`, and `resolveId()` lets most routes accept either UUID or slug.
 - **[intentional]** Filters: `?category=` takes comma-separated slugs/UUIDs, `?inStock=true` (plan: `?in_stock`), plus `?collection=` and `?status=`. `?search=` matches **title only** (plan: title or description).
 - **[gap]** `/admin/slugs` and `/admin/localization` from `diagram.jpg`: no Slug or Localization tables/endpoints. Localization is served by `/system-texts` (UI strings) and by JSONB fields on entities.
 - **[added]** `PUT /categories/reorder`, public comment endpoints, `/admin/comments/*`, `/system-texts/*`.
-- **[quality]** Public access is method-based, not resource-based, so `GET` on admin-only data is open: `GET /api/v1/users` and `/users/:id` (return the full row including the `password` column) and `GET /api/v1/admin/comments` (all statuses, including unmoderated). Also `GET /posts` has no default `status` filter, so anonymous callers can read Draft/Archived posts (the public UI passes `status=Published` itself). See `PRODUCTION-READINESS.md`.
+- **[quality]** Access is decided by HTTP method in `proxy.ts`, not by resource, so every `GET` outside `/users/**` and `/admin/**` is public (including `GET /media`, which lists every file, also images of unpublished posts). Fixed 2026-09-19: `/api/v1/users/**` and `/api/v1/admin/**` need a JWT for every method, `UserRepository` no longer returns `password`, and anonymous readers get only `Published` posts (`GET /posts`, `GET /posts/:slugOrId`, `GET /collections/:id/posts` and the project page metadata). See `PRODUCTION-READINESS.md` → "Fixed in code".
 
 ### Response and error contracts
 - **[intentional]** `{data, meta}` / `{data:{}, error:{code,message,details}}` and the `BaseError` hierarchy (`serialize()`, `errorCode`, `statusCode`) match the plan.
-- **[quality]** `sendError()` for non-`BaseError` failures returns HTTP 500 with the **raw `error.message`**. The plan says to hide internals and return a generic code.
+- **[quality]** `sendError()` used to return the **raw `error.message`** for non-`BaseError` failures (Drizzle messages include the SQL and parameters). Fixed 2026-09-19: the response is the generic `InternalServerError`, details go to the log only. Invalid UUIDs and malformed JSON still end in 500 instead of 4xx.
 - **[quality]** `meta.totalItems` is the size of the current page (`services/pagination.ts`), not the total, and there is no total-count query. Plan contract implies the real total.
 - **[quality]** `GET /collections/:id/posts` double-wraps (`data: {data, meta}`) and reports `totalItems: undefined`. `/auth/dev-login` returns `{error: "string"}` outside the contract.
 - **[quality]** 41 `console.*` calls bypass the winston logger the plan mandates (`refresh`, `google/exchange`, `tagService`, `sitemap`, …).
