@@ -36,7 +36,7 @@ Items 1–4 were fixed in code on 2026-09-19 (not yet verified by hand, `CHANGE-
 - Media pipeline aligned with the plan (JPG conversion, 300/1200 px), magic-byte validation, storage interface (Adapter/Strategy).
 - Public-page SSR for post content, `next/image` and `next/font`, replacing `import * as LucideIcons`, caching system texts.
 - Making `npm run lint` green: it currently fails with 345 errors (318 `no-explicit-any`, 19 `set-state-in-effect`, 3 `no-require-imports`, 3 `no-empty-object-type`) and 73 warnings (2026-09-23). Replacing 40 `console.*` calls with the logger, a `withErrorHandling` wrapper for controllers.
-- Test suite (none exists; tooling is installed), security headers, Prettier.
+- Test suite (none exists; tooling is installed), Prettier. A nonce-based (strict) CSP, on top of the baseline one added 2026-09-28.
 - Documentation cleanup: stale `.agents/rules`, default README, leftover files (`scratch_findKeys.mjs`, `public/*.svg`, `old.*.png`).
 
 ## Fixes applied (2026-09-19)
@@ -64,6 +64,19 @@ Applied one point at a time at the owner's request (commits `840bc10`, `b5dc337`
 | Google login hardening | new `src/utils/googleOAuth.ts`, new `src/app/api/v1/auth/google/start/route.ts`, `src/app/api/v1/auth/google/exchange/route.ts`, `src/app/admin/login/page.tsx`, `src/common/validation/schemas.ts`; `src/app/api/v1/auth/config/route.ts` removed |
 
 Found while working: `S3_ENDPOINT` served both as the server's connection address and as the public image address; `GOOGLE_CALLBACK_URL` is required but unused and holds a placeholder locally; `S3_FORCE_PATH_STYLE` is required but unused; deleting a media row leaves its files in the bucket; the infinite scroll sends one extra request for an empty page (CP-7). The last four are listed in `CHANGE-PLAN.md`.
+
+## Fixes applied (2026-09-28)
+
+Applied one point at a time at the owner's request. Checked with `tsc --noEmit` (clean), `next build` (passes, 28 pages), and a headless-browser console check for CSP violations. No new dependency, no migration or config changed.
+
+| Point | Files |
+|-------|-------|
+| Public `GET /media` closed (B12) | `src/proxy.ts` (`isAdminOnlyResource` now matches `/api/v1/media(/|$)` too) |
+| Security headers / baseline CSP | `next.config.ts` (`headers()`: `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`, `Content-Security-Policy`) |
+| `replyToComment` 404 instead of 500 | `src/services/commentService.ts` (`NotFoundError` instead of a plain `Error`) |
+| CP-7: infinite scroll extra empty-page request | `src/app/[locale]/(public)/page.tsx`, `src/app/admin/dashboard/page.tsx`, `src/app/admin/tags/page.tsx`, `src/app/admin/comments/page.tsx` (`hasMore` derived at render from `meta.nextPage` instead of `useState` + a sync effect) |
+
+Found while working: `GET /media`'s only consumer in the codebase is the admin media picker (`admin/projects/[id]/page.tsx`) — the public site never called it, so gating it behind a JWT breaks nothing. The CSP keeps `script-src`/`style-src` `'unsafe-inline'` (App Router RSC streaming and framer-motion inline styles need it) and is not nonce-based; a strict CSP is a separate, bigger task (`PRODUCTION-READINESS.md` → XSS).
 
 ## Status of earlier audit findings
 

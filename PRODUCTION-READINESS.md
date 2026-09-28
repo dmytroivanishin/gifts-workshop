@@ -6,14 +6,14 @@ Legend: `[x]` verified OK in code · `[ ]` open / needs a fix · **(you)** canno
 
 ## Release blockers (fix before the site is public)
 
-B1–B6 were fixed in code on 2026-09-19 and B7, B9, B11 on 2026-09-23 (see "Fixed in code" right after this table); B8 and B10 are open.
+B1–B6 were fixed in code on 2026-09-19, B7, B9, B11 on 2026-09-23, and B12 on 2026-09-28 (see "Fixed in code" right after this table); B8 and B10 are open.
 
 | # | Problem | Where | Effect |
 |---|---------|-------|--------|
 | B8 | No Dockerfile / build config. A Dockerfile is the chosen approach for Coolify; Coolify itself is not set up yet. | repo root | Nothing to deploy yet. |
 | B10 | `next@16.2.6` has 11 advisories (1 critical) in `npm audit`, including a Middleware/Proxy bypass, and `src/proxy.ts` is the only auth guard for `/admin` and all writes. | `package.json` | The auth gate may be bypassable until Next is upgraded (fixed in 16.3.5). The specific proxy-bypass advisory (GHSA-6gpp-xcg3-4w24, patched in 16.2.11) needs Turbopack and a single `config.i18n.locales` entry; this app has no `i18n` block, so it most likely does not apply (CP-1, checked 2026-09-19). The other advisories on 16.2.6 still call for the upgrade. |
 
-### Fixed in code (B1–B6 on 2026-09-19, not yet verified by hand: `CHANGE-PLAN.md` CP-4; B7, B9, B11 and OAuth on 2026-09-23, checked by scripts and in a browser)
+### Fixed in code (B1–B6 on 2026-09-19, not yet verified by hand: `CHANGE-PLAN.md` CP-4; B7, B9, B11 and OAuth on 2026-09-23, checked by scripts and in a browser; B12 on 2026-09-28, checked with `tsc`/`next build` and a route-consumer check)
 
 | # | What was wrong | What changed | Still true / notes |
 |---|----------------|--------------|--------------------|
@@ -27,12 +27,12 @@ B1–B6 were fixed in code on 2026-09-19 and B7, B9, B11 on 2026-09-23 (see "Fix
 | B9 | Media URLs were built from `S3_ENDPOINT`, the address the server connects to (an internal host in Docker or Coolify), and stored absolute; `initializeBucket()` was never called. | `S3_PUBLIC_URL` is a required env var (`env.ts`); `StorageService` builds `${S3_PUBLIC_URL}/${bucket}/${object}` (checked with `new URL`, trailing slash trimmed). `ensureBucket()` in `minioClient.ts` runs before the first upload of a process: it creates the bucket when missing and sets public read only when the bucket has no policy (an existing policy is kept); a failure is not cached. `initializeBucket()` is removed. | Stored URLs are still absolute, so changing `S3_PUBLIC_URL` later means a SQL `replace()` on `media` (`CHANGE-PLAN.md` CP-8); `saveMedia` also accepts external URLs. Checked on 2026-09-23: 7 scenarios on throwaway buckets and one real upload through the admin on the dev server. `S3_FORCE_PATH_STYLE` is required but unused, and deleting a media row leaves its two objects in the bucket (both in CP-6). |
 | B11 | `/sitemap.xml` was prerendered at build time from the DB. | `app/sitemap.ts` exports `dynamic = "force-dynamic"`, so it is built on every request (`ƒ /sitemap.xml` in the build output). | Only `Published` posts are listed. `next build` now passes with an unreachable database (checked 2026-09-23). Each request queries the DB; add HTTP caching if that ever matters. |
 | OAuth | Google login had no `state`/PKCE, took the redirect address from the client and only decoded the ID token. | `POST /api/v1/auth/google/start` builds the authorize URL with a random `state` and a PKCE S256 challenge and keeps both in an HttpOnly cookie (`oauthState`, SameSite=Lax, path `/api/v1/auth`, 10 minutes, single use). `google/exchange` compares the state (timing-safe), sends `code_verifier` and the server-side redirect address (`NEXT_PUBLIC_APP_URL` + `/admin/login`), and verifies the ID token with `jwtVerify` against Google's keys (RS256, issuer, audience = `GOOGLE_CLIENT_ID`, expiry), then requires `email_verified === true`. Code: `utils/googleOAuth.ts`; the unused `/auth/config` route is removed. | Checked by scripts (17 unit, 9 HTTP, 6 browser checks) and by a real Google login by the user on 2026-09-23. `GOOGLE_CALLBACK_URL` is still required by `env.ts` but unused (CP-6). No `nonce` check: `state` and PKCE already bind the code to the browser. |
+| B12 | Public `GET /api/v1/media` (list and by id) returned every uploaded file with no auth, including images of Draft/Archived posts that `GET /posts` already hides from anonymous readers (B3). | `proxy.ts`'s `isAdminOnlyResource` pattern now also matches `/api/v1/media(/|$)`, so every method needs a JWT — same treatment as `/users/**` and `/admin/**`, not just the write methods. | Checked: the endpoint has exactly one consumer in the codebase, the admin media picker (`admin/projects/[id]/page.tsx`); the public site never calls it, so nothing anonymous breaks. `tsc --noEmit` clean, `next build` passes (28 pages). |
 
-State on 2026-09-23: `npx tsc --noEmit` 0 errors; `next build` passes (exit 0); `npm run lint` 418 problems (345 errors, 73 warnings), see "Code quality".
+State on 2026-09-23: `npx tsc --noEmit` 0 errors; `next build` passes (exit 0); `npm run lint` 418 problems (345 errors, 73 warnings), see "Code quality". Re-run 2026-09-28 after the B12, security-header, `replyToComment` and CP-7 fixes: `tsc --noEmit` and `next build` still clean; lint and `npm audit` were not re-run (no dependency changed), so the 2026-09-23 numbers still stand.
 
 **Known limits of the B3 fix**
 - The access token lives 15 minutes and the browser then drops the cookie. If the admin leaves the dashboard open longer and then searches or loads more, the server sees an anonymous caller: the list silently contains only published posts (no 401, so no silent refresh) and a draft opened in the editor is "not found" until the page is reloaded. If it hurts: send an explicit `status=all` from the dashboard and answer 401 for it when there is no token.
-- `GET /media` is still public and lists every file, including images of unpublished posts.
 - Only `proxy.ts` and the read filters enforce access. Controllers do not re-check on writes (only the media upload does): see CP-5.
 
 ---
@@ -98,7 +98,9 @@ State on 2026-09-23: `npx tsc --noEmit` 0 errors; `next build` passes (exit 0); 
 
 ### XSS
 - [x] No `dangerouslySetInnerHTML` in the codebase; React escapes user text (comments, titles).
-- [ ] Add security headers (`Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS) in `next.config.ts` or at the Coolify proxy. There are none now. Note that Google Fonts is loaded by CSS `@import`, which a CSP must allow, or move to `next/font`.
+- [x] Security headers added in `next.config.ts`'s `headers()` (2026-09-28): `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Permissions-Policy` (camera/microphone/geolocation denied), and a `Content-Security-Policy`. `img-src` includes the `S3_PUBLIC_URL` origin (read from `process.env` when `next.config.ts` loads); `style-src`/`font-src` allow Google Fonts (still loaded via CSS `@import`, not `next/font`). Checked with a headless browser on the public homepage and `/admin/login`: no CSP console violations.
+- [ ] The CSP is a baseline, not a strict one: `script-src`/`style-src` keep `'unsafe-inline'` because the App Router streams RSC payloads through inline `<script>` tags and framer-motion sets inline `style` attributes, and neither is nonce-based today. A stricter CSP needs a per-request nonce generated in `proxy.ts` and threaded through `next/script`/`<style>` — bigger change, not done.
+- [ ] No HSTS yet (no HTTPS locally); add it once the app is behind Coolify's TLS.
 
 ### Dependency vulnerabilities
 
@@ -204,6 +206,8 @@ State on 2026-09-23: `npx tsc --noEmit` 0 errors; `next build` passes (exit 0); 
 | `npm audit --json` (2026-09-23, run by Claude) | 28 findings: 1 critical, 10 high, 14 moderate, 3 low; the 8 new names are dev tooling | "Dependency vulnerabilities", CP-2 |
 | `npm run lint` (2026-09-23, run by Claude) | **fails**: 418 problems (345 errors, 73 warnings) | "Code quality" |
 | `bash scripts/run.sh build` (2026-09-23, run by Claude) | passes (28 pages, `/sitemap.xml` dynamic); also passes with an unreachable database | "Deployment", B11 |
+| `npx tsc --noEmit` (2026-09-28, run by Claude) | empty output, 0 errors | "Code quality" |
+| `bash scripts/run.sh build` (2026-09-28, run by Claude) | passes (28 pages) | "Deployment", B12 |
 
 ## Decisions and status
 

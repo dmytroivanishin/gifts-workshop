@@ -43,7 +43,7 @@ The endpoint table in `backend.md` stays valid as a target. Differences in the c
 - **[intentional]** Filters: `?category=` takes comma-separated slugs/UUIDs, `?inStock=true` (plan: `?in_stock`), plus `?collection=` and `?status=`. `?search=` matches **title only** (plan: title or description).
 - **[gap]** `/admin/slugs` and `/admin/localization` from `diagram.jpg`: no Slug or Localization tables/endpoints. Localization is served by `/system-texts` (UI strings) and by JSONB fields on entities.
 - **[added]** `PUT /categories/reorder`, public comment endpoints, `/admin/comments/*`, `/system-texts/*`.
-- **[quality]** Access is decided by HTTP method in `proxy.ts`, not by resource, so every `GET` outside `/users/**` and `/admin/**` is public (including `GET /media`, which lists every file, also images of unpublished posts). Fixed 2026-09-19: `/api/v1/users/**` and `/api/v1/admin/**` need a JWT for every method, `UserRepository` no longer returns `password`, and anonymous readers get only `Published` posts (`GET /posts`, `GET /posts/:slugOrId`, `GET /collections/:id/posts` and the project page metadata). See `PRODUCTION-READINESS.md` → "Fixed in code".
+- **[fixed 2026-09-28]** Access was decided by HTTP method in `proxy.ts`, not by resource, so every `GET` outside `/users/**` and `/admin/**` was public — including `GET /media`, which listed every file, also images of unpublished posts. Fixed 2026-09-19: `/api/v1/users/**` and `/api/v1/admin/**` need a JWT for every method, `UserRepository` no longer returns `password`, and anonymous readers get only `Published` posts (`GET /posts`, `GET /posts/:slugOrId`, `GET /collections/:id/posts` and the project page metadata). Fixed 2026-09-28: `/api/v1/media/**` joined the same pattern in `proxy.ts` (B12); its only consumer in the codebase is the admin media picker. See `PRODUCTION-READINESS.md` → "Fixed in code".
 
 ### Response and error contracts
 - **[intentional]** `{data, meta}` / `{data:{}, error:{code,message,details}}` and the `BaseError` hierarchy (`serialize()`, `errorCode`, `statusCode`) match the plan.
@@ -51,6 +51,7 @@ The endpoint table in `backend.md` stays valid as a target. Differences in the c
 - **[quality]** `meta.totalItems` is the size of the current page (`services/pagination.ts`), not the total, and there is no total-count query. Plan contract implies the real total.
 - **[quality]** `GET /collections/:id/posts` double-wraps (`data: {data, meta}`) and reports `totalItems: undefined`. `/auth/dev-login` returns `{error: "string"}` outside the contract.
 - **[quality]** 40 `console.*` calls bypass the winston logger the plan mandates (`refresh`, `tagService`, `sitemap`, …); the Google login routes use the logger since 2026-09-23.
+- **[fixed 2026-09-28]** `CommentService.replyToComment` threw a plain `Error("Parent comment not found")` for a missing parent (surfaced as a generic 500); it now throws `NotFoundError` (404).
 
 ### Media
 - **[quality]** Plan: convert everything to JPG; thumbnail 300×300, original 1200×1200 fitted. Actual: format preserved (JPEG/PNG only), original max 1000×1000, thumbnail max 320×320 (`fit: inside`). The WebP branch in `StorageService` is unreachable because uploads allow only JPEG/PNG.
@@ -83,6 +84,7 @@ The endpoint table in `backend.md` stays valid as a target. Differences in the c
 
 - **[intentional]** Stack matches (App Router, Tailwind 4, shadcn `radix-nova`, RTK + RTK Query, Framer Motion).
 - **[intentional]** Home page: search, category filter, in-stock filter, favorites filter (added, visible in `design.jpg`), infinite scroll via IntersectionObserver + RTK Query `merge` (fixes the old "local state vs RTK" issue on this page; the admin dashboard still merges in local state).
+- **[fixed 2026-09-28]** `hasMore` for infinite scroll was kept in `useState`, synced by a separate `useEffect`; for a short window after the last page arrived the loader stayed mounted and observed, sending one more request for an empty page. Now derived at render from `response.meta.nextPage != null` on the public page, admin dashboard, tags and comments (`admin/localizations/page.tsx` already did this).
 - **[gap]** Multi-select category filter: only a single `?category=` selection (a parent expands to its children).
 - **[intentional]** Category navigation uses `<Link href>` (old audit claim about `<button>` is obsolete). Likes persist in `localStorage`. Project page: CSS-columns masonry, contact icons from `NEXT_PUBLIC_SOCIAL_LINKS`, fullscreen gallery.
 - **[added]** Public comments with moderation (`CommentSection`).
@@ -114,6 +116,7 @@ The endpoint table in `backend.md` stays valid as a target. Differences in the c
 - **[gap]** No `app` service, no `Dockerfile`, no `.dockerignore`, no CI, no healthchecks, no `output: "standalone"`. Nothing in the repo describes the Coolify deployment. Decision (2026-09-19): deploy from a Dockerfile; Coolify is not set up yet and nothing is deployed.
 - **[fixed 2026-09-23]** `/sitemap.xml` was prerendered at build time from the DB (static in the build output), so it went stale and would be nearly empty in a Docker build. It now exports `dynamic = "force-dynamic"` and is built on each request; `next build` passes without a reachable database.
 - **[added]** Rate limiting (2026-09-23), not in the plan: `proxy.ts` + `utils/rateLimit.ts` (`rate-limiter-flexible`, in memory, per client address): `/api/v1/auth/*` 20 per minute, public comment POST 5 per 10 minutes, `POST /media` 30 per minute; 429 `TOO_MANY_REQUESTS` with `Retry-After`. `limit` is capped at 100 and `GET /posts` defaults to 20 per page. Single instance only; ordinary GETs are not limited.
+- **[added]** Security headers (2026-09-28), not in the plan: `next.config.ts`'s `headers()` sets `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` and a baseline `Content-Security-Policy` (`script-src`/`style-src` keep `'unsafe-inline'` for App Router RSC streaming and framer-motion inline styles, so it is not nonce-based). No HSTS yet (no local HTTPS).
 - **[quality]** `next@16.2.6` / `sharp@0.34.5` carry `npm audit` advisories (1 critical); the `shadcn` CLI is in `dependencies`. See `PRODUCTION-READINESS.md`.
 - **[quality]** Dev credentials are hardcoded in compose, and pgweb (8081) and the MinIO console (9001) are exposed. These are fine for local use only.
 
