@@ -18,7 +18,6 @@ export default function AdminComments() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [comments, setComments] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(false);
 
   const { data: commentsResponse, isLoading, isFetching, refetch } = useGetAdminCommentsQuery({ page, limit: 15, status: statusFilter || undefined });
   const [updateStatus, { isLoading: isUpdating }] = useUpdateCommentStatusMutation();
@@ -32,6 +31,7 @@ export default function AdminComments() {
   const [replyText, setReplyText] = useState("");
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const hasMore = commentsResponse?.meta?.nextPage != null;
 
   // Sync loaded page chunk to comments list
   useEffect(() => {
@@ -45,7 +45,6 @@ export default function AdminComments() {
           return [...prev, ...newComments];
         });
       }
-      setHasMore(commentsResponse.meta?.nextPage !== null);
     }
   }, [commentsResponse, page]);
 

@@ -68,8 +68,10 @@ export async function proxy(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // These resources hold admin-only data, so even GET needs a token; every other GET stays public
-    const isAdminOnlyResource = /^\/api\/v1\/(users|admin)(\/|$)/.test(pathname);
+    // These resources hold admin-only data, so even GET needs a token; every other GET stays public.
+    // media is here too: the admin media library is its only consumer, and it must not leak files
+    // belonging to unpublished posts the way GET /posts already hides them from anonymous readers.
+    const isAdminOnlyResource = /^\/api\/v1\/(users|admin|media)(\/|$)/.test(pathname);
 
     if (isAdminOnlyResource || ["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
       const token = request.cookies.get("accessToken")?.value;

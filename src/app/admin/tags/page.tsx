@@ -20,7 +20,6 @@ export default function AdminTags() {
   const { t, loc, locale } = useTranslation();
   const [page, setPage] = useState(1);
   const [tags, setTags] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(false);
 
   const { data: tagsResponse, isLoading, isFetching } = useGetTagsQuery({ page, limit: 15 });
   const [createTag, { isLoading: isCreating }] = useCreateTagMutation();
@@ -44,6 +43,7 @@ export default function AdminTags() {
   const [editTagName, setEditTagName] = useState("");
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const hasMore = tagsResponse?.meta?.nextPage != null;
 
   // Sync loaded page chunk to tags list
   useEffect(() => {
@@ -57,7 +57,6 @@ export default function AdminTags() {
           return [...prev, ...newTags];
         });
       }
-      setHasMore(tagsResponse.meta?.nextPage !== null);
     }
   }, [tagsResponse, page]);
 

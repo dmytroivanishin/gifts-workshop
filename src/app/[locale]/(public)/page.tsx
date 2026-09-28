@@ -77,7 +77,6 @@ function HomeContent() {
   const dbCategories = categoriesResponse?.data || [];
 
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
 
   // Expand parent category selection and strictly resolve slugs to UUIDs on the client!
   let categoryQueryParam = "";
@@ -112,18 +111,12 @@ function HomeContent() {
   });
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const hasMore = response?.meta?.nextPage != null;
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
   }, [search, activeCategory, inStockOnly, favoritesOnly]);
-
-  // Sync hasMore state
-  useEffect(() => {
-    if (response) {
-      setHasMore(response.meta?.nextPage !== null);
-    }
-  }, [response]);
 
   // IntersectionObserver bottom anchor logic
   useEffect(() => {

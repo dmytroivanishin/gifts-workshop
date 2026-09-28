@@ -13,7 +13,6 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [posts, setPosts] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState("");
 
@@ -25,6 +24,7 @@ export default function AdminDashboard() {
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const hasMore = response?.meta?.nextPage != null;
 
   // Reset page on search input changes
   useEffect(() => {
@@ -43,7 +43,6 @@ export default function AdminDashboard() {
           return [...prev, ...newPosts];
         });
       }
-      setHasMore(response.meta?.nextPage !== null);
     }
   }, [response, page]);
 
