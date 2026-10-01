@@ -31,9 +31,9 @@ Items 1–4 were fixed in code on 2026-09-19 (not yet verified by hand, `CHANGE-
 
 - Extracting an `AuthService` (token issuing is copy-pasted three times) and moving the direct DB access out of `CategoryService` / `MediaService`.
 - Real `totalItems` in pagination; fixing the double-wrapped `/collections/:id/posts` response.
-- Removing the "premature refresh" heuristic, purging old `token_sessions`. (The OAuth hardening, `state`/PKCE and the ID-token checks, was done on 2026-09-23.)
+- Removing the "premature refresh" heuristic (still open; presented 2026-09-28 and again 2026-10-01, not selected either time). (The OAuth hardening, `state`/PKCE and the ID-token checks, was done on 2026-09-23; purging old `token_sessions` was done 2026-10-01, see "Fixes applied" below.)
 - Self-referencing FKs (`categories.parent_id`, `comments.reply_id`); GIN/trigram search index; search on description as well as title.
-- Media pipeline aligned with the plan (JPG conversion, 300/1200 px), magic-byte validation, storage interface (Adapter/Strategy).
+- Media pipeline aligned with the plan (JPG conversion, 300/1200 px), storage interface (Adapter/Strategy). Magic-byte validation was done 2026-09-28 (see "Fixes applied" → round 2).
 - Public-page SSR for post content, `next/image` and `next/font`, replacing `import * as LucideIcons`, caching system texts.
 - Making `npm run lint` green: it currently fails with 345 errors (318 `no-explicit-any`, 19 `set-state-in-effect`, 3 `no-require-imports`, 3 `no-empty-object-type`) and 73 warnings (2026-09-23). Replacing 40 `console.*` calls with the logger, a `withErrorHandling` wrapper for controllers.
 - Test suite (none exists; tooling is installed), Prettier. A nonce-based (strict) CSP, on top of the baseline one added 2026-09-28.
@@ -63,11 +63,15 @@ Applied one point at a time at the owner's request (commits `840bc10`, `b5dc337`
 | Public image URL and bucket (part of item 6) | `src/modules/core/env.ts` (`S3_PUBLIC_URL`), `src/modules/storage/StorageService.ts`, `src/modules/storage/minioClient.ts` (`ensureBucket()`), `src/modules/core/container.ts` (dead import removed) |
 | Google login hardening | new `src/utils/googleOAuth.ts`, new `src/app/api/v1/auth/google/start/route.ts`, `src/app/api/v1/auth/google/exchange/route.ts`, `src/app/admin/login/page.tsx`, `src/common/validation/schemas.ts`; `src/app/api/v1/auth/config/route.ts` removed |
 
-Found while working: `S3_ENDPOINT` served both as the server's connection address and as the public image address; `GOOGLE_CALLBACK_URL` is required but unused and holds a placeholder locally; `S3_FORCE_PATH_STYLE` is required but unused; deleting a media row leaves its files in the bucket; the infinite scroll sends one extra request for an empty page (CP-7). The last four are listed in `CHANGE-PLAN.md`.
+Found while working: `S3_ENDPOINT` served both as the server's connection address and as the public image address; `GOOGLE_CALLBACK_URL` was required but unused and held a placeholder locally; `S3_FORCE_PATH_STYLE` was required but unused; deleting a media row left its files in the bucket; the infinite scroll sent one extra request for an empty page. All four were fixed 2026-09-28 (CP-7 in round 1, the rest in round 2, below).
 
 ## Fixes applied (2026-09-28)
 
-Applied one point at a time at the owner's request. Checked with `tsc --noEmit` (clean), `next build` (passes, 28 pages), and a headless-browser console check for CSP violations. No new dependency, no migration or config changed.
+Two rounds the same day, each applied one point at a time at the owner's request.
+
+### Round 1
+
+Checked with `tsc --noEmit` (clean), `next build` (passes, 28 pages), and a headless-browser console check for CSP violations. No new dependency, no migration or config changed.
 
 | Point | Files |
 |-------|-------|
@@ -77,6 +81,33 @@ Applied one point at a time at the owner's request. Checked with `tsc --noEmit` 
 | CP-7: infinite scroll extra empty-page request | `src/app/[locale]/(public)/page.tsx`, `src/app/admin/dashboard/page.tsx`, `src/app/admin/tags/page.tsx`, `src/app/admin/comments/page.tsx` (`hasMore` derived at render from `meta.nextPage` instead of `useState` + a sync effect) |
 
 Found while working: `GET /media`'s only consumer in the codebase is the admin media picker (`admin/projects/[id]/page.tsx`) — the public site never called it, so gating it behind a JWT breaks nothing. The CSP keeps `script-src`/`style-src` `'unsafe-inline'` (App Router RSC streaming and framer-motion inline styles need it) and is not nonce-based; a strict CSP is a separate, bigger task (`PRODUCTION-READINESS.md` → XSS).
+
+### Round 2
+
+Checked with `tsc --noEmit` (clean), `next build` (passes), and scripted checks run directly against the local dev DB/MinIO (self-cleaning: test rows/objects created and removed by the scripts themselves). No new dependency, no migration or config changed.
+
+| Point | Files |
+|-------|-------|
+| Dashboard silently showed only published posts after token expiry | `src/utils/postVisibility.ts` (`resolveStatusFilter` treats `status=all` as the admin's explicit request for everything: no filter if admin, 401 otherwise), `src/app/admin/dashboard/page.tsx` (now sends `status: "all"`) |
+| `MediaService.deleteMedia` left files in the bucket | `src/modules/storage/StorageService.ts` (new `deleteImage()`, best-effort, skips external URLs), `src/services/mediaService.ts` |
+| Unused required env vars | `src/modules/core/env.ts` (`S3_FORCE_PATH_STYLE`, `GOOGLE_CALLBACK_URL` dropped from `requiredEnvVars` and the `env` object; 32 required variables now) |
+| `POST /users` always failed (`password` NOT NULL) | `src/services/userService.ts` (`saveUser` sets the same placeholder the Google login route uses) |
+| Upload trusted client MIME/extension | `src/modules/storage/StorageService.ts` (`uploadImage` derives format, extension and `Content-Type` from `sharp(buffer).metadata()`; an unsupported/undecodable file is a `ValidationError` 400), `src/services/mediaService.ts` (stopped forwarding the now-unused client MIME type) |
+
+Found while working: the four checks above were run as real create → verify → delete cycles against the local Postgres/MinIO (a locally-minted JWT for the auth-gated checks), not just `tsc`/`build`. Verified specifically: `status=all` gives 401 anonymously and 200 for a real admin token, while every other status value's existing (already-verified) B3 behavior is untouched; `deleteMedia` leaves zero objects behind (both `statObject` calls return `NotFound` after delete); `saveUser` no longer hits the `NOT NULL` constraint; a real PNG under a spoofed `.txt` name is accepted and stored as `.png`, garbage bytes claiming to be PNG are rejected with 400, and a real JPEG is accepted and stored as `.jpg`.
+
+## Fixes applied (2026-10-01)
+
+Four issues picked from a third backlog list (numbered 21–25 in that pass; issue 25, `meta.totalItems`/`GET /collections/:id/posts` not using the shared `paginate()`, was presented but not selected). Checked with `tsc --noEmit` (clean), `next build` (passes), scripted create/verify/delete checks against the local dev Postgres (self-cleaning), and HTTP checks against a temporary `next start` server with a locally-minted admin JWT. No new dependency, no migration or config changed.
+
+| Point | Files |
+|-------|-------|
+| `createComment` didn't check `postId` existed | `src/services/commentService.ts` (checks `postRepo.getById(postId)`, throws `NotFoundError`), `src/modules/core/container.ts` (`CommentService` now takes `postRepo` too) |
+| `POST/PUT/DELETE /api/v1/users` unrestricted and unused | `src/app/api/v1/users/route.ts`, `src/app/api/v1/users/[id]/route.ts` (write methods removed), `src/controllers/userController.ts`, `src/services/userService.ts`, `src/services/interfaces.ts` (`saveUser`/`deleteUser` removed), `src/common/validation/schemas.ts` (`userSchema` removed, now unused) |
+| `token_sessions` rows never purged | `src/repositories/drizzle/tokenRepository.ts` (new `deleteExpired()`, deletes only rows past `expiresAt`), `src/app/api/v1/auth/refresh/route.ts`, `src/app/api/v1/auth/google/exchange/route.ts` (call it after issuing a new session) |
+| `search` didn't escape `%`/`_` in `ILIKE` | `src/repositories/drizzle/postRepository.ts` (escapes `%`, `_`, `\` before wrapping the term) |
+
+Found while working: `comments.reply_id` has **no FK constraint at all** in the schema (only `post_id` does), so unlike the `postId` fix, a bogus `replyId` doesn't error — it is silently stored as a dangling reference; left open (same bucket as the other missing self-referencing FKs, `categories.parent_id`). `google/exchange/route.ts` auto-provisions users by calling `userRepository.save()` directly, never through `UserService`, so removing `saveUser`/`POST /users` could not affect login. Verified specifically: a bogus `postId` now 404s and a real one still works (regression-checked end to end through the public comment route); `POST/PUT/DELETE /api/v1/users` now answer 405 (method not implemented) instead of succeeding; `deleteExpired()` removes a session row seeded 1 minute past `expiresAt` but leaves an `isUsed=true` row that isn't expired yet untouched; `search=%` and `search=_` now match 0 of 5 dev-DB posts instead of all 5.
 
 ## Status of earlier audit findings
 
