@@ -83,6 +83,10 @@ export async function POST(request: Request) {
       tokenFamily: session.tokenFamily, // Maintain family for chain tracking
     });
 
+    // Opportunistic cleanup: only rows already past expiresAt, so reuse detection
+    // on a still-live rotated-out token is unaffected (see tokenRepository.deleteExpired).
+    await tokenRepository.deleteExpired();
+
     // Set new cookies
     cookieStore.set("accessToken", newAccessToken, {
       httpOnly: true,

@@ -28,8 +28,10 @@ export class MediaService implements IMediaService {
     return paginate(mediaList, { page, limit });
   }
 
-  async uploadAndSaveMedia(buffer: Buffer, originalFilename: string, mimeType: string, userId: string): Promise<Media> {
-    const processed = await storageService.uploadImage(buffer, originalFilename, mimeType);
+  async uploadAndSaveMedia(buffer: Buffer, originalFilename: string, _mimeType: string, userId: string): Promise<Media> {
+    // _mimeType is kept for the interface contract; StorageService now derives the real format
+    // from the decoded bytes instead of trusting the client-declared type (CP-6 hardening).
+    const processed = await storageService.uploadImage(buffer, originalFilename);
     
     const media: Media = {
       id: randomUUID(),
@@ -110,6 +112,13 @@ export class MediaService implements IMediaService {
       throw new ConflictError("Cannot delete media because it is used in a post.", "MEDIA_IN_USE");
     }
 
-    return this.mediaRepo.delete(id);
+    const media = await this.mediaRepo.getById(id);
+    const deleted = await this.mediaRepo.delete(id);
+
+    if (deleted && media) {
+      await storageService.deleteImage(media.originalUrl, media.thumbnailUrl);
+    }
+
+    return deleted;
   }
 }

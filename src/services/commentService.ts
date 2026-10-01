@@ -1,4 +1,4 @@
-import { ICommentRepository, QueryOptions } from "@/repositories/interfaces";
+import { ICommentRepository, IPostRepository, QueryOptions } from "@/repositories/interfaces";
 import { ICommentService } from "./interfaces";
 import { Comment, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
@@ -6,7 +6,7 @@ import { paginate } from "./pagination";
 import { NotFoundError } from "@/common/errors/notFound";
 
 export class CommentService implements ICommentService {
-  constructor(private commentRepo: ICommentRepository) {}
+  constructor(private commentRepo: ICommentRepository, private postRepo: IPostRepository) {}
 
   async getFilteredComments(filters?: QueryOptions): Promise<PaginatedResult<Comment>> {
     const dbOptions: QueryOptions = {
@@ -44,8 +44,11 @@ export class CommentService implements ICommentService {
   }
 
   async createComment(body: any): Promise<Comment> {
+    const post = await this.postRepo.getById(body.postId);
+    if (!post) throw new NotFoundError("Post not found");
+
     const id = randomUUID();
-    
+
     const newComment: Comment = {
       id,
       postId: body.postId,

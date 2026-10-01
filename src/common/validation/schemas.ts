@@ -148,12 +148,6 @@ export const postSchema = postSchemaBase.superRefine((data, ctx) => {
   }
 });
 
-export const userSchema = z.object({
-  email: z.string().email("error_invalid_email"),
-  name: z.string().min(1, "error_required_field"),
-  password: z.string().min(6, "error_invalid_password").optional(), // Optional for updates
-});
-
 export const commentSchema = z.object({
   postId: z.string().uuid("error_invalid_uuid"),
   name: z.string().trim().min(1, "error_required_field").max(100, "error_name_too_long"),

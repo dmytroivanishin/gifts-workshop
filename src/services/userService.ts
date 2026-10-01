@@ -1,7 +1,6 @@
 import { IUserRepository } from "@/repositories/interfaces";
 import { IUserService } from "./interfaces";
 import { User } from "@/types";
-import { randomUUID } from "crypto";
 
 import { paginate } from "./pagination";
 
@@ -27,19 +26,5 @@ export class UserService implements IUserService {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     return this.userRepo.getByEmail(email);
-  }
-
-  async saveUser(body: any): Promise<User> {
-    const id = body.id || randomUUID();
-    const user: User = {
-      id,
-      email: body.email,
-      name: body.name,
-    };
-    return this.userRepo.save(user);
-  }
-
-  async deleteUser(id: string): Promise<boolean> {
-    return this.userRepo.delete(id);
   }
 }

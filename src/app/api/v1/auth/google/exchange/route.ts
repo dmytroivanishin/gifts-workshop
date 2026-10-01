@@ -98,6 +98,9 @@ export async function POST(request: Request) {
       tokenFamily,
     });
 
+    // Opportunistic cleanup of long-expired sessions (see tokenRepository.deleteExpired).
+    await tokenRepository.deleteExpired();
+
     // Set Cookies
     cookieStore.set("accessToken", accessToken, {
       httpOnly: true,

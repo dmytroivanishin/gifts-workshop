@@ -18,6 +18,7 @@ export default function AdminDashboard() {
 
   const { data: response, isLoading, isFetching } = useGetPostsQuery({
     search: search || undefined,
+    status: "all",
     page,
     limit: 10,
   });

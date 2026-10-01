@@ -148,7 +148,10 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     if (query.inStock !== undefined) conditions.push(eq(posts.inStock, query.inStock));
     
     if (query.search) {
-      conditions.push(sql`${posts.title}::text ILIKE ${`%${query.search}%`}`);
+      // Escape ILIKE wildcards in the user's input so a literal "%" or "_" is matched
+      // literally instead of acting as a pattern; "\" is Postgres's default LIKE escape char.
+      const escapedSearch = query.search.replace(/[\\%_]/g, "\\$&");
+      conditions.push(sql`${posts.title}::text ILIKE ${`%${escapedSearch}%`}`);
     }
 
     const queryOptions: any = {

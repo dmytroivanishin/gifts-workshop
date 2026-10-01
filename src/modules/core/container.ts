@@ -52,7 +52,7 @@ export const tagService = new TagService(tagRepository, categoryRepository);
 export const userService = new UserService(userRepository);
 export const postService = new PostService(postRepository, categoryRepository, tagRepository, collectionRepository);
 export const systemTextService = new SystemTextService(systemTextRepository);
-export const commentService = new CommentService(commentRepository);
+export const commentService = new CommentService(commentRepository, postRepository);
 
 // 3. Instantiating Controllers and injecting service dependencies
 export const categoryController = new CategoryController(categoryService);

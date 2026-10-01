@@ -47,8 +47,6 @@ export interface IUserService {
   getAllUsers(options?: PaginationOptions): Promise<PaginatedResult<User>>;
   getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  saveUser(body: any): Promise<User>;
-  deleteUser(id: string): Promise<boolean>;
 }
 
 export interface IPostService {
