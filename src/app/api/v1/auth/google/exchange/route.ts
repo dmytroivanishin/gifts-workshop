@@ -1,4 +1,4 @@
-import { signToken } from "@/utils/jwt";
+import { isAllowedAdminEmail, signAccessToken } from "@/utils/jwt";
 import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
 import { userRepository } from "@/repositories/drizzle/userRepository";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
@@ -35,9 +35,7 @@ export async function POST(request: Request) {
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const allowedEmails = env.ADMIN_EMAILS.map(e => e.toLowerCase());
-
-    if (!clientId || !clientSecret || allowedEmails.length === 0) {
+    if (!clientId || !clientSecret || env.ADMIN_EMAILS.length === 0) {
       throw new Error("Server OAuth configuration is missing");
     }
 
@@ -63,7 +61,7 @@ export async function POST(request: Request) {
 
     const { email } = await verifyGoogleIdToken(tokenData.id_token, clientId);
 
-    if (!allowedEmails.includes(email.toLowerCase())) {
+    if (!isAllowedAdminEmail(email)) {
       throw new UnauthorizedError("Unauthorized email address");
     }
 
@@ -83,7 +81,7 @@ export async function POST(request: Request) {
     }
     const userId = user.id;
 
-    const accessToken = await signToken({ userId, role: "admin" }, "15m");
+    const accessToken = await signAccessToken(userId, user.email);
     const refreshToken = crypto.randomBytes(40).toString("hex");
 
     const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");

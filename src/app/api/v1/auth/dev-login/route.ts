@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { signToken } from "@/utils/jwt";
+import { signAccessToken } from "@/utils/jwt";
 import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
 import { userRepository } from "@/repositories/drizzle/userRepository";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
@@ -33,7 +33,7 @@ export async function POST() {
     }
     const userId = user.id;
 
-    const accessToken = await signToken({ userId, role: "admin" }, "15m");
+    const accessToken = await signAccessToken(userId, user.email);
     const refreshToken = crypto.randomBytes(40).toString("hex");
     const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 

@@ -9,6 +9,12 @@ import { drizzleDatabase } from "@/repositories/drizzle/database";
 import { posts, postsToMedia } from "@/repositories/drizzle/schema";
 import { eq, sql } from "drizzle-orm";
 
+// A generous ceiling, well above any real product-photo batch; it exists to stop a single request
+// from processing an unbounded number of files (each goes through sharp + two MinIO uploads), not
+// to cap normal admin work. Configurable via MAX_FILES_PER_UPLOAD (optional; same fallback pattern
+// as NEXT_PUBLIC_MAX_FILE_SIZE_MB below, so a missing value in config/test.env doesn't break env.ts).
+export const MAX_FILES_PER_UPLOAD = Number(process.env.MAX_FILES_PER_UPLOAD) || 50;
+
 export class MediaService implements IMediaService {
   constructor(
     private mediaRepo: IMediaRepository,
@@ -52,6 +58,9 @@ export class MediaService implements IMediaService {
     
     if (!files || files.length === 0) {
       throw new ConflictError("No files provided", "VALIDATION_ERROR");
+    }
+    if (files.length > MAX_FILES_PER_UPLOAD) {
+      throw new ConflictError(`Too many files in one upload. Max is ${MAX_FILES_PER_UPLOAD}.`, "VALIDATION_ERROR");
     }
 
     const savedMedia: Media[] = [];

@@ -47,6 +47,11 @@ export class CommentService implements ICommentService {
     const post = await this.postRepo.getById(body.postId);
     if (!post) throw new NotFoundError("Post not found");
 
+    if (body.replyId) {
+      const parent = await this.commentRepo.getById(body.replyId);
+      if (!parent) throw new NotFoundError("Parent comment not found");
+    }
+
     const id = randomUUID();
 
     const newComment: Comment = {

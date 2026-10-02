@@ -18,6 +18,10 @@ export const RATE_LIMITS = {
   auth: { name: "auth", limit: 20, windowMs: 60 * 1000 },
   comment: { name: "comment", limit: 5, windowMs: 10 * 60 * 1000 },
   upload: { name: "upload", limit: 30, windowMs: 60 * 1000 },
+  // Catch-all for authenticated writes not covered above (categories, posts, tags, …). Sized well
+  // above anything a couple of admins working concurrently would hit, even sharing one address
+  // behind the same NAT/proxy; it exists for a leaked/stolen token or a runaway script, not normal use.
+  adminWrite: { name: "adminWrite", limit: 300, windowMs: 60 * 1000 },
 } as const satisfies Record<string, RateLimitRule>;
 
 const limiters = new Map<string, RateLimiterMemory>();

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
+import { verifyAdminToken } from "@/utils/jwt";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
 import { TooManyRequestsError } from "@/common/errors/tooManyRequests";
 import { RATE_LIMITS, checkRateLimit, getClientKey, type RateLimitRule } from "@/utils/rateLimit";
@@ -9,36 +9,26 @@ const PUBLIC_COMMENT_POST = /^\/api\/v1\/posts\/[a-zA-Z0-9_-]+\/comments$/;
 const MEDIA_UPLOAD = /^\/api\/v1\/media\/?$/;
 
 // Only the routes that are public or expensive: login, the anonymous comment form and uploads
+const MUTATING_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
+
 function resolveRateLimitRule(method: string, pathname: string): RateLimitRule | undefined {
   if (pathname.startsWith("/api/v1/auth/")) return RATE_LIMITS.auth;
   if (method === "POST" && PUBLIC_COMMENT_POST.test(pathname)) return RATE_LIMITS.comment;
   if (method === "POST" && MEDIA_UPLOAD.test(pathname)) return RATE_LIMITS.upload;
+  // Every other authenticated write (categories, posts, tags, media edits/deletes, …): see
+  // RATE_LIMITS.adminWrite for why the limit is this loose.
+  if (MUTATING_METHODS.includes(method) && pathname.startsWith("/api/v1/")) return RATE_LIMITS.adminWrite;
   return undefined;
 }
 
-// Get secret key for JWT verification in Edge
-const getJwtSecret = () => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error("JWT_SECRET is missing in environment variables.");
-  }
-  return new TextEncoder().encode(secret);
-};
-
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // 1. Protect Admin UI Routes
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     const token = request.cookies.get("accessToken")?.value;
-    
-    if (!token) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
-    }
 
-    try {
-      await jwtVerify(token, getJwtSecret());
-    } catch (error) {
+    if (!token || !(await verifyAdminToken(token))) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }
@@ -73,7 +63,7 @@ export async function proxy(request: NextRequest) {
     // belonging to unpublished posts the way GET /posts already hides them from anonymous readers.
     const isAdminOnlyResource = /^\/api\/v1\/(users|admin|media)(\/|$)/.test(pathname);
 
-    if (isAdminOnlyResource || ["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
+    if (isAdminOnlyResource || MUTATING_METHODS.includes(method)) {
       const token = request.cookies.get("accessToken")?.value;
 
       if (!token) {
@@ -84,9 +74,7 @@ export async function proxy(request: NextRequest) {
         );
       }
 
-      try {
-        await jwtVerify(token, getJwtSecret());
-      } catch (err) {
+      if (!(await verifyAdminToken(token))) {
         const error = new UnauthorizedError("Invalid or expired token");
         return NextResponse.json(
           { data: {}, error: error.serialize() },

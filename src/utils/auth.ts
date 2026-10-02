@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { verifyToken } from "./jwt";
+import { verifyAdminToken } from "./jwt";
 import { userRepository } from "@/repositories/drizzle/userRepository";
 
 export async function getUserId(): Promise<string | undefined> {
@@ -7,31 +7,28 @@ export async function getUserId(): Promise<string | undefined> {
     const cookieStore = await cookies();
     const token = cookieStore.get("accessToken")?.value;
     if (!token) return undefined;
-    
-    const payload = await verifyToken(token);
-    const userId = payload?.userId as string | undefined;
-    
-    if (!userId) return undefined;
-    
+
+    const payload = await verifyAdminToken(token);
+    if (!payload) return undefined;
+
     // Verify user exists
-    const user = await userRepository.getById(userId);
+    const user = await userRepository.getById(payload.userId);
     if (!user) return undefined;
-    
-    return userId;
+
+    return payload.userId;
   } catch (error) {
     return undefined;
   }
 }
 
-// Signature check only (no DB lookup): used to decide what a reader may see, not to authorize writes
+// Token claims only (no DB lookup): used to decide what a reader may see, not to authorize writes
 export async function isAdminRequest(): Promise<boolean> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("accessToken")?.value;
     if (!token) return false;
 
-    const payload = await verifyToken(token);
-    return payload?.role === "admin";
+    return (await verifyAdminToken(token)) !== null;
   } catch {
     return false;
   }
