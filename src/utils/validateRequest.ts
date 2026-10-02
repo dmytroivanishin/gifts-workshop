@@ -2,6 +2,18 @@ import { z, ZodError } from "zod";
 import { ValidationError } from "@/common/errors/validation";
 
 /**
+ * Parses a request body as JSON, converting a malformed body into a clean 400
+ * instead of letting the SyntaxError bubble up as a generic 500.
+ */
+export async function parseJsonBody(request: Request): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    throw new ValidationError("Malformed JSON body");
+  }
+}
+
+/**
  * Validates data against a Zod schema.
  * Throws a formatted ValidationError if validation fails.
  * 

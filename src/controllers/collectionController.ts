@@ -3,7 +3,7 @@ import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { ICollectionService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
-import { validateRequest } from "@/utils/validateRequest";
+import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { collectionSchema } from "@/common/validation/schemas";
 import { getUserId } from "@/utils/auth";
 import { getPaginationParams } from "@/utils/paginationUtils";
@@ -35,7 +35,7 @@ export class CollectionController {
 
   async saveCollection(request: Request, id?: string) {
     try {
-      const rawBody = await request.json();
+      const rawBody: any = await parseJsonBody(request);
       if (id) {
         rawBody.id = await resolveId(id, (slug) => this.collectionService.getCollectionBySlug(slug));
       }

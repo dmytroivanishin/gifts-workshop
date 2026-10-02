@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
 import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
+import { issueSession } from "@/utils/authSession";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
-import { isAllowedAdminEmail, signAccessToken, verifyAdminToken, verifyToken } from "@/utils/jwt";
+import { isAllowedAdminEmail, verifyAdminToken, verifyToken } from "@/utils/jwt";
 import { userRepository } from "@/repositories/drizzle/userRepository";
+import { logger } from "@/modules/logger";
 
 export async function POST(request: Request) {
   try {
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
     };
 
     if (await isSuspicious(accessTokenCookie)) {
-      console.warn(`[THEFT DETECTION] Premature refresh attempted for user ${session.userId}. Revoking family.`);
+      logger.warn("[THEFT DETECTION] Premature refresh attempted. Revoking family.", { userId: session.userId });
       await tokenRepository.revokeFamily(session.tokenFamily);
       clearCookies(cookieStore);
       throw new UnauthorizedError("Suspicious token refresh activity detected. Session revoked.");
@@ -63,7 +65,7 @@ export async function POST(request: Request) {
 
     // Advanced Theft Detection: Heuristic 1 (Token Reuse)
     if (session.isUsed) {
-      console.warn(`[THEFT DETECTION] Reused refresh token detected for user ${session.userId}. Revoking family.`);
+      logger.warn("[THEFT DETECTION] Reused refresh token detected. Revoking family.", { userId: session.userId });
       await tokenRepository.revokeFamily(session.tokenFamily);
       clearCookies(cookieStore);
       throw new UnauthorizedError("Stolen refresh token detected. All sessions revoked.");
@@ -82,41 +84,12 @@ export async function POST(request: Request) {
     session.isUsed = true;
     await tokenRepository.updateSession(session);
 
-    // Generate new pair
-    const newJti = crypto.randomUUID();
-    const newAccessToken = await signAccessToken(session.userId, user.email);
-    const newRefreshToken = crypto.randomBytes(40).toString("hex");
-    const newRefreshTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
-
-    await tokenRepository.createSession({
-      id: newJti,
-      userId: session.userId,
-      refreshTokenHash: newRefreshTokenHash,
-      isUsed: false,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      tokenFamily: session.tokenFamily, // Maintain family for chain tracking
-    });
+    // Maintain the existing token family so reuse detection still spans the whole chain.
+    await issueSession(session.userId, user.email, session.tokenFamily);
 
     // Opportunistic cleanup: only rows already past expiresAt, so reuse detection
     // on a still-live rotated-out token is unaffected (see tokenRepository.deleteExpired).
     await tokenRepository.deleteExpired();
-
-    // Set new cookies
-    cookieStore.set("accessToken", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60,
-      path: "/",
-    });
-
-    cookieStore.set("refreshToken", `${newJti}.${newRefreshToken}`, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60,
-      path: "/api/v1/auth",
-    });
 
     return sendSuccess({ success: true });
   } catch (error: any) {

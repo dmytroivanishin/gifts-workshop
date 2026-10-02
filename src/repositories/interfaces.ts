@@ -32,6 +32,7 @@ export interface ICategoryRepository extends IBaseRepository<Category, Populated
   getBySlug(slug: string): Promise<PopulatedCategory | undefined>;
   updateColorInCategories(colorId: string, newHex: string): Promise<void>;
   reorderCategories(items: { id: string; order: number }[]): Promise<boolean>;
+  countChildren(parentId: string): Promise<number>;
 }
 
 export interface ICollectionRepository extends IBaseRepository<Collection> {
@@ -45,6 +46,9 @@ export interface IMediaRepository extends IBaseRepository<Media> {}
 export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, QueryOptions> {
   getBySlug(slug: string): Promise<PopulatedPost | undefined>;
   getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedPost[]>;
+  countByCategory(categoryId: string): Promise<number>;
+  countByPoster(mediaId: string): Promise<number>;
+  countGalleryUsage(mediaId: string): Promise<number>;
 }
 
 export interface ITagRepository extends IBaseRepository<Tag> {

@@ -4,6 +4,7 @@ import { Category, PopulatedCategory, PaginationOptions } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, inArray, sql, and } from "drizzle-orm";
 import { ICategoryRepository } from "../interfaces";
+import { isUUID } from "@/utils/uuid";
 
 type CategoryRecord = typeof categories.$inferSelect & {
   categoriesToTags?: { tag: typeof tags.$inferSelect }[];
@@ -66,6 +67,7 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
   }
 
   override async getById(id: string): Promise<PopulatedCategory | undefined> {
+    if (!isUUID(id)) return undefined;
     const record = await drizzleDatabase.getDb().query.categories.findFirst({
       where: eq(categories.id, id),
       with: this.getWithRelations()
@@ -74,12 +76,22 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
   }
 
   override async getByIds(ids: string[]): Promise<PopulatedCategory[]> {
-    if (!ids.length) return [];
+    const validIds = ids.filter(isUUID);
+    if (!validIds.length) return [];
     const records = await drizzleDatabase.getDb().query.categories.findMany({
-      where: inArray(categories.id, ids),
+      where: inArray(categories.id, validIds),
       with: this.getWithRelations()
     });
     return records.map(this.mapToPopulated);
+  }
+
+  async countChildren(parentId: string): Promise<number> {
+    if (!isUUID(parentId)) return 0;
+    const [{ count }] = await drizzleDatabase.getDb()
+      .select({ count: sql<number>`count(*)` })
+      .from(categories)
+      .where(eq(categories.parentId, parentId));
+    return Number(count);
   }
 
   async getBySlug(slug: string): Promise<PopulatedCategory | undefined> {

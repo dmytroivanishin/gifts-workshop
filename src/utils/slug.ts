@@ -1,3 +1,5 @@
+import { logger } from "@/modules/logger";
+
 function transliterate(text: string): string {
   const ru: { [key: string]: string } = {
     'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh',
@@ -33,7 +35,7 @@ export async function translateToEnglish(text: string): Promise<string> {
       return json[0][0][0];
     }
   } catch (error) {
-    console.error("Smart translation failed, using transliteration fallback:", error);
+    logger.error("Smart translation failed, using transliteration fallback", { error: error instanceof Error ? error.message : String(error) });
   }
 
   // Fallback to simple transliteration

@@ -4,6 +4,7 @@ import { Comment, PopulatedComment, PaginationOptions } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, and, desc } from "drizzle-orm";
 import { ICommentRepository, QueryOptions } from "../interfaces";
+import { isUUID } from "@/utils/uuid";
 
 type CommentRecord = typeof comments.$inferSelect & {
   post?: typeof posts.$inferSelect;
@@ -59,6 +60,7 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
   }
 
   override async getById(id: string): Promise<PopulatedComment | undefined> {
+    if (!isUUID(id)) return undefined;
     const record = await drizzleDatabase.getDb().query.comments.findFirst({
       where: eq(comments.id, id),
       with: this.getWithRelations()
@@ -125,6 +127,7 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
   }
 
   override async delete(id: string): Promise<boolean> {
+    if (!isUUID(id)) return false;
     const db = drizzleDatabase.getDb();
     let deleted = false;
     await db.transaction(async (tx) => {

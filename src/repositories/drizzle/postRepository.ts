@@ -4,6 +4,7 @@ import { Post, PopulatedPost, PaginationOptions } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, and, sql, inArray, desc } from "drizzle-orm";
 import { IPostRepository, QueryOptions } from "../interfaces";
+import { isUUID } from "@/utils/uuid";
 
 type PostRecord = typeof posts.$inferSelect & {
   postsToTags?: { tag: typeof tags.$inferSelect }[];
@@ -107,6 +108,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
   }
 
   override async getById(id: string): Promise<PopulatedPost | undefined> {
+    if (!isUUID(id)) return undefined;
     const record = await drizzleDatabase.getDb().query.posts.findFirst({
       where: eq(posts.id, id),
       with: this.getWithRelations()
@@ -115,12 +117,40 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
   }
 
   override async getByIds(ids: string[]): Promise<PopulatedPost[]> {
-    if (!ids.length) return [];
+    const validIds = ids.filter(isUUID);
+    if (!validIds.length) return [];
     const records = await drizzleDatabase.getDb().query.posts.findMany({
-      where: inArray(posts.id, ids),
+      where: inArray(posts.id, validIds),
       with: this.getWithRelations()
     });
     return records.map(this.mapToPopulated.bind(this));
+  }
+
+  async countByCategory(categoryId: string): Promise<number> {
+    if (!isUUID(categoryId)) return 0;
+    const [{ count }] = await drizzleDatabase.getDb()
+      .select({ count: sql<number>`count(*)` })
+      .from(posts)
+      .where(eq(posts.categoryId, categoryId));
+    return Number(count);
+  }
+
+  async countByPoster(mediaId: string): Promise<number> {
+    if (!isUUID(mediaId)) return 0;
+    const [{ count }] = await drizzleDatabase.getDb()
+      .select({ count: sql<number>`count(*)` })
+      .from(posts)
+      .where(eq(posts.posterId, mediaId));
+    return Number(count);
+  }
+
+  async countGalleryUsage(mediaId: string): Promise<number> {
+    if (!isUUID(mediaId)) return 0;
+    const [{ count }] = await drizzleDatabase.getDb()
+      .select({ count: sql<number>`count(*)` })
+      .from(postsToMedia)
+      .where(eq(postsToMedia.mediaId, mediaId));
+    return Number(count);
   }
 
   async getBySlug(slug: string): Promise<PopulatedPost | undefined> {

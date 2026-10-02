@@ -2,6 +2,7 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import * as LucideIcons from "lucide-react";
 import { ChevronLeft, Loader2, ZoomIn } from "lucide-react";
 import { FaTelegramPlane, FaInstagram, FaVk, FaEnvelope, FaPinterest, FaWhatsapp, FaFacebook, FaLinkedin } from "react-icons/fa";
@@ -50,9 +51,10 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     );
   }
 
-  const images = post.media
-    .map((m) => m.media?.originalUrl)
-    .filter((url): url is string => typeof url === "string");
+  const galleryMedia = post.media
+    .map((m) => m.media)
+    .filter((m): m is NonNullable<typeof m> => typeof m?.originalUrl === "string");
+  const images = galleryMedia.map((m) => m.originalUrl);
   
   const categoryTitle = loc(post.category.title);
   const categoryColor = post.category.color!.color;
@@ -96,7 +98,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
         <div className="lg:col-span-7">
           {images.length > 0 ? (
             <div className="columns-1 sm:columns-2 gap-4">
-              {images.map((img, index) => (
+              {galleryMedia.map((mediaItem, index) => (
                 <motion.div
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -105,9 +107,12 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   className="mb-4 overflow-hidden rounded-2xl bg-muted relative group cursor-pointer break-inside-avoid"
                   onClick={() => handleImageClick(index)}
                 >
-                  <img
-                    src={img}
+                  <Image
+                    src={mediaItem.originalUrl}
                     alt={`${loc(post.title)} - ${index + 1}`}
+                    width={mediaItem.width}
+                    height={mediaItem.height}
+                    sizes="(min-width: 640px) 50vw, 100vw"
                     className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   {/* Overlay for hover */}

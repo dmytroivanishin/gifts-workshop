@@ -4,6 +4,7 @@ import { Tag } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";
+import { logger } from "@/modules/logger";
 
 import { paginate } from "./pagination";
 
@@ -74,7 +75,7 @@ export class TagService implements ITagService {
             )
         );
       } catch (err) {
-        console.error("Failed to cleanup categories on tag delete", err);
+        logger.error("Failed to cleanup categories on tag delete", { error: err instanceof Error ? err.message : String(err) });
       }
     }
 

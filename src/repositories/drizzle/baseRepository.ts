@@ -3,6 +3,7 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { PgTable } from "drizzle-orm/pg-core";
 import { IBaseRepository } from "../interfaces";
 import { PaginationOptions } from "@/types";
+import { isUUID } from "@/utils/uuid";
 
 export abstract class DrizzleBaseRepository<
   T extends { id: string },
@@ -32,14 +33,18 @@ export abstract class DrizzleBaseRepository<
   }
 
   async getById(id: string): Promise<TPopulated | undefined> {
+    // A non-UUID id can never match a uuid primary key; short-circuit instead of letting
+    // Postgres throw "invalid input syntax for type uuid" (which would surface as a 500).
+    if (!isUUID(id)) return undefined;
     const records = await drizzleDatabase.getDb().select().from(this.table).where(eq(this.table.id, id)).limit(1);
     if (!records.length) return undefined;
     return this.populate(records[0]);
   }
 
   async getByIds(ids: string[]): Promise<TPopulated[]> {
-    if (!ids.length) return [];
-    const records = await drizzleDatabase.getDb().select().from(this.table).where(inArray(this.table.id, ids));
+    const validIds = ids.filter(isUUID);
+    if (!validIds.length) return [];
+    const records = await drizzleDatabase.getDb().select().from(this.table).where(inArray(this.table.id, validIds));
     return Promise.all(records.map(r => this.populate(r)));
   }
 
@@ -82,6 +87,7 @@ export abstract class DrizzleBaseRepository<
   }
 
   async delete(id: string): Promise<boolean> {
+    if (!isUUID(id)) return false;
     const result = await drizzleDatabase.getDb().delete(this.table).where(eq(this.table.id, id)).returning({ id: this.table.id });
     return result.length > 0;
   }

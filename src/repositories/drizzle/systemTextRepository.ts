@@ -3,6 +3,7 @@ import { ISystemTextRepository } from "../interfaces";
 import { SystemText } from "@/types";
 import { drizzleDatabase } from "./database";
 import { systemTexts } from "./schema";
+import { isUUID } from "@/utils/uuid";
 
 import { QueryOptions } from "../interfaces";
 
@@ -20,15 +21,17 @@ export class SystemTextRepository implements ISystemTextRepository {
   }
 
   async getById(id: string): Promise<SystemText | undefined> {
+    if (!isUUID(id)) return undefined;
     const db = drizzleDatabase.getDb();
     const result = await db.select().from(systemTexts).where(eq(systemTexts.id, id));
     return result[0] as SystemText | undefined;
   }
 
   async getByIds(ids: string[]): Promise<SystemText[]> {
-    if (!ids || ids.length === 0) return [];
+    const validIds = (ids || []).filter(isUUID);
+    if (!validIds.length) return [];
     const db = drizzleDatabase.getDb();
-    const result = await db.select().from(systemTexts).where(inArray(systemTexts.id, ids));
+    const result = await db.select().from(systemTexts).where(inArray(systemTexts.id, validIds));
     return result as SystemText[];
   }
 
@@ -73,6 +76,7 @@ export class SystemTextRepository implements ISystemTextRepository {
   }
 
   async delete(id: string): Promise<boolean> {
+    if (!isUUID(id)) return false;
     const db = drizzleDatabase.getDb();
     const result = await db.delete(systemTexts).where(eq(systemTexts.id, id)).returning({ id: systemTexts.id });
     return result.length > 0;

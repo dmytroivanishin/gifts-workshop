@@ -1,6 +1,7 @@
-import { isAllowedAdminEmail, signAccessToken } from "@/utils/jwt";
+import { isAllowedAdminEmail } from "@/utils/jwt";
 import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
 import { userRepository } from "@/repositories/drizzle/userRepository";
+import { issueSession } from "@/utils/authSession";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
 import { googleExchangeSchema } from "@/common/validation/schemas";
@@ -65,10 +66,6 @@ export async function POST(request: Request) {
       throw new UnauthorizedError("Unauthorized email address");
     }
 
-    // Generate our own Access and Refresh Tokens
-    const jti = crypto.randomUUID();
-    const tokenFamily = crypto.randomUUID();
-    
     // Find or automatically create the admin user to obtain a valid UUID
     let user = await userRepository.getByEmail(email);
     if (!user) {
@@ -81,40 +78,10 @@ export async function POST(request: Request) {
     }
     const userId = user.id;
 
-    const accessToken = await signAccessToken(userId, user.email);
-    const refreshToken = crypto.randomBytes(40).toString("hex");
-
-    const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
-
-    // Store the refresh token session
-    await tokenRepository.createSession({
-      id: jti,
-      userId,
-      refreshTokenHash,
-      isUsed: false,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      tokenFamily,
-    });
+    await issueSession(userId, user.email);
 
     // Opportunistic cleanup of long-expired sessions (see tokenRepository.deleteExpired).
     await tokenRepository.deleteExpired();
-
-    // Set Cookies
-    cookieStore.set("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60, // 15 mins
-      path: "/",
-    });
-
-    cookieStore.set("refreshToken", `${jti}.${refreshToken}`, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-      path: "/api/v1/auth", // Only send refresh token to auth routes
-    });
 
     return sendSuccess({ success: true, email });
   } catch (error: unknown) {

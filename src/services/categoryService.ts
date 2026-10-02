@@ -1,4 +1,4 @@
-import { ICategoryRepository, ITagRepository } from "@/repositories/interfaces";
+import { ICategoryRepository, ITagRepository, IPostRepository } from "@/repositories/interfaces";
 import { ICategoryService } from "./interfaces";
 import { Category, PopulatedCategory } from "@/types";
 import { randomUUID } from "crypto";
@@ -6,9 +6,6 @@ import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
 import { ValidationError } from "@/common/errors/validation";
 import { ConflictError } from "@/common/errors/conflict";
 import { isUUID } from "@/utils/uuid";
-import { drizzleDatabase } from "@/repositories/drizzle/database";
-import { categories as categoriesSchema, posts } from "@/repositories/drizzle/schema";
-import { eq, sql } from "drizzle-orm";
 
 import { paginate } from "./pagination";
 import { PaginationOptions } from "@/types";
@@ -16,7 +13,8 @@ import { PaginationOptions } from "@/types";
 export class CategoryService implements ICategoryService {
   constructor(
     private categoryRepo: ICategoryRepository,
-    private tagRepo: ITagRepository
+    private tagRepo: ITagRepository,
+    private postRepo: IPostRepository
   ) {}
 
   async getAllCategories(options?: PaginationOptions): Promise<any> {
@@ -114,23 +112,13 @@ export class CategoryService implements ICategoryService {
   }
 
   async deleteCategory(id: string): Promise<boolean> {
-    const db = drizzleDatabase.getDb();
-    
-    const [{ childrenCount }] = await db
-      .select({ childrenCount: sql<number>`count(*)` })
-      .from(categoriesSchema)
-      .where(eq(categoriesSchema.parentId, id));
-      
-    if (Number(childrenCount) > 0) {
+    const childrenCount = await this.categoryRepo.countChildren(id);
+    if (childrenCount > 0) {
       throw new ConflictError("Cannot delete parent category because it contains child categories.", "CATEGORY_HAS_CHILDREN");
     }
-    
-    const [{ postCount }] = await db
-      .select({ postCount: sql<number>`count(*)` })
-      .from(posts)
-      .where(eq(posts.categoryId, id));
-      
-    if (Number(postCount) > 0) {
+
+    const postCount = await this.postRepo.countByCategory(id);
+    if (postCount > 0) {
       throw new ConflictError("Cannot delete category because it is linked to posts.", "CATEGORY_HAS_POSTS");
     }
 

@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { postService, categoryService } from "@/modules/core/container";
 import { env } from "@/modules/core/env";
+import { logger } from "@/modules/logger";
 
 const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -51,7 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch (error) {
-    console.error("Error generating sitemap:", error);
+    logger.error("Error generating sitemap", { error: error instanceof Error ? error.message : String(error) });
   }
 
   return sitemapEntries;

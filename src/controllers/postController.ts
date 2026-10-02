@@ -2,7 +2,7 @@ import { z } from "zod";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { IPostService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
-import { validateRequest } from "@/utils/validateRequest";
+import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { postSchema } from "@/common/validation/schemas";
 import { resolveId } from "@/utils/idResolver";
 import { getUserId } from "@/utils/auth";
@@ -55,7 +55,7 @@ export class PostController {
 
   async createPost(request: Request) {
     try {
-      const rawBody = await request.json();
+      const rawBody: any = await parseJsonBody(request);
       const body = await validateRequest(postSchema, rawBody);
       const userId = await getUserId();
       const post = await this.postService.createPost({ ...body, userId } as any);
@@ -67,7 +67,7 @@ export class PostController {
 
   async updatePost(request: Request, id: string) {
     try {
-      const rawBody = await request.json();
+      const rawBody: any = await parseJsonBody(request);
       const resolvedId = await resolveId(id, (slug) => this.postService.getPostBySlug(slug));
       const body = await validateRequest(postSchema, rawBody);
       const userId = await getUserId();

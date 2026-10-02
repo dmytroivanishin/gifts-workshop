@@ -3,7 +3,7 @@ import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { ITagService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
-import { validateRequest } from "@/utils/validateRequest";
+import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { tagSchema } from "@/common/validation/schemas";
 import { getPaginationParams } from "@/utils/paginationUtils";
 import { getUserId } from "@/utils/auth";
@@ -36,7 +36,7 @@ export class TagController {
 
   async saveTag(request: Request, id?: string) {
     try {
-      const rawBody = await request.json();
+      const rawBody: any = await parseJsonBody(request);
       if (id) {
         rawBody.id = await resolveId(id, (slug) => this.tagService.getTagBySlug(slug));
       }

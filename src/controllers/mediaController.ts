@@ -2,7 +2,7 @@ import { z } from "zod";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { IMediaService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
-import { validateRequest } from "@/utils/validateRequest";
+import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { mediaSchema } from "@/common/validation/schemas";
 import { getUserId } from "@/utils/auth";
 import { ValidationError } from "@/common/errors/validation";
@@ -51,7 +51,7 @@ export class MediaController {
         return sendSuccess(savedMedia);
       } else {
         // Fallback for legacy JSON saving (e.g. updating positions)
-        const rawBody = await request.json();
+        const rawBody: any = await parseJsonBody(request);
         if (id) {
           rawBody.id = id;
         }

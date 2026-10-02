@@ -6,6 +6,7 @@ import { env } from "@/modules/core/env";
 import { redirect } from "next/navigation";
 import { isUUID } from "@/utils/uuid";
 import { visibleToViewer } from "@/utils/postVisibility";
+import { logger } from "@/modules/logger";
 
 const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -85,7 +86,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       },
     };
   } catch (error) {
-    console.error("Error generating metadata for post:", slug, error);
+    logger.error("Error generating metadata for post", { slug, error: error instanceof Error ? error.message : String(error) });
     return {};
   }
 }

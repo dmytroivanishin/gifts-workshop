@@ -5,9 +5,6 @@ import { randomUUID } from "crypto";
 import { paginate } from "./pagination";
 import { ConflictError } from "@/common/errors/conflict";
 import { storageService } from "@/modules/storage/StorageService";
-import { drizzleDatabase } from "@/repositories/drizzle/database";
-import { posts, postsToMedia } from "@/repositories/drizzle/schema";
-import { eq, sql } from "drizzle-orm";
 
 // A generous ceiling, well above any real product-photo batch; it exists to stop a single request
 // from processing an unbounded number of files (each goes through sharp + two MinIO uploads), not
@@ -101,23 +98,13 @@ export class MediaService implements IMediaService {
   }
 
   async deleteMedia(id: string): Promise<boolean> {
-    const db = drizzleDatabase.getDb();
-    
-    const [{ posterCount }] = await db
-      .select({ posterCount: sql<number>`count(*)` })
-      .from(posts)
-      .where(eq(posts.posterId, id));
-      
-    if (Number(posterCount) > 0) {
+    const posterCount = await this.postRepo.countByPoster(id);
+    if (posterCount > 0) {
       throw new ConflictError("Cannot delete media because it is used in a post.", "MEDIA_IN_USE");
     }
-    
-    const [{ galleryCount }] = await db
-      .select({ galleryCount: sql<number>`count(*)` })
-      .from(postsToMedia)
-      .where(eq(postsToMedia.mediaId, id));
-      
-    if (Number(galleryCount) > 0) {
+
+    const galleryCount = await this.postRepo.countGalleryUsage(id);
+    if (galleryCount > 0) {
       throw new ConflictError("Cannot delete media because it is used in a post.", "MEDIA_IN_USE");
     }
 

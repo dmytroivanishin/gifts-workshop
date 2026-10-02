@@ -2,7 +2,7 @@ import { z } from "zod";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { ICommentService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
-import { validateRequest } from "@/utils/validateRequest";
+import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { commentSchema } from "@/common/validation/schemas";
 import { getPaginationParams } from "@/utils/paginationUtils";
 
@@ -25,7 +25,7 @@ export class CommentController {
 
   async createComment(request: Request, injectedPostId?: string) {
     try {
-      const rawBody = await request.json();
+      const rawBody: any = await parseJsonBody(request);
       if (injectedPostId) {
         rawBody.postId = injectedPostId;
       }
@@ -39,7 +39,7 @@ export class CommentController {
 
   async updateCommentStatus(request: Request, id: string) {
     try {
-      const rawBody = await request.json();
+      const rawBody: any = await parseJsonBody(request);
       const statusSchema = z.object({
         status: z.enum(["Review", "Approved", "Rejected"])
       });
@@ -56,7 +56,7 @@ export class CommentController {
 
   async replyToComment(request: Request, id: string) {
     try {
-      const rawBody = await request.json();
+      const rawBody: any = await parseJsonBody(request);
       const replySchema = z.object({
         text: z.string().min(1, "error_required_field").max(2000, "error_text_too_long")
       });

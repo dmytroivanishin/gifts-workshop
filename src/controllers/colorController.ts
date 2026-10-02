@@ -2,7 +2,7 @@ import { z } from "zod";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { IColorService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
-import { validateRequest } from "@/utils/validateRequest";
+import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { colorSchema } from "@/common/validation/schemas";
 import { getPaginationParams } from "@/utils/paginationUtils";
 import { getUserId } from "@/utils/auth";
@@ -34,7 +34,7 @@ export class ColorController {
 
   async saveColor(request: Request, id?: string) {
     try {
-      const rawBody = await request.json();
+      const rawBody: any = await parseJsonBody(request);
       if (id) {
         rawBody.id = id;
       }

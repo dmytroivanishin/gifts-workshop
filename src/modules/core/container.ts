@@ -45,7 +45,7 @@ export {
 
 // 2. Instantiating Services and injecting repository/service dependencies
 export const colorService = new ColorService(colorRepository, categoryRepository);
-export const categoryService = new CategoryService(categoryRepository, tagRepository);
+export const categoryService = new CategoryService(categoryRepository, tagRepository, postRepository);
 export const collectionService = new CollectionService(collectionRepository);
 export const mediaService = new MediaService(mediaRepository, postRepository);
 export const tagService = new TagService(tagRepository, categoryRepository);

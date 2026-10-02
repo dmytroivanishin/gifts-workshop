@@ -4,7 +4,7 @@ import { ICategoryService } from "@/services/interfaces";
 import { ForbiddenError } from "@/common/errors/forbidden";
 import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
-import { validateRequest } from "@/utils/validateRequest";
+import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { categorySchema } from "@/common/validation/schemas";
 import { getUserId } from "@/utils/auth";
 import { getPaginationParams } from "@/utils/paginationUtils";
@@ -38,7 +38,7 @@ export class CategoryController {
 
   async saveCategory(request: Request, id?: string) {
     try {
-      const rawBody = await request.json();
+      const rawBody: any = await parseJsonBody(request);
       if (id) {
         rawBody.id = await resolveId(id, (slug) => this.categoryService.getCategoryBySlug(slug));
       }
@@ -63,12 +63,12 @@ export class CategoryController {
 
   async reorderCategories(request: Request) {
     try {
-      const rawBody = await request.json();
-      const items = z.array(z.object({
+      const rawBody: any = await parseJsonBody(request);
+      const items = await validateRequest(z.array(z.object({
         id: z.string().uuid(),
         order: z.number().int()
-      })).parse(rawBody.items);
-      
+      })), rawBody.items);
+
       const result = await this.categoryService.reorderCategories(items);
       return sendSuccess(result);
     } catch (error: any) {

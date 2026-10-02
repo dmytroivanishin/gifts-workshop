@@ -4,14 +4,26 @@ const isProd = process.env.NODE_ENV === "production";
 
 // The public MinIO address is a runtime env var (CHANGE-PLAN.md CP-8), so it has to be
 // read here rather than hardcoded; img-src needs it for post/media thumbnails.
-const s3Origin = (() => {
+const s3Url = (() => {
   if (!process.env.S3_PUBLIC_URL) return undefined;
   try {
-    return new URL(process.env.S3_PUBLIC_URL).origin;
+    return new URL(process.env.S3_PUBLIC_URL);
   } catch {
     return undefined;
   }
 })();
+const s3Origin = s3Url?.origin;
+
+// next/image needs an explicit allowlist for remote hosts; media URLs are always under
+// S3_PUBLIC_URL (see StorageService), so this is the only host real post images come from.
+const s3RemotePattern = s3Url
+  ? {
+      protocol: s3Url.protocol.replace(":", "") as "http" | "https",
+      hostname: s3Url.hostname,
+      port: s3Url.port,
+      pathname: "/**",
+    }
+  : undefined;
 
 // script-src/style-src need 'unsafe-inline': the App Router streams RSC payloads through
 // inline <script> tags, and framer-motion sets inline style attributes for animations.
@@ -30,6 +42,13 @@ const cspDirectives = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: s3RemotePattern ? [s3RemotePattern] : [],
+    // Next 16 refuses to optimize an image whose host resolves to a private IP (SSRF guard).
+    // Locally S3_PUBLIC_URL is MinIO on localhost, which always resolves that way; in production
+    // it is a public domain, so this only ever relaxes the guard for the local dev network.
+    dangerouslyAllowLocalIP: !isProd,
+  },
   async headers() {
     return [
       {
