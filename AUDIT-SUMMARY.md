@@ -29,13 +29,13 @@ Items 1–4 were fixed in code on 2026-09-19 (not yet verified by hand, `CHANGE-
 
 ## What can wait
 
-- Extracting an `AuthService` (token issuing is copy-pasted three times) and moving the direct DB access out of `CategoryService` / `MediaService`.
+- ~~Extracting an `AuthService` (token issuing is copy-pasted three times) and moving the direct DB access out of `CategoryService` / `MediaService`.~~ Done 2026-10-02 (second round): `issueSession()` and the new repository count methods, see "Fixes applied" below.
 - Real `totalItems` in pagination; fixing the double-wrapped `/collections/:id/posts` response.
 - Removing the "premature refresh" heuristic (still open; presented 2026-09-28 and again 2026-10-01, not selected either time). (The OAuth hardening, `state`/PKCE and the ID-token checks, was done on 2026-09-23; purging old `token_sessions` was done 2026-10-01, see "Fixes applied" below.)
 - Self-referencing FKs (`categories.parent_id`, `comments.reply_id`); GIN/trigram search index; search on description as well as title.
 - Media pipeline aligned with the plan (JPG conversion, 300/1200 px), storage interface (Adapter/Strategy). Magic-byte validation was done 2026-09-28 (see "Fixes applied" → round 2).
 - Public-page SSR for post content, `next/image` and `next/font`, replacing `import * as LucideIcons`, caching system texts.
-- Making `npm run lint` green: it currently fails with 345 errors (318 `no-explicit-any`, 19 `set-state-in-effect`, 3 `no-require-imports`, 3 `no-empty-object-type`) and 73 warnings (2026-09-23). Replacing 40 `console.*` calls with the logger, a `withErrorHandling` wrapper for controllers.
+- Making `npm run lint` green: it currently fails with 345 errors (318 `no-explicit-any`, 19 `set-state-in-effect`, 3 `no-require-imports`, 3 `no-empty-object-type`) and 73 warnings (2026-09-23). Replacing the remaining 34 of 40 `console.*` calls with the logger (6 done 2026-10-02; the rest are in client components, where winston can't run — a separate decision, `CHANGE-PLAN.md` CP-18), a `withErrorHandling` wrapper for controllers.
 - Test suite (none exists; tooling is installed), Prettier. A nonce-based (strict) CSP, on top of the baseline one added 2026-09-28.
 - Documentation cleanup: stale `.agents/rules`, default README, leftover files (`scratch_findKeys.mjs`, `public/*.svg`, `old.*.png`).
 
@@ -111,6 +111,10 @@ Found while working: `comments.reply_id` has **no FK constraint at all** in the 
 
 ## Fixes applied (2026-10-02)
 
+Two rounds the same day, each picked from its own backlog list and applied one point at a time at the owner's request.
+
+### Round 1
+
 Five issues picked from a fourth backlog list (numbered 26–30 in that pass). Two of them (28, 29) were first presented with a narrower framing the owner pushed back on — the shipped behavior below is the revised one, not the original draft. Checked with `tsc --noEmit` (clean), `next build` (passes), a locally-minted-JWT test matrix against a temporary `next start` server, and scripted checks against the local dev Postgres (self-cleaning). No new dependency, no migration changed (one seed data file deleted, not a schema migration).
 
 | Point | Files |
@@ -122,6 +126,20 @@ Five issues picked from a fourth backlog list (numbered 26–30 in that pass). T
 | `seeds/initial-data/users.json` committed a password-shaped value, unused by any loader | file deleted |
 
 Found while working, not yet fixed (see `PRODUCTION-READINESS.md` → Input validation, `DEVIATIONS.md` → Media / Frontend (Admin), `CHANGE-PLAN.md` CP-16): Next's `experimental.proxyClientMaxBodySize` defaults to 10 MB and silently truncates any request body over that for every route behind `proxy.ts`, turning a large upload into a raw 500 instead of a clean error (confirmed with a 12 MB file and with two 8.7 MB files in one request); and the admin media library page bypasses RTK Query (raw `fetch`), so it lacks silent token refresh, cache invalidation, and per-file error reporting that every other admin page gets. Verified specifically: a locally-minted-JWT matrix (good/uppercase-email/no-email/foreign-email/wrong-role/no-token) against `GET /users`, `GET /admin/dashboard` and `GET /posts?status=all` behaves as expected in every case; a refresh with a pre-claim access token upgrades transparently (200, new token carries `email`); a refresh for a user removed from `ADMIN_EMAILS` is rejected and the family revoked; a normal admin write and the public anonymous comment route are unaffected; 300 rate-limited requests pass and the 301st gets 429; 51 files in one upload request are rejected before any processing, 50 are all accepted (then cleaned up).
+
+### Round 2
+
+Five issues picked from a fifth backlog list (numbered 31–35 in that pass), all five approved together ("давай делаем все, будь предельно внимателен"). Checked with `tsc --noEmit` (clean), `next build` (passes, same 40 routes), HTTP checks against a temporary `next dev` server, and a headless-browser (Playwright) check. No new dependency, no migration.
+
+| Point | Files |
+|-------|-------|
+| Malformed JSON and non-UUID ids ended in a raw 500 | New `parseJsonBody()` (`src/utils/validateRequest.ts`), applied at all 11 `request.json()` call sites across 9 controllers; `categoryController.reorderCategories`'s separate `.parse()` call routed through `validateRequest` too; `isUUID` guard added to `DrizzleBaseRepository.getById`/`getByIds`/`delete` and to the repositories that override them (`categoryRepository.ts`, `postRepository.ts`, `commentRepository.ts`, `systemTextRepository.ts`) |
+| `CategoryService.deleteCategory`/`MediaService.deleteMedia` ran raw Drizzle queries instead of going through a repository | New `CategoryRepository.countChildren`, `PostRepository.countByCategory`/`countByPoster`/`countGalleryUsage` (added to `ICategoryRepository`/`IPostRepository`); `src/services/categoryService.ts`, `src/services/mediaService.ts`, `src/modules/core/container.ts` (`CategoryService` now also takes `postRepo`) |
+| Token-issuing code copied across three auth routes | New `issueSession(userId, email, tokenFamily?)` (`src/utils/authSession.ts`); `src/app/api/v1/auth/{google/exchange,dev-login,refresh}/route.ts` each call it instead of minting/hashing/setting cookies themselves |
+| Raw `<img>` in the public project gallery (scoped down from all 7 to just this one, by agreement — the other 6 are admin-only or drag/crop widgets where `next/image` fights CSS transforms) | `src/app/[locale]/(public)/projects/[slug]/page.tsx` (now `next/image`, carrying `width`/`height` from the `media` row), `next.config.ts` (`images.remotePatterns` for the `S3_PUBLIC_URL` host, plus a dev-only `images.dangerouslyAllowLocalIP` — an unplanned but necessary follow-on found while verifying, since Next 16 refuses to optimize an image resolving to a private IP, which `localhost` always does locally) |
+| `console.*` bypassing the logger | 6 of the 40 sites converted (`src/app/sitemap.ts`, `src/app/[locale]/(public)/projects/[slug]/layout.tsx`, `src/utils/slug.ts`, `src/services/tagService.ts`, 2 in `src/app/api/v1/auth/refresh/route.ts`) — the remaining ~34 are inside `"use client"` components, where winston cannot run; left as `console.*`, tracked as its own decision in `CHANGE-PLAN.md` CP-18 |
+
+Found while working: the `console.*` item was originally framed (in the backlog pass, and in CP-18) as "40 easy swaps" — checking which call sites are actually client components (grep + a `"use client"` check on every file) showed only 6 are safely fixable without new client-side logging infrastructure; the other 34 are a distinct, larger gap, not a quick finish. Verified specifically: a full `dev-login` → `refresh` (rotation) → replay-old-refresh-token (reuse detection) → confirm-whole-family-revoked HTTP sequence against a temporary server (confirms `issueSession` end-to-end, including that the new access token still carries `email`); malformed JSON and non-UUID/nonexistent ids now return clean 400/404 across colors, media, tags, collections, system-texts and categories (previously 500); a `categories/reorder` malformed-JSON-and-bad-UUID check; real dev-DB regression checks for all three delete-conflict business rules (category-has-children, media-is-poster, media-in-gallery, all still 409 as before); a Playwright check of the gallery page confirming `next/image` generates proper `<img>` tags (`loading="lazy"`, populated `srcset`), the `/_next/image` optimizer returns a real re-encoded JPEG (not a 400), and there are zero browser console errors.
 
 ## Status of earlier audit findings
 
