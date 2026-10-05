@@ -4,18 +4,25 @@ import * as schema from './schema';
 import { env } from "@/modules/core/env";
 import { logger } from '@/modules/logger';
 
+declare global {
+  // eslint-disable-next-line no-var
+  var __drizzleDatabaseInstance: DrizzleDatabase | undefined;
+}
+
 export class DrizzleDatabase {
-  private static instance: DrizzleDatabase;
   private client: postgres.Sql | null = null;
   private db: PostgresJsDatabase<typeof schema> | null = null;
 
   private constructor() {}
 
+  // Cached on globalThis, not a module-level static field: in `next dev`, Fast Refresh
+  // can re-evaluate this module while the Node process (and globalThis) persists, which
+  // would otherwise spin up a brand new postgres connection pool on every reload.
   public static getInstance(): DrizzleDatabase {
-    if (!DrizzleDatabase.instance) {
-      DrizzleDatabase.instance = new DrizzleDatabase();
+    if (!globalThis.__drizzleDatabaseInstance) {
+      globalThis.__drizzleDatabaseInstance = new DrizzleDatabase();
     }
-    return DrizzleDatabase.instance;
+    return globalThis.__drizzleDatabaseInstance;
   }
 
   private initConnection(uri: string): void {

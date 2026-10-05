@@ -2,7 +2,7 @@ import { DrizzleBaseRepository } from "./baseRepository";
 import { posts, postsToTags, tags, media, postsToMedia } from "./schema";
 import { Post, PopulatedPost, PaginationOptions } from "@/types";
 import { drizzleDatabase } from "./database";
-import { eq, and, sql, inArray, desc } from "drizzle-orm";
+import { eq, and, or, sql, inArray, desc } from "drizzle-orm";
 import { IPostRepository, QueryOptions } from "../interfaces";
 import { isUUID } from "@/utils/uuid";
 
@@ -181,7 +181,13 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
       // Escape ILIKE wildcards in the user's input so a literal "%" or "_" is matched
       // literally instead of acting as a pattern; "\" is Postgres's default LIKE escape char.
       const escapedSearch = query.search.replace(/[\\%_]/g, "\\$&");
-      conditions.push(sql`${posts.title}::text ILIKE ${`%${escapedSearch}%`}`);
+      const pattern = `%${escapedSearch}%`;
+      conditions.push(
+        or(
+          sql`${posts.title}::text ILIKE ${pattern}`,
+          sql`${posts.description}::text ILIKE ${pattern}`
+        )!
+      );
     }
 
     const queryOptions: any = {

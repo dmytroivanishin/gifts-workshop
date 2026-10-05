@@ -1,6 +1,20 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin", "cyrillic"],
+  style: ["normal", "italic"],
+  variable: "--font-heading",
+  display: "swap",
+});
 import { ReduxProvider } from "@/store/Provider";
 import { I18nProvider } from "@/i18n";
 import { systemTextService } from "@/modules/core/container";
@@ -45,7 +59,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className="font-sans h-full antialiased"
+      className={`${inter.variable} ${playfairDisplay.variable} font-sans h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ReduxProvider>

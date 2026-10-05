@@ -70,7 +70,13 @@ export class CategoryService implements ICategoryService {
           { field: "parentId", message: "Self-referencing parent is not allowed" }
         ]);
       }
-      
+
+      if (!categoriesList.some((c) => c.id === body.parentId)) {
+        throw new ValidationError("Parent category does not exist", [
+          { field: "parentId", message: "Parent category not found" }
+        ]);
+      }
+
       let currentParentId = body.parentId;
       const visited = new Set<string>();
       

@@ -1,10 +1,9 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, type ComponentType } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import * as LucideIcons from "lucide-react";
-import { ChevronLeft, Loader2, ZoomIn } from "lucide-react";
+import { ChevronLeft, Loader2, ZoomIn, Link as LinkIcon, Globe, Phone, MessageCircle } from "lucide-react";
 import { FaTelegramPlane, FaInstagram, FaVk, FaEnvelope, FaPinterest, FaWhatsapp, FaFacebook, FaLinkedin } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useGetPostByIdQuery } from "@/store/api";
@@ -71,7 +70,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     console.error("Failed to parse NEXT_PUBLIC_SOCIAL_LINKS");
   }
 
-  const ICON_MAP: Record<string, any> = {
+  const ICON_MAP: Record<string, ComponentType<{ size?: number }>> = {
     telegram: FaTelegramPlane,
     instagram: FaInstagram,
     vk: FaVk,
@@ -80,6 +79,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     whatsapp: FaWhatsapp,
     facebook: FaFacebook,
     linkedin: FaLinkedin,
+    website: Globe,
+    phone: Phone,
+    messenger: MessageCircle,
   };
 
   return (
@@ -188,7 +190,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
               <div className="flex flex-wrap gap-3">
                 {socialLinks.map((social, idx) => {
                   const iconKey = social.icon.toLowerCase();
-                  const IconComponent = ICON_MAP[iconKey] || (LucideIcons as any)[social.icon] || LucideIcons.Link;
+                  const IconComponent = ICON_MAP[iconKey] || LinkIcon;
                   return (
                     <a
                       key={idx}
