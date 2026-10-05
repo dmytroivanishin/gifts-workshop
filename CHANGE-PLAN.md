@@ -49,6 +49,31 @@ Running list of open steps for this repo. It is imported into `CLAUDE.md`, so it
 - Before running it, the dev DB needs a one-time check for any already-existing dangling `parent_id`/`reply_id` values — the migration fails outright if any exist (Postgres refuses to add a FK constraint that current data already violates).
 - **Need:** your explicit "да" to proceed with the migration itself (`drizzle-kit generate` + apply), per the no-migration-without-asking rule. Until then, only the app-level checks protect these columns.
 
+### CP-23 · HTTP cache headers for public GETs (added 2026-10-05)
+- Public list/read endpoints (`/posts`, `/categories`, `/collections`, `/tags`, `/colors`, `/system-texts`) send no `Cache-Control`; every request hits Postgres. Pure code (response headers in controllers or a shared helper), no migration/config. See `PRODUCTION-READINESS.md` → Performance.
+
+### CP-24 · Seed loaders for categories/tags/colors/collections (added 2026-10-05)
+- Only `system_texts` has a runner (`runSystemTextsSeed.ts`). The other seed JSONs (`categories`, `categories_to_tags`, `collections`, `colors`, `tags`, `users`) have no loader. Pure code (new `tsx` scripts following the existing one), no migration. See `PRODUCTION-READINESS.md` → Database.
+
+### CP-25 · Deployment bundle: Dockerfile, health endpoint, migration/rollback decisions (added 2026-10-05, this is blocker B8)
+- Multi-stage Dockerfile (`output: "standalone"`, `NEXT_PUBLIC_*` as build args, secrets as runtime env, a base image supporting `sharp`), `GET /api/health` (checks DB), decide `drizzle-kit migrate` in the deploy command vs. a pre-start script, decide a rollback strategy (Drizzle has no down migrations). New files, not an edit to an existing migration/config, but large enough to want a plan presented before writing it. See `PRODUCTION-READINESS.md` → Deployment.
+
+### CP-26 · Cache `system_texts`, revalidate on admin edit (added 2026-10-05)
+- Root layout reads up to 2000 `system_texts` rows from Postgres on every request. Pure code (Next 16 caching primitives — check `node_modules/next/dist/docs/` first per the house rule), no migration/config. See `PRODUCTION-READINESS.md` → Performance.
+
+### CP-27 · Rate limiter: single-process memory only, no shared store (added 2026-10-05)
+- `rate-limiter-flexible`'s in-memory store means counters don't survive a restart and don't work across more than one app instance. A Redis-backed store fixes this but is a **new dependency** — needs the same explicit go-ahead as any other package addition (`CLAUDE.md` → Dependencies). Low priority until more than one instance is actually planned. See `PRODUCTION-READINESS.md` → Rate limiting.
+
+### CP-28 · "Premature refresh" heuristic (presented 2026-09-28 and 2026-10-01, declined both times)
+- Revoking the whole token family when refreshing with >2 min of access-token life left can log out a legitimate admin (parallel tabs, retries). Raised twice already and not selected either time — listed here only so it isn't silently forgotten; not on the active queue unless you ask for it again.
+
+### CP-29 · `users.password` design decision (not decided)
+- A constant placeholder string is stored for every admin row since there's no real password-login flow. Options: make the column nullable, or drop it and adjust the one remaining write path (Google-login auto-provisioning). A decision, not a one-line fix.
+
+### CP-30 · Planned-but-unbuilt features from the original plan (added 2026-10-05, different in kind — needs a scope decision)
+- These are missing **features**, not bugs/quality issues: multi-select category filter (today a single `?category=` value, a parent expands to its children), Archive view with restore (today just a status badge/filter), profile editing, a SEO settings page (slugs are auto-generated from titles today), the `Language` table (locales currently come from `NEXT_PUBLIC_SUPPORTED_LOCALES`, works fine as is). See `DEVIATIONS.md` → `[gap]` entries for the full list with file references.
+- **Need:** do you want this folded into the same sequential queue as the fixes above, or tracked separately and started only when you explicitly ask? Building a feature is different work (new UI, new endpoints) than fixing existing code, and some of these may not be worth the effort depending on usage (e.g. the `Language` table arguably isn't needed at all).
+
 ### CP-17 · SEO and metadata/semantics review (added 2026-10-02)
 Not started — a dedicated review, not a quick fix. Current state, checked in code before writing this down:
 - **Post pages already pull keywords from tags**, not a gap: `projects/[slug]/layout.tsx`'s `generateMetadata` sets `keywords: extractLocalizedTags(post.tags)`. But there's a stale comment right above it ("Filter tags to only include the current locale if they are formatted properly... otherwise just use all of them") describing locale-filtering that was never actually implemented — `keywords = allKeywords` just passes everything through unfiltered. Verify/fix the locale-filtering before calling this "done".
@@ -59,6 +84,7 @@ Not started — a dedicated review, not a quick fix. Current state, checked in c
 - hreflang/`alternates` — already present on both layouts with metadata; re-verify correctness rather than assume.
 - No structured data (JSON-LD) anywhere today (Product/Article schema) — decide if it's worth adding.
 - Broader semantic-HTML audit (heading hierarchy, alt text coverage, landmark regions) usually travels with an "SEO pass" — fold it in here rather than opening a separate item.
+- **Public pages are client-rendered** (RTK Query), so post content isn't in the initial HTML — a real SEO gap, not just a nice-to-have. Server-fetching the first page of posts and the project page content is an architecture change (added 2026-10-05, found while re-auditing the backlog), bigger than the other bullets here — scope it as its own step inside this round, not assumed free.
 - To be scoped as its own numbered-issue list (with subpoints, as above) when this round starts, same format as the small-fix rounds.
 
 ### CP-18 · Code-standard / refactor pass (added 2026-10-02, partly done the same day)
