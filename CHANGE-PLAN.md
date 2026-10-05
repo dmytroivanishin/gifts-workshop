@@ -57,6 +57,7 @@ Running list of open steps for this repo. It is imported into `CLAUDE.md`, so it
 
 ### CP-25 · Deployment bundle: Dockerfile, health endpoint, migration/rollback decisions (added 2026-10-05, this is blocker B8)
 - Multi-stage Dockerfile (`output: "standalone"`, `NEXT_PUBLIC_*` as build args, secrets as runtime env, a base image supporting `sharp`), `GET /api/health` (checks DB), decide `drizzle-kit migrate` in the deploy command vs. a pre-start script, decide a rollback strategy (Drizzle has no down migrations). New files, not an edit to an existing migration/config, but large enough to want a plan presented before writing it. See `PRODUCTION-READINESS.md` → Deployment.
+- Folded in (all deploy-time decisions, not separate code fixes): add HSTS once behind Coolify's TLS; decide rate limiting for ordinary public GETs and the multi-instance/`X-Forwarded-For` (Traefik-only) assumption in `utils/rateLimit.ts`; never reuse `docker-compose.yml`'s hardcoded dev DB/MinIO credentials in production — generate real ones in Coolify's secret store; Postgres/MinIO backup frequency and retention **(you)** — not a Claude code task.
 
 ### CP-26 · Cache `system_texts`, revalidate on admin edit (added 2026-10-05)
 - Root layout reads up to 2000 `system_texts` rows from Postgres on every request. Pure code (Next 16 caching primitives — check `node_modules/next/dist/docs/` first per the house rule), no migration/config. See `PRODUCTION-READINESS.md` → Performance.
@@ -73,6 +74,23 @@ Running list of open steps for this repo. It is imported into `CLAUDE.md`, so it
 ### CP-30 · Planned-but-unbuilt features from the original plan (added 2026-10-05, different in kind — needs a scope decision)
 - These are missing **features**, not bugs/quality issues: multi-select category filter (today a single `?category=` value, a parent expands to its children), Archive view with restore (today just a status badge/filter), profile editing, a SEO settings page (slugs are auto-generated from titles today), the `Language` table (locales currently come from `NEXT_PUBLIC_SUPPORTED_LOCALES`, works fine as is). See `DEVIATIONS.md` → `[gap]` entries for the full list with file references.
 - **Need:** do you want this folded into the same sequential queue as the fixes above, or tracked separately and started only when you explicitly ask? Building a feature is different work (new UI, new endpoints) than fixing existing code, and some of these may not be worth the effort depending on usage (e.g. the `Language` table arguably isn't needed at all).
+
+### CP-31 · Testing infrastructure from scratch (added 2026-10-05, found while re-auditing — no CP-ID existed for this before)
+- `vitest` and Playwright are installed and scripts exist (`scripts/run-test.sh`), but there is no `vitest.config`, no `playwright.config`, and zero test files — `PRODUCTION-READINESS.md` → Testing has been saying this since the start without ever getting its own tracked item. `config/test.env` still lacks `JWT_SECRET` (tied to CP-4).
+- Suggested first tests (already listed in `PRODUCTION-READINESS.md`): proxy auth matrix (which method+path needs a token), token rotation/reuse detection, category cycle guard, media in-use delete guard, post status visibility.
+- Large enough to want a scoping conversation (unit vs. API vs. e2e, how much coverage) before writing configs/specs — not a quick fix.
+
+### CP-32 · Design visual-language audit (added 2026-10-05, found while re-auditing)
+- `DEVIATIONS.md` → "Design & UI" flags that the exact hover/motion/typography values in `.agents/rules/design.md` (card lift `translateY(-6px)`, image `scale(1.03)`, like-icon easing, transition durations, heading/body line-heights) were never actually checked against the implemented CSS — only their general presence was. `/portfolio-design-check` is built for exactly this but hasn't been run as a dedicated pass.
+
+### CP-33 · Strict, nonce-based CSP (added 2026-10-05, found while re-auditing)
+- The baseline CSP (`next.config.ts`, added 2026-09-28) keeps `script-src`/`style-src` `'unsafe-inline'` because App Router RSC streaming and framer-motion inline styles need it. A stricter CSP needs a per-request nonce generated in `proxy.ts` and threaded through `next/script`/inline `<style>` — a real architecture change, not a config tweak, so it needs a plan before touching `next.config.ts`/`proxy.ts`.
+
+### CP-34 · Repo cleanup: stale leftovers and `.agents/` docs drift (added 2026-10-05, found while re-auditing)
+- Unused leftovers: `public/{next,vercel,file,globe,window}.svg`, `public/images/old.*.png` (create-next-app boilerplate, confirmed unreferenced).
+- Root scratch files: `scratch_findKeys.mjs` (a one-off i18n key scanner, tracked in git), `tags_review.md` (a Russian tag brainstorm, not project docs), `audit_results.md`/`report.md` (earlier working notes, partly obsolete — `AUDIT-SUMMARY.md` already records which findings still hold).
+- `migrations/seeds/pull-system-texts.js` writes to a stale path (`src/migrations/initial-data`; the real one is `src/migrations/seeds/initial-data`) — a small bug, not just drift.
+- `.agents/rules/{backend.md,system_rules.md}` still describe an Express stack and reference folders that don't exist (`.agents/plans/`, `.agents/summaries/`); `rules/design.md`/`workflows/review.md` reference a `theme_colors.md` that was never real (the actual files are `project-plan/colors.md` + `theme_design.md`); `rules/quota-rules.md` is an obsolete AI-token-economy note; `project-plan/backend.md` describes `Post.media` as embedded JSONB and a `Language` model that don't match the code. All low priority, doc-only, no code risk.
 
 ### CP-17 · SEO and metadata/semantics review (added 2026-10-02)
 Not started — a dedicated review, not a quick fix. Current state, checked in code before writing this down:
@@ -95,6 +113,8 @@ Mostly not started — large enough to need its own scoping session, not a 5-iss
 - ~~Refresh-token minting + `tokenRepository.createSession(...)` + cookie-setting copy-pasted 2-3× per auth route.~~ **Done 2026-10-02** (second round, see CP-20): shared `issueSession()` (`utils/authSession.ts`).
 - `console.*` → `logger`: **partly done 2026-10-02** (second round, see CP-20) — 6 of 40 call sites, the genuinely server-side ones. The remaining ~34 are inside `"use client"` admin/shared components; winston (`src/modules/logger`) is a Node-only library and cannot run in the browser, so these need their own decision (leave as `console.*` permanently, or build a small client-safe logger/error-reporting path) rather than a straight swap — not started.
 - `postVisibility.ts`'s `resolveStatusFilter` readability cleanup (already tracked under CP-6, fold in rather than duplicate). Still not started.
+- `TagService.deleteTag` redundantly rewrites categories on top of the `ON DELETE CASCADE` that already handles it (found while auditing, cosmetic). Still not started.
+- Media `orientation` is stored lowercase (`"landscape"`) while the Zod enum/type expects `"Portrait" | "Landscape"` (found while auditing, not yet causing a visible bug, worth normalizing). Still not started.
 
 ### CP-19 · Project documentation pass: README and docs completeness (added 2026-10-02)
 Not started.
