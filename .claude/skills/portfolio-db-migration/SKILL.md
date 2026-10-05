@@ -24,7 +24,7 @@ Arguments received: `$ARGUMENTS`
 ## Process
 
 1. **Diff intent.** Compare `schema.ts` with the last snapshot (`meta/0000_snapshot.json`) and the SQL: list new/changed/removed tables, columns, constraints and indexes. State the intent in one sentence.
-2. **Schema rules.** Every FK column has an `index(...)`; ownership `user_id` → `ON DELETE SET NULL`; join tables → `CASCADE` with a composite primary key; lookup data referenced by content (`posts.poster_id`, `categories.color_id`) → `RESTRICT`; localized text as `jsonb(...).$type<LocalizedText>()`; slugs `unique`; `NOT NULL` additions on existing tables need a default or a backfill. Known open items you may fix in a migration when asked: FKs for `categories.parent_id` and `comments.reply_id`; `users.password` nullable or removed; a trigram/GIN index for search.
+2. **Schema rules.** Every FK column has an `index(...)`; ownership `user_id` → `ON DELETE SET NULL`; join tables → `CASCADE` with a composite primary key; lookup data referenced by content (`posts.poster_id`, `categories.color_id`) → `RESTRICT`; localized text as `jsonb(...).$type<LocalizedText>()`; slugs `unique`; `NOT NULL` additions on existing tables need a default or a backfill. Known open items you may fix in a migration when asked: FKs for `categories.parent_id` and `comments.reply_id` (discussed in detail with the owner 2026-10-05, blocked on their explicit go-ahead, `CHANGE-PLAN.md` CP-22 — check for existing dangling values first, the migration fails if any exist); `users.password` nullable or removed; a trigram/GIN index for search.
 3. **Generate** (only with `--generate`). The command needs `DB_URI` in the environment and writes into `src/migrations/sql`:
    ```bash
    set -a; source config/local.env; set +a

@@ -35,7 +35,7 @@ Arguments received: `$ARGUMENTS`
    - buttons and links: transition `0.2–0.3s ease`;
    - page transitions: Framer Motion fade-in + slide-up.
    These exact values were **not** audited before (`DEVIATIONS.md` says so): report `matches` / `differs (found value)` / `not found`.
-5. **Typography.** Playfair Display for headings, Inter for UI/body; headings `line-height: 1.2`, weight 500–600; body `line-height: 1.5`, size 0.9–1rem; tags/meta: `letter-spacing: 0.06em`, uppercase, weight 700. Fonts should come from `next/font` (today they come from a CSS `@import` on Google Fonts; do not add more).
+5. **Typography.** Playfair Display for headings, Inter for UI/body; headings `line-height: 1.2`, weight 500–600; body `line-height: 1.5`, size 0.9–1rem; tags/meta: `letter-spacing: 0.06em`, uppercase, weight 700. Fonts come from `next/font` (`Inter`/`Playfair Display` via `next/font/google`, since 2026-10-05; do not go back to a CSS `@import`).
 6. **Shape.** Cards/containers 12px radius (`rounded-xl` / `--radius`); controls, search bars, category tags full pill (`rounded-full`, 100px).
 7. **States.** No blank screens: skeletons or elegant placeholders for loading and empty lists; error states use the shared components.
 8. **No dark mode.** No `dark:` variants and no `next-themes` outside shadcn primitives (`sonner.tsx` uses `next-themes` today); hierarchy comes from white space, shadows and blur.
