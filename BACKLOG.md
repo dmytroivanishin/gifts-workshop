@@ -14,15 +14,14 @@ regenerate it rather than trusting it blindly after a long gap.
 
 ## 🔴 Waiting on you (nothing to pick here — I need an answer/action first)
 
-- **CP-2** — upgrade `next`/`sharp`, run `npm audit fix` yourself, paste back `npm audit --omit=dev` + build output.
-- **CP-4** — log in by hand and check B1–B6 in the browser; decide whether to add a mock `JWT_SECRET` to `config/test.env`.
+- **CP-4** — log in by hand and check B1–B6 in the browser; decide whether to add a mock `JWT_SECRET` to `config/test.env`; also now covers a real Google login + browser image upload against the upgraded `next`/`sharp` (former CP-2 manual-verification step — Google OAuth can't be scripted).
 - **CP-29** — design decision on `users.password` (nullable column, or drop it) — not a code task, your call first.
 
 ## 🟢 Ready to pick right now — pure code, no migration/config/dependency
 
 - **CP-23** — HTTP cache headers on public GET endpoints.
 - **CP-24** — seed loaders for categories/tags/colors/collections (only `system_texts` has one today).
-- **CP-26** — cache `system_texts`, revalidate on admin edit.
+- **CP-5** — second JWT-check layer inside write controllers (unblocked — the Next upgrade it waited on is done).
 - **CP-6** — small leftovers: `resolveStatusFilter` readability cleanup, `meta.totalItems`/`GET /collections/:id/posts` consistency.
 - **CP-32** — design visual-language audit (`/portfolio-design-check`, read-only, then report what's off).
 - **CP-34** — repo cleanup: stale leftover files (`public/*.svg`, old images, scratch scripts, obsolete `.agents/` doc drift) + one real small bug (`pull-system-texts.js` writes to a stale path).
@@ -34,7 +33,6 @@ regenerate it rather than trusting it blindly after a long gap.
 - **CP-27** — Redis-backed rate limiter (new npm dependency).
 - **CP-33** — strict, nonce-based CSP (`next.config.ts` + `proxy.ts` architecture change — wants a plan first, not just a go-ahead).
 - **CP-8** — set `S3_PUBLIC_URL` for production (blocked: no domain/server yet, not actionable today).
-- **CP-5** — second JWT-check layer inside controllers (deliberately deferred until after CP-2's Next upgrade).
 
 ## 🔵 Big pieces — want a scoping conversation before any code, not a quick fix
 
@@ -53,3 +51,6 @@ regenerate it rather than trusting it blindly after a long gap.
 ## ✅ Done (brief — full detail and file lists are in `CHANGE-PLAN.md` → "Done")
 
 CP-1, CP-3, CP-7, CP-9, CP-10, CP-11, CP-12, CP-13, CP-14, CP-15, CP-20, CP-21 — six rounds of small fixes (2026-09-19 through 2026-10-05) covering: anonymous-read blockers B1–B6, rate limiting, security headers, OAuth hardening (`state`+PKCE+verified ID token), dynamic sitemap, `S3_PUBLIC_URL`, media-list auth gate, dashboard `status=all`, upload MIME hardening, dead-code removal (`/users` writes), `token_sessions` purge, search escaping, `replyId`/email-allowlist checks, `adminWrite` rate limit, malformed-JSON/non-UUID handling, repository-bypass fixes, shared `issueSession()`, `next/image` on the public gallery, `parentId` existence check, `lucide-react` tree-shaking, `DrizzleDatabase` singleton on `globalThis`, search-by-description, and self-hosted fonts via `next/font`.
+
+- **CP-2 (2026-10-05, one-off exception — you run upgrades normally).** `next` → 16.3.8, `sharp` → 0.35.4, `eslint-config-next` → 16.3.8, `shadcn` → `devDependencies`. `npm audit --omit=dev`: 0 critical/high, 5 moderate (all accepted). Manual Google-login + upload check still needs you (folded into CP-4).
+- **CP-26 (2026-10-05).** `system_texts` cached via `unstable_cache`, invalidated on admin edit via `revalidateTag`.
