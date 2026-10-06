@@ -9,13 +9,8 @@ export async function GET(
   const { id } = await params;
   try {
     const status = await resolveStatusFilter(undefined);
-    const posts = await postService.getFilteredPosts({ collection: id, status });
-    return sendSuccess(posts, {
-      page: 1,
-      nextPage: null,
-      prevPage: null,
-      totalItems: posts.length,
-    });
+    const result = await postService.getFilteredPosts({ collection: id, status });
+    return sendSuccess(result.data, result.meta);
   } catch (error: any) {
     return sendError(error);
   }
