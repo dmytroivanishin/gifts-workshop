@@ -41,7 +41,7 @@ export class MediaController {
       if (contentType.includes("multipart/form-data")) {
         const formData = await request.formData();
         const files = formData.getAll("files") as File[];
-        
+
         const userId = await getUserId();
         if (!userId) {
           throw new UnauthorizedError("Unauthorized");

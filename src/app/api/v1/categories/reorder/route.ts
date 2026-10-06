@@ -1,5 +1,6 @@
 import { categoryController } from "@/modules/core/container";
+import { withAdminAuth } from "@/utils/withAdminAuth";
 
-export async function PUT(request: Request) {
-  return categoryController.reorderCategories(request);
-}
+export const PUT = withAdminAuth((request: Request) =>
+  categoryController.reorderCategories(request)
+);

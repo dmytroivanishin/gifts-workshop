@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { verifyAdminToken } from "./jwt";
 import { userRepository } from "@/repositories/drizzle/userRepository";
+import { UnauthorizedError } from "@/common/errors/unauthorized";
 
 export async function getUserId(): Promise<string | undefined> {
   try {
@@ -32,4 +33,15 @@ export async function isAdminRequest(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// Second, independent check for write controllers: proxy.ts is the only other gate on writes
+// today, so this re-verifies the admin token in the controller itself, and throws instead of
+// letting a missing/invalid token through as an undefined userId.
+export async function requireAdmin(): Promise<string> {
+  const userId = await getUserId();
+  if (!userId) {
+    throw new UnauthorizedError();
+  }
+  return userId;
 }
