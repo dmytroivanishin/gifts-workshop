@@ -1,5 +1,7 @@
+> Moved from `.agents/rules/design.md` (2026-10-06, CP-34). This is the project's active visual-language spec — checked by `/portfolio-design-check` — not superseded by `CLAUDE.md` the way the other retired `.agents/rules/*` files were.
+
 ## Visual Language
-- **Color Palette**: Strictly follow colors defined in `.agents/theme_colors.md`. Use these tokens consistently across all components.
+- **Color Palette**: Strictly follow colors defined in `docs/project-plan/colors.md` (`theme_design.md` for the shadcn CSS variables). Use these tokens consistently across all components.
 - **Glassmorphism**: Use translucent backgrounds with `backdrop-blur` for overlays, navbars, and cards.
 - **Gradients**: Avoid flat colors for large areas. Use subtle gradients with curated colors from the palette.
 - **Shadows**: Use very soft, layered shadows for depth, e.g., `0 12px 30px rgba(0, 0, 0, 0.08)`.

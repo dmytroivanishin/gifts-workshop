@@ -7,7 +7,7 @@ allowed-tools: Read Grep Glob
 
 # Portfolio Architecture Check
 
-Verifies module boundaries and the global coding standards. Sources: `.agents/rules/architect.md` (still valid) and the layer rules in `CLAUDE.md` §2. Read-only.
+Verifies module boundaries and the global coding standards. Sources: `CLAUDE.md`'s Working Agreements (TS/functional-style rules, formerly `.agents/rules/architect.md` — folded in and that file retired 2026-10-06) and the layer rules in `CLAUDE.md` §2. Read-only.
 
 ## Trigger words
 
@@ -33,7 +33,7 @@ Run each check with `Grep` over the target, then open the hits and confirm.
 6. **Utilities and types:** `src/utils/*` must not grow business logic (`utils/auth.ts` already depends on `userRepository`; do not add more). Domain types live in `src/types`; no Drizzle table types leak to the frontend (`grep` client components, marked `"use client"`, for imports of `@/repositories`, `@/services`, `@/controllers`, `@/modules/core/container`, `drizzle-orm`).
 7. **Frontend layering:** server-only modules (`env.ts`, container, storage) are never imported by `"use client"` files; server state goes through RTK Query in `src/store/api.ts`; components live in `components/{ui,shared,features}` (details: `portfolio-frontend-standards`).
 8. **Strict interfaces:** every module boundary has an interface or DTO; a new public method is added to the interface first.
-9. **TypeScript excellence** (`architect.md`): no `any` (use `unknown`), explicit return types, `interface` vs `type`, `as const` over `enum`, Zod before casting external data, `Pick`/`Omit`/`Partial`/`Readonly`.
+9. **TypeScript excellence** (`CLAUDE.md`'s Working Agreements): no `any` (use `unknown`), explicit return types, `interface` vs `type`, `as const` over `enum`, Zod before casting external data, `Pick`/`Omit`/`Partial`/`Readonly`.
 10. **Functional style:** `.map/.filter/.reduce`, immutability, one function = one action, comments explain "why".
 11. **Error handling:** `BaseError` subclasses from `src/common/errors/*` (`ConflictError`, `ForbiddenError`, `InternalServerError`, `NotFoundError`, `UnauthorizedError`, `ValidationError`); one try/catch at the controller entry.
 

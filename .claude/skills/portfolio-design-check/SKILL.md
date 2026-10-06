@@ -7,7 +7,7 @@ allowed-tools: Read Grep Glob
 
 # Portfolio Design Check
 
-Read-only visual-language audit. Sources: `.agents/rules/design.md` (the rules), `.agents/project-plan/colors.md` (palette: Ivory, Brown, Orange, Tan, … scales 50–950), `.agents/project-plan/theme_design.md` (shadcn CSS variables), `src/app/globals.css` (the implemented tokens), `.agents/project-plan/design.jpg` and `.agents/project-plan/example-ui/` (reference images). The `theme_colors.md` that `design.md` and the old review workflow mention does not exist; use the files above. Split out from step 2 of `portfolio-code-review`.
+Read-only visual-language audit. Sources: `docs/guidelines/design.md` (the rules, moved from `.agents/rules/` 2026-10-06), `docs/project-plan/colors.md` (palette: Ivory, Brown, Orange, Tan, … scales 50–950), `docs/project-plan/theme_design.md` (shadcn CSS variables), `src/app/globals.css` (the implemented tokens), `docs/project-plan/design.jpg` and `docs/project-plan/example-ui/` (reference images). Split out from step 2 of `portfolio-code-review`.
 
 ## Trigger words
 

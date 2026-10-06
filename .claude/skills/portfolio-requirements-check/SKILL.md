@@ -1,6 +1,6 @@
 ---
 name: portfolio-requirements-check
-description: Compares the project plans in .agents/project-plan with the current code and classifies every difference (intentional, quality, gap, added); optionally refreshes DEVIATIONS.md. Use when the plans or code changed, when asked what is implemented vs planned, or before writing new plan-driven work.
+description: Compares the project plans in docs/project-plan with the current code and classifies every difference (intentional, quality, gap, added); optionally refreshes DEVIATIONS.md. Use when the plans or code changed, when asked what is implemented vs planned, or before writing new plan-driven work.
 argument-hint: "[--plan general|backend|frontend] [--update]"
 allowed-tools: Read Grep Glob Bash(git log *) Bash(git diff *)
 ---
@@ -17,7 +17,7 @@ requirements check, plan vs code, what is missing from the plan, deviations, is 
 
 Arguments received: `$ARGUMENTS`
 
-- `--plan general|backend|frontend` (default: all three): which file in `.agents/project-plan/` to check (`general.md`, `backend.md`, `frontend.md`; `colors.md` and `theme_design.md` belong to `portfolio-design-check`; `diagram.jpg` = REST + DB schema, `design.jpg` = UI reference).
+- `--plan general|backend|frontend` (default: all three): which file in `docs/project-plan/` to check (`general.md`, `backend.md`, `frontend.md`; `colors.md` and `theme_design.md` belong to `portfolio-design-check`; `diagram.jpg` = REST + DB schema, `design.jpg` = UI reference).
 - `--update`: after the check, rewrite the affected entries in `DEVIATIONS.md` (only that file).
 
 ## Process
@@ -27,11 +27,11 @@ Arguments received: `$ARGUMENTS`
 3. **Locate each in code.** Grep for the route in `src/app/api/v1`, the field in `schema.ts` / `src/types`, the screen in `src/app`, the rule in services. Open the file and confirm; never rely on memory or on `DEVIATIONS.md` alone, since it can be stale (compare its date with `git log -1 --format=%cs -- DEVIATIONS.md`, and look at `git log --since` for later code changes).
 4. **Classify** with the tags used in `DEVIATIONS.md`:
    - `[intentional]`: different but valid approach; the plan is outdated;
-   - `[quality]`: the code diverges from the project's own rules (`.agents/rules/*`, layering, contracts) and is a cleanup candidate;
+   - `[quality]`: the code diverges from the project's own rules (`CLAUDE.md`'s Working Agreements, `docs/guidelines/*`, layering, contracts) and is a cleanup candidate;
    - `[gap]`: planned, not implemented;
    - `[added]`: in code, absent from the plans.
 5. **Judge quality only against patterns the project itself defines** (layering, `BaseError`, Zod at the edge, response envelope, i18n rules); do not propose a different stack or architecture.
-6. **Docs drift.** Note plan/rule files that reference things that do not exist (for example `theme_colors.md`, `.agents/plans/`, Express) and record them under "Documentation drift". Do not edit `.agents/` files unless the user asks.
+6. **Docs drift.** Note plan files that reference things that do not exist or no longer match the code (for example `docs/project-plan/backend.md` still describing Express) and record them under "Documentation drift". `docs/project-plan/*` is read-only plan history, not spec — do not edit it unless the user asks.
 7. **With `--update`:** edit only the affected bullets of `DEVIATIONS.md`, keep the tag vocabulary and file references, update the verification date, and mention any status change in `CLAUDE.md` §1/§11 as a suggestion.
 
 ## Output

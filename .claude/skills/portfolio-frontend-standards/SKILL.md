@@ -7,7 +7,7 @@ allowed-tools: Read Grep Glob
 
 # Portfolio Frontend Standards
 
-Rules for UI code. Source: `.agents/rules/frontend.md` and `.agents/rules/design.md`, corrected where the code differs (see "Where the code differs from `frontend.md`"). Visual rules are checked by `portfolio-design-check`. The Next.js in this repo is **16**: read the relevant guide in `node_modules/next/dist/docs/` before writing Next-specific code (`middleware.ts` is now `proxy.ts`, `params` is a `Promise`).
+Rules for UI code. Source: `docs/guidelines/frontend.md` and `docs/guidelines/design.md` (moved from `.agents/rules/` 2026-10-06), corrected where the code differs (see "Where the code differs from `frontend.md`"). Visual rules are checked by `portfolio-design-check`. The Next.js in this repo is **16**: read the relevant guide in `node_modules/next/dist/docs/` before writing Next-specific code (`middleware.ts` is now `proxy.ts`, `params` is a `Promise`).
 
 ## Trigger words
 

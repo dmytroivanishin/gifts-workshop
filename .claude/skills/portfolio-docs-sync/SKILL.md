@@ -7,7 +7,7 @@ allowed-tools: Read Grep Glob Edit Bash(git log *) Bash(git diff *) Bash(git sta
 
 # Portfolio Docs Sync
 
-Keeps the generated documentation true. **The code is the source of truth**; the docs follow it. Scope of edits: `CLAUDE.md`, `DEVIATIONS.md`, `PRODUCTION-READINESS.md`, `AUDIT-SUMMARY.md`, `SKILL-CANDIDATES.md`, `CHANGE-PLAN.md`. This skill never edits `src/`, migrations, configs or `.agents/`.
+Keeps the generated documentation true. **The code is the source of truth**; the docs follow it. Scope of edits: `CLAUDE.md`, `DEVIATIONS.md`, `PRODUCTION-READINESS.md`, `AUDIT-SUMMARY.md`, `SKILL-CANDIDATES.md`, `CHANGE-PLAN.md`. This skill never edits `src/`, migrations, configs or `docs/project-plan/` (read-only plan history, not spec — see `docs/guidelines/` for the two rule files that moved out of `.agents/` 2026-10-06 and are still occasionally corrected).
 
 ## Trigger words
 
@@ -47,7 +47,7 @@ Arguments received: `$ARGUMENTS`
 
 1. **Doc changes made:** `file | section | before → after | evidence (file:line)`.
 2. **Unverified items** and the exact commands the user should run to verify them.
-3. **Drift you found but did not fix** (for example in `.agents/` or in skills), and why.
+3. **Drift you found but did not fix** (for example in `docs/project-plan/` or in skills), and why.
 
 ## Example usage
 

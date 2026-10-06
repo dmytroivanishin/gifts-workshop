@@ -7,7 +7,7 @@ allowed-tools: Read Grep Glob Bash(git diff *) Bash(git log *) Bash(git status *
 
 # Portfolio Code Review
 
-Read-only review of code in this repository against the project's own rules. It reports findings with a suggested fix for each; it does not edit files. Ported from `.agents/workflows/review.md` (5 steps), corrected against the current code, which is the source of truth (`CLAUDE.md`, `DEVIATIONS.md`).
+Read-only review of code in this repository against the project's own rules. It reports findings with a suggested fix for each; it does not edit files. Originally ported from the project's `.agents/workflows/review.md` (5 steps; that file and the rest of `.agents/` were retired 2026-10-06, CP-34 — this skill is the living, corrected version), checked against the current code, which is the source of truth (`CLAUDE.md`, `DEVIATIONS.md`).
 
 ## Trigger words
 
@@ -24,8 +24,8 @@ Arguments received: `$ARGUMENTS`
 
 1. **Scope.** For `diff`, run `git status --short` and `git diff HEAD` (add `--stat` first for size). Read every changed file in full, not only the hunks: most rules need the surrounding code. Tag each file backend / frontend / shared.
 2. **Step 1: Architectural alignment.** Load `.claude/skills/portfolio-architecture-check/SKILL.md` and apply its checks to the scope (layer boundaries, container wiring, no server code in client components).
-3. **Step 2: Design and UX** (frontend files only). Apply the checklist from `.claude/skills/portfolio-design-check/SKILL.md`. Note: the tokens live in `.agents/project-plan/colors.md`, `.agents/project-plan/theme_design.md` and `src/app/globals.css`. The `theme_colors.md` mentioned in the old workflow does not exist.
-4. **Step 3: TypeScript and type safety** (source: `.agents/rules/architect.md`).
+3. **Step 2: Design and UX** (frontend files only). Apply the checklist from `.claude/skills/portfolio-design-check/SKILL.md`. Note: the tokens live in `docs/project-plan/colors.md`, `docs/project-plan/theme_design.md` and `src/app/globals.css`.
+4. **Step 3: TypeScript and type safety** (source: `CLAUDE.md`'s Working Agreements).
    - Zero `any`; `unknown` plus type guards for dynamic values. `catch (error: any)` and `body: any` exist in old code: flag them only when the change adds or touches them.
    - Explicit return types on every function and method.
    - `interface` for object shapes, `type` for unions and aliases, `as const` objects instead of `enum`.
@@ -48,7 +48,7 @@ Arguments received: `$ARGUMENTS`
 A report in the user's language (code, identifiers and paths stay as written):
 
 1. **Verdict:** approve / approve with comments / changes requested, in one line.
-2. **Findings**, most severe first (`HIGH` / `MEDIUM` / `LOW`). For each: `path:line`, the rule (which step), why it matters, and a concise code snippet with the suggested fix (as `review.md` requires).
+2. **Findings**, most severe first (`HIGH` / `MEDIUM` / `LOW`). For each: `path:line`, the rule (which step), why it matters, and a concise code snippet with the suggested fix.
 3. **Pre-existing debt seen in the scope** (one line each, with a pointer to `DEVIATIONS.md`).
 4. **Not reviewed** (files skipped, behavior not run).
 

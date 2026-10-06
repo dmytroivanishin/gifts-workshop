@@ -1,6 +1,4 @@
----
-trigger: always_on
----
+> **Reference material, not the live spec.** Moved from `.agents/rules/frontend.md` (2026-10-06, CP-34). `CLAUDE.md` and the current code in `src/` are authoritative where they disagree with this file — for example, components here use named exports and `src/store/api.ts`, not the default-export/`src/services/` pattern this file describes. Kept for the parts still accurate (component folder split, RTK Query, shadcn usage).
 
 # Frontend Architecture Rules
 
@@ -20,7 +18,7 @@ trigger: always_on
 - **Component Definitions**: One component per file. Export as default.
 
 ## Multi-Area Architecture
-- **Single Theme**: The application uses one global color scheme derived from `theme_colors.md` for both Public and Admin areas.
+- **Single Theme**: The application uses one global color scheme derived from `docs/project-plan/colors.md` + `theme_design.md` for both Public and Admin areas.
 - **Public Area**: High-customized UI. Minimal Shadcn usage (only for core inputs like Search, Buttons, Badges, Poppover, Icons). Focus on custom components and unique layouts.
 - **Admin Area**: Heavy Shadcn usage. Standardized UI components for data management and efficiency.
 - **Strict Interfaces**: Every component must have a `props` interface defined.
