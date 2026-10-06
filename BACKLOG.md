@@ -21,18 +21,12 @@ regenerate it rather than trusting it blindly after a long gap.
 
 - **CP-23** — HTTP cache headers on public GET endpoints.
 - **CP-24** — seed loaders for categories/tags/colors/collections (only `system_texts` has one today).
-- **CP-5** — second JWT-check layer inside write controllers (unblocked — the Next upgrade it waited on is done).
-- **CP-6** — small leftovers: `resolveStatusFilter` readability cleanup, `meta.totalItems`/`GET /collections/:id/posts` consistency.
 - **CP-32** — design visual-language audit (`/portfolio-design-check`, read-only, then report what's off).
-- **CP-34** — repo cleanup: stale leftover files (`public/*.svg`, old images, scratch scripts, obsolete `.agents/` doc drift) + one real small bug (`pull-system-texts.js` writes to a stale path).
 
 ## 🟡 Needs your explicit "да" first (migration / config / new dependency)
 
-- **CP-22** — real FK constraints on `categories.parent_id`/`comments.reply_id` (migration).
-- **CP-16a** — `next.config.ts`: set `experimental.proxyClientMaxBodySize` (fixes a silent upload-truncation bug).
-- **CP-27** — Redis-backed rate limiter (new npm dependency).
 - **CP-33** — strict, nonce-based CSP (`next.config.ts` + `proxy.ts` architecture change — wants a plan first, not just a go-ahead).
-- **CP-8** — set `S3_PUBLIC_URL` for production (blocked: no domain/server yet, not actionable today).
+- **CP-8** — set `S3_PUBLIC_URL` for production (blocked: no domain/server yet, not actionable today — kept as-is, no action until a domain exists).
 
 ## 🔵 Big pieces — want a scoping conversation before any code, not a quick fix
 
@@ -47,6 +41,9 @@ regenerate it rather than trusting it blindly after a long gap.
 ## ⚪ Parked / declined — not on the active queue
 
 - **CP-28** — "premature refresh" token-family revocation heuristic. Presented twice (2026-09-28, 2026-10-01), declined both times. Listed only so it isn't silently forgotten.
+- **CP-22** — real DB-level FK constraints on `categories.parent_id`/`comments.reply_id`. Declined 2026-10-06 — the app-level existence/cycle checks already in place are considered sufficient.
+- **CP-16a** — `next.config.ts`: `experimental.proxyClientMaxBodySize`. Declined 2026-10-06 — upload UI sends one file per request, so no request should need to exceed 10 MB in normal use.
+- **CP-27** — Redis-backed rate limiter. Declined 2026-10-06 — no more than one app instance planned for the foreseeable future.
 
 ## ✅ Done (brief — full detail and file lists are in `CHANGE-PLAN.md` → "Done")
 
@@ -54,3 +51,6 @@ CP-1, CP-3, CP-7, CP-9, CP-10, CP-11, CP-12, CP-13, CP-14, CP-15, CP-20, CP-21 �
 
 - **CP-2 (2026-10-05, one-off exception — you run upgrades normally).** `next` → 16.3.8, `sharp` → 0.35.4, `eslint-config-next` → 16.3.8, `shadcn` → `devDependencies`. `npm audit --omit=dev`: 0 critical/high, 5 moderate (all accepted). Manual Google-login + upload check still needs you (folded into CP-4).
 - **CP-26 (2026-10-05).** `system_texts` cached via `unstable_cache`, invalidated on admin edit via `revalidateTag`.
+- **CP-5 (2026-10-06).** Second, independent auth check on every write route (`withAdminAuth()` in `route.ts`, not in controllers — moved there after you pushed back on controllers knowing about auth).
+- **CP-6 (2026-10-06).** `resolveStatusFilter` readability checked — already clean, no change needed. `GET /collections/:id/posts` double-wrap fixed (was nesting an already-wrapped `{data,meta}` object inside `sendSuccess`'s own wrapping).
+- **CP-34 (2026-10-06).** `.agents/` retired — the project plan and reference material moved to `docs/`, stale/obsolete rule files deleted, nothing kept that CLAUDE.md didn't already supersede. Also deleted: `scratch_findKeys.mjs`, `pull-system-texts.js`, `tags_review.md`, `audit_results.md`, `report.md`, boilerplate `public/*.svg`/`old.*.png`.
