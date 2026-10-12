@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Upload, Trash2, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useDispatch } from "react-redux";
 import { addNotification } from "@/store/slices/notificationSlice";
+import { useGetMediaQuery, useUploadMediaMutation, useDeleteMediaMutation } from "@/store/api";
 
 interface MediaItem {
   id: string;
@@ -14,70 +15,65 @@ interface MediaItem {
   size: string;
 }
 
+// POST /media takes one file per request now, so there's nothing left for the server to cap —
+// this guards the UI's own sequential batch instead: RATE_LIMITS.upload (src/utils/rateLimit.ts)
+// allows 30 requests/minute, so a larger selection would just start failing with 429s partway
+// through the loop.
+const MAX_FILES_PER_UPLOAD = Number(process.env.NEXT_PUBLIC_MAX_FILES_PER_UPLOAD) || 30;
+
 export default function AdminMedia() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const [media, setMedia] = useState<MediaItem[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStats, setUploadStats] = useState({ total: 0, current: 0 });
-  const [isLoading, setIsLoading] = useState(true);
+  const [failedFiles, setFailedFiles] = useState<string[]>([]);
 
-  // Fetch initial media
-  useEffect(() => {
-    const fetchMedia = async () => {
-      try {
-        const res = await fetch('/api/v1/media');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.data) {
-            setMedia(data.data.map((m: any) => ({
-              id: m.id,
-              url: m.thumbnailUrl || m.originalUrl,
-              name: m.originalUrl.split('/').pop() || 'image',
-              size: `${m.width}x${m.height}`
-            })));
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch media", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchMedia();
-  }, []);
+  const { data: mediaData, isLoading } = useGetMediaQuery();
+  const [uploadMedia] = useUploadMediaMutation();
+  const [deleteMedia] = useDeleteMediaMutation();
+
+  const media: MediaItem[] = (mediaData?.data || []).map((m: any) => ({
+    id: m.id,
+    url: m.thumbnailUrl || m.originalUrl,
+    name: m.originalUrl.split('/').pop() || 'image',
+    size: `${m.width}x${m.height}`
+  }));
 
   const handleFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
 
+    if (files.length > MAX_FILES_PER_UPLOAD) {
+      dispatch(addNotification({
+        type: 'error',
+        messageKey: 'TOO_MANY_FILES',
+        details: `You can upload at most ${MAX_FILES_PER_UPLOAD} files at once. Please select fewer files.`
+      }));
+      return;
+    }
+
     setIsUploading(true);
     setUploadStats({ total: files.length, current: 0 });
+    setFailedFiles([]);
 
     try {
-      const newMediaItems: any[] = [];
+      let anySucceeded = false;
 
       // Upload sequentially to show accurate progress bar
       for (let i = 0; i < files.length; i++) {
         setUploadStats({ total: files.length, current: i + 1 });
         const formData = new FormData();
-        formData.append("files", files[i]);
+        formData.append("file", files[i]);
 
-        const response = await fetch("/api/v1/media", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.data && result.data.length > 0) {
-            newMediaItems.push(...result.data);
-          }
-        } else {
-          const errorData = await response.json().catch(() => ({}));
+        try {
+          await uploadMedia(formData).unwrap();
+          anySucceeded = true;
+        } catch (err: any) {
+          const errorData = err?.data;
           const errorCode = errorData?.error?.code || errorData?.code || 'UPLOAD_FAILED';
+          setFailedFiles(prev => [...prev, files[i].name]);
           dispatch(addNotification({
             type: 'error',
             messageKey: errorCode,
@@ -86,14 +82,7 @@ export default function AdminMedia() {
         }
       }
 
-      if (newMediaItems.length > 0) {
-        const mappedItems = newMediaItems.map((m: any) => ({
-          id: m.id,
-          url: m.thumbnailUrl || m.originalUrl,
-          name: m.originalUrl.split('/').pop() || 'image',
-          size: `${m.width}x${m.height}`
-        }));
-        setMedia(prev => [...mappedItems, ...prev]);
+      if (anySucceeded) {
         dispatch(addNotification({ type: 'success', messageKey: 'media_uploaded' }));
       }
     } catch (error) {
@@ -132,22 +121,16 @@ export default function AdminMedia() {
   const handleConfirmDelete = async () => {
     if (!deleteTargetId) return;
     try {
-      const response = await fetch(`/api/v1/media/${deleteTargetId}`, { method: 'DELETE' });
-      if (response.ok) {
-        setMedia(media.filter((item) => item.id !== deleteTargetId));
-        dispatch(addNotification({ type: 'success', messageKey: 'media_deleted' }));
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        const errorCode = errorData?.error?.code || errorData?.code || 'DELETE_FAILED';
-        dispatch(addNotification({
-          type: 'error',
-          messageKey: errorCode,
-          details: errorData?.error?.message || errorData?.message || 'Failed to delete media'
-        }));
-      }
-    } catch (error) {
-      console.error("Failed to delete", error);
-      dispatch(addNotification({ type: 'error', messageKey: 'UNKNOWN_ERROR', details: 'Network error' }));
+      await deleteMedia(deleteTargetId).unwrap();
+      dispatch(addNotification({ type: 'success', messageKey: 'media_deleted' }));
+    } catch (err: any) {
+      const errorData = err?.data;
+      const errorCode = errorData?.error?.code || errorData?.code || 'DELETE_FAILED';
+      dispatch(addNotification({
+        type: 'error',
+        messageKey: errorCode,
+        details: errorData?.error?.message || errorData?.message || 'Failed to delete media'
+      }));
     } finally {
       setIsDeleteOpen(false);
       setDeleteTargetId("");
@@ -202,6 +185,17 @@ export default function AdminMedia() {
               }
             }} />
           </label>
+        )}
+
+        {failedFiles.length > 0 && (
+          <div className="w-full max-w-md mt-2 text-xs text-destructive">
+            <p className="font-semibold mb-1">{t("upload_failed") || "Failed to upload:"}</p>
+            <ul className="list-disc list-inside space-y-0.5">
+              {failedFiles.map((name, i) => (
+                <li key={i} className="truncate">{name}</li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
 

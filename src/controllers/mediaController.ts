@@ -40,14 +40,17 @@ export class MediaController {
       const contentType = request.headers.get("content-type") || "";
       if (contentType.includes("multipart/form-data")) {
         const formData = await request.formData();
-        const files = formData.getAll("files") as File[];
+        const file = formData.get("file") as File | null;
 
         const userId = await getUserId();
         if (!userId) {
           throw new UnauthorizedError("Unauthorized");
         }
+        if (!file) {
+          throw new ValidationError("No file provided", [{ field: "file", message: "file is required" }]);
+        }
 
-        const savedMedia = await this.mediaService.uploadMultiple(files, userId);
+        const savedMedia = await this.mediaService.uploadMedia(file, userId);
         return sendSuccess(savedMedia);
       } else {
         // Fallback for legacy JSON saving (e.g. updating positions)

@@ -237,6 +237,21 @@ export const api = createApi({
        query: () => "/media",
        providesTags: ["Media"],
      }),
+     uploadMedia: builder.mutation<{ data: Media }, FormData>({
+       query: (formData) => ({
+         url: "/media",
+         method: "POST",
+         body: formData,
+       }),
+       invalidatesTags: ["Media"],
+     }),
+     deleteMedia: builder.mutation<{ success: boolean }, string>({
+       query: (id) => ({
+         url: `/media/${id}`,
+         method: "DELETE",
+       }),
+       invalidatesTags: ["Media"],
+     }),
      getColors: builder.query<{ data: { id: string; color: string }[] }, void>({
        query: () => "/colors",
        providesTags: ["Color"],
@@ -419,6 +434,8 @@ export const api = createApi({
    useUpdateCollectionMutation,
    useDeleteCollectionMutation,
    useGetMediaQuery,
+   useUploadMediaMutation,
+   useDeleteMediaMutation,
    useGetColorsQuery,
    useCreateColorMutation,
    useUpdateColorMutation,
