@@ -15,7 +15,7 @@ export interface ProcessedImageResult {
   thumbnailUrl: string;
   width: number;
   height: number;
-  orientation: string;
+  orientation: "Portrait" | "Landscape";
 }
 
 export class StorageService {
@@ -84,7 +84,7 @@ export class StorageService {
     const processedMetadata = await sharp(originalBuffer).metadata();
     const finalWidth = processedMetadata.width || 0;
     const finalHeight = processedMetadata.height || 0;
-    const orientation = finalWidth >= finalHeight ? 'landscape' : 'portrait';
+    const orientation = finalWidth >= finalHeight ? 'Landscape' : 'Portrait';
 
     // Upload to MinIO
     await ensureBucket();

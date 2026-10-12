@@ -36,7 +36,7 @@ export class MediaService implements IMediaService {
       originalUrl: processed.originalUrl,
       width: processed.width,
       height: processed.height,
-      orientation: processed.orientation as "Portrait" | "Landscape",
+      orientation: processed.orientation,
       userId: userId,
     };
 

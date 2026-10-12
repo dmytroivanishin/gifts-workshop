@@ -1,18 +1,14 @@
-import { ITagRepository, ICategoryRepository } from "@/repositories/interfaces";
+import { ITagRepository } from "@/repositories/interfaces";
 import { ITagService } from "./interfaces";
 import { Tag } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";
-import { logger } from "@/modules/logger";
 
 import { paginate } from "./pagination";
 
 export class TagService implements ITagService {
-  constructor(
-    private tagRepo: ITagRepository,
-    private categoryRepo?: ICategoryRepository
-  ) {}
+  constructor(private tagRepo: ITagRepository) {}
 
   async getAllTags(options?: any): Promise<any> {
     if (options?.page || options?.limit) {
@@ -60,25 +56,8 @@ export class TagService implements ITagService {
   }
 
   async deleteTag(id: string): Promise<boolean> {
-    // Cascade cleanup: remove tag ID from categories
-    if (this.categoryRepo) {
-      try {
-        const categories = await this.categoryRepo.getAll();
-        await Promise.all(
-          categories
-            .filter((cat) => Array.isArray(cat.tagsIds) && cat.tagsIds.includes(id))
-            .map((cat) =>
-              this.categoryRepo!.save({
-                ...cat,
-                tagsIds: cat.tagsIds!.filter((t) => t !== id),
-              })
-            )
-        );
-      } catch (err) {
-        logger.error("Failed to cleanup categories on tag delete", { error: err instanceof Error ? err.message : String(err) });
-      }
-    }
-
+    // categories_to_tags.tag_id has ON DELETE CASCADE (schema.ts), so Postgres already
+    // removes the category/tag links as part of this delete — no app-level cleanup needed.
     return this.tagRepo.delete(id);
   }
 }
