@@ -54,3 +54,17 @@ export function sendError(error: any) {
     { status: internalError.statusCode }
   );
 }
+
+// Every controller method ended with the same catch (error: any) { return sendError(error); } —
+// this replaces that boilerplate at the call site instead of repeating it in each method.
+export function withErrorHandling<Args extends unknown[]>(
+  handler: (...args: Args) => Promise<NextResponse>
+): (...args: Args) => Promise<NextResponse> {
+  return async (...args: Args) => {
+    try {
+      return await handler(...args);
+    } catch (error: any) {
+      return sendError(error);
+    }
+  };
+}

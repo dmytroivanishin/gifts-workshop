@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sendSuccess, sendError, CACHE_SECONDS } from "@/utils/apiResponse";
+import { sendSuccess, CACHE_SECONDS, withErrorHandling } from "@/utils/apiResponse";
 import { ISystemTextService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
@@ -14,53 +14,37 @@ const systemTextSchema = z.object({
 export class SystemTextController {
   constructor(private systemTextService: ISystemTextService) {}
 
-  async getSystemTexts(request: Request) {
-    try {
-      const { page, limit } = getPaginationParams(request, 1, 100);
+  getSystemTexts = withErrorHandling(async (request: Request) => {
+    const { page, limit } = getPaginationParams(request, 1, 100);
 
-      const result = await this.systemTextService.getAllSystemTexts({ page, limit });
-      return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
-    } catch (error: any) {
-      return sendError(error);
-    }
-  }
+    const result = await this.systemTextService.getAllSystemTexts({ page, limit });
+    return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
+  });
 
-  async getSystemTextById(request: Request, id: string) {
-    try {
-      const text = await this.systemTextService.getSystemTextById(id);
-      if (!text) {
-        throw new NotFoundError("System text not found");
-      }
-      return sendSuccess(text, undefined, CACHE_SECONDS.lookup);
-    } catch (error: any) {
-      return sendError(error);
+  getSystemTextById = withErrorHandling(async (request: Request, id: string) => {
+    const text = await this.systemTextService.getSystemTextById(id);
+    if (!text) {
+      throw new NotFoundError("System text not found");
     }
-  }
+    return sendSuccess(text, undefined, CACHE_SECONDS.lookup);
+  });
 
-  async saveSystemText(request: Request, id?: string) {
-    try {
-      const rawBody: any = await parseJsonBody(request);
-      if (id) {
-        rawBody.id = id;
-      }
-      const body = await validateRequest(systemTextSchema, rawBody);
-      
-      const text = await this.systemTextService.saveSystemText(body);
-      return sendSuccess(text);
-    } catch (error: any) {
-      return sendError(error);
+  saveSystemText = withErrorHandling(async (request: Request, id?: string) => {
+    const rawBody: any = await parseJsonBody(request);
+    if (id) {
+      rawBody.id = id;
     }
-  }
+    const body = await validateRequest(systemTextSchema, rawBody);
 
-  async deleteSystemText(request: Request, id: string) {
-    try {
-      const success = await this.systemTextService.deleteSystemText(id);
-      if (!success) {
-        throw new NotFoundError("System text not found");
-      }
-      return sendSuccess({ success: true });
-    } catch (error: any) {
-      return sendError(error);
+    const text = await this.systemTextService.saveSystemText(body);
+    return sendSuccess(text);
+  });
+
+  deleteSystemText = withErrorHandling(async (request: Request, id: string) => {
+    const success = await this.systemTextService.deleteSystemText(id);
+    if (!success) {
+      throw new NotFoundError("System text not found");
     }
-  }
+    return sendSuccess({ success: true });
+  });
 }

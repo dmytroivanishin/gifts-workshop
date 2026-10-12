@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { sendSuccess, withErrorHandling } from "@/utils/apiResponse";
 import { ICommentService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
@@ -9,71 +9,51 @@ import { getPaginationParams } from "@/utils/paginationUtils";
 export class CommentController {
   constructor(private commentService: ICommentService) {}
 
-  async getComments(request: Request) {
-    try {
-      const { searchParams } = new URL(request.url);
-      const { page, limit } = getPaginationParams(request);
-      const status = searchParams.get("status") || undefined;
-      const postId = searchParams.get("postId") || undefined;
+  getComments = withErrorHandling(async (request: Request) => {
+    const { searchParams } = new URL(request.url);
+    const { page, limit } = getPaginationParams(request);
+    const status = searchParams.get("status") || undefined;
+    const postId = searchParams.get("postId") || undefined;
 
-      const result = await this.commentService.getFilteredComments({ page, limit, status, postId });
-      return sendSuccess(result.data, result.meta);
-    } catch (error: any) {
-      return sendError(error);
-    }
-  }
+    const result = await this.commentService.getFilteredComments({ page, limit, status, postId });
+    return sendSuccess(result.data, result.meta);
+  });
 
-  async createComment(request: Request, injectedPostId?: string) {
-    try {
-      const rawBody: any = await parseJsonBody(request);
-      if (injectedPostId) {
-        rawBody.postId = injectedPostId;
-      }
-      const body = await validateRequest(commentSchema, rawBody);
-      const comment = await this.commentService.createComment(body);
-      return sendSuccess(comment);
-    } catch (error: any) {
-      return sendError(error);
+  createComment = withErrorHandling(async (request: Request, injectedPostId?: string) => {
+    const rawBody: any = await parseJsonBody(request);
+    if (injectedPostId) {
+      rawBody.postId = injectedPostId;
     }
-  }
+    const body = await validateRequest(commentSchema, rawBody);
+    const comment = await this.commentService.createComment(body);
+    return sendSuccess(comment);
+  });
 
-  async updateCommentStatus(request: Request, id: string) {
-    try {
-      const rawBody: any = await parseJsonBody(request);
-      const statusSchema = z.object({
-        status: z.enum(["Review", "Approved", "Rejected"])
-      });
-      const body = await validateRequest(statusSchema, rawBody);
-      const comment = await this.commentService.updateCommentStatus(id, body.status);
-      if (!comment) {
-         throw new NotFoundError("Comment not found");
-      }
-      return sendSuccess(comment);
-    } catch (error: any) {
-      return sendError(error);
+  updateCommentStatus = withErrorHandling(async (request: Request, id: string) => {
+    const rawBody: any = await parseJsonBody(request);
+    const statusSchema = z.object({
+      status: z.enum(["Review", "Approved", "Rejected"])
+    });
+    const body = await validateRequest(statusSchema, rawBody);
+    const comment = await this.commentService.updateCommentStatus(id, body.status);
+    if (!comment) {
+       throw new NotFoundError("Comment not found");
     }
-  }
+    return sendSuccess(comment);
+  });
 
-  async replyToComment(request: Request, id: string) {
-    try {
-      const rawBody: any = await parseJsonBody(request);
-      const replySchema = z.object({
-        text: z.string().min(1, "error_required_field").max(2000, "error_text_too_long")
-      });
-      const body = await validateRequest(replySchema, rawBody);
-      const comment = await this.commentService.replyToComment(id, body);
-      return sendSuccess(comment);
-    } catch (error: any) {
-      return sendError(error);
-    }
-  }
+  replyToComment = withErrorHandling(async (request: Request, id: string) => {
+    const rawBody: any = await parseJsonBody(request);
+    const replySchema = z.object({
+      text: z.string().min(1, "error_required_field").max(2000, "error_text_too_long")
+    });
+    const body = await validateRequest(replySchema, rawBody);
+    const comment = await this.commentService.replyToComment(id, body);
+    return sendSuccess(comment);
+  });
 
-  async deleteComment(request: Request, id: string) {
-    try {
-      await this.commentService.deleteComment(id);
-      return sendSuccess(null);
-    } catch (error: any) {
-      return sendError(error);
-    }
-  }
+  deleteComment = withErrorHandling(async (request: Request, id: string) => {
+    await this.commentService.deleteComment(id);
+    return sendSuccess(null);
+  });
 }
