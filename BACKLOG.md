@@ -7,26 +7,22 @@ grouped by what it takes to start, so you can say "бери CP-23" and I know ex
 what that means without you having to scroll `CHANGE-PLAN.md`.
 
 Generated 2026-10-05 from `CHANGE-PLAN.md`, `PRODUCTION-READINESS.md` and
-`DEVIATIONS.md`. If these docs change later, this file can drift — ask me to
-regenerate it rather than trusting it blindly after a long gap.
+`DEVIATIONS.md`; refreshed 2026-10-12. If these docs change later, this file can
+drift — ask me to regenerate it rather than trusting it blindly after a long gap.
 
 ---
 
 ## 🔴 Waiting on you (nothing to pick here — I need an answer/action first)
 
 - **CP-4** — log in by hand and check B1–B6 in the browser; decide whether to add a mock `JWT_SECRET` to `config/test.env`; also now covers a real Google login + browser image upload against the upgraded `next`/`sharp` (former CP-2 manual-verification step — Google OAuth can't be scripted).
-- **CP-29** — design decision on `users.password` (nullable column, or drop it) — not a code task, your call first.
 
 ## 🟢 Ready to pick right now — pure code, no migration/config/dependency
 
-- **CP-23** — HTTP cache headers on public GET endpoints.
-- **CP-24** — seed loaders for categories/tags/colors/collections (only `system_texts` has one today).
-- **CP-32** — design visual-language audit (`/portfolio-design-check`, read-only, then report what's off).
+- **CP-32** — design visual-language audit (`/portfolio-design-check`, read-only, then report what's off). Postponed by you 2026-10-12 — technically ready, just not scheduled.
 
 ## 🟡 Needs your explicit "да" first (migration / config / new dependency)
 
-- **CP-33** — strict, nonce-based CSP (`next.config.ts` + `proxy.ts` architecture change — wants a plan first, not just a go-ahead).
-- **CP-8** — set `S3_PUBLIC_URL` for production (blocked: no domain/server yet, not actionable today — kept as-is, no action until a domain exists).
+- **CP-33** — strict, nonce-based CSP (`next.config.ts` + `proxy.ts` architecture change — wants a plan first, not just a go-ahead). Postponed by you 2026-10-12, no active vulnerability today (no `dangerouslySetInnerHTML`/`innerHTML` in `src/`).
 
 ## 🔵 Big pieces — want a scoping conversation before any code, not a quick fix
 
@@ -34,12 +30,13 @@ regenerate it rather than trusting it blindly after a long gap.
 - **CP-17** — SEO/metadata review (includes the bigger item: server-rendering post content for SEO, today fully client-fetched).
 - **CP-18** — code-standard pass: ~280 lines of `any`, `withErrorHandling` wrapper, `console.*` in client components, lint cleanup (418 problems).
 - **CP-19** — real `README.md` + completeness pass across the generated docs.
-- **CP-25** — deployment bundle: Dockerfile, health endpoint, migration/rollback strategy, HSTS, rate-limit-at-the-edge decision, swapping dev credentials, backups (this is blocker B8).
+- **CP-25** — deployment bundle: Dockerfile, health endpoint, migration/rollback strategy, HSTS, rate-limit-at-the-edge decision, swapping dev credentials, backups (this is blocker B8). **Now also carries CP-24** (seed the lookup tables as part of the same first-boot migration step, not a separate loader script) **and CP-8** (set the real `S3_PUBLIC_URL`, not a Coolify temporary domain, in this same first deploy) — merged in 2026-10-12 at your request.
 - **CP-31** — testing infrastructure from scratch (no vitest/playwright config or specs exist at all today).
 - **CP-30** — planned-but-unbuilt **features** (multi-select category filter, Archive view with restore, profile editing, SEO settings page, `Language` table) — kept separate from the fix/quality queue per your decision (2026-10-05); only start on these if you explicitly ask.
 
 ## ⚪ Parked / declined — not on the active queue
 
+- **CP-29** — `users.password` placeholder design decision. Closed 2026-10-12, no action: your call is that keeping the placeholder is fine (leaves room for a real password or Google-account linking later), and there's no risk since it's never returned and nothing treats it as a real credential today.
 - **CP-28** — "premature refresh" token-family revocation heuristic. Presented twice (2026-09-28, 2026-10-01), declined both times. Listed only so it isn't silently forgotten.
 - **CP-22** — real DB-level FK constraints on `categories.parent_id`/`comments.reply_id`. Declined 2026-10-06 — the app-level existence/cycle checks already in place are considered sufficient.
 - **CP-16a** — `next.config.ts`: `experimental.proxyClientMaxBodySize`. Declined 2026-10-06 — upload UI sends one file per request, so no request should need to exceed 10 MB in normal use.
@@ -54,3 +51,4 @@ CP-1, CP-3, CP-7, CP-9, CP-10, CP-11, CP-12, CP-13, CP-14, CP-15, CP-20, CP-21 �
 - **CP-5 (2026-10-06).** Second, independent auth check on every write route (`withAdminAuth()` in `route.ts`, not in controllers — moved there after you pushed back on controllers knowing about auth).
 - **CP-6 (2026-10-06).** `resolveStatusFilter` readability checked — already clean, no change needed. `GET /collections/:id/posts` double-wrap fixed (was nesting an already-wrapped `{data,meta}` object inside `sendSuccess`'s own wrapping).
 - **CP-34 (2026-10-06).** `.agents/` retired — the project plan and reference material moved to `docs/`, stale/obsolete rule files deleted, nothing kept that CLAUDE.md didn't already supersede. Also deleted: `scratch_findKeys.mjs`, `pull-system-texts.js`, `tags_review.md`, `audit_results.md`, `report.md`, boilerplate `public/*.svg`/`old.*.png`.
+- **CP-23 (2026-10-12).** `Cache-Control` on public list/read GETs: `categories`/`collections`/`tags`/`colors`/`system-texts` unconditionally (60s, named constant `CACHE_SECONDS.lookup`); `posts` (list, by-id, `collections/:id/posts`) at 30s but only for non-admin callers, decided in the controller (not inside the generic `sendSuccess` helper), since an admin's response can include Draft/Archived posts a shared cache must never leak to the next anonymous caller.

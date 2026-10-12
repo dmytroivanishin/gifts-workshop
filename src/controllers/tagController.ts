@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { sendSuccess, sendError, CACHE_SECONDS } from "@/utils/apiResponse";
 import { ITagService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
@@ -16,7 +16,7 @@ export class TagController {
       const { page, limit } = getPaginationParams(request);
 
       const result = await this.tagService.getAllTags({ page, limit });
-      return sendSuccess(result.data, result.meta);
+      return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
     } catch (error: any) {
       return sendError(error);
     }
@@ -28,7 +28,7 @@ export class TagController {
       if (!tag) {
         throw new NotFoundError("Tag not found");
       }
-      return sendSuccess(tag);
+      return sendSuccess(tag, undefined, CACHE_SECONDS.lookup);
     } catch (error: any) {
       return sendError(error);
     }

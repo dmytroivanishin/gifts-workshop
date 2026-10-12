@@ -3,12 +3,27 @@ import { BaseError } from "@/common/errors/base";
 import { InternalServerError } from "@/common/errors/internalServer";
 import { logger } from "@/modules/logger";
 
-export function sendSuccess(data: any, meta?: any) {
+// Durations for the cacheable list/read endpoints (CP-23), named once instead of as a bare
+// number at each call site. The decision of *which* one applies (and, for posts, whether the
+// caller is an admin) is made by the controller, not here — this stays a plain response helper.
+export const CACHE_SECONDS = {
+  lookup: 60, // categories/collections/tags/colors/system-texts: identical for every caller
+  posts: 30, // posts: pass this only for the anonymous-safe response, never an admin's
+} as const;
+
+export function sendSuccess(data: any, meta?: any, cacheSeconds?: number) {
   const payload: any = { data };
   if (meta) {
     payload.meta = meta;
   }
-  return NextResponse.json(payload);
+  const response = NextResponse.json(payload);
+  if (cacheSeconds) {
+    response.headers.set(
+      "Cache-Control",
+      `public, max-age=${cacheSeconds}, stale-while-revalidate=${cacheSeconds * 5}`
+    );
+  }
+  return response;
 }
 
 export function sendError(error: any) {

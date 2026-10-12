@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { sendSuccess, sendError, CACHE_SECONDS } from "@/utils/apiResponse";
 import { IColorService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
@@ -14,7 +14,7 @@ export class ColorController {
     try {
       const { page, limit } = getPaginationParams(request);
       const result = await this.colorService.getAllColors({ page, limit });
-      return sendSuccess(result.data, result.meta);
+      return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
     } catch (error: any) {
       return sendError(error);
     }
@@ -26,7 +26,7 @@ export class ColorController {
       if (!color) {
         throw new NotFoundError("Color not found");
       }
-      return sendSuccess(color);
+      return sendSuccess(color, undefined, CACHE_SECONDS.lookup);
     } catch (error: any) {
       return sendError(error);
     }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { sendSuccess, sendError, CACHE_SECONDS } from "@/utils/apiResponse";
 import { ISystemTextService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
@@ -19,7 +19,7 @@ export class SystemTextController {
       const { page, limit } = getPaginationParams(request, 1, 100);
 
       const result = await this.systemTextService.getAllSystemTexts({ page, limit });
-      return sendSuccess(result.data, result.meta);
+      return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
     } catch (error: any) {
       return sendError(error);
     }
@@ -31,7 +31,7 @@ export class SystemTextController {
       if (!text) {
         throw new NotFoundError("System text not found");
       }
-      return sendSuccess(text);
+      return sendSuccess(text, undefined, CACHE_SECONDS.lookup);
     } catch (error: any) {
       return sendError(error);
     }

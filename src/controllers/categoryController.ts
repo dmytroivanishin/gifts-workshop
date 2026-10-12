@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { sendSuccess, sendError, CACHE_SECONDS } from "@/utils/apiResponse";
 import { ICategoryService } from "@/services/interfaces";
 import { ForbiddenError } from "@/common/errors/forbidden";
 import { NotFoundError } from "@/common/errors/notFound";
@@ -17,7 +17,7 @@ export class CategoryController {
       const { page, limit } = getPaginationParams(request);
 
       const result = await this.categoryService.getAllCategories({ page, limit });
-      return sendSuccess(result.data, result.meta);
+      return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
     } catch (error: any) {
       return sendError(error);
     }
@@ -30,7 +30,7 @@ export class CategoryController {
       if (!category) {
         throw new NotFoundError("Category not found");
       }
-      return sendSuccess(category);
+      return sendSuccess(category, undefined, CACHE_SECONDS.lookup);
     } catch (error: any) {
       return sendError(error);
     }

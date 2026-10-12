@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { sendSuccess, sendError, CACHE_SECONDS } from "@/utils/apiResponse";
 import { IPostService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { postSchema } from "@/common/validation/schemas";
 import { resolveId } from "@/utils/idResolver";
-import { getUserId } from "@/utils/auth";
+import { getUserId, isAdminRequest } from "@/utils/auth";
 import { getPaginationParams } from "@/utils/paginationUtils";
 import { isUUID } from "@/utils/uuid";
 import { resolveStatusFilter, visibleToViewer } from "@/utils/postVisibility";
@@ -26,7 +26,10 @@ export class PostController {
 
       const result = await this.postService.getFilteredPosts({ search, category, tag, collection, inStock, status, page, limit });
 
-      return sendSuccess(result.data, result.meta);
+      // An admin's response can include Draft/Archived posts, so only the anonymous-shaped
+      // response is safe for a shared cache to store under this URL.
+      const cacheSeconds = (await isAdminRequest()) ? undefined : CACHE_SECONDS.posts;
+      return sendSuccess(result.data, result.meta, cacheSeconds);
     } catch (error: any) {
       return sendError(error);
     }
@@ -47,7 +50,9 @@ export class PostController {
       if (!post) {
         throw new NotFoundError("Post not found");
       }
-      return sendSuccess(post);
+      // Same reasoning as getPosts above: an admin can still see Draft/Archived posts here.
+      const cacheSeconds = (await isAdminRequest()) ? undefined : CACHE_SECONDS.posts;
+      return sendSuccess(post, undefined, cacheSeconds);
     } catch (error: any) {
       return sendError(error);
     }

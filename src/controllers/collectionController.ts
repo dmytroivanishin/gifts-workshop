@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { sendSuccess, sendError, CACHE_SECONDS } from "@/utils/apiResponse";
 import { ICollectionService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
@@ -15,7 +15,7 @@ export class CollectionController {
     try {
       const { page, limit } = getPaginationParams(request);
       const result = await this.collectionService.getAllCollections({ page, limit });
-      return sendSuccess(result.data, result.meta);
+      return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
     } catch (error: any) {
       return sendError(error);
     }
@@ -27,7 +27,7 @@ export class CollectionController {
       if (!collection) {
         throw new NotFoundError("Collection not found");
       }
-      return sendSuccess(collection);
+      return sendSuccess(collection, undefined, CACHE_SECONDS.lookup);
     } catch (error: any) {
       return sendError(error);
     }
