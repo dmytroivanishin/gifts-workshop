@@ -1,11 +1,10 @@
 import { Metadata } from "next";
-import { postService } from "@/modules/core/container";
 import { extractLocalizedTags } from "@/utils/tags";
 import { getLocalizedField } from "@/utils/localization";
 import { env } from "@/modules/core/env";
 import { redirect } from "next/navigation";
 import { isUUID } from "@/utils/uuid";
-import { visibleToViewer } from "@/utils/postVisibility";
+import { getVisiblePostBySlugOrId } from "@/utils/postLookup";
 import { logger } from "@/modules/logger";
 
 const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -20,9 +19,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const isEn = locale === 'en';
   
   try {
-    // We use getPostById or getPostBySlug depending on whether the slug is a UUID
-    // The page metadata is server-rendered into the HTML, so unpublished posts must be filtered here as well
-    const post = await visibleToViewer(isUUID(slug) ? await postService.getPostById(slug) : await postService.getPostBySlug(slug));
+    // The page metadata is server-rendered into the HTML, so unpublished posts must be filtered here as well.
+    // getVisiblePostBySlugOrId is React.cache()'d, so this and the page's own lookup of the same slug
+    // share one DB round trip per request instead of two.
+    const post = await getVisiblePostBySlugOrId(slug);
 
     if (!post) {
       return {
@@ -94,7 +94,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function ProjectLayout({ children, params }: ProjectLayoutProps) {
   const { locale, slug } = await params;
   if (isUUID(slug)) {
-    const post = await visibleToViewer(await postService.getPostById(slug));
+    const post = await getVisiblePostBySlugOrId(slug);
     if (post && post.slug) {
       redirect(`/${locale}/projects/${post.slug}`);
     }
