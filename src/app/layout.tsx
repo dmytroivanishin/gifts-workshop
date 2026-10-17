@@ -20,11 +20,15 @@ import { I18nProvider } from "@/i18n";
 import { systemTextService } from "@/modules/core/container";
 import { env } from "@/modules/core/env";
 
+// This metadata is static (no generateMetadata/locale param available at this level), so it can
+// only ever use one fixed locale — the root layout wraps /admin/* too, where RU is the fixed
+// authoring/default locale. Public pages never see this: [locale]/(public)/layout.tsx's own
+// generateMetadata always overrides it with the real per-request locale.
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-const siteTitle = process.env.SITE_TITLE || "Добрые Подарки (Kind Gifts) | Каталог ручной работы / Handmade Catalog";
-const siteTemplate = process.env.SITE_TEMPLATE || "%s | Добрые Подарки (Kind Gifts)";
-const siteDescription = process.env.SITE_DESCRIPTION || "Добрые Подарки — каталог душевной ручной работы. Уют на кухне: авторский текстиль, прихваточки, варежки и полотенца. Интерьерные куколки и мягкие плюшевые игрушки. Радость в деталях для любимого дома. | Kind Gifts — soulful handmade catalog. Kitchen textiles, potholders, oven mitts, and towels. Interior dolls and plush toys. Joy in details for your beloved home.";
-const siteName = process.env.SITE_NAME || "Добрые Подарки";
+const siteTitle = process.env.SITE_TITLE_RU || "Мастерская подарков | Каталог душевной ручной работы";
+const siteTemplate = process.env.SITE_TEMPLATE_RU || "%s | Мастерская подарков";
+const siteDescription = process.env.SITE_DESCRIPTION_RU || "Мастерская подарков — каталог душевной ручной работы.";
+const siteName = process.env.SITE_NAME_RU || "Мастерская подарков";
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),

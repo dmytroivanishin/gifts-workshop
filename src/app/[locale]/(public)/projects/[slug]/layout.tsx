@@ -36,11 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
     const description = getLocalizedField(post.description, locale);
 
-    const allKeywords = extractLocalizedTags(post.tags);
-    // Filter tags to only include the current locale if they are formatted properly,
-    // otherwise just use all of them. Assuming extractLocalizedTags returns a string or array.
-    // If it's a comma separated string, we just pass it as is.
-    const keywords = allKeywords;
+    const keywords = extractLocalizedTags(post.tags, locale);
 
     let imageUrl = "/images/og-image.png";
     if (post.media && post.media.length > 0) {
@@ -73,10 +69,16 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         type: "article",
       },
       alternates: {
-        languages: env.SUPPORTED_LOCALES.reduce((acc, l) => {
-          acc[l] = `${appUrl}/${l}/projects/${projectSlug}`;
-          return acc;
-        }, {} as Record<string, string>)
+        canonical: `${appUrl}/${locale}/projects/${projectSlug}`,
+        languages: {
+          ...env.SUPPORTED_LOCALES.reduce((acc, l) => {
+            acc[l] = `${appUrl}/${l}/projects/${projectSlug}`;
+            return acc;
+          }, {} as Record<string, string>),
+          // Matches proxy.ts's own fallback for a visitor with no saved locale and no matching
+          // Accept-Language (NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC, "en" by default).
+          'x-default': `${appUrl}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC || "en"}/projects/${projectSlug}`,
+        },
       },
       twitter: {
         card: "summary_large_image",

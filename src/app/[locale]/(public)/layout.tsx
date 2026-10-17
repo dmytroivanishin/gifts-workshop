@@ -18,8 +18,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
   return {
     title: {
-      default: title || "Добрые Подарки | Kind Gifts",
-      template: isEn ? process.env.SITE_TEMPLATE_EN || "%s | Kind Gifts" : process.env.SITE_TEMPLATE_RU || "%s | Добрые Подарки"
+      // `absolute`, not `default`: per Next's own docs, title.default still gets wrapped by the
+      // closest ANCESTOR's own template (the root layout's) — so with `default` here, this value
+      // (already a complete site title) was being wrapped twice, producing a doubled title like
+      // "X | Site | Site". `absolute` provides the same fallback for this route's own children
+      // (the project page) without being re-wrapped itself.
+      absolute: title || "Мастерская подарков | Kind Gifts",
+      template: isEn ? process.env.SITE_TEMPLATE_EN || "%s | Kind Gifts" : process.env.SITE_TEMPLATE_RU || "%s | Мастерская подарков"
     },
     description,
     keywords,
@@ -40,9 +45,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       type: "website",
     },
     alternates: {
+      canonical: `${appUrl}/${locale}`,
       languages: {
         'ru': `${appUrl}/ru`,
         'en': `${appUrl}/en`,
+        // Matches proxy.ts's own fallback for a visitor with no saved locale and no matching
+        // Accept-Language (NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC, "en" by default).
+        'x-default': `${appUrl}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC || "en"}`,
       },
     },
     twitter: {

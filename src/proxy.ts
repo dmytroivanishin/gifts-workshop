@@ -91,7 +91,13 @@ export async function proxy(request: NextRequest) {
     !pathname.includes('.')
   ) {
     const isAdmin = pathname.startsWith('/admin');
+    // NEXT_PUBLIC_DEFAULT_LOCALE (ru) is also the content/authoring fallback used elsewhere
+    // (i18n's missing-translation fallback, the localization editor's "required" language,
+    // getLocalizedField) — admin keeps using it as-is below. A visitor with no saved cookie and
+    // no matching Accept-Language is a different concern, kept separate so changing one never
+    // silently changes the other.
     const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'ru';
+    const defaultPublicLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC || 'en';
     const supportedLocales = (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || 'ru,en').split(',').map(l => l.trim());
 
     if (isAdmin) {
@@ -129,7 +135,7 @@ export async function proxy(request: NextRequest) {
         (loc) => pathname.startsWith(`/${loc}/`) || pathname === `/${loc}`
       );
       
-      let locale = defaultLocale;
+      let locale = defaultPublicLocale;
       if (pathnameHasLocale) {
          locale = pathname.split('/')[1];
       } else {
