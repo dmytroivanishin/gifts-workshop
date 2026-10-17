@@ -19,6 +19,7 @@ drift — ask me to regenerate it rather than trusting it blindly after a long g
 ## 🟢 Ready to pick right now — pure code, no migration/config/dependency
 
 - **CP-32** — design visual-language audit (`/portfolio-design-check`, read-only, then report what's off). Postponed by you 2026-10-12 — technically ready, just not scheduled.
+- **CP-17 (remainder)** — JSON-LD structured data (Product schema per post, ItemList for the homepage). The rest of CP-17 (SSR for the public pages, canonical/hreflang, tags locale bug, default-locale split) is done, see "Done" below — this is the one piece left, paused at your request to read up on it first, not declined.
 
 ## 🟡 Needs your explicit "да" first (migration / config / new dependency)
 
@@ -26,7 +27,6 @@ drift — ask me to regenerate it rather than trusting it blindly after a long g
 
 ## 🔵 Big pieces — want a scoping conversation before any code, not a quick fix
 
-- **CP-17** — SEO/metadata review (includes the bigger item: server-rendering post content for SEO, today fully client-fetched).
 - **CP-19** — real `README.md` + completeness pass across the generated docs.
 - **CP-25** — deployment bundle: Dockerfile, health endpoint, migration/rollback strategy, HSTS, rate-limit-at-the-edge decision, swapping dev credentials, backups (this is blocker B8). **Now also carries CP-24** (seed the lookup tables as part of the same first-boot migration step, not a separate loader script) **and CP-8** (set the real `S3_PUBLIC_URL`, not a Coolify temporary domain, in this same first deploy) — merged in 2026-10-12 at your request.
 - **CP-31** — testing infrastructure from scratch (no vitest/playwright config or specs exist at all today).
@@ -43,6 +43,7 @@ drift — ask me to regenerate it rather than trusting it blindly after a long g
 
 ## ✅ Done (brief — full detail and file lists are in `CHANGE-PLAN.md` → "Done")
 
+- **CP-17, most of the round (2026-10-17).** Server-rendered the homepage and project page's initial content (both were fully client-rendered via RTK Query, so a crawler's raw HTML before JS ran was just a loading spinner — confirmed live before/after). Both pages are now thin async server components fetching through the existing service layer and handing the data to the unchanged client components as initial props; all real interactivity (filters, infinite scroll, likes) still runs through the same RTK Query hooks as before. Plus: a project page's tag keywords no longer mix RU/EN together regardless of locale, `canonical`/`x-default` added (were entirely missing), the default-locale fallback split into a content-authoring one (`ru`, unchanged) and a new visitor-facing one (`NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC`, `en`), and a doubled `<title>` bug found live while verifying (`title.default` was being wrapped by the root layout's own template) fixed via `title.absolute`. Only JSON-LD is left open, see "Ready to pick" above.
 - **CP-36 (2026-10-17).** Creating a *new* system text/localization entry was broken (server's Zod schema required `id`, client sent `code`). Fixed: schema's required key field renamed to `code`, `id` kept optional for the real DB UUID (unchanged URL-injection on edit). Admin page's `area` default also fixed from `"public"` to `"admin"`, matching the DB column default and the service's own fallback.
 
 CP-1, CP-3, CP-7, CP-9, CP-10, CP-11, CP-12, CP-13, CP-14, CP-15, CP-20, CP-21 — six rounds of small fixes (2026-09-19 through 2026-10-05) covering: anonymous-read blockers B1–B6, rate limiting, security headers, OAuth hardening (`state`+PKCE+verified ID token), dynamic sitemap, `S3_PUBLIC_URL`, media-list auth gate, dashboard `status=all`, upload MIME hardening, dead-code removal (`/users` writes), `token_sessions` purge, search escaping, `replyId`/email-allowlist checks, `adminWrite` rate limit, malformed-JSON/non-UUID handling, repository-bypass fixes, shared `issueSession()`, `next/image` on the public gallery, `parentId` existence check, `lucide-react` tree-shaking, `DrizzleDatabase` singleton on `globalThis`, search-by-description, and self-hosted fonts via `next/font`.
