@@ -6,9 +6,12 @@ import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { getPaginationParams } from "@/utils/paginationUtils";
 
 const systemTextSchema = z.object({
-  id: z.string().min(1).max(255), // the key
+  code: z.string().min(1).max(255), // unique key, e.g. "post_created" — always sent by the client
   content: z.record(z.string(), z.string()), // { "ru": "...", "en": "..." }
   area: z.enum(["public", "admin", "shared"]).optional(),
+  // The row's real DB UUID. Never sent by the client itself — saveSystemText() injects it
+  // from the :id URL segment below when editing, so the service can tell update from insert.
+  id: z.string().optional(),
 });
 
 export class SystemTextController {

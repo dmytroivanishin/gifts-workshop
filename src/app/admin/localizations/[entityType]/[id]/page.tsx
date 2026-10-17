@@ -55,7 +55,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
   const [titles, setTitles] = useState<Record<string, string>>({});
   const [descriptions, setDescriptions] = useState<Record<string, string>>({});
-  const [area, setArea] = useState<string>("public");
+  const [area, setArea] = useState<string>("admin");
   const [code, setCode] = useState<string>("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
@@ -76,7 +76,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
            newTitles[lang] = rawContent[lang] || "";
          });
          setTitles(newTitles);
-         setArea(systemEntity.area || "public");
+         setArea(systemEntity.area || "admin");
          setCode(systemEntity.code || "");
       } else {
          const namedEntity = entity as { title?: LocalizedText | string; name?: LocalizedText | string; description?: LocalizedText | string };
@@ -100,7 +100,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
          newTitles[lang] = "";
        });
        setTitles(newTitles);
-       setArea("public");
+       setArea("admin");
        setCode("");
     }
   }, [entity, activeLanguages, isSystem, id]);
