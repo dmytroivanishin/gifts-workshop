@@ -11,8 +11,8 @@ export const CACHE_SECONDS = {
   posts: 30, // posts: pass this only for the anonymous-safe response, never an admin's
 } as const;
 
-export function sendSuccess(data: any, meta?: any, cacheSeconds?: number) {
-  const payload: any = { data };
+export function sendSuccess(data: unknown, meta?: Record<string, unknown>, cacheSeconds?: number) {
+  const payload: { data: unknown; meta?: Record<string, unknown> } = { data };
   if (meta) {
     payload.meta = meta;
   }
@@ -26,7 +26,7 @@ export function sendSuccess(data: any, meta?: any, cacheSeconds?: number) {
   return response;
 }
 
-export function sendError(error: any) {
+export function sendError(error: unknown) {
   if (error instanceof BaseError) {
     logger.error(error.message, { code: error.errorCode, stack: error.stack });
     return NextResponse.json(
@@ -39,9 +39,11 @@ export function sendError(error: any) {
   }
 
   // Generic 500 error
-  logger.error(error.message || "An unexpected error occurred", { 
-    code: "INTERNAL_SERVER_ERROR", 
-    stack: error.stack 
+  const message = error instanceof Error ? error.message : "An unexpected error occurred";
+  const stack = error instanceof Error ? error.stack : undefined;
+  logger.error(message, {
+    code: "INTERNAL_SERVER_ERROR",
+    stack,
   });
   
   // The raw message stays in the log only: Drizzle errors carry the SQL text and bound parameters
@@ -63,7 +65,7 @@ export function withErrorHandling<Args extends unknown[]>(
   return async (...args: Args) => {
     try {
       return await handler(...args);
-    } catch (error: any) {
+    } catch (error: unknown) {
       return sendError(error);
     }
   };

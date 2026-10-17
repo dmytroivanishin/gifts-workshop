@@ -1,6 +1,6 @@
 import { ICategoryRepository, ITagRepository, IPostRepository } from "@/repositories/interfaces";
 import { ICategoryService } from "./interfaces";
-import { Category, PopulatedCategory } from "@/types";
+import { Category, PopulatedCategory, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
 import { ValidationError } from "@/common/errors/validation";
@@ -17,7 +17,7 @@ export class CategoryService implements ICategoryService {
     private postRepo: IPostRepository
   ) {}
 
-  async getAllCategories(options?: PaginationOptions): Promise<any> {
+  async getAllCategories(options?: PaginationOptions): Promise<PaginatedResult<PopulatedCategory>> {
     if (options?.page || options?.limit) {
       const page = options.page || 1;
       const limit = options.limit || 20;
@@ -90,7 +90,7 @@ export class CategoryService implements ICategoryService {
           ]);
         }
         
-        const parentCategory = categoriesList.find((c: any) => c.id === currentParentId);
+        const parentCategory = categoriesList.find((c) => c.id === currentParentId);
         currentParentId = parentCategory?.parentId;
       }
     }

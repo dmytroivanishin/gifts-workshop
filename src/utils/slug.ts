@@ -1,4 +1,5 @@
 import { logger } from "@/modules/logger";
+import { LocalizedText } from "@/types";
 
 function transliterate(text: string): string {
   const ru: { [key: string]: string } = {
@@ -58,7 +59,7 @@ export async function generateSlug(text: string): Promise<string> {
   return formatSlug(englishText);
 }
 
-export async function generateSlugFromField(field: string | Record<string, any> | undefined): Promise<string> {
+export async function generateSlugFromField(field: string | LocalizedText | undefined): Promise<string> {
   if (!field) return `slug-${Date.now()}`;
   
   if (typeof field === "string") {
@@ -82,7 +83,7 @@ export async function generateSlugFromField(field: string | Record<string, any> 
 }
 
 export async function generateUniqueSlug(
-  field: string | Record<string, any> | undefined,
+  field: string | LocalizedText | undefined,
   currentId: string,
   getBySlug: (slug: string) => Promise<{ id: string } | null | undefined>
 ): Promise<string> {

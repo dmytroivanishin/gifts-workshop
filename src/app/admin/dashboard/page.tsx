@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Plus, Search, Edit, Trash2, Eye, Loader2 } from "lucide-react";
 import { useGetPostsQuery, useDeletePostMutation } from "@/store/api";
-import { Post } from "@/types";
+import { PopulatedPost } from "@/types";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   const { t, loc } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<PopulatedPost[]>([]);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState("");
 
@@ -40,7 +40,7 @@ export default function AdminDashboard() {
       } else {
         setPosts((prev) => {
           const existingIds = new Set(prev.map((p) => p.id));
-          const newPosts = response.data.filter((p: any) => !existingIds.has(p.id));
+          const newPosts = response.data.filter((p) => !existingIds.has(p.id));
           return [...prev, ...newPosts];
         });
       }
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
                       <td className="p-4 text-sm text-muted-foreground">{categoryTitle}</td>
                       <td className="p-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusClasses(post.status)}`}>
-                          {t(post.status.toLowerCase() as any)}
+                          {t(post.status.toLowerCase())}
                         </span>
                       </td>
                       <td className="p-4">
@@ -262,7 +262,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusClasses(post.status)}`}>
-                          {t(post.status.toLowerCase() as any)}
+                          {t(post.status.toLowerCase())}
                         </span>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStockClasses(post.inStock)}`}>
                           {post.inStock ? t("in_stock") : t("on_request")}

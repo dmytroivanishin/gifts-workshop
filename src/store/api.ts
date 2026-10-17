@@ -1,13 +1,15 @@
 import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
-import { Post, Category, Tag, Collection, Media, PopulatedPost, PopulatedCategory, Language, SystemText } from "@/types";
+import { Post, Category, Tag, Collection, Media, PopulatedPost, PopulatedCategory, Language, SystemText, Comment, PopulatedComment } from "@/types";
 
-const baseQuery = fetchBaseQuery({ 
+type PaginationMeta = { page: number; nextPage: number | null; prevPage: number | null; totalItems: number };
+
+const baseQuery = fetchBaseQuery({
   baseUrl: "/api/v1",
-  credentials: "include" 
+  credentials: "include"
 });
 
 let isRefreshing = false;
-let refreshPromise: Promise<any> | null = null;
+let refreshPromise: ReturnType<typeof baseQuery> | null = null;
 
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
   const result = await baseQuery(args, api, extraOptions);
@@ -25,7 +27,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   refreshPromise = baseQuery({
     url: '/auth/refresh',
     method: 'POST',
-  }, api, extraOptions) as Promise<any>;
+  }, api, extraOptions);
   
   const refreshResult = await refreshPromise;
   
@@ -48,7 +50,7 @@ export const api = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ["Post", "Category", "Tag", "Collection", "Media", "Color", "Language", "SystemText", "Comment"],
   endpoints: (builder) => ({
-    getPosts: builder.query<{ data: PopulatedPost[]; meta: any }, { search?: string; category?: string; inStock?: boolean; status?: string; page?: number; limit?: number } | void>({
+    getPosts: builder.query<{ data: PopulatedPost[]; meta: PaginationMeta }, { search?: string; category?: string; inStock?: boolean; status?: string; page?: number; limit?: number } | void>({
       query: (params) => {
         const urlParams = new URLSearchParams();
         if (params?.search) urlParams.append("search", params.search);
@@ -111,7 +113,7 @@ export const api = createApi({
       }),
       invalidatesTags: ["Post"],
     }),
-    getCategories: builder.query<{ data: PopulatedCategory[]; meta: any }, { page?: number; limit?: number } | void>({
+    getCategories: builder.query<{ data: PopulatedCategory[]; meta: PaginationMeta }, { page?: number; limit?: number } | void>({
       query: (params) => {
         const urlParams = new URLSearchParams();
         if (params?.page) urlParams.append("page", params.page.toString());
@@ -134,7 +136,7 @@ export const api = createApi({
       }),
       invalidatesTags: ["Category"],
     }),
-    getTags: builder.query<{ data: Tag[]; meta: any }, { page?: number; limit?: number } | void>({
+    getTags: builder.query<{ data: Tag[]; meta: PaginationMeta }, { page?: number; limit?: number } | void>({
       query: (params) => {
         const urlParams = new URLSearchParams();
         if (params?.page) urlParams.append("page", params.page.toString());
@@ -195,7 +197,7 @@ export const api = createApi({
       }),
       invalidatesTags: ["Category"],
     }),
-     getCollections: builder.query<{ data: Collection[]; meta: any }, { page?: number; limit?: number } | void>({
+     getCollections: builder.query<{ data: Collection[]; meta: PaginationMeta }, { page?: number; limit?: number } | void>({
        query: (params) => {
          const urlParams = new URLSearchParams();
          if (params?.page) urlParams.append("page", params.page.toString());
@@ -279,7 +281,7 @@ export const api = createApi({
        }),
        invalidatesTags: ["Color", "Category"],
      }),
-     getLanguages: builder.query<{ data: Language[]; meta: any }, { page?: number; limit?: number } | void>({
+     getLanguages: builder.query<{ data: Language[]; meta: PaginationMeta }, { page?: number; limit?: number } | void>({
        query: (params) => {
          const urlParams = new URLSearchParams();
          if (params?.page) urlParams.append("page", params.page.toString());
@@ -317,7 +319,7 @@ export const api = createApi({
        }),
        invalidatesTags: ["Language"],
      }),
-     getSystemTexts: builder.query<{ data: SystemText[]; meta: any }, { page?: number; limit?: number } | void>({
+     getSystemTexts: builder.query<{ data: SystemText[]; meta: PaginationMeta }, { page?: number; limit?: number } | void>({
        query: (params) => {
          const urlParams = new URLSearchParams();
          if (params?.page) urlParams.append("page", params.page.toString());
@@ -355,7 +357,7 @@ export const api = createApi({
        }),
        invalidatesTags: ["SystemText"],
      }),
-     getAdminComments: builder.query<{ data: any[]; meta: any }, { page?: number; limit?: number; postId?: string; status?: string } | void>({
+     getAdminComments: builder.query<{ data: PopulatedComment[]; meta: PaginationMeta }, { page?: number; limit?: number; postId?: string; status?: string } | void>({
        query: (params) => {
          const urlParams = new URLSearchParams();
          if (params?.page) urlParams.append("page", params.page.toString());
@@ -368,7 +370,7 @@ export const api = createApi({
        },
        providesTags: ["Comment"],
      }),
-     updateCommentStatus: builder.mutation<{ data: any }, { id: string; status: string }>({
+     updateCommentStatus: builder.mutation<{ data: Comment }, { id: string; status: string }>({
        query: ({ id, status }) => ({
          url: `/admin/comments/${id}/status`,
          method: "PATCH",
@@ -376,7 +378,7 @@ export const api = createApi({
        }),
        invalidatesTags: ["Comment", "Post"],
      }),
-     replyToComment: builder.mutation<{ data: any }, { id: string; text: string; name?: string }>({
+     replyToComment: builder.mutation<{ data: Comment }, { id: string; text: string; name?: string }>({
        query: ({ id, ...body }) => ({
          url: `/admin/comments/${id}/reply`,
          method: "POST",
@@ -391,14 +393,14 @@ export const api = createApi({
        }),
        invalidatesTags: ["Comment", "Post"],
      }),
-     createPublicComment: builder.mutation<{ data: any }, { postId: string; name: string; text: string }>({
+     createPublicComment: builder.mutation<{ data: Comment }, { postId: string; name: string; text: string }>({
        query: ({ postId, ...body }) => ({
          url: `/posts/${postId}/comments`,
          method: "POST",
          body,
        }),
      }),
-     getPublicComments: builder.query<{ data: any[]; meta: any }, { postId: string; page?: number; limit?: number }>({
+     getPublicComments: builder.query<{ data: Comment[]; meta: PaginationMeta }, { postId: string; page?: number; limit?: number }>({
         query: ({ postId, page, limit }) => {
           const urlParams = new URLSearchParams();
           if (page) urlParams.append("page", page.toString());

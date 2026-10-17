@@ -26,13 +26,13 @@ export class CollectionController {
   });
 
   saveCollection = withErrorHandling(async (request: Request, id?: string) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
     if (id) {
       rawBody.id = await resolveId(id, (slug) => this.collectionService.getCollectionBySlug(slug));
     }
     const body = await validateRequest(collectionSchema.extend({ id: z.string().uuid().optional() }), rawBody);
     const userId = await getUserId();
-    const collection = await this.collectionService.saveCollection({ ...body, userId } as any);
+    const collection = await this.collectionService.saveCollection({ ...body, userId });
     return sendSuccess(collection);
   });
 

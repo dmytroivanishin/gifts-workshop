@@ -25,13 +25,13 @@ export class ColorController {
   });
 
   saveColor = withErrorHandling(async (request: Request, id?: string) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
     if (id) {
       rawBody.id = id;
     }
     const body = await validateRequest(colorSchema.extend({ id: z.string().uuid().optional() }), rawBody);
     const userId = await getUserId();
-    const color = await this.colorService.saveColor({ ...body, userId } as any);
+    const color = await this.colorService.saveColor({ ...body, userId });
     return sendSuccess(color);
   });
 

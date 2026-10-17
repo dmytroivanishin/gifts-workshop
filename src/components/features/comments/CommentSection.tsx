@@ -51,8 +51,8 @@ export function CommentSection({ postId }: { postId: string }) {
   const comments = commentsResponse?.data || [];
   
   // Group replies
-  const topLevelComments = comments.filter((c: any) => !c.replyId);
-  const getReplies = (parentId: string) => comments.filter((c: any) => c.replyId === parentId);
+  const topLevelComments = comments.filter((c) => !c.replyId);
+  const getReplies = (parentId: string) => comments.filter((c) => c.replyId === parentId);
 
   return (
     <div className="mt-12 pt-8 border-t border-border/40 font-sans max-w-3xl mx-auto">
@@ -126,7 +126,7 @@ export function CommentSection({ postId }: { postId: string }) {
             <Loader2 className="animate-spin" size={24} />
           </div>
         ) : topLevelComments.length > 0 ? (
-          topLevelComments.map((comment: any) => (
+          topLevelComments.map((comment) => (
             <div key={comment.id} className="flex flex-col gap-3">
               {/* Parent Comment */}
               <div className="bg-card p-5 rounded-2xl border border-border/40 shadow-sm flex flex-col gap-2">
@@ -138,7 +138,7 @@ export function CommentSection({ postId }: { postId: string }) {
               </div>
 
               {/* Replies */}
-              {getReplies(comment.id).map((reply: any) => (
+              {getReplies(comment.id).map((reply) => (
                 <div key={reply.id} className="ml-8 md:ml-12 relative flex gap-3">
                   {/* Decorative curved line for reply tree */}
                   <div className="absolute -left-6 md:-left-8 top-0 w-4 h-8 border-l-2 border-b-2 border-border/60 rounded-bl-xl"></div>

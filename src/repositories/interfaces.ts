@@ -9,7 +9,8 @@ export interface QueryOptions extends PaginationOptions {
   inStock?: boolean;
   status?: string;
   postId?: string;
-  
+  replyId?: string | null;
+
   // Database-native flat fields for repository querying
   id?: string;
   categoryId?: string | string[];
@@ -45,7 +46,7 @@ export interface IMediaRepository extends IBaseRepository<Media> {}
 
 export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, QueryOptions> {
   getBySlug(slug: string): Promise<PopulatedPost | undefined>;
-  getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedPost[]>;
+  getByQuery(query: QueryOptions, options?: PaginationOptions): Promise<PopulatedPost[]>;
   countByCategory(categoryId: string): Promise<number>;
   countByPoster(mediaId: string): Promise<number>;
   countGalleryUsage(mediaId: string): Promise<number>;
@@ -66,6 +67,6 @@ export interface ILanguageRepository extends IBaseRepository<Language> {
 export interface ISystemTextRepository extends IBaseRepository<SystemText, SystemText, QueryOptions> {}
 
 export interface ICommentRepository extends IBaseRepository<Comment, PopulatedComment, QueryOptions> {
-  getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedComment[]>;
+  getByQuery(query: QueryOptions, options?: PaginationOptions): Promise<PopulatedComment[]>;
 }
 

@@ -17,6 +17,7 @@ import {
   useCreateSystemTextMutation,
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
+import { ApiMutationError, SystemText, PopulatedPost, PopulatedCategory, Tag, Collection, LocalizedText } from "@/types";
 
 interface PageProps {
   params: Promise<{ entityType: string; id: string }>;
@@ -68,24 +69,26 @@ export default function LocalizationDetailPage({ params }: PageProps) {
     if (entity) {
       if (isSystem) {
          // SystemText has 'content'
-         const rawContent = (entity as any).content || {};
+         const systemEntity = entity as SystemText;
+         const rawContent = systemEntity.content || {};
          const newTitles: Record<string, string> = {};
          activeLanguages.forEach(lang => {
            newTitles[lang] = rawContent[lang] || "";
          });
          setTitles(newTitles);
-         setArea((entity as any).area || "public");
-         setCode((entity as any).code || "");
+         setArea(systemEntity.area || "public");
+         setCode(systemEntity.code || "");
       } else {
-         const rawTitle = (entity as any).title || (entity as any).name;
-         const rawDesc = (entity as any).description || {};
+         const namedEntity = entity as { title?: LocalizedText | string; name?: LocalizedText | string; description?: LocalizedText | string };
+         const rawTitle = namedEntity.title || namedEntity.name;
+         const rawDesc = namedEntity.description || {};
 
          const newTitles: Record<string, string> = {};
          const newDescs: Record<string, string> = {};
 
          activeLanguages.forEach(lang => {
-            newTitles[lang] = typeof rawTitle === "string" && lang === "ru" ? rawTitle : rawTitle?.[lang] || "";
-            newDescs[lang] = typeof rawDesc === "string" && lang === "ru" ? rawDesc : rawDesc?.[lang] || "";
+            newTitles[lang] = typeof rawTitle === "string" && lang === "ru" ? rawTitle : (rawTitle as LocalizedText | undefined)?.[lang] || "";
+            newDescs[lang] = typeof rawDesc === "string" && lang === "ru" ? rawDesc : (rawDesc as LocalizedText | undefined)?.[lang] || "";
          });
 
          setTitles(newTitles);
@@ -122,7 +125,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
           await updateSystem({ id, content: titles, area, code }).unwrap();
         }
       } else if (isPost) {
-        const post = entity as any;
+        const post = entity as PopulatedPost;
         await updatePost({
           id,
           title: titles,
@@ -136,7 +139,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
           media: post.media,
         }).unwrap();
       } else if (isCategory) {
-        const cat = entity as any;
+        const cat = entity as PopulatedCategory;
         await updateCategory({
           id,
           title: titles,
@@ -147,14 +150,14 @@ export default function LocalizationDetailPage({ params }: PageProps) {
           tagsIds: cat.tagsIds,
         }).unwrap();
       } else if (isTag) {
-        const tag = entity as any;
+        const tag = entity as Tag;
         await updateTag({
           id,
           name: titles,
           slug: tag.slug,
         }).unwrap();
       } else if (isCollection) {
-        const coll = entity as any;
+        const coll = entity as Collection;
         await updateCollection({
           id,
           title: titles,
@@ -166,11 +169,12 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
       setSaveStatus({ type: "success", message: t("translations_success") || "Saved successfully!" });
       setTimeout(() => setSaveStatus(null), 3000);
-    } catch (err: any) {
-      if (err?.data?.error?.details) {
+    } catch (err: unknown) {
+      const apiError = err as ApiMutationError;
+      if (apiError?.data?.error?.details) {
         const newErrors: Record<string, string> = {};
-        err.data.error.details.forEach((detail: any) => {
-          newErrors[detail.field] = detail.message;
+        apiError.data.error.details.forEach((detail) => {
+          if (detail.field) newErrors[detail.field] = detail.message;
         });
         setServerErrors(newErrors);
       }

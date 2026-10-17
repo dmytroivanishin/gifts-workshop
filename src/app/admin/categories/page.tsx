@@ -24,6 +24,7 @@ import { categorySchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { SortableCategoryGroup } from "@/components/shared/SortableCategoryTree";
 import { getLocalizedField } from "@/utils/localization";
+import { ApiMutationError, PopulatedCategory } from "@/types";
 
 export default function AdminCategories() {
   const { t, loc, locale } = useTranslation();
@@ -42,7 +43,7 @@ export default function AdminCategories() {
   const categories = categoriesResponse?.data || [];
   const allTags = tagsResponse?.data || [];
   const colorsList = colorsResponse?.data || [];
-  const tagOptions = allTags.map((tag: any) => ({ 
+  const tagOptions = allTags.map((tag) => ({
     value: tag.id, 
     label: loc(tag.name) 
   }));
@@ -82,12 +83,12 @@ export default function AdminCategories() {
   const [editCollectionId, setEditCollectionId] = useState("");
   const [editParentId, setEditParentId] = useState("");
   const [editSelectedTags, setEditSelectedTags] = useState<string[]>([]);
-  const [activeCategoryObj, setActiveCategoryObj] = useState<any>(null);
+  const [activeCategoryObj, setActiveCategoryObj] = useState<PopulatedCategory | null>(null);
 
   // Auto-create / select color for creation form
   useEffect(() => {
     if (!color) return;
-    const existing = colorsList.find((c: any) => c.color.toLowerCase() === color.toLowerCase());
+    const existing = colorsList.find((c) => c.color.toLowerCase() === color.toLowerCase());
     if (existing) {
       setSelectedColorId(existing.id);
       setIsCreatingColorPending(false);
@@ -133,7 +134,7 @@ export default function AdminCategories() {
   // Auto-create / select color for edit form
   useEffect(() => {
     if (!editColor || !isEditing) return;
-    const existing = colorsList.find((c: any) => c.color.toLowerCase() === editColor.toLowerCase());
+    const existing = colorsList.find((c) => c.color.toLowerCase() === editColor.toLowerCase());
     if (existing) {
       setEditSelectedColorId(existing.id);
       setIsEditingColorPending(false);
@@ -189,9 +190,10 @@ export default function AdminCategories() {
       setColor("");
       setSelectedColorId("");
       setSessionColorId("");
-    } catch (err: any) {
-      if (err?.data?.error?.details) {
-        err.data.error.details.forEach((detail: any) => {
+    } catch (err: unknown) {
+      const apiError = err as ApiMutationError;
+      if (apiError?.data?.error?.details) {
+        apiError.data.error.details.forEach((detail) => {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }
@@ -228,7 +230,7 @@ export default function AdminCategories() {
     }
   };
 
-  const handleStartEdit = (cat: any) => {
+  const handleStartEdit = (cat: PopulatedCategory) => {
     setIsEditing(cat.id);
     setActiveCategoryObj(cat);
     setEditTitle(getLocalizedField(cat.title, locale));
@@ -237,7 +239,7 @@ export default function AdminCategories() {
     setEditSelectedColorId(cat.color?.id || (colorsList.length > 0 ? colorsList[0].id : ""));
     setEditCollectionId(cat.collectionId || "");
     setEditParentId(cat.parentId || "");
-    setEditSelectedTags(cat.tagsIds || cat.tags?.map((t: any) => t.id) || []);
+    setEditSelectedTags(cat.tagsIds || cat.tags?.map((t) => t.id) || []);
   };
 
   const handleDeleteClick = (id: string) => {
@@ -296,7 +298,7 @@ export default function AdminCategories() {
                     }
                   }
                 }}
-                renderItem={(cat: any) => {
+                renderItem={(cat) => {
                   const catTitleLoc = getLocalizedField(cat.title, locale);
                   const catDescLoc = getLocalizedField(cat.description, locale);
                   const catColor = cat.color?.color || "transparent";
@@ -332,7 +334,7 @@ export default function AdminCategories() {
                               required
                             >
                               <option value="" disabled>{t("placeholder_select_collection")}</option>
-                              {collections.map((col: any) => (
+                              {collections.map((col) => (
                                 <option key={col.id} value={col.id} className="bg-card text-foreground">
                                   {getLocalizedField(col.title, locale)}
                                 </option>
@@ -348,8 +350,8 @@ export default function AdminCategories() {
                             >
                               <option value="">{t("none_main_category")}</option>
                               {categories
-                                .filter((c: any) => c.id !== cat.id)
-                                .map((c: any) => (
+                                .filter((c) => c.id !== cat.id)
+                                .map((c) => (
                                   <option key={c.id} value={c.id} className="bg-card text-foreground">
                                     {getLocalizedField(c.title, locale)}
                                   </option>
@@ -361,7 +363,7 @@ export default function AdminCategories() {
                             <Combobox
                               options={tagOptions}
                               value={editSelectedTags}
-                              onChange={(val) => setEditSelectedTags(val)}
+                              onChange={(val) => setEditSelectedTags(val as string[])}
                               placeholder={t("placeholder_select_tags")}
                               searchPlaceholder={t("placeholder_search_tags")}
                               allowCreate
@@ -375,7 +377,7 @@ export default function AdminCategories() {
                             {/* Presets Grid */}
                             {colorsList.length > 0 && (
                               <div className="flex flex-wrap gap-2 sm:gap-1.5 p-2 sm:p-1.5 rounded-lg bg-muted/30 border border-border/40">
-                                {colorsList.map((c: any) => (
+                                {colorsList.map((c) => (
                                   <button
                                     key={c.id}
                                     type="button"
@@ -427,7 +429,7 @@ export default function AdminCategories() {
                               HEX: {catColor}
                             </span>
                             {cat.parentId && (() => {
-                              const parentCat = categories.find((c: any) => c.id === cat.parentId);
+                              const parentCat = categories.find((c) => c.id === cat.parentId);
                               const parentTitle = parentCat ? getLocalizedField(parentCat.title, locale) : "";
                               return parentTitle ? (
                                 <span className="text-[11px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
@@ -548,7 +550,7 @@ export default function AdminCategories() {
                         className={`w-full px-3.5 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer ${form.formState.errors.collectionId ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
                       >
                         <option value="" disabled>{t("placeholder_select_collection")}</option>
-                        {collections.map((col: any) => (
+                        {collections.map((col) => (
                           <option key={col.id} value={col.id} className="bg-card text-foreground">
                             {getLocalizedField(col.title, locale)}
                           </option>
@@ -573,7 +575,7 @@ export default function AdminCategories() {
                         className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                       >
                         <option value="">{t("none_main_category")}</option>
-                        {categories.map((c: any) => {
+                        {categories.map((c) => {
                           const titleStr = getLocalizedField(c.title, locale);
                           return (
                             <option key={c.id} value={c.id} className="bg-card text-foreground">
@@ -618,7 +620,7 @@ export default function AdminCategories() {
                 {/* Presets Grid */}
                 {colorsList.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 p-2 rounded-lg bg-muted/30 border border-border/40">
-                    {colorsList.map((c: any) => (
+                    {colorsList.map((c) => (
                       <button
                         key={c.id}
                         type="button"

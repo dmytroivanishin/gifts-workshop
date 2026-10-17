@@ -2,7 +2,7 @@
 
 import { createContext, useContext, ReactNode, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { SystemText } from "@/types";
+import { SystemText, LocalizedText } from "@/types";
 
 type Locale = string;
 
@@ -11,7 +11,7 @@ interface I18nContextProps {
   setLocale: (locale: Locale) => void;
   activeLanguages: string[];
   t: (key: string) => string;
-  loc: (field: any) => string;
+  loc: (field: LocalizedText | string | null | undefined) => string;
   isLoading: boolean;
 }
 
@@ -67,7 +67,7 @@ export function I18nProvider({ children, systemTexts, initialLocale, activeLangu
     return item[locale] || key;
   };
 
-  const loc = (field: any): string => {
+  const loc = (field: LocalizedText | string | null | undefined): string => {
     if (!field) return "";
     if (typeof field === "string") return field;
     if (typeof field === "object") {

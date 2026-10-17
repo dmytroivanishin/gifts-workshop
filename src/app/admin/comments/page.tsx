@@ -11,13 +11,15 @@ import {
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useTranslation } from "@/i18n";
 import { PopulatedComment } from "@/types";
+
+type CommentNode = PopulatedComment & { adminReplies: PopulatedComment[] };
 import { getLocalizedField } from "@/utils/localization";
 
 export default function AdminComments() {
   const { t, locale } = useTranslation();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<PopulatedComment[]>([]);
 
   const { data: commentsResponse, isLoading, isFetching, refetch } = useGetAdminCommentsQuery({ page, limit: 15, status: statusFilter || undefined });
   const [updateStatus, { isLoading: isUpdating }] = useUpdateCommentStatusMutation();
@@ -41,7 +43,7 @@ export default function AdminComments() {
       } else {
         setComments((prev) => {
           const existingIds = new Set(prev.map((c) => c.id));
-          const newComments = commentsResponse.data.filter((c: any) => !existingIds.has(c.id));
+          const newComments = commentsResponse.data.filter((c) => !existingIds.has(c.id));
           return [...prev, ...newComments];
         });
       }
@@ -77,7 +79,7 @@ export default function AdminComments() {
     setPage(1);
   }, [statusFilter]);
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
+  const handleStatusChange = async (id: string, newStatus: "Approved" | "Rejected") => {
     try {
       await updateStatus({ id, status: newStatus }).unwrap();
       // Refetch or update local state
@@ -127,8 +129,8 @@ export default function AdminComments() {
   };
 
   const sortedComments = useMemo(() => {
-    const parentMap = new Map();
-    const orphans: any[] = [];
+    const parentMap = new Map<string, CommentNode>();
+    const orphans: PopulatedComment[] = [];
     
     // Find all parents
     comments.forEach(c => {
@@ -141,7 +143,7 @@ export default function AdminComments() {
     comments.forEach(c => {
       if (c.replyId) {
         if (parentMap.has(c.replyId)) {
-          parentMap.get(c.replyId).adminReplies.push(c);
+          parentMap.get(c.replyId)!.adminReplies.push(c);
         } else {
           orphans.push(c);
         }
@@ -150,15 +152,15 @@ export default function AdminComments() {
 
     // Sort replies ASC (oldest first under parent)
     parentMap.forEach(parent => {
-      parent.adminReplies.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      parent.adminReplies.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     });
 
-    const parents = Array.from(parentMap.values()).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    
+    const parents = Array.from(parentMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
     return parents;
   }, [comments]);
 
-  const renderCommentNode = (comment: any, isReply: boolean = false) => (
+  const renderCommentNode = (comment: PopulatedComment, isReply: boolean = false) => (
     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
       <div className="flex flex-col gap-1.5 flex-1 relative z-10">
         <div className="flex items-center gap-2">
@@ -254,7 +256,7 @@ export default function AdminComments() {
               {t("loading") || "Loading..."}
             </div>
           ) : sortedComments.length > 0 ? (
-            sortedComments.map((parent: any) => (
+            sortedComments.map((parent) => (
               <div key={parent.id} className="flex flex-col divide-y divide-border/20 border-b border-border/45 last:border-b-0">
                 <div className="p-4 hover:bg-muted/10 transition-colors">
                   {renderCommentNode(parent, false)}
@@ -291,7 +293,7 @@ export default function AdminComments() {
 
                 {parent.adminReplies && parent.adminReplies.length > 0 && (
                   <div className="bg-black/5 divide-y divide-border/20">
-                    {parent.adminReplies.map((reply: any) => (
+                    {parent.adminReplies.map((reply) => (
                       <div key={reply.id} className="p-4 pl-12 relative hover:bg-muted/10 transition-colors">
                         <div className="absolute left-6 top-0 w-4 h-8 border-l-2 border-b-2 border-border/60 rounded-bl-xl z-0"></div>
                         {renderCommentNode(reply, true)}

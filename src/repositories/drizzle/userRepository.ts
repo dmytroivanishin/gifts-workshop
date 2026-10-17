@@ -7,10 +7,10 @@ import { IUserRepository } from "../interfaces";
 
 export class UserRepository extends DrizzleBaseRepository<User, User> implements IUserRepository {
   constructor() {
-    super(users as any);
+    super(users);
   }
 
-  async populate(item: any): Promise<User> {
+  async populate(item: typeof users.$inferSelect): Promise<User> {
     // Explicit allowlist: the password column must never leave the repository
     return { id: item.id, email: item.email, name: item.name };
   }

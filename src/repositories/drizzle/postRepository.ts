@@ -1,6 +1,6 @@
 import { DrizzleBaseRepository } from "./baseRepository";
 import { posts, postsToTags, tags, media, postsToMedia } from "./schema";
-import { Post, PopulatedPost, PaginationOptions } from "@/types";
+import { Post, PopulatedPost, PaginationOptions, PopulatedPostMedia } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, and, or, sql, inArray, desc } from "drizzle-orm";
 import { IPostRepository, QueryOptions } from "../interfaces";
@@ -8,40 +8,37 @@ import { isUUID } from "@/utils/uuid";
 
 type PostRecord = typeof posts.$inferSelect & {
   postsToTags?: { tag: typeof tags.$inferSelect }[];
-  postsToMedia?: { 
-    order: number;
-    position?: any;
+  postsToMedia?: (typeof postsToMedia.$inferSelect & {
     media: typeof media.$inferSelect;
-  }[];
-  [key: string]: any;
+  })[];
 };
 
 export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, QueryOptions> implements IPostRepository {
   constructor() {
-    super(posts as any);
+    super(posts);
   }
 
   private mapToPopulated(record: PostRecord): PopulatedPost {
-    if (!record) return record as any;
-    const tagsList = record.postsToTags?.map((pt: any) => pt.tag) || [];
-    
-    const mediaList = record.postsToMedia?.map((pm: any) => ({
+    if (!record) return record as unknown as PopulatedPost;
+    const tagsList = record.postsToTags?.map((pt) => pt.tag) || [];
+
+    const mediaList: PopulatedPostMedia[] = record.postsToMedia?.map((pm) => ({
       id: pm.media.id,
       order: pm.order,
       mediaId: pm.media.id,
-      position: pm.position,
-      media: pm.media
+      position: pm.position ?? undefined,
+      media: pm.media as unknown as PopulatedPostMedia["media"]
     })) || [];
-    
-    mediaList.sort((a: any, b: any) => a.order - b.order);
-    const { postsToTags, postsToMedia, ...restRecord } = record as any;
+
+    mediaList.sort((a, b) => a.order - b.order);
+    const { postsToTags, postsToMedia, ...restRecord } = record;
 
     return {
       ...restRecord,
       media: mediaList,
       tags: tagsList,
-      tagsIds: tagsList.map((t: any) => t.id),
-    } as PopulatedPost;
+      tagsIds: tagsList.map((t) => t.id),
+    } as unknown as PopulatedPost;
   }
 
   private getWithRelations() {
@@ -78,10 +75,10 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     };
   }
 
-  async populate(item: any): Promise<PopulatedPost> {
-    if (!item) return item;
+  async populate(item: { id: string } & Record<string, unknown>): Promise<PopulatedPost> {
+    if (!item) return item as unknown as PopulatedPost;
     const results = await this.getById(item.id);
-    if (!results) return item;
+    if (!results) return item as unknown as PopulatedPost;
     return results;
   }
 
@@ -91,11 +88,12 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     }
 
     const db = drizzleDatabase.getDb();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Drizzle's relational query-builder config type is generic over the schema/fields pair and can't be named without re-deriving that generic here; built up dynamically below.
     const queryOptions: any = {
       with: this.getListRelations(),
       orderBy: [desc(posts.createdAt)]
     };
-    
+
     if (options?.limit) {
       queryOptions.limit = options.limit;
       if (options?.page) {
@@ -113,7 +111,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
       where: eq(posts.id, id),
       with: this.getWithRelations()
     });
-    return record ? this.mapToPopulated(record as any) : undefined;
+    return record ? this.mapToPopulated(record) : undefined;
   }
 
   override async getByIds(ids: string[]): Promise<PopulatedPost[]> {
@@ -158,10 +156,10 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
       where: eq(posts.slug, slug),
       with: this.getWithRelations()
     });
-    return record ? this.mapToPopulated(record as any) : undefined;
+    return record ? this.mapToPopulated(record) : undefined;
   }
 
-  async getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedPost[]> {
+  async getByQuery(query: QueryOptions, options?: PaginationOptions): Promise<PopulatedPost[]> {
     const db = drizzleDatabase.getDb();
     
     const conditions = [];
@@ -190,6 +188,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- same generic Drizzle relational query-builder config as in getAll above.
     const queryOptions: any = {
       with: this.getListRelations(),
       orderBy: [desc(posts.createdAt)]
@@ -216,7 +215,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     const db = drizzleDatabase.getDb();
     const existing = await db.select({ id: posts.id }).from(posts).where(eq(posts.id, item.id)).limit(1);
 
-    const { tagsIds, media: postMediaItems, ...postData } = item as any;
+    const { tagsIds, media: postMediaItems, ...postData } = item;
 
     let savedId: string = "";
 
@@ -254,7 +253,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
          await tx.delete(postsToMedia).where(eq(postsToMedia.postId, savedId));
          if (postMediaItems.length > 0) {
            await tx.insert(postsToMedia).values(
-             postMediaItems.map((m: any) => ({
+             postMediaItems.map((m) => ({
                postId: savedId,
                mediaId: m.mediaId,
                order: m.order,

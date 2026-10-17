@@ -7,6 +7,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useDispatch } from "react-redux";
 import { addNotification } from "@/store/slices/notificationSlice";
 import { useGetMediaQuery, useUploadMediaMutation, useDeleteMediaMutation } from "@/store/api";
+import { ApiMutationError } from "@/types";
 
 interface MediaItem {
   id: string;
@@ -35,7 +36,7 @@ export default function AdminMedia() {
   const [uploadMedia] = useUploadMediaMutation();
   const [deleteMedia] = useDeleteMediaMutation();
 
-  const media: MediaItem[] = (mediaData?.data || []).map((m: any) => ({
+  const media: MediaItem[] = (mediaData?.data || []).map((m) => ({
     id: m.id,
     url: m.thumbnailUrl || m.originalUrl,
     name: m.originalUrl.split('/').pop() || 'image',
@@ -70,14 +71,14 @@ export default function AdminMedia() {
         try {
           await uploadMedia(formData).unwrap();
           anySucceeded = true;
-        } catch (err: any) {
-          const errorData = err?.data;
-          const errorCode = errorData?.error?.code || errorData?.code || 'UPLOAD_FAILED';
+        } catch (err: unknown) {
+          const errorData = (err as ApiMutationError)?.data;
+          const errorCode = errorData?.error?.code || 'UPLOAD_FAILED';
           setFailedFiles(prev => [...prev, files[i].name]);
           dispatch(addNotification({
             type: 'error',
             messageKey: errorCode,
-            details: errorData?.error?.message || errorData?.message || 'Upload failed'
+            details: errorData?.error?.message || 'Upload failed'
           }));
         }
       }
@@ -123,13 +124,13 @@ export default function AdminMedia() {
     try {
       await deleteMedia(deleteTargetId).unwrap();
       dispatch(addNotification({ type: 'success', messageKey: 'media_deleted' }));
-    } catch (err: any) {
-      const errorData = err?.data;
-      const errorCode = errorData?.error?.code || errorData?.code || 'DELETE_FAILED';
+    } catch (err: unknown) {
+      const errorData = (err as ApiMutationError)?.data;
+      const errorCode = errorData?.error?.code || 'DELETE_FAILED';
       dispatch(addNotification({
         type: 'error',
         messageKey: errorCode,
-        details: errorData?.error?.message || errorData?.message || 'Failed to delete media'
+        details: errorData?.error?.message || 'Failed to delete media'
       }));
     } finally {
       setIsDeleteOpen(false);

@@ -1,6 +1,6 @@
 import { IPostRepository, ICategoryRepository, ITagRepository, ICollectionRepository, QueryOptions } from "@/repositories/interfaces";
 import { IPostService } from "./interfaces";
-import { Post, PopulatedPost, Category } from "@/types";
+import { Post, PopulatedPost, Category, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";
@@ -33,7 +33,7 @@ export class PostService implements IPostService {
     }
   }
 
-  async getFilteredPosts(filters?: QueryOptions): Promise<any> {
+  async getFilteredPosts(filters?: QueryOptions): Promise<PaginatedResult<PopulatedPost>> {
     // 1. Build clean database query options
     const dbOptions: QueryOptions = {
       search: filters?.search,

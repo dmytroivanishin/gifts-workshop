@@ -21,18 +21,19 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, X, Move, Star } from "lucide-react";
 import { useTranslation } from "@/i18n";
+import { Media, Position } from "@/types";
 
 interface MediaItem {
   mediaId: string;
   url: string;
-  position?: { x: number; y: number; zoom: number };
+  position?: Position;
 }
 
 interface SortableMediaItemProps {
   item: MediaItem;
   isCover: boolean;
-  mediaItemDetails: any; // from mediaList
-  onSetCover: (id: string, position?: any) => void;
+  mediaItemDetails: Media | undefined; // from mediaList
+  onSetCover: (id: string, position?: Position) => void;
   onCrop: (id: string) => void;
   onRemove: (id: string) => void;
 }
@@ -169,10 +170,10 @@ export function SortableMediaGrid({
   onRemove,
 }: {
   items: MediaItem[];
-  mediaList: any[];
+  mediaList: Media[];
   coverImage: string;
   onReorder: (newItems: MediaItem[]) => void;
-  onSetCover: (id: string, position?: any) => void;
+  onSetCover: (id: string, position?: Position) => void;
   onCrop: (id: string) => void;
   onRemove: (id: string) => void;
 }) {

@@ -51,19 +51,19 @@ export class PostController {
   });
 
   createPost = withErrorHandling(async (request: Request) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = await parseJsonBody(request);
     const body = await validateRequest(postSchema, rawBody);
     const userId = await getUserId();
-    const post = await this.postService.createPost({ ...body, userId } as any);
+    const post = await this.postService.createPost({ ...body, userId });
     return sendSuccess(post);
   });
 
   updatePost = withErrorHandling(async (request: Request, id: string) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = await parseJsonBody(request);
     const resolvedId = await resolveId(id, (slug) => this.postService.getPostBySlug(slug));
     const body = await validateRequest(postSchema, rawBody);
     const userId = await getUserId();
-    const post = await this.postService.updatePost(resolvedId, { ...body, userId } as any);
+    const post = await this.postService.updatePost(resolvedId, { ...body, userId });
     if (!post) {
       throw new NotFoundError("Post not found");
     }

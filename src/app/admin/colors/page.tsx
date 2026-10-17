@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { colorSchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { ApiMutationError } from "@/types";
 
 export default function AdminColors() {
   const { t } = useTranslation();
@@ -46,9 +47,10 @@ export default function AdminColors() {
     try {
       await createColor(values).unwrap();
       form.reset(defaultValues);
-    } catch (err: any) {
-      if (err?.data?.error?.details) {
-        err.data.error.details.forEach((detail: any) => {
+    } catch (err: unknown) {
+      const apiError = err as ApiMutationError;
+      if (apiError?.data?.error?.details) {
+        apiError.data.error.details.forEach((detail) => {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }
@@ -148,7 +150,7 @@ export default function AdminColors() {
 
           <div className="divide-y divide-border/60">
             {colors.length > 0 ? (
-              colors.map((c: any) => {
+              colors.map((c) => {
                 const isEditingThis = editingId === c.id;
                 return (
                   <div key={c.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">

@@ -43,9 +43,9 @@ function LoginContent() {
       }
 
       router.push("/admin/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.message || "Authentication error occurred");
+      toast.error(err instanceof Error ? err.message : "Authentication error occurred");
       // Drops the used code and state from the address bar
       router.replace("/admin/login");
       setIsLoading(false);
@@ -65,8 +65,8 @@ function LoginContent() {
       }
 
       window.location.href = googleAuthUrl;
-    } catch (err: any) {
-      toast.error(err.message || "Failed to start Google login");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to start Google login");
       setIsLoading(false);
     }
   };
@@ -85,8 +85,8 @@ function LoginContent() {
       }
 
       router.push("/admin/dashboard");
-    } catch (err: any) {
-      toast.error(err.message || "Bypass failed");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Bypass failed");
       setIsLoading(false);
     }
   };

@@ -7,10 +7,10 @@ import { ITagRepository } from "../interfaces";
 
 export class TagRepository extends DrizzleBaseRepository<Tag, Tag> implements ITagRepository {
   constructor() {
-    super(tags as any);
+    super(tags);
   }
 
-  async populate(item: any): Promise<Tag> {
+  async populate(item: typeof tags.$inferSelect): Promise<Tag> {
     return item as Tag;
   }
 

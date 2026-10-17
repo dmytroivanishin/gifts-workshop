@@ -15,7 +15,7 @@ export async function GET(
     // response (Published only) is safe for a shared cache.
     const cacheSeconds = (await isAdminRequest()) ? undefined : CACHE_SECONDS.posts;
     return sendSuccess(result.data, result.meta, cacheSeconds);
-  } catch (error: any) {
+  } catch (error: unknown) {
     return sendError(error);
   }
 }

@@ -11,8 +11,19 @@ import {
   useGetSystemTextsQuery,
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
+import { LocalizedText } from "@/types";
 
 type EntityType = "post" | "category" | "tag" | "collection" | "system";
+
+// Loose union covering whichever entity is currently selected (post/category/tag/collection/system);
+// each branch only reads the couple of fields relevant to it, the same duck-typed access this had under `any`.
+interface LocalizableItem {
+  id: string;
+  title?: LocalizedText | string;
+  name?: LocalizedText | string;
+  content?: LocalizedText;
+  code?: string;
+}
 
 export default function AdminLocalizations() {
   const { t, activeLanguages, locale } = useTranslation();
@@ -23,7 +34,7 @@ export default function AdminLocalizations() {
   const limit = 12;
 
   // Track items locally to allow "Load More" appending
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<LocalizableItem[]>([]);
 
   const isPost = entityType === "post";
   const isCategory = entityType === "category";
@@ -56,7 +67,7 @@ export default function AdminLocalizations() {
         
         // Prevent duplicates just in case
         const existingIds = new Set(prev.map(i => i.id));
-        const newItems = currentData.data.filter((i: any) => !existingIds.has(i.id));
+        const newItems = currentData.data.filter((i) => !existingIds.has(i.id));
         return [...prev, ...newItems];
       });
     }
@@ -73,7 +84,7 @@ export default function AdminLocalizations() {
     }
   };
 
-  const getTranslationStatus = (item: any) => {
+  const getTranslationStatus = (item: LocalizableItem) => {
     const missing: string[] = [];
 
     if (isSystem) {

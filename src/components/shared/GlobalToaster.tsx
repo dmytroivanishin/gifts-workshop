@@ -16,7 +16,7 @@ export function GlobalToaster() {
     if (queue.length > 0) {
       queue.forEach((notification) => {
         // Find translation, fallback to details or key
-        let message = t(notification.messageKey as any);
+        let message = t(notification.messageKey);
         if (message === notification.messageKey && notification.details) {
           message = notification.details;
         }

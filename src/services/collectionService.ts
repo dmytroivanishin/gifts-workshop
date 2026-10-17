@@ -1,6 +1,6 @@
 import { ICollectionRepository } from "@/repositories/interfaces";
 import { ICollectionService } from "./interfaces";
-import { Collection } from "@/types";
+import { Collection, PaginatedResult, PaginationOptions } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";
@@ -16,7 +16,7 @@ export class CollectionService implements ICollectionService {
     private collectionRepo: ICollectionRepository
   ) {}
 
-  async getAllCollections(options?: any): Promise<any> {
+  async getAllCollections(options?: PaginationOptions): Promise<PaginatedResult<Collection>> {
     const page = options?.page || 1;
     const limit = options?.limit || 20;
 
@@ -40,7 +40,7 @@ export class CollectionService implements ICollectionService {
     return this.collectionRepo.getBySlug(slug);
   }
 
-  async saveCollection(body: any): Promise<Collection> {
+  async saveCollection(body: { id?: string; title: Collection["title"]; description?: Collection["description"]; main?: boolean; slug?: string; userId?: string }): Promise<Collection> {
     const id = body.id || randomUUID();
     
     let slug = body.slug;
@@ -51,7 +51,7 @@ export class CollectionService implements ICollectionService {
     const collection: Collection = {
       id,
       title: body.title,
-      description: body.description,
+      description: body.description as Collection["description"],
       main: body.main ?? false,
       slug,
     };

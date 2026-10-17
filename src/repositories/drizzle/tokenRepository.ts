@@ -6,10 +6,10 @@ import { eq, lt } from "drizzle-orm";
 
 export class TokenRepository extends DrizzleBaseRepository<TokenSession, TokenSession> {
   constructor() {
-    super(tokenSessions as any);
+    super(tokenSessions);
   }
 
-  async populate(item: any): Promise<TokenSession> {
+  async populate(item: typeof tokenSessions.$inferSelect): Promise<TokenSession> {
     return item as TokenSession;
   }
 

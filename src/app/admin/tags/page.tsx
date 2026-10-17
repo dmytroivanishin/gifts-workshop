@@ -15,11 +15,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { tagSchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { ApiMutationError, Tag } from "@/types";
 
 export default function AdminTags() {
   const { t, loc, locale } = useTranslation();
   const [page, setPage] = useState(1);
-  const [tags, setTags] = useState<any[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
 
   const { data: tagsResponse, isLoading, isFetching } = useGetTagsQuery({ page, limit: 15 });
   const [createTag, { isLoading: isCreating }] = useCreateTagMutation();
@@ -37,7 +38,7 @@ export default function AdminTags() {
   });
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
-  const [activeTagObj, setActiveTagObj] = useState<any>(null);
+  const [activeTagObj, setActiveTagObj] = useState<Tag | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState("");
   const [editTagName, setEditTagName] = useState("");
@@ -53,7 +54,7 @@ export default function AdminTags() {
       } else {
         setTags((prev) => {
           const existingIds = new Set(prev.map((t) => t.id));
-          const newTags = tagsResponse.data.filter((t: any) => !existingIds.has(t.id));
+          const newTags = tagsResponse.data.filter((t) => !existingIds.has(t.id));
           return [...prev, ...newTags];
         });
       }
@@ -90,9 +91,10 @@ export default function AdminTags() {
       await createTag(values).unwrap();
       form.reset(defaultValues);
       setPage(1); // Reset to page 1 to fetch the latest
-    } catch (err: any) {
-      if (err?.data?.error?.details) {
-        err.data.error.details.forEach((detail: any) => {
+    } catch (err: unknown) {
+      const apiError = err as ApiMutationError;
+      if (apiError?.data?.error?.details) {
+        apiError.data.error.details.forEach((detail) => {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }
@@ -156,7 +158,7 @@ export default function AdminTags() {
                 {t("loading_tags")}
               </div>
             ) : tags.length > 0 ? (
-              tags.map((tag: any) => (
+              tags.map((tag) => (
                 <div
                   key={tag.id}
                   className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"

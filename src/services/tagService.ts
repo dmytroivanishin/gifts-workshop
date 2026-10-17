@@ -1,6 +1,6 @@
 import { ITagRepository } from "@/repositories/interfaces";
 import { ITagService } from "./interfaces";
-import { Tag } from "@/types";
+import { Tag, LocalizedText, PaginatedResult, PaginationOptions } from "@/types";
 import { randomUUID } from "crypto";
 import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";
@@ -10,7 +10,7 @@ import { paginate } from "./pagination";
 export class TagService implements ITagService {
   constructor(private tagRepo: ITagRepository) {}
 
-  async getAllTags(options?: any): Promise<any> {
+  async getAllTags(options?: PaginationOptions): Promise<PaginatedResult<Tag>> {
     if (options?.page || options?.limit) {
       const page = options.page || 1;
       const limit = options.limit || 20;
@@ -39,7 +39,7 @@ export class TagService implements ITagService {
     return this.tagRepo.getBySlug(slug);
   }
 
-  async saveTag(body: any): Promise<Tag> {
+  async saveTag(body: { name: LocalizedText; slug?: string; id?: string; userId?: string }): Promise<Tag> {
     const id = body.id || randomUUID();
     let slug = body.slug;
     if (!slug) {

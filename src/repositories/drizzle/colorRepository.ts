@@ -5,10 +5,10 @@ import { IColorRepository } from "../interfaces";
 
 export class ColorRepository extends DrizzleBaseRepository<Color, Color> implements IColorRepository {
   constructor() {
-    super(colors as any);
+    super(colors);
   }
 
-  async populate(item: any): Promise<Color> {
+  async populate(item: typeof colors.$inferSelect): Promise<Color> {
     return item as Color;
   }
 }

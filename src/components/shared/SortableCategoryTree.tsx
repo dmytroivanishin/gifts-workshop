@@ -63,19 +63,25 @@ function SortableItemWrapper({ id, children }: SortableItemProps) {
   );
 }
 
-interface SortableCategoryGroupProps {
-  parentId: string | null;
-  items: any[];
-  renderItem: (item: any) => React.ReactNode;
-  onReorder: (newItems: any[]) => void;
+interface SortableCategoryItem {
+  id: string;
+  parentId?: string | null;
+  order?: number;
 }
 
-export function SortableCategoryGroup({
+interface SortableCategoryGroupProps<T extends SortableCategoryItem> {
+  parentId: string | null;
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+  onReorder: (newItems: T[]) => void;
+}
+
+export function SortableCategoryGroup<T extends SortableCategoryItem>({
   parentId,
   items,
   renderItem,
   onReorder,
-}: SortableCategoryGroupProps) {
+}: SortableCategoryGroupProps<T>) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {

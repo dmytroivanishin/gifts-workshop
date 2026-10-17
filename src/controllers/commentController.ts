@@ -20,7 +20,7 @@ export class CommentController {
   });
 
   createComment = withErrorHandling(async (request: Request, injectedPostId?: string) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
     if (injectedPostId) {
       rawBody.postId = injectedPostId;
     }
@@ -30,7 +30,7 @@ export class CommentController {
   });
 
   updateCommentStatus = withErrorHandling(async (request: Request, id: string) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = await parseJsonBody(request);
     const statusSchema = z.object({
       status: z.enum(["Review", "Approved", "Rejected"])
     });
@@ -43,7 +43,7 @@ export class CommentController {
   });
 
   replyToComment = withErrorHandling(async (request: Request, id: string) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = await parseJsonBody(request);
     const replySchema = z.object({
       text: z.string().min(1, "error_required_field").max(2000, "error_text_too_long")
     });

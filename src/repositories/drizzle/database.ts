@@ -35,8 +35,9 @@ export class DrizzleDatabase {
     try {
       this.initConnection(uri);
       logger.info("Drizzle ORM connected successfully.");
-    } catch (error: any) {
-      logger.error("Failed to connect Drizzle ORM", { code: "DB_CONNECT_ERROR", error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error("Failed to connect Drizzle ORM", { code: "DB_CONNECT_ERROR", error: message });
       throw error;
     }
   }
@@ -50,8 +51,9 @@ export class DrizzleDatabase {
       try {
         this.initConnection(dbUri);
         logger.info("Drizzle ORM auto-connected successfully.");
-      } catch (error: any) {
-        logger.error("Failed to auto-connect Drizzle ORM", { code: "DB_AUTOCONNECT_ERROR", error: error.message });
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        logger.error("Failed to auto-connect Drizzle ORM", { code: "DB_AUTOCONNECT_ERROR", error: message });
         throw error;
       }
     }

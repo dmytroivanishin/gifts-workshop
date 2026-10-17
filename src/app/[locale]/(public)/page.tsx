@@ -82,13 +82,13 @@ function HomeContent() {
   let categoryQueryParam = "";
   if (activeCategory && dbCategories.length > 0) {
     const targetCategoryObj = dbCategories.find(
-      (c: any) => c.id === activeCategory || c.slug === activeCategory
+      (c) => c.id === activeCategory || c.slug === activeCategory
     );
     if (targetCategoryObj) {
       if (!targetCategoryObj.parentId) {
         // It is a parent category! Aggregate its ID and all children's IDs
-        const children = dbCategories.filter((c: any) => c.parentId === targetCategoryObj.id);
-        const resolvedIds = [targetCategoryObj.id, ...children.map((c: any) => c.id)];
+        const children = dbCategories.filter((c) => c.parentId === targetCategoryObj.id);
+        const resolvedIds = [targetCategoryObj.id, ...children.map((c) => c.id)];
         categoryQueryParam = resolvedIds.join(",");
       } else {
         // It is a single child category! Just use its ID
@@ -146,7 +146,7 @@ function HomeContent() {
   // Client-side filtering for favorites
   const posts = response?.data || [];
   const displayedPosts = favoritesOnly
-    ? posts.filter((post: any) => likedIds.includes(post.id))
+    ? posts.filter((post) => likedIds.includes(post.id))
     : posts;
 
   return (
@@ -229,16 +229,16 @@ function HomeContent() {
 
             {/* Dynamic Categories */}
             {dbCategories
-              .filter((cat: any) => !cat.parentId)
-              .map((cat: any) => {
+              .filter((cat) => !cat.parentId)
+              .map((cat) => {
                 const localizedTitle = loc(cat.title);
-                const children = dbCategories.filter((c: any) => c.parentId === cat.id);
+                const children = dbCategories.filter((c) => c.parentId === cat.id);
                 const hasChildren = children.length > 0;
 
                 const isSelected =
                   activeCategory === cat.id ||
                   activeCategory === cat.slug ||
-                  children.some((c: any) => activeCategory === c.id || activeCategory === c.slug);
+                  children.some((c) => activeCategory === c.id || activeCategory === c.slug);
 
                 if (hasChildren) {
                   return (
@@ -273,7 +273,7 @@ function HomeContent() {
                             {t("all")} {localizedTitle}
                           </Link>
                           <div className="h-[1px] bg-border/60 my-1" />
-                          {children.map((child: any) => {
+                          {children.map((child) => {
                             const isChildSelected = activeCategory === child.id || activeCategory === child.slug;
                             return (
                               <Link

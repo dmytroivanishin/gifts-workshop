@@ -1,13 +1,13 @@
 import { IUserRepository } from "@/repositories/interfaces";
 import { IUserService } from "./interfaces";
-import { User } from "@/types";
+import { User, PaginatedResult, PaginationOptions } from "@/types";
 
 import { paginate } from "./pagination";
 
 export class UserService implements IUserService {
   constructor(private userRepo: IUserRepository) {}
 
-  async getAllUsers(options?: any): Promise<any> {
+  async getAllUsers(options?: PaginationOptions): Promise<PaginatedResult<User>> {
     const page = options?.page || 1;
     const limit = options?.limit || 20;
 

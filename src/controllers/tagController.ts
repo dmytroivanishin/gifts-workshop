@@ -27,13 +27,13 @@ export class TagController {
   });
 
   saveTag = withErrorHandling(async (request: Request, id?: string) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
     if (id) {
       rawBody.id = await resolveId(id, (slug) => this.tagService.getTagBySlug(slug));
     }
     const body = await validateRequest(tagSchema.extend({ id: z.string().uuid().optional() }), rawBody);
     const userId = await getUserId();
-    const tag = await this.tagService.saveTag({ ...body, userId } as any);
+    const tag = await this.tagService.saveTag({ ...body, userId });
     return sendSuccess(tag);
   });
 

@@ -28,13 +28,13 @@ export class CategoryController {
   });
 
   saveCategory = withErrorHandling(async (request: Request, id?: string) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
     if (id) {
       rawBody.id = await resolveId(id, (slug) => this.categoryService.getCategoryBySlug(slug));
     }
     const body = await validateRequest(categorySchema.extend({ id: z.string().uuid().optional() }), rawBody);
     const userId = await getUserId();
-    const category = await this.categoryService.saveCategory({ ...body, userId } as any);
+    const category = await this.categoryService.saveCategory({ ...body, userId });
     return sendSuccess(category);
   });
 
@@ -45,7 +45,7 @@ export class CategoryController {
   });
 
   reorderCategories = withErrorHandling(async (request: Request) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
     const items = await validateRequest(z.array(z.object({
       id: z.string().uuid(),
       order: z.number().int()

@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { collectionSchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
+import { ApiMutationError, Collection } from "@/types";
 
 export default function AdminCollections() {
   const { t, loc, locale } = useTranslation();
@@ -39,7 +40,7 @@ export default function AdminCollections() {
   });
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
-  const [activeCollectionObj, setActiveCollectionObj] = useState<any>(null);
+  const [activeCollectionObj, setActiveCollectionObj] = useState<Collection | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState("");
 
@@ -49,7 +50,7 @@ export default function AdminCollections() {
     form.reset(defaultValues);
   };
 
-  const handleEdit = (col: any) => {
+  const handleEdit = (col: Collection) => {
     setIsEditing(col.id);
     setActiveCollectionObj(col);
     form.reset({
@@ -75,9 +76,10 @@ export default function AdminCollections() {
         await createCollection(values).unwrap();
       }
       resetForm();
-    } catch (err: any) {
-      if (err?.data?.error?.details) {
-        err.data.error.details.forEach((detail: any) => {
+    } catch (err: unknown) {
+      const apiError = err as ApiMutationError;
+      if (apiError?.data?.error?.details) {
+        apiError.data.error.details.forEach((detail) => {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }
@@ -128,7 +130,7 @@ export default function AdminCollections() {
                 {t("loading_collections")}
               </div>
             ) : collections.length > 0 ? (
-              collections.map((col: any) => (
+              collections.map((col) => (
                 <div
                   key={col.id}
                   className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"

@@ -28,6 +28,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { ru, enUS, Locale } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ApiMutationError, Tag, PopulatedPostMedia, Media } from "@/types";
+
+// The API can return a gallery/poster reference as a bare id string instead of the
+// fully populated object, depending on which populate() path produced it — handled
+// defensively below the same way this code already did under `any`.
+type LoosePostMedia = Omit<PopulatedPostMedia, "media"> & { media: Media | string };
 
 const dateLocales: Record<string, Locale> = { ru, en: enUS };
 
@@ -136,17 +142,17 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
         collectionId: col || post.collectionId || "",
         inStock: post.inStock,
         status: post.status,
-        tagsIds: post.tags ? post.tags.map((t: any) => typeof t === "string" ? t : t.id) : [],
+        tagsIds: post.tags ? post.tags.map((t: Tag | string) => typeof t === "string" ? t : t.id) : [],
         posterId: post.poster ? (typeof post.poster === "string" ? post.poster : post.poster.id) : undefined as any,
         createdAt: post.createdAt ? new Date(post.createdAt).toISOString().slice(0, 16) : undefined,
-        media: post.media ? post.media.map((m: any, i: number) => ({
+        media: post.media ? (post.media as LoosePostMedia[]).map((m, i: number) => ({
           order: i + 1,
           mediaId: typeof m.media === "string" ? m.media : m.media.id,
           position: m.position || undefined,
         })) : []
       });
 
-      const images: SelectedMedia[] = post.media.map((m: any) => ({
+      const images: SelectedMedia[] = (post.media as LoosePostMedia[]).map((m) => ({
         mediaId: typeof m.media === "string" ? m.media : m.media.id,
         url: typeof m.media === "string" ? "" : m.media.originalUrl,
         position: m.position,
@@ -239,9 +245,10 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       } else {
         router.push("/admin/dashboard");
       }
-    } catch (err: any) {
-      if (err?.data?.error?.details) {
-        err.data.error.details.forEach((detail: any) => {
+    } catch (err: unknown) {
+      const apiError = err as ApiMutationError;
+      if (apiError?.data?.error?.details) {
+        apiError.data.error.details.forEach((detail) => {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }

@@ -7,10 +7,10 @@ import { ICollectionRepository } from "../interfaces";
 
 export class CollectionRepository extends DrizzleBaseRepository<Collection, Collection> implements ICollectionRepository {
   constructor() {
-    super(collections as any);
+    super(collections);
   }
 
-  async populate(item: any): Promise<Collection> {
+  async populate(item: typeof collections.$inferSelect): Promise<Collection> {
     return item as Collection;
   }
 

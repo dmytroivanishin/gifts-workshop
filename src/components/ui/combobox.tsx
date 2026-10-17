@@ -11,7 +11,7 @@ interface ComboboxOption {
 interface ComboboxProps {
   options: ComboboxOption[];
   value: string | string[];
-  onChange: (value: any) => void;
+  onChange: (value: string | string[]) => void;
   placeholder?: string;
   searchPlaceholder?: string;
   allowCreate?: boolean;

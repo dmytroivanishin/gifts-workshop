@@ -24,12 +24,12 @@ export class CommentService implements ICommentService {
         offset: (page - 1) * limit,
       });
 
-      return paginate(comments as any, { page, limit });
+      return paginate(comments, { page, limit });
     }
 
     const comments = await this.commentRepo.getByQuery(dbOptions);
     return {
-      data: comments as any,
+      data: comments,
       meta: {
         page: 1,
         nextPage: null,
@@ -43,7 +43,7 @@ export class CommentService implements ICommentService {
     return this.commentRepo.getById(id);
   }
 
-  async createComment(body: any): Promise<Comment> {
+  async createComment(body: { postId: string; name: string; text: string; replyId?: string | null }): Promise<Comment> {
     const post = await this.postRepo.getById(body.postId);
     if (!post) throw new NotFoundError("Post not found");
 
@@ -60,7 +60,7 @@ export class CommentService implements ICommentService {
       name: body.name,
       text: body.text,
       status: "Review",
-      replyId: body.replyId,
+      replyId: body.replyId ?? undefined,
       createdAt: new Date(),
     };
 
@@ -79,7 +79,7 @@ export class CommentService implements ICommentService {
     return this.commentRepo.save(updatedComment);
   }
 
-  async replyToComment(id: string, body: any): Promise<Comment> {
+  async replyToComment(id: string, body: { name?: string; text: string }): Promise<Comment> {
     const existing = await this.commentRepo.getById(id);
     if (!existing) throw new NotFoundError("Parent comment not found");
 

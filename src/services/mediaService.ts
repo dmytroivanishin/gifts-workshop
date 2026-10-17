@@ -1,6 +1,6 @@
 import { IMediaRepository, IPostRepository } from "@/repositories/interfaces";
 import { IMediaService } from "./interfaces";
-import { Media } from "@/types";
+import { Media, PaginatedResult, PaginationOptions } from "@/types";
 import { randomUUID } from "crypto";
 import { paginate } from "./pagination";
 import { ConflictError } from "@/common/errors/conflict";
@@ -12,7 +12,7 @@ export class MediaService implements IMediaService {
     private postRepo: IPostRepository
   ) { }
 
-  async getAllMedia(options?: any): Promise<any> {
+  async getAllMedia(options?: PaginationOptions): Promise<PaginatedResult<Media>> {
     const page = options?.page || 1;
     const limit = options?.limit || 20;
 
@@ -64,7 +64,7 @@ export class MediaService implements IMediaService {
     return this.mediaRepo.getById(id);
   }
 
-  async saveMedia(body: any): Promise<Media> {
+  async saveMedia(body: Omit<Media, "id" | "userId"> & { id?: string; userId?: string }): Promise<Media> {
     const id = body.id || randomUUID();
     const media: Media = {
       id,
@@ -73,7 +73,8 @@ export class MediaService implements IMediaService {
       width: body.width,
       height: body.height,
       orientation: body.orientation,
-      userId: body.userId,
+      // Route-level withAdminAuth() already guarantees an authenticated admin before this runs.
+      userId: body.userId!,
     };
     return this.mediaRepo.save(media);
   }

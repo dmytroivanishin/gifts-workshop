@@ -1,6 +1,6 @@
 import { drizzleDatabase } from "./database";
 import { eq, inArray, sql } from "drizzle-orm";
-import { PgTable } from "drizzle-orm/pg-core";
+import { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { IBaseRepository } from "../interfaces";
 import { PaginationOptions } from "@/types";
 import { isUUID } from "@/utils/uuid";
@@ -10,11 +10,12 @@ export abstract class DrizzleBaseRepository<
   TPopulated = T,
   TQueryOptions extends PaginationOptions = PaginationOptions
 > implements IBaseRepository<T, TPopulated, TQueryOptions> {
-  
-  constructor(protected table: PgTable & { id: any }) {}
 
-  // Abstract method every concrete repository must implement to map raw DB records to the populated TypeScript model
-  abstract populate(item: any): Promise<TPopulated>;
+  constructor(protected table: PgTable & { id: AnyPgColumn }) {}
+
+  // Abstract method every concrete repository must implement to map raw DB records to the populated TypeScript model;
+  // each subclass overrides with its own table's concrete Drizzle row type (e.g. `typeof users.$inferSelect`).
+  abstract populate(item: Record<string, unknown>): Promise<TPopulated>;
 
   async getAll(options?: TQueryOptions): Promise<TPopulated[]> {
     let query = drizzleDatabase.getDb().select().from(this.table).$dynamic();
@@ -69,10 +70,10 @@ export abstract class DrizzleBaseRepository<
     // Dynamically construct update block for bulk upsert (ON CONFLICT DO UPDATE)
     const keys = Object.keys(items[0]).filter(k => k !== "id");
     const updateSet = keys.reduce((acc, key) => {
-      const dbColumnName = (this.table as any)[key]?.name || key;
+      const dbColumnName = (this.table as unknown as Record<string, AnyPgColumn>)[key]?.name || key;
       acc[key] = sql`excluded.${sql.identifier(dbColumnName)}`;
       return acc;
-    }, {} as any);
+    }, {} as Record<string, ReturnType<typeof sql>>);
 
     const records = await drizzleDatabase.getDb()
       .insert(this.table)

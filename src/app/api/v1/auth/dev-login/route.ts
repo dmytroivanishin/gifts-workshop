@@ -32,7 +32,7 @@ export async function POST() {
     await issueSession(userId, user.email);
 
     return sendSuccess({ success: true, email, id: userId });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return sendError(error);
   }
 }

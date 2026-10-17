@@ -1,6 +1,6 @@
 import { IColorRepository, ICategoryRepository } from "@/repositories/interfaces";
 import { IColorService } from "./interfaces";
-import { Color } from "@/types";
+import { Color, PaginatedResult, PaginationOptions } from "@/types";
 import { randomUUID } from "crypto";
 
 import { paginate } from "./pagination";
@@ -11,7 +11,7 @@ export class ColorService implements IColorService {
     private categoryRepo: ICategoryRepository
   ) {}
 
-  async getAllColors(options?: any): Promise<any> {
+  async getAllColors(options?: PaginationOptions): Promise<PaginatedResult<Color>> {
     const page = options?.page || 1;
     const limit = options?.limit || 20;
 
@@ -28,7 +28,7 @@ export class ColorService implements IColorService {
     return this.colorRepo.getById(id);
   }
 
-  async saveColor(body: any): Promise<Color> {
+  async saveColor(body: { id?: string; color: string; userId?: string }): Promise<Color> {
     const id = body.id || randomUUID();
     const color: Color = {
       id,

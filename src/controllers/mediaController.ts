@@ -45,13 +45,13 @@ export class MediaController {
       return sendSuccess(savedMedia);
     } else {
       // Fallback for legacy JSON saving (e.g. updating positions)
-      const rawBody: any = await parseJsonBody(request);
+      const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
       if (id) {
         rawBody.id = id;
       }
       const body = await validateRequest(mediaSchema.extend({ id: z.string().uuid().optional() }), rawBody);
       const userId = await getUserId();
-      const media = await this.mediaService.saveMedia({ ...body, userId } as any);
+      const media = await this.mediaService.saveMedia({ ...body, userId });
       return sendSuccess(media);
     }
   });

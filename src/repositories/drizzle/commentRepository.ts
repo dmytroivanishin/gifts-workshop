@@ -10,24 +10,23 @@ type CommentRecord = typeof comments.$inferSelect & {
   post?: typeof posts.$inferSelect;
   parent?: typeof comments.$inferSelect;
   replies?: typeof comments.$inferSelect[];
-  [key: string]: any;
 };
 
 export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedComment, QueryOptions> implements ICommentRepository {
   constructor() {
-    super(comments as any);
+    super(comments);
   }
 
-  async populate(item: any): Promise<PopulatedComment> {
-    if (!item) return item;
+  async populate(item: { id: string } & Record<string, unknown>): Promise<PopulatedComment> {
+    if (!item) return item as unknown as PopulatedComment;
     const results = await this.getById(item.id);
-    if (!results) return item;
+    if (!results) return item as unknown as PopulatedComment;
     return results;
   }
 
 
   private mapToPopulated(record: CommentRecord): PopulatedComment {
-    if (!record) return record as any;
+    if (!record) return record as unknown as PopulatedComment;
     return record as unknown as PopulatedComment;
   }
 
@@ -43,11 +42,12 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
     }
 
     const db = drizzleDatabase.getDb();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Drizzle's relational query-builder config type is generic over the schema/fields pair and can't be named without re-deriving that generic here; built up dynamically below.
     const queryOptions: any = {
       with: this.getWithRelations(),
       orderBy: [desc(comments.createdAt)]
     };
-    
+
     if (options?.limit) {
       queryOptions.limit = options.limit;
       if (options?.page) {
@@ -65,10 +65,10 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
       where: eq(comments.id, id),
       with: this.getWithRelations()
     });
-    return record ? this.mapToPopulated(record as any) : undefined;
+    return record ? this.mapToPopulated(record) : undefined;
   }
 
-  async getByQuery(query: Record<string, any>, options?: PaginationOptions): Promise<PopulatedComment[]> {
+  async getByQuery(query: QueryOptions, options?: PaginationOptions): Promise<PopulatedComment[]> {
     const db = drizzleDatabase.getDb();
     const conditions = [];
 
@@ -83,6 +83,7 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
        }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- same generic Drizzle relational query-builder config as in getAll above.
     const queryOptions: any = {
       with: this.getWithRelations(),
       orderBy: [desc(comments.createdAt)]
@@ -108,8 +109,9 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
   override async save(item: Comment): Promise<PopulatedComment> {
     const db = drizzleDatabase.getDb();
     
-    // Strip relational data that shouldn't be saved
-    const { post, parent, replies, ...dataToSave } = item as any;
+    // Strip relational data that shouldn't be saved (present only if a caller passes a
+    // PopulatedComment in where a plain Comment is expected; item itself never declares these).
+    const { post, parent, replies, ...dataToSave } = item as PopulatedComment;
     
     const existing = await db.select({ id: comments.id }).from(comments).where(eq(comments.id, item.id)).limit(1);
 

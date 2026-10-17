@@ -30,7 +30,7 @@ export class SystemTextController {
   });
 
   saveSystemText = withErrorHandling(async (request: Request, id?: string) => {
-    const rawBody: any = await parseJsonBody(request);
+    const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
     if (id) {
       rawBody.id = id;
     }

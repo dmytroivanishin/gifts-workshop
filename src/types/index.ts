@@ -143,6 +143,24 @@ export interface PaginationOptions {
   offset?: number;
 }
 
+export interface ApiErrorDetail {
+  field?: string;
+  message: string;
+}
+
+// Shape of an RTK Query mutation rejection (`.unwrap()`'s catch), matching the server's
+// sendError() envelope: { data: {}, error: { code, message, details? } }.
+export interface ApiMutationError {
+  status?: number;
+  data?: {
+    error?: {
+      code?: string;
+      message?: string;
+      details?: ApiErrorDetail[];
+    };
+  };
+}
+
 export type CommentStatus = "Review" | "Approved" | "Rejected";
 
 export interface Comment {

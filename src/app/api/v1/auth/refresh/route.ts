@@ -92,7 +92,7 @@ export async function POST(request: Request) {
     await tokenRepository.deleteExpired();
 
     return sendSuccess({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof UnauthorizedError) {
       return sendError(error);
     }
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
   }
 }
 
-function clearCookies(cookieStore: any) {
+function clearCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
   cookieStore.delete("accessToken");
   cookieStore.delete({
     name: "refreshToken",
