@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Добрые подарки / Kind Gifts
 
-## Getting Started
+A handmade-goods portfolio (soft toys, dolls, textiles, kitchen textiles) with a public,
+localized (ru/en) catalog and a single-admin CMS. Frontend and backend live in one
+Next.js app — see `CLAUDE.md` for the full architecture, status and open issues; this
+file only covers getting it running locally.
 
-First, run the development server:
+**Not production-ready yet.** No deployment config exists; see `CLAUDE.md` §12 and
+`PRODUCTION-READINESS.md` before deploying anywhere.
+
+## Stack
+
+Next.js 16 (App Router, TypeScript) · PostgreSQL + Drizzle ORM · MinIO (S3-compatible
+storage) · Redux Toolkit + RTK Query · Tailwind CSS 4 + shadcn/ui · Google OAuth + JWT
+sessions. Full breakdown: `CLAUDE.md` §1.
+
+## Local setup
+
+1. **Start the local services** (Postgres, MinIO, pgweb — a DB browser at
+   `localhost:8081`):
+   ```bash
+   docker-compose up -d
+   ```
+2. **Create `config/local.env`** (git-ignored — ask whoever owns this repo for the real
+   values, or copy `config/test.env` as a mocked-out starting point). The full list of
+   required variables and what each one is for is `CLAUDE.md` §9 — there is no `.env.example`
+   file, that section is the reference.
+3. **Push the database schema:**
+   ```bash
+   set -a; source config/local.env; set +a
+   npx drizzle-kit push
+   ```
+   (`drizzle.config.ts` reads `DB_URI` straight from `process.env`, it does not load
+   `config/local.env` itself — hence sourcing it into the shell first.)
+4. **Optionally seed the admin UI strings:**
+   ```bash
+   npx tsx src/migrations/seeds/runSystemTextsSeed.ts
+   ```
+   Only `system_texts` has a seed loader today; categories/tags/colors/collections are
+   created by hand through the admin UI once you've logged in (see `CHANGE-PLAN.md` CP-24
+   for the plan to automate this).
+5. **Run the app:**
+   ```bash
+   bash scripts/run.sh dev
+   ```
+   Use `bash`, not `npm run dev` directly — the script is not executable and is what
+   loads `config/local.env` into the process; plain `npm run dev` starts with no env vars
+   at all. The app is then at `http://localhost:3000`, admin login at `/admin/login`.
+
+## Scripts
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bash scripts/run.sh dev     # next dev with config/local.env loaded
+bash scripts/run.sh build   # next build (same env loading)
+bash scripts/run.sh start   # next start, after a build
+npm run lint                # eslint — currently red, see CLAUDE.md §11
+
+# Tests: scripts exist, but there is no vitest/playwright config or any test file yet
+# (CHANGE-PLAN.md CP-31)
+scripts/run-test.sh test:db:start   # test Postgres on :5433 + drizzle-kit push
+scripts/run-test.sh test:unit       # vitest run
+scripts/run-test.sh test:api        # playwright --project=api (test:e2e for --project=e2e)
+scripts/run-test.sh test:db:stop
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Where the real documentation lives
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **[`docs/BUSINESS-LOGIC.md`](docs/BUSINESS-LOGIC.md)** — what the app actually does:
+  every feature on the public site and in the admin CMS, section by section.
+- **`CLAUDE.md`** — the technical reference: architecture, folder structure, API, auth,
+  storage, env vars, current status, known issues. Read this first for anything beyond
+  "how do I run it."
