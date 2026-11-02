@@ -117,7 +117,7 @@ The endpoint table in `backend.md` stays valid as a target. Differences in the c
 
 ## Testing & Tooling
 
-- **[gap, partly closed 2026-11-02]** Plan: Vitest (unit/component/coverage), Playwright (E2E), Prettier. Actual: an API test suite now exists (`playwright.config.ts`, `tests/api/**`, 89 specs, `CHANGE-PLAN.md` CP-31 phase 1) against `docker-compose.test.yml` + `config/test.env`. Still **no** `vitest.config`, no e2e specs, no Prettier config — unit and e2e are separate, later phases.
+- **[gap, partly closed 2026-11-02]** Plan: Vitest (unit/component/coverage), Playwright (E2E), Prettier. Actual: an API test suite exists (`playwright.config.ts`, `tests/api/**`, 89 specs, `CHANGE-PLAN.md` CP-31 phase 1) against `docker-compose.test.yml` + `config/test.env`, and a unit test suite exists (`vitest.config.ts`, `tests/unit/**`, 17 files / 169 tests, CP-31 phase 2) covering pure functions in `utils`/`services`/Zod schemas — no DB/MinIO needed, run via `scripts/run-test.sh test:unit`. Still **no** e2e specs, no Prettier config — e2e is a separate, later phase (CP-31 phase 3).
 - **[quality]** Against the "zero `any`" rule: 318 ESLint `no-explicit-any` errors (about 280 source lines). `npm run lint` fails overall with 418 problems (345 errors, 73 warnings; also 19 `set-state-in-effect`, 3 `no-require-imports`, 3 `no-empty-object-type`), counted on 2026-09-23. `strict: true` is on, `tsc --noEmit` and `next build` pass. No `eslint-disable` / `@ts-ignore` anywhere.
 
 ## Infrastructure

@@ -100,10 +100,15 @@ npx drizzle-kit generate      # create SQL migration from src/repositories/drizz
 npx drizzle-kit push          # or apply schema directly (dev/test)
 npx tsx src/migrations/seeds/runSystemTextsSeed.ts   # seed system_texts (loads config/local.env itself)
 
-# Tests: API test suite exists (tests/api/**, CP-31 phase 1); unit (vitest) and e2e specs don't yet
+# Tests: API test suite (tests/api/**, CP-31 phase 1) and unit test suite (tests/unit/**, CP-31
+# phase 2, vitest.config.ts) exist; e2e specs don't yet
 scripts/run-test.sh test:infra:start # docker-compose.test.yml: test Postgres :5433 + test MinIO :9002 + drizzle-kit push (config/test.env)
-scripts/run-test.sh test:unit        # vitest run
-npx vitest run path/to/file.test.ts  # single unit test
+scripts/run-test.sh test:unit        # vitest run; needs config/test.env sourced first (always via this script,
+                                      # never raw `npm run test:unit`/`npx vitest run` — src/modules/core/env.ts
+                                      # validates all 32 required env vars at import time, and some unit specs
+                                      # (e.g. googleOAuth.spec.ts) transitively import it); no Docker needed, unlike test:api
+set -a; source config/test.env; set +a
+npx vitest run tests/unit/path/to/file.spec.ts   # single unit test (same env-sourcing requirement)
 scripts/run-test.sh test:api         # playwright --project=api;  test:e2e for --project=e2e
 npx playwright test path/to/spec.ts --project=api   # single spec
 scripts/run-test.sh test:infra:stop
@@ -224,7 +229,7 @@ Also optional, outside the required list (added 2026-10-17, CP-17): `NEXT_PUBLIC
 
 Working: Google login + token rotation, public catalog with search / category / in-stock / favorites (localStorage) filters and infinite scroll, project page (masonry gallery, contact links, moderated comments), admin CRUD for all entities, drag-and-drop ordering (categories, media in a post), crop modal, media library with delete protection, localization editor (DB-driven texts), slug URLs with UUID→slug redirect, OpenGraph/hreflang metadata, sitemap.xml, robots.txt.
 
-In progress / missing: see `DEVIATIONS.md` (`[gap]` items). No automated tests exist.
+In progress / missing: see `DEVIATIONS.md` (`[gap]` items). API tests (`tests/api/**`) and unit tests (`tests/unit/**`) exist (CP-31 phases 1–2); e2e specs don't yet.
 
 ---
 
