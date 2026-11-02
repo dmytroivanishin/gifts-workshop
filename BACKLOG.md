@@ -15,7 +15,6 @@ drift — ask me to regenerate it rather than trusting it blindly after a long g
 ## 🔴 Waiting on you (nothing to pick here — I need an answer/action first)
 
 - **CP-4** — log in by hand and check B1–B6 in the browser (the `JWT_SECRET` mock decision is done, 2026-10-18); also now covers a real Google login + browser image upload against the upgraded `next`/`sharp` (former CP-2 manual-verification step — Google OAuth can't be scripted).
-- **CP-19 (remainder)** — go/no-go on three small `CLAUDE.md` completeness/accuracy fixes found during CP-19's docs pass (a missing env var in §9, an undocumented route, one stale field name in §7). The README + business-logic doc itself is done, see "Done" below.
 
 ## 🟢 Ready to pick right now — pure code, no migration/config/dependency
 
@@ -43,6 +42,7 @@ drift — ask me to regenerate it rather than trusting it blindly after a long g
 
 ## ✅ Done (brief — full detail and file lists are in `CHANGE-PLAN.md` → "Done")
 
+- **CP-19 (remainder) (2026-11-02).** The three small `CLAUDE.md` completeness/accuracy fixes, applied: `NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC` added to §9, `POST /api/v1/auth/logout` documented in §6, §7's stale `files` upload field corrected to `file`.
 - **CP-19 (2026-10-18/2026-11-02).** Real `README.md` (was `create-next-app` boilerplate) plus, on your ask, a much more detailed `docs/BUSINESS-LOGIC.md` describing every real feature on the public site and in each admin section (bulk media upload, photo crop/positioning, inline tag creation, category-suggested tags, etc.) — every claim checked against the actual code, one wrong claim (category nesting hard-capped at one level) caught and corrected. CP-tracking docs deliberately not linked from the README (temporary scaffolding, not project docs).
 - **CP-17 follow-up (2026-10-18).** A missing/draft project page returned HTTP 200 with a "not found" message instead of a real 404 (a soft 404) — fixed with one `notFound()` call in `projects/[slug]/page.tsx`; verified existing posts, the UUID redirect, and an admin viewing a draft by its public URL all still work, and that the API's own JSON 404 is untouched.
 - **CP-17, most of the round (2026-10-17).** Server-rendered the homepage and project page's initial content (both were fully client-rendered via RTK Query, so a crawler's raw HTML before JS ran was just a loading spinner — confirmed live before/after). Both pages are now thin async server components fetching through the existing service layer and handing the data to the unchanged client components as initial props; all real interactivity (filters, infinite scroll, likes) still runs through the same RTK Query hooks as before. Plus: a project page's tag keywords no longer mix RU/EN together regardless of locale, `canonical`/`x-default` added (were entirely missing), the default-locale fallback split into a content-authoring one (`ru`, unchanged) and a new visitor-facing one (`NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC`, `en`), and a doubled `<title>` bug found live while verifying (`title.default` was being wrapped by the root layout's own template) fixed via `title.absolute`. Only JSON-LD is left open, see "Ready to pick" above.
