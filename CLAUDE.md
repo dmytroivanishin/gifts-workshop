@@ -91,7 +91,8 @@ bash scripts/run.sh dev       # next dev with config/local.env exported (plain `
 bash scripts/run.sh build     # next build (same env loading)
 bash scripts/run.sh start
 npm run lint                  # eslint (next core-web-vitals + typescript); currently RED, see §11
-docker-compose up -d          # local Postgres :5432, MinIO :9000/:9001, pgweb :8081
+npm run local:infra:start     # docker-compose.local.yml: local Postgres :5432, MinIO :9000/:9001, pgweb :8081
+npm run local:infra:stop
 
 # Drizzle (drizzle.config.ts reads process.env.DB_URI and does not load dotenv)
 set -a; source config/local.env; set +a
@@ -99,13 +100,13 @@ npx drizzle-kit generate      # create SQL migration from src/repositories/drizz
 npx drizzle-kit push          # or apply schema directly (dev/test)
 npx tsx src/migrations/seeds/runSystemTextsSeed.ts   # seed system_texts (loads config/local.env itself)
 
-# Tests: scripts exist, but there is NO vitest/playwright config and NO test files yet
-scripts/run-test.sh test:db:start    # test Postgres :5433 + drizzle-kit push (config/test.env)
+# Tests: API test suite exists (tests/api/**, CP-31 phase 1); unit (vitest) and e2e specs don't yet
+scripts/run-test.sh test:infra:start # docker-compose.test.yml: test Postgres :5433 + test MinIO :9002 + drizzle-kit push (config/test.env)
 scripts/run-test.sh test:unit        # vitest run
 npx vitest run path/to/file.test.ts  # single unit test
 scripts/run-test.sh test:api         # playwright --project=api;  test:e2e for --project=e2e
 npx playwright test path/to/spec.ts --project=api   # single spec
-scripts/run-test.sh test:db:stop
+scripts/run-test.sh test:infra:stop
 ```
 
 Nothing runs migrations at app startup or deploy time. The MinIO bucket is prepared lazily: `ensureBucket()` runs before the first upload of a process (see §8).
@@ -199,7 +200,7 @@ Ownership FKs (`user_id`) are `ON DELETE SET NULL`. Repositories re-expose `tags
 
 ## 9. Docker & Infrastructure
 
-`docker-compose.yml` (local dev only): `postgres` (16-alpine, db `portfolio`, :5432, data in `./.docker/db-data`), `minio` (pinned release, :9000 API / :9001 console, data in `./.docker/minio-data`), `pgweb` (:8081). Fixed subnet `10.10.10.0/24`, `restart: always`, no healthchecks, dev credentials hardcoded. `docker-compose.test.yml`: Postgres 15 on :5433 for tests. **No app service, no Dockerfile, no CI.**
+`docker-compose.local.yml` (local dev only; renamed from `docker-compose.yml` 2026-11-02 so its name pairs clearly with `docker-compose.test.yml` — `docker-compose` no longer auto-discovers it without `-f`, hence `npm run local:infra:start`/`local:infra:stop` in §3): `postgres` (16-alpine, db `portfolio`, :5432, data in `./.docker/db-data`), `minio` (pinned release, :9000 API / :9001 console, data in `./.docker/minio-data`), `pgweb` (:8081). Fixed subnet `10.10.10.0/24`, `restart: always`, no healthchecks, dev credentials hardcoded — this data is meant to persist across restarts (your working dev content), unlike the test stack below. `docker-compose.test.yml`: Postgres 15 on :5433 + an isolated MinIO on :9002 for API tests (`tests/api/**`, CP-31) — both services are deliberately volume-less so every `npm run test:infra:start`/`test:infra:stop` (via `scripts/run-test.sh`) starts from a truly blank state; a named volume here once accumulated an incompatible schema across runs and had to be cleared by hand, so it was dropped entirely 2026-11-02. **No app service, no Dockerfile, no CI.**
 
 **Environment variable names** (values live in `config/local.env`, git-ignored; `config/test.env` holds mock values; all 32 listed are required by `env.ts`, including `JWT_SECRET` since 2026-09-19 and `S3_PUBLIC_URL` since 2026-09-23; `S3_FORCE_PATH_STYLE` and `GOOGLE_CALLBACK_URL` were required-but-unused and dropped from the list 2026-09-28 (the config files may still carry the lines, which is harmless); `config/test.env` has `S3_PUBLIC_URL` but still lacks `JWT_SECRET`, CP-4):
 

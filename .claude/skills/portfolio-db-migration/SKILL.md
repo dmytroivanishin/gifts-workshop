@@ -19,7 +19,7 @@ Arguments received: `$ARGUMENTS`
 
 - `--check` (default when nothing is passed): review only, no file is written and no command that touches a database is run.
 - `--generate`: run `drizzle-kit generate` to create the SQL file from the current `schema.ts`, then review it.
-- `--target dev|test`: `dev` = local docker-compose Postgres (`config/local.env`); `test` = the test Postgres on :5433 (`config/test.env`, started by `test:db:start`, which applies the schema with `drizzle-kit push`). Never a production database.
+- `--target dev|test`: `dev` = `docker-compose.local.yml`'s Postgres (`config/local.env`); `test` = the test Postgres on :5433 (`config/test.env`, started by `test:infra:start`, which applies the schema with `drizzle-kit push`). Never a production database.
 
 ## Process
 
@@ -33,7 +33,7 @@ Arguments received: `$ARGUMENTS`
    Show the new SQL file in full. If the generated name is meaningless it can be renamed only before it is applied anywhere, and the `meta/_journal.json` tag must be changed consistently.
 4. **Review the SQL** for: `DROP TABLE` / `DROP COLUMN`, type changes that rewrite data, `NOT NULL` without default on populated tables, dropped and re-created indexes, statements Drizzle might reorder wrongly (FK before the referenced table exists). Flag each with its data-loss risk.
 5. **Consistency.** Every `.sql` file has a journal entry (`_journal.json` `tag`) and a snapshot; no migration was edited after being applied; `git status` shows the three parts (sql, journal, snapshot) together.
-6. **Applying.** Report the options and their trade-offs, and let the user choose: `drizzle-kit push` (schema pushed directly; what `test:db:start` uses; fine for local and test, no history), or `drizzle-kit migrate` (applies the SQL files; the path for deployment). Run neither against a database without the user's explicit approval. Before running anything that connects, state which host and database the URI points at (never print the password). For production: take a backup first, run the migration before starting the new app version, and remember that env validation runs at import, so the migration command needs the same environment.
+6. **Applying.** Report the options and their trade-offs, and let the user choose: `drizzle-kit push` (schema pushed directly; what `test:infra:start` uses; fine for local and test, no history), or `drizzle-kit migrate` (applies the SQL files; the path for deployment). Run neither against a database without the user's explicit approval. Before running anything that connects, state which host and database the URI points at (never print the password). For production: take a backup first, run the migration before starting the new app version, and remember that env validation runs at import, so the migration command needs the same environment.
 7. **After applying** (dev/test): ask the user to confirm the app starts (`scripts/run.sh dev`) and, if the change touched seeds, that `runSystemTextsSeed.ts` still works.
 8. **Docs.** Suggest updates to the `CLAUDE.md` §5 table and to `DEVIATIONS.md` (Database & Migrations) when tables or constraints changed.
 

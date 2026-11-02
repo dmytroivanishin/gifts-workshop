@@ -81,7 +81,7 @@ State on 2026-09-23: `npx tsc --noEmit` 0 errors; `next build` passes (exit 0); 
 ### Secrets management
 - [x] `.env*` and `config/local.env` are git-ignored; `config/local.env` was never committed; no Google client-secret pattern (`GOCSPX`) in git history.
 - [x] `config/test.env` is tracked but contains only mock values.
-- [ ] `docker-compose.yml` hardcodes dev passwords (`postgres_local_password`, `minio_admin_password`). Never reuse them in production.
+- [ ] `docker-compose.local.yml` (renamed from `docker-compose.yml` 2026-11-02) hardcodes dev passwords (`postgres_local_password`, `minio_admin_password`). Never reuse them in production.
 - [x] **Fixed 2026-10-02.** `seeds/initial-data/users.json` committed an admin email and a password-shaped value (always just the standard placeholder, never a real credential, but looked like one and had no loader anywhere); the file was deleted. The admin row is still auto-provisioned on first Google login (`auth/google/exchange/route.ts`), unaffected.
 - **(you)** Generate a strong `JWT_SECRET`, DB and MinIO credentials in Coolify's secret store.
 
@@ -183,9 +183,9 @@ The 5 remaining moderate findings, all already known and accepted:
 ## Testing (priority 3)
 
 - [ ] Unit: none. `vitest` and testing-library are installed but there is no config and no test file.
-- [ ] Integration (API): none. `test:api` (Playwright), `docker-compose.test.yml`, `config/test.env` exist, but there is no `playwright.config` and no specs.
+- [x] **Integration (API): done 2026-11-02 (CP-31 phase 1).** `playwright.config.ts` + `tests/api/**` (89 specs across every entity, the proxy auth matrix, and auth/refresh/rate-limit behavior) against `docker-compose.test.yml` + `config/test.env`. 88 pass, 1 deliberately opt-in/skipped (rate-limit exhaustion, `RUN_SLOW_TESTS=1`).
 - [ ] E2E for the auth flow: none.
-- [ ] `config/test.env` has no `JWT_SECRET`, which `env.ts` requires; add a mock value before the first test run (CP-4). It has `S3_PUBLIC_URL` since 2026-09-23 (added by the user).
+- [x] `config/test.env` has `JWT_SECRET` since 2026-10-18 (CP-4) and `S3_PUBLIC_URL` since 2026-09-23.
 - Highest-value first tests: proxy auth matrix (which method+path needs a token), token rotation/reuse detection, category cycle guard, media in-use delete guard, post status visibility.
 
 ## Performance (priority 3)

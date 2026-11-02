@@ -19,8 +19,10 @@ sessions. Full breakdown: `CLAUDE.md` §1.
 1. **Start the local services** (Postgres, MinIO, pgweb — a DB browser at
    `localhost:8081`):
    ```bash
-   docker-compose up -d
+   npm run local:infra:start
    ```
+   (`docker-compose.local.yml` — named so it pairs clearly with `docker-compose.test.yml`; plain
+   `docker-compose up -d` no longer auto-discovers it without `-f docker-compose.local.yml`.)
 2. **Create `config/local.env`** (git-ignored — ask whoever owns this repo for the real
    values, or copy `config/test.env` as a mocked-out starting point). The full list of
    required variables and what each one is for is `CLAUDE.md` §9 — there is no `.env.example`
@@ -55,12 +57,12 @@ bash scripts/run.sh build   # next build (same env loading)
 bash scripts/run.sh start   # next start, after a build
 npm run lint                # eslint — currently red, see CLAUDE.md §11
 
-# Tests: scripts exist, but there is no vitest/playwright config or any test file yet
-# (CHANGE-PLAN.md CP-31)
-scripts/run-test.sh test:db:start   # test Postgres on :5433 + drizzle-kit push
-scripts/run-test.sh test:unit       # vitest run
-scripts/run-test.sh test:api        # playwright --project=api (test:e2e for --project=e2e)
-scripts/run-test.sh test:db:stop
+# Tests: an API test suite exists (tests/api/**, CHANGE-PLAN.md CP-31 phase 1); unit (vitest)
+# and e2e specs don't yet
+scripts/run-test.sh test:infra:start   # test Postgres :5433 + test MinIO :9002 + drizzle-kit push
+scripts/run-test.sh test:unit          # vitest run
+scripts/run-test.sh test:api           # playwright --project=api (test:e2e for --project=e2e)
+scripts/run-test.sh test:infra:stop
 ```
 
 ## Where the real documentation lives
