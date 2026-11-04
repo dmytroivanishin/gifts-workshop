@@ -124,11 +124,9 @@ export default function AdminCategories() {
   };
   useEffect(() => {
     cacheSelectedTags(editSearchedTags, editSelectedTags);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- cacheSelectedTags is a plain closure redefined every render; re-running on the two real inputs changing is the intent.
   }, [editSearchedTags, editSelectedTags]);
   useEffect(() => {
     cacheSelectedTags(newSearchedTags, newSelectedTagIds);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- newSelectedTagIds comes from form.watch() and is a new array each render; re-running on every newSearchedTags change is the intent, not a missing-dep bug.
   }, [newSearchedTags, newSelectedTagIds]);
 
   // Auto-create / select color for creation form

@@ -138,7 +138,6 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       }
       return changed ? Array.from(merged.values()) : prev;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedTagIds comes from form.watch() and is a new array each render; re-running on every searchedTags change is the actual intent here, not a missing-dep bug.
   }, [searchedTags, selectedTagIds]);
 
   // Sync complex states to RHF

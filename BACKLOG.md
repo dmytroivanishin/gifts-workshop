@@ -7,7 +7,7 @@ grouped by what it takes to start, so you can say "бери CP-23" and I know ex
 what that means without you having to scroll `CHANGE-PLAN.md`.
 
 Generated 2026-10-05 from `CHANGE-PLAN.md`, `PRODUCTION-READINESS.md` and
-`DEVIATIONS.md`; refreshed 2026-10-12. If these docs change later, this file can
+`DEVIATIONS.md`; refreshed 2026-10-12, 2026-11-04. If these docs change later, this file can
 drift — ask me to regenerate it rather than trusting it blindly after a long gap.
 
 ---
@@ -28,7 +28,6 @@ drift — ask me to regenerate it rather than trusting it blindly after a long g
 ## 🔵 Big pieces — want a scoping conversation before any code, not a quick fix
 
 - **CP-25** — deployment bundle: Dockerfile, health endpoint, migration/rollback strategy, HSTS, rate-limit-at-the-edge decision, swapping dev credentials, backups (this is blocker B8). **Now also carries CP-24** (seed the lookup tables as part of the same first-boot migration step, not a separate loader script) **and CP-8** (set the real `S3_PUBLIC_URL`, not a Coolify temporary domain, in this same first deploy) — merged in 2026-10-12 at your request.
-- **CP-31** — testing infrastructure from scratch (no vitest/playwright config or specs exist at all today).
 - **CP-35** — general control-flow/structural code-quality pass: flatten nested `if`/`for`/`while` into guard clauses, remove redundant conditions, apply design patterns only where they'd remove real duplication. Distinct from CP-18 (typing/lint/logging). Raised 2026-10-12, needs a scan before picking what's worth touching.
 - **CP-30** — planned-but-unbuilt **features** (multi-select category filter, Archive view with restore, profile editing, SEO settings page, `Language` table) — kept separate from the fix/quality queue per your decision (2026-10-05); only start on these if you explicitly ask.
 
@@ -42,6 +41,9 @@ drift — ask me to regenerate it rather than trusting it blindly after a long g
 
 ## ✅ Done (brief — full detail and file lists are in `CHANGE-PLAN.md` → "Done")
 
+- **CP-42 (2026-11-04).** Code review of CP-40/41's work: removed ~44 lines of duplicated `getAll()` pagination logic across the tag/collection/color/media repositories (two new protected hooks on `baseRepository`); fixed CP-39 for real (categories page's inline tag creation was sending the wrong field name) and added an e2e test proving it through the real UI, not just documenting the bug.
+- **CP-40/CP-41 (2026-11-04).** `created_at` + deterministic `desc(createdAt)` ordering added to tags/colors/media/collections; a real cap-at-20 bug fixed in `collectionService`/`colorService`; server-side `search` added to `GET /tags` with a debounced Combobox; a new shared `VirtualScrollList` (`@tanstack/react-virtual`) applied to the Combobox and the tags/colors/collections admin pages (categories/collections stay fully loaded by design). Followed by a full test-coverage round across all three layers (9 new API tests, 8 new unit tests, 5 new e2e tests) after you pushed back that "code is ready" isn't verification.
+- **CP-31 — testing infrastructure, all 3 phases (2026-11-02/2026-11-03), extended by CP-40/41 (2026-11-04).** API suite (`tests/api/**`, 98 specs), unit suite (`tests/unit/**`, 20 files/177 tests, pure functions only), e2e suite (`tests/e2e/**`, 10 spec files/43 tests, real Chromium via `playwright.config.ts`'s `"e2e"` project) all exist and pass. Confirmed via two consecutive clean e2e runs from the same un-reset test DB each round. No Prettier config remains the one open item under CP-18/testing tooling.
 - **CP-19 (remainder) (2026-11-02).** The three small `CLAUDE.md` completeness/accuracy fixes, applied: `NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC` added to §9, `POST /api/v1/auth/logout` documented in §6, §7's stale `files` upload field corrected to `file`.
 - **CP-19 (2026-10-18/2026-11-02).** Real `README.md` (was `create-next-app` boilerplate) plus, on your ask, a much more detailed `docs/BUSINESS-LOGIC.md` describing every real feature on the public site and in each admin section (bulk media upload, photo crop/positioning, inline tag creation, category-suggested tags, etc.) — every claim checked against the actual code, one wrong claim (category nesting hard-capped at one level) caught and corrected. CP-tracking docs deliberately not linked from the README (temporary scaffolding, not project docs).
 - **CP-17 follow-up (2026-10-18).** A missing/draft project page returned HTTP 200 with a "not found" message instead of a real 404 (a soft 404) — fixed with one `notFound()` call in `projects/[slug]/page.tsx`; verified existing posts, the UUID redirect, and an admin viewing a draft by its public URL all still work, and that the API's own JSON 404 is untouched.
