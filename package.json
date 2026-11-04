@@ -13,8 +13,8 @@
     "test:infra:stop": "docker-compose -p portfolio_test -f docker-compose.test.yml down",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:e2e": "playwright test --project=e2e",
-    "test:e2e:ui": "playwright test --project=e2e --ui",
+    "test:e2e": "rm -rf .next/dev/cache/fetch-cache && playwright test --project=e2e --workers=1",
+    "test:e2e:ui": "rm -rf .next/dev/cache/fetch-cache && playwright test --project=e2e --ui",
     "test:api": "playwright test --project=api",
     "test:api:ui": "playwright test --project=api --ui"
   },
@@ -26,6 +26,7 @@
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@reduxjs/toolkit": "^2.12.0",
+    "@tanstack/react-virtual": "^3.14.25",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cookie": "^1.1.1",

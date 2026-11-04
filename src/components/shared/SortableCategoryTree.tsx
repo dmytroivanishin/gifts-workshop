@@ -54,6 +54,7 @@ function SortableItemWrapper({ id, children }: SortableItemProps) {
         {...attributes}
         {...listeners}
         style={{ touchAction: "none" }}
+        data-test-id="category-drag-handle"
         className="flex items-center justify-center px-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors border-r border-border/40"
       >
         <GripVertical size={16} />

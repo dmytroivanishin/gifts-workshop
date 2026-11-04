@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - File storage: MinIO (S3-compatible, `minio` client) + `sharp` for image processing. DB browser: pgweb (dev only).
 - Auth: Google OAuth (authorization code with `state` and PKCE, ID token verified) → own JWT (`jose`) in HttpOnly cookies, restricted to `ADMIN_EMAILS`. Rate limiting: `rate-limiter-flexible` (in memory) in `proxy.ts`.
 - State: Redux Toolkit + RTK Query (`src/store`). Forms: react-hook-form + zod 4.
-- UI: Tailwind CSS 4, shadcn/ui (style `radix-nova`, Radix), lucide-react, react-icons, framer-motion, dnd-kit (drag-and-drop), sonner (toasts). No dark mode.
+- UI: Tailwind CSS 4, shadcn/ui (style `radix-nova`, Radix), lucide-react, react-icons, framer-motion, dnd-kit (drag-and-drop), sonner (toasts), `@tanstack/react-virtual` (list virtualization, added 2026-11-04 — the shared `VirtualScrollList` wrapper, `src/components/shared/VirtualScrollList.tsx`). No dark mode.
 - Logging: winston (JSON to stdout).
 - Infra: Docker Compose for local dev; production target is a VPS with Coolify, deployed from a Dockerfile (neither exists yet; nothing is deployed).
 
@@ -100,8 +100,8 @@ npx drizzle-kit generate      # create SQL migration from src/repositories/drizz
 npx drizzle-kit push          # or apply schema directly (dev/test)
 npx tsx src/migrations/seeds/runSystemTextsSeed.ts   # seed system_texts (loads config/local.env itself)
 
-# Tests: API test suite (tests/api/**, CP-31 phase 1) and unit test suite (tests/unit/**, CP-31
-# phase 2, vitest.config.ts) exist; e2e specs don't yet
+# Tests: API suite (tests/api/**, CP-31 phase 1), unit suite (tests/unit/**, phase 2) and e2e
+# suite (tests/e2e/**, phase 3, real Chromium via playwright.config.ts's "e2e" project) all exist
 scripts/run-test.sh test:infra:start # docker-compose.test.yml: test Postgres :5433 + test MinIO :9002 + drizzle-kit push (config/test.env)
 scripts/run-test.sh test:unit        # vitest run; needs config/test.env sourced first (always via this script,
                                       # never raw `npm run test:unit`/`npx vitest run` — src/modules/core/env.ts
@@ -109,8 +109,17 @@ scripts/run-test.sh test:unit        # vitest run; needs config/test.env sourced
                                       # (e.g. googleOAuth.spec.ts) transitively import it); no Docker needed, unlike test:api
 set -a; source config/test.env; set +a
 npx vitest run tests/unit/path/to/file.spec.ts   # single unit test (same env-sourcing requirement)
-scripts/run-test.sh test:api         # playwright --project=api;  test:e2e for --project=e2e
-npx playwright test path/to/spec.ts --project=api   # single spec
+scripts/run-test.sh test:api         # playwright --project=api
+scripts/run-test.sh test:e2e         # playwright --project=e2e, --workers=1 (admin specs share global
+                                      # lists — categories/media/collections aren't partitioned per test
+                                      # file the way other entities' unique fixtures are, so parallel
+                                      # files racing the same admin UI corrupts each other's counts/diffs);
+                                      # also clears .next/dev/cache/fetch-cache first — unstable_cache's
+                                      # dev-mode disk cache persists across DB_URI changes, so a stale
+                                      # entry from an earlier `next dev` against the LOCAL db can leak
+                                      # real system_texts content into the e2e run's empty test DB
+npx playwright test path/to/spec.ts --project=api   # single spec (api project; e2e needs the same
+                                      # cache-clear + --workers=1 the npm script does)
 scripts/run-test.sh test:infra:stop
 ```
 
@@ -149,14 +158,14 @@ Schema: `src/repositories/drizzle/schema.ts`. One migration: `src/migrations/sql
 
 | Table | Key columns / notes |
 |-------|--------------------|
-| `users` | `email` (unique), `name`, `password` (NOT NULL; constant placeholder string for admin; never returned, `UserRepository.populate()` exposes only id/email/name) |
+| `users` | `email` (unique), `name`, `password` (NOT NULL; constant placeholder string for admin; never returned, `UserRepository.populate()` exposes only id/email/name), `created_at` |
 | `token_sessions` | refresh sessions: `id`=JTI, `user_id`→users (cascade), `refresh_token_hash`, `is_used`, `expires_at`, `token_family` |
-| `system_texts` | `code` (unique key), `content` JSONB, `area` = `public`/`admin`/`shared` |
-| `colors` | `color` hex; `user_id` |
-| `media` | `thumbnail_url`, `original_url`, `width`, `height`, `orientation`, `user_id` |
-| `collections` | `slug` (unique), `title`, `description`, `main` |
-| `categories` | `slug`, `title`, `description`, `order`, `parent_id` (no FK constraint), `color_id`→colors (restrict), `collection_id` |
-| `tags` | `slug`, `name` |
+| `system_texts` | `code` (unique key), `content` JSONB, `area` = `public`/`admin`/`shared`, `created_at` (ordering unchanged: still `orderBy(id)`) |
+| `colors` | `color` hex; `user_id`, `created_at` (`getAll` now `orderBy(desc(created_at))`) |
+| `media` | `thumbnail_url`, `original_url`, `width`, `height`, `orientation`, `user_id`, `created_at` (`getAll` now `orderBy(desc(created_at))`) |
+| `collections` | `slug` (unique), `title`, `description`, `main`, `created_at` (`getAll` now `orderBy(desc(created_at))`) |
+| `categories` | `slug`, `title`, `description`, `order`, `parent_id` (no FK constraint), `color_id`→colors (restrict), `collection_id` — no `created_at`: the hand-curated `order` column stays the sole ordering, since the drag-reorder tree needs the complete list in memory anyway |
+| `tags` | `slug`, `name`, `created_at` (`getAll` now `orderBy(desc(created_at))` — fixes a real bug: tags previously had no deterministic order at all, so page-by-page pagination over them could skip or repeat rows) |
 | `categories_to_tags` | PK (`category_id`,`tag_id`), cascade |
 | `posts` | `slug`, `title`, `description`, `poster_id`→media (restrict), `in_stock`, `status` (`Draft`/`Published`/`Archived`), `collection_id`, `category_id`, `created_at` (used for manual ordering) |
 | `posts_to_media` | PK (`post_id`,`media_id`), `order`, `position` JSONB `{x,y,zoom}` |
@@ -164,6 +173,8 @@ Schema: `src/repositories/drizzle/schema.ts`. One migration: `src/migrations/sql
 | `comments` | `post_id`→posts (cascade), `name`, `text`, `status` (`Review`/`Approved`/`Rejected`), `reply_id` (no FK constraint) |
 
 Ownership FKs (`user_id`) are `ON DELETE SET NULL`. Repositories re-expose `tagsIds` and `media` arrays to services. The seed JSONs in `migrations/seeds/initial-data` (categories, tags, colors, collections, users, system-texts) have loaders only for system texts.
+
+The 6 `created_at` columns above (2026-11-04) were added by hand-editing the existing `0000_tired_human_robot.sql` migration and its snapshot JSON, not by generating a new migration — nothing is deployed yet, so there's no running-migration-history to preserve, and the owner wants one clean initial migration once the project does launch (`CHANGE-PLAN.md`, "Done"). `GET /api/v1/tags` also gained an optional `search` param (same escape-then-`ILIKE` convention as `posts`' `search`), and `collectionService.getAllCollections`/`colorService.getAllColors` no longer silently cap an argument-less call at 20 rows (they now match `tagService`/`categoryService`'s existing "no args = everything" convention) — both services previously applied a default `limit: 20` unconditionally, so the admin collections/colors pages were quietly never showing more than their first 20 rows.
 
 ---
 
@@ -229,7 +240,7 @@ Also optional, outside the required list (added 2026-10-17, CP-17): `NEXT_PUBLIC
 
 Working: Google login + token rotation, public catalog with search / category / in-stock / favorites (localStorage) filters and infinite scroll, project page (masonry gallery, contact links, moderated comments), admin CRUD for all entities, drag-and-drop ordering (categories, media in a post), crop modal, media library with delete protection, localization editor (DB-driven texts), slug URLs with UUID→slug redirect, OpenGraph/hreflang metadata, sitemap.xml, robots.txt.
 
-In progress / missing: see `DEVIATIONS.md` (`[gap]` items). API tests (`tests/api/**`) and unit tests (`tests/unit/**`) exist (CP-31 phases 1–2); e2e specs don't yet.
+In progress / missing: see `DEVIATIONS.md` (`[gap]` items). API tests (`tests/api/**`), unit tests (`tests/unit/**`) and e2e tests (`tests/e2e/**`) all exist (CP-31 phases 1–3, done).
 
 ---
 
@@ -277,6 +288,7 @@ Full detail with file references: `PRODUCTION-READINESS.md`. Summary:
 | Media pipeline differs from plan (no JPG conversion, 1000/320 px) | Open | MEDIUM |
 | Upload MIME/extension was trusted from the client instead of the decoded file: now validated against the real `sharp`-decoded format (JPEG/PNG only), extension and object `Content-Type` derived from it, and an unsupported/undecodable file is a 400 instead of an uncaught 500 | Fixed 2026-09-28 | – |
 | `meta.totalItems` = page size; `/collections/:id/posts` double-wrapped | Open | LOW |
+| CP-23's unconditional `Cache-Control: public, max-age=60` on categories/collections/tags/colors (not just the already-flagged system_texts/posts case) means the browser's own HTTP cache can serve a stale GET back to RTK Query's post-mutation refetch — an admin's own create/edit/delete/reorder on these 4 entities can silently not show up in the same tab for up to a minute. Found 2026-11-02 while building `tests/e2e/admin/categories-reorder.spec.ts` (CP-31 phase 3): a verified-200 reorder PUT left the on-page row order unchanged a full 2s later; confirmed via a direct, cache-independent API re-read that the server-side data was actually correct. The test now asserts against that read instead of the DOM for this reason (see the spec's own comment) | Open, not yet decided | MEDIUM |
 | Lint red: 140 problems, 74 errors as of 2026-10-17 (51 `no-explicit-any` — every one reviewed and left on purpose, see `CHANGE-PLAN.md` CP-18 — 49 `no-unused-vars`, 18 `set-state-in-effect`, 8 `exhaustive-deps`, 3 `no-empty-object-type`, misc) — down from 378/310 after CP-18's `no-explicit-any` sweep (287 → 51); `no-unused-vars`/`set-state-in-effect`/etc. are still open, not touched by that pass; 34 of 40 `console.*` still bypass the logger in client components, **decided 2026-10-12: staying that way permanently** (winston can't run in the browser and there's no error-reporting infra to send them to instead — not re-opened as a gap, CP-18); 6 of 7 raw `<img>` remain (the public project gallery now uses `next/image`, fixed 2026-10-02) | Open | LOW |
 | `import * as LucideIcons from "lucide-react"` defeated tree-shaking; Google Fonts loaded via a blocking CSS `@import` | Fixed 2026-10-05: explicit named icon imports (+ a small curated extra set) replace the `import *`/dynamic-lookup fallback; `Inter`/`Playfair Display` now load via `next/font/google` (self-hosted, no runtime Google request) | – |
 | `DrizzleDatabase` cached its singleton in a class static field, which `next dev`'s Fast Refresh could re-create (extra connection pool) on module re-evaluation | Fixed 2026-10-05: singleton cached on `globalThis` instead | – |

@@ -99,6 +99,7 @@ function SortableMediaItem({
         {...attributes}
         {...listeners}
         style={{ touchAction: "none" }}
+        data-test-id="media-drag-handle"
         className="absolute top-2 left-2 z-20 p-1.5 bg-background/80 text-muted-foreground hover:text-foreground rounded-md shadow-sm backdrop-blur-sm cursor-grab active:cursor-grabbing transition-colors"
         title={t("drag_to_reorder")}
       >
@@ -151,6 +152,7 @@ function SortableMediaItem({
           e.stopPropagation();
           onCrop(item.mediaId);
         }}
+        data-test-id="media-crop-button"
         className="absolute bottom-2 right-2 z-20 p-1.5 bg-background/80 hover:bg-secondary text-foreground rounded-md shadow-sm backdrop-blur-sm transition-colors cursor-pointer"
         title={t("position")}
       >

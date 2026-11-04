@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Check, ChevronsUpDown, X, Plus } from "lucide-react";
+import VirtualScrollList from "@/components/shared/VirtualScrollList";
 
 interface ComboboxOption {
   value: string;
@@ -19,6 +20,20 @@ interface ComboboxProps {
   multiple?: boolean;
   className?: string;
   onCreate?: (search: string) => Promise<string>;
+  // When true, `options` is assumed to already be the server-filtered/paginated page for the
+  // current `search` value — the local client-side filter is skipped and `onSearchChange` (not
+  // the local useMemo) is what narrows the list.
+  serverSearch?: boolean;
+  // Debounced internally (~300ms) before firing, so a caller wiring this to a network request
+  // isn't flooded on every keystroke.
+  onSearchChange?: (query: string) => void;
+  // Fired when the virtualized dropdown list is scrolled near its end — wired to a caller's
+  // "load next page" for an infinite-scroll options list.
+  onEndReached?: () => void;
+  // Resolves a display label for an already-selected value that isn't in the current `options`
+  // page (e.g. a server-search combobox showing a chip for a value outside the loaded page) —
+  // used only for the selected-chip display, never for the dropdown's own option list.
+  resolveLabel?: (value: string) => string | undefined;
 }
 
 export default function Combobox({
@@ -32,10 +47,30 @@ export default function Combobox({
   multiple = false,
   className = "",
   onCreate,
+  serverSearch = false,
+  onSearchChange,
+  onEndReached,
+  resolveLabel,
 }: ComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const handleSearchInput = (query: string) => {
+    setSearch(query);
+    if (!serverSearch || !onSearchChange) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onSearchChange(query);
+    }, 300);
+  };
 
   const selectedValues = useMemo(() => {
     if (multiple) {
@@ -44,12 +79,14 @@ export default function Combobox({
     return value ? [value as string] : [];
   }, [value, multiple]);
 
-  // Filter options based on search query
+  // Filter options based on search query — skipped entirely in server-search mode, where
+  // `options` is already the caller's current search-narrowed page.
   const filteredOptions = useMemo(() => {
+    if (serverSearch) return options;
     if (!search) return options;
     const query = search.toLowerCase();
     return options.filter((opt) => opt.label.toLowerCase().includes(query));
-  }, [options, search]);
+  }, [options, search, serverSearch]);
 
   // Click outside to close dropdown
   useEffect(() => {
@@ -112,9 +149,11 @@ export default function Combobox({
   const selectedOptions = useMemo(() => {
     return selectedValues.map((val) => {
       const opt = options.find((o) => o.value === val);
-      return opt || { value: val, label: val };
+      if (opt) return opt;
+      const resolved = resolveLabel?.(val);
+      return { value: val, label: resolved ?? val };
     });
-  }, [selectedValues, options]);
+  }, [selectedValues, options, resolveLabel]);
 
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
@@ -169,7 +208,7 @@ export default function Combobox({
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchInput(e.target.value)}
               placeholder={searchPlaceholder}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && allowCreate && search) {
@@ -182,7 +221,7 @@ export default function Combobox({
             />
           </div>
 
-          <div className="max-h-56 overflow-y-auto p-1.5 space-y-0.5">
+          <div className="p-1.5">
             {filteredOptions.length === 0 ? (
               allowCreate && search ? (
                 <button
@@ -197,22 +236,27 @@ export default function Combobox({
                 <div className="px-3 py-2.5 text-sm text-muted-foreground text-center">No options found.</div>
               )
             ) : (
-              filteredOptions.map((opt) => {
-                const isChecked = selectedValues.includes(opt.value);
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleSelect(opt.value)}
-                    className="w-full flex items-center justify-between px-3 py-2 text-sm text-left hover:bg-muted rounded-lg transition-colors cursor-pointer"
-                  >
-                    <span className={isChecked ? "font-semibold text-foreground" : "text-muted-foreground"}>
-                      {opt.label}
-                    </span>
-                    {isChecked && <Check size={14} className="text-primary" />}
-                  </button>
-                );
-              })
+              <VirtualScrollList
+                items={filteredOptions}
+                estimateSize={40}
+                className="max-h-56"
+                onEndReached={onEndReached}
+                renderItem={(opt) => {
+                  const isChecked = selectedValues.includes(opt.value);
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(opt.value)}
+                      className="w-full h-full flex items-center justify-between px-3 py-2 text-sm text-left hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                    >
+                      <span className={isChecked ? "font-semibold text-foreground" : "text-muted-foreground"}>
+                        {opt.label}
+                      </span>
+                      {isChecked && <Check size={14} className="text-primary" />}
+                    </button>
+                  );
+                }}
+              />
             )}
           </div>
         </div>

@@ -10,6 +10,7 @@ import {
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import VirtualScrollList from "@/components/shared/VirtualScrollList";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -148,12 +149,16 @@ export default function AdminColors() {
             {isLoading && <Loader2 size={20} className="animate-spin text-muted-foreground" />}
           </div>
 
-          <div className="divide-y divide-border/60">
+          <div>
             {colors.length > 0 ? (
-              colors.map((c) => {
+              <VirtualScrollList
+                items={colors}
+                estimateSize={88}
+                className="max-h-[70vh] divide-y divide-border/60"
+                renderItem={(c) => {
                 const isEditingThis = editingId === c.id;
                 return (
-                  <div key={c.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
+                  <div className="py-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
                     {isEditingThis ? (
                       <div className="flex items-center gap-3 flex-1 w-full">
                         <input
@@ -226,7 +231,8 @@ export default function AdminColors() {
                     </div>
                   </div>
                 );
-              })
+                }}
+              />
             ) : (
               !isLoading && (
                 <div className="p-8 text-center text-sm text-muted-foreground">

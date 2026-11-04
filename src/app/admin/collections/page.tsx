@@ -9,6 +9,7 @@ import {
   useDeleteCollectionMutation,
 } from "@/store/api";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import VirtualScrollList from "@/components/shared/VirtualScrollList";
 import { useTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -123,17 +124,20 @@ export default function AdminCollections() {
               {t("collections")} ({collections.length})
             </h2>
           </div>
-          <div className="divide-y divide-border/45">
+          <div>
             {isLoading ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
                 {t("loading_collections")}
               </div>
             ) : collections.length > 0 ? (
-              collections.map((col) => (
+              <VirtualScrollList
+                items={collections}
+                estimateSize={100}
+                className="max-h-[70vh] divide-y divide-border/45"
+                renderItem={(col) => (
                 <div
-                  key={col.id}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"
+                  className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"
                 >
                   <div className="flex-1 min-w-0 pr-0 sm:pr-4">
                     <div className="flex items-center gap-2">
@@ -175,7 +179,8 @@ export default function AdminCollections() {
                     </button>
                   </div>
                 </div>
-              ))
+                )}
+              />
             ) : (
               <div className="p-8 text-center text-sm text-muted-foreground">{t("no_projects")}</div>
             )}

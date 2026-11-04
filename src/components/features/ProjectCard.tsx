@@ -189,6 +189,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={toggleLike}
+              data-test-id="like-button"
               className="p-1 -mr-1 z-10 cursor-pointer"
             >
               <Heart

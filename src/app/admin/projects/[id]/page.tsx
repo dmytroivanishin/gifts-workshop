@@ -9,11 +9,11 @@ import {
   useUpdatePostMutation,
   useGetPostByIdQuery,
   useGetCategoriesQuery,
-  useGetTagsQuery,
   useCreateTagMutation,
   useGetMediaQuery,
   useGetCollectionsQuery,
 } from "@/store/api";
+import { useTagsList } from "@/hooks/useTagsList";
 import ImageCropModal from "@/components/shared/ImageCropModal";
 import MediaPickerModal from "@/components/shared/MediaPickerModal";
 import Combobox from "@/components/ui/combobox";
@@ -61,12 +61,20 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
     skip: !isEditMode,
   });
   const { data: categoriesResponse } = useGetCategoriesQuery();
-  const { data: tagsResponse } = useGetTagsQuery();
+  const [tagSearch, setTagSearch] = useState("");
+  const { tags: searchedTags, hasMore: hasMoreTags, loadMore: loadMoreTags } = useTagsList(tagSearch);
+  // Tags that must always resolve to a real name in the Combobox even when they fall outside
+  // the current search/page — the post's own existing tags (on load) and any tag created
+  // on the fly (handleCreateTag) — since `searchedTags` only ever holds the current page.
+  const [extraTags, setExtraTags] = useState<Tag[]>([]);
   const { data: collectionsResponse } = useGetCollectionsQuery();
   const [createTag] = useCreateTagMutation();
 
   const categories = categoriesResponse?.data || [];
-  const allTags = tagsResponse?.data || [];
+  // Deliberately NOT merged with extraTags: this drives the dropdown's own visible option list
+  // (the sort/star logic below included), which must stay exactly what the current search/page
+  // actually matched — extraTags only resolves already-selected chips via `resolveLabel` below.
+  const allTags = searchedTags;
   const collections = collectionsResponse?.data || [];
   const { data: mediaResponse } = useGetMediaQuery();
   const mediaList = mediaResponse?.data || [];
@@ -103,12 +111,35 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
       const res = await createTag({
         name: { [locale]: name },
       }).unwrap();
+      setExtraTags((prev) => [...prev, res.data]);
       return res.data.id;
     } catch (err) {
       console.error("Failed to create tag dynamically", err);
       return "";
     }
   };
+
+  // Opportunistically cache any currently-selected tag the moment it's visible in
+  // `searchedTags` — without this, selecting a tag while the dropdown is unsearched and then
+  // typing an unrelated search term would narrow `searchedTags` away from it, and its chip
+  // would fall back to showing the raw id (resolveLabel only has what's in extraTags).
+  const selectedTagIds = form.watch("tagsIds") || [];
+  useEffect(() => {
+    const toCache = searchedTags.filter((tag) => selectedTagIds.includes(tag.id));
+    if (!toCache.length) return;
+    setExtraTags((prev) => {
+      const merged = new Map(prev.map((t) => [t.id, t]));
+      let changed = false;
+      for (const tag of toCache) {
+        if (!merged.has(tag.id)) {
+          merged.set(tag.id, tag);
+          changed = true;
+        }
+      }
+      return changed ? Array.from(merged.values()) : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedTagIds comes from form.watch() and is a new array each render; re-running on every searchedTags change is the actual intent here, not a missing-dep bug.
+  }, [searchedTags, selectedTagIds]);
 
   // Sync complex states to RHF
   useEffect(() => {
@@ -151,6 +182,15 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           position: m.position || undefined,
         })) : []
       });
+
+      if (post.tags) {
+        const fullTags = post.tags.filter((t: Tag | string): t is Tag => typeof t !== "string");
+        setExtraTags((prev) => {
+          const merged = new Map(prev.map((tag) => [tag.id, tag]));
+          for (const tag of fullTags) merged.set(tag.id, tag);
+          return Array.from(merged.values());
+        });
+      }
 
       const images: SelectedMedia[] = (post.media as LoosePostMedia[]).map((m) => ({
         mediaId: typeof m.media === "string" ? m.media : m.media.id,
@@ -411,6 +451,17 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                         const prevTags = form.getValues("tagsIds") || [];
                         const filtered = prevTags.filter((tId: string) => !oldTags.includes(tId));
                         form.setValue("tagsIds", Array.from(new Set([...filtered, ...newTags])), { shouldValidate: true });
+
+                        // The category's own suggested tags are full Tag objects here (PopulatedCategory),
+                        // independent of whatever page/search the tags Combobox currently has loaded —
+                        // cache them so a newly auto-added tag's chip always resolves a real label.
+                        if (newCat?.tags?.length) {
+                          setExtraTags((prev) => {
+                            const merged = new Map(prev.map((t) => [t.id, t]));
+                            for (const tag of newCat.tags) merged.set(tag.id, tag);
+                            return Array.from(merged.values());
+                          });
+                        }
                       }}
                       placeholder={t("placeholder_select_category")}
                       searchPlaceholder={t("placeholder_search_categories")}
@@ -464,6 +515,13 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                       createLabel={t("add_new_tag_prompt")}
                       multiple
                       onCreate={handleCreateTag}
+                      serverSearch
+                      onSearchChange={setTagSearch}
+                      onEndReached={hasMoreTags ? loadMoreTags : undefined}
+                      resolveLabel={(id) => {
+                        const tag = extraTags.find((t) => t.id === id);
+                        return tag ? loc(tag.name) : undefined;
+                      }}
                     />
                   </FormControl>
                   <FormMessage className="text-[0.8rem] font-medium text-destructive" />
@@ -630,6 +688,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                 type="button"
                 onClick={() => handleActionClick("Published")}
                 disabled={!canPublish || isSaving}
+                data-test-id="post-publish-button"
                 className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
               >
                 {isSaving && form.getValues("status") === "Published" ? (

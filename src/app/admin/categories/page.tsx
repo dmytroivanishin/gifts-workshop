@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Plus, Edit, Save, X, Loader2, Trash2 } from "lucide-react";
-import { 
-  useGetCategoriesQuery, 
-  useCreateCategoryMutation, 
-  useGetTagsQuery,
+import {
+  useGetCategoriesQuery,
+  useCreateCategoryMutation,
   useCreateTagMutation,
   useGetCollectionsQuery,
   useGetColorsQuery,
@@ -14,6 +13,7 @@ import {
   useDeleteCategoryMutation,
   useReorderCategoriesMutation
 } from "@/store/api";
+import { useTagsList } from "@/hooks/useTagsList";
 import Combobox from "@/components/ui/combobox";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useTranslation } from "@/i18n";
@@ -24,13 +24,23 @@ import { categorySchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { SortableCategoryGroup } from "@/components/shared/SortableCategoryTree";
 import { getLocalizedField } from "@/utils/localization";
-import { ApiMutationError, PopulatedCategory } from "@/types";
+import { ApiMutationError, PopulatedCategory, Tag } from "@/types";
 
 export default function AdminCategories() {
   const { t, loc, locale } = useTranslation();
 
   const { data: categoriesResponse, isLoading } = useGetCategoriesQuery();
-  const { data: tagsResponse } = useGetTagsQuery();
+  // Two independent search states/hooks, one per Combobox instance — the inline edit row and
+  // the always-visible "Add New Category" form can both be on screen at once, so sharing one
+  // search state would make typing in either combobox's search box narrow both of them.
+  const [editTagSearch, setEditTagSearch] = useState("");
+  const { tags: editSearchedTags, hasMore: hasMoreEditTags, loadMore: loadMoreEditTags } = useTagsList(editTagSearch);
+  const [newTagSearch, setNewTagSearch] = useState("");
+  const { tags: newSearchedTags, hasMore: hasMoreNewTags, loadMore: loadMoreNewTags } = useTagsList(newTagSearch);
+  // Tags that must always resolve to a real name in the Combobox even when outside the current
+  // search/page — a category's own already-assigned tags (on edit) and any tag created on the
+  // fly — since the searched-tags lists above only ever hold their own current page.
+  const [extraTags, setExtraTags] = useState<Tag[]>([]);
   const { data: collectionsResponse } = useGetCollectionsQuery();
   const { data: colorsResponse } = useGetColorsQuery();
   const [saveCategory, { isLoading: isSaving }] = useCreateCategoryMutation();
@@ -41,12 +51,19 @@ export default function AdminCategories() {
   const [updateColor] = useUpdateColorMutation();
 
   const categories = categoriesResponse?.data || [];
-  const allTags = tagsResponse?.data || [];
   const colorsList = colorsResponse?.data || [];
-  const tagOptions = allTags.map((tag) => ({
-    value: tag.id, 
-    label: loc(tag.name) 
+  const editTagOptions = editSearchedTags.map((tag) => ({
+    value: tag.id,
+    label: loc(tag.name)
   }));
+  const newTagOptions = newSearchedTags.map((tag) => ({
+    value: tag.id,
+    label: loc(tag.name)
+  }));
+  const resolveTagLabel = (id: string) => {
+    const tag = extraTags.find((t) => t.id === id);
+    return tag ? loc(tag.name) : undefined;
+  };
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -84,6 +101,35 @@ export default function AdminCategories() {
   const [editParentId, setEditParentId] = useState("");
   const [editSelectedTags, setEditSelectedTags] = useState<string[]>([]);
   const [activeCategoryObj, setActiveCategoryObj] = useState<PopulatedCategory | null>(null);
+
+  // Opportunistically cache any currently-selected tag the moment it's visible in its
+  // Combobox's own searched-tags page — without this, selecting a tag while unsearched and
+  // then typing an unrelated search term would narrow the options away from it, and its chip
+  // would fall back to showing the raw id (resolveTagLabel only has what's in extraTags).
+  const newSelectedTagIds: string[] = form.watch("tagsIds") || [];
+  const cacheSelectedTags = (searched: Tag[], selectedIds: string[]) => {
+    const toCache = searched.filter((tag) => selectedIds.includes(tag.id));
+    if (!toCache.length) return;
+    setExtraTags((prev) => {
+      const merged = new Map(prev.map((t) => [t.id, t]));
+      let changed = false;
+      for (const tag of toCache) {
+        if (!merged.has(tag.id)) {
+          merged.set(tag.id, tag);
+          changed = true;
+        }
+      }
+      return changed ? Array.from(merged.values()) : prev;
+    });
+  };
+  useEffect(() => {
+    cacheSelectedTags(editSearchedTags, editSelectedTags);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cacheSelectedTags is a plain closure redefined every render; re-running on the two real inputs changing is the intent.
+  }, [editSearchedTags, editSelectedTags]);
+  useEffect(() => {
+    cacheSelectedTags(newSearchedTags, newSelectedTagIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- newSelectedTagIds comes from form.watch() and is a new array each render; re-running on every newSearchedTags change is the intent, not a missing-dep bug.
+  }, [newSearchedTags, newSelectedTagIds]);
 
   // Auto-create / select color for creation form
   useEffect(() => {
@@ -165,8 +211,9 @@ export default function AdminCategories() {
   const handleCreateTag = async (name: string) => {
     try {
       const res = await createTag({
-        title: { [locale]: name },
+        name: { [locale]: name },
       }).unwrap();
+      setExtraTags((prev) => [...prev, res.data]);
       return res.data.id;
     } catch (err) {
       console.error("Failed to create tag dynamically", err);
@@ -240,6 +287,13 @@ export default function AdminCategories() {
     setEditCollectionId(cat.collectionId || "");
     setEditParentId(cat.parentId || "");
     setEditSelectedTags(cat.tagsIds || cat.tags?.map((t) => t.id) || []);
+    if (cat.tags?.length) {
+      setExtraTags((prev) => {
+        const merged = new Map(prev.map((tag) => [tag.id, tag]));
+        for (const tag of cat.tags!) merged.set(tag.id, tag);
+        return Array.from(merged.values());
+      });
+    }
   };
 
   const handleDeleteClick = (id: string) => {
@@ -361,7 +415,7 @@ export default function AdminCategories() {
                           <div className="grid grid-cols-1 gap-2">
                             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("tags")}</label>
                             <Combobox
-                              options={tagOptions}
+                              options={editTagOptions}
                               value={editSelectedTags}
                               onChange={(val) => setEditSelectedTags(val as string[])}
                               placeholder={t("placeholder_select_tags")}
@@ -370,6 +424,10 @@ export default function AdminCategories() {
                               createLabel={t("add_new_tag_prompt")}
                               multiple
                               onCreate={handleCreateTag}
+                              serverSearch
+                              onSearchChange={setEditTagSearch}
+                              onEndReached={hasMoreEditTags ? loadMoreEditTags : undefined}
+                              resolveLabel={resolveTagLabel}
                             />
                           </div>
                           <div className="grid grid-cols-1 gap-2">
@@ -598,7 +656,7 @@ export default function AdminCategories() {
                     <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tags")}</FormLabel>
                     <FormControl>
                       <Combobox
-                        options={tagOptions}
+                        options={newTagOptions}
                         value={field.value || []}
                         onChange={(val) => field.onChange(val)}
                         placeholder={t("placeholder_select_tags")}
@@ -607,6 +665,10 @@ export default function AdminCategories() {
                         createLabel={t("add_new_tag_prompt")}
                         multiple
                         onCreate={handleCreateTag}
+                        serverSearch
+                        onSearchChange={setNewTagSearch}
+                        onEndReached={hasMoreNewTags ? loadMoreNewTags : undefined}
+                        resolveLabel={resolveTagLabel}
                       />
                     </FormControl>
                     <FormMessage className="text-[0.8rem] font-medium text-destructive" />

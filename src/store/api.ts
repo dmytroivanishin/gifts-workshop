@@ -136,11 +136,12 @@ export const api = createApi({
       }),
       invalidatesTags: ["Category"],
     }),
-    getTags: builder.query<{ data: Tag[]; meta: PaginationMeta }, { page?: number; limit?: number } | void>({
+    getTags: builder.query<{ data: Tag[]; meta: PaginationMeta }, { page?: number; limit?: number; search?: string } | void>({
       query: (params) => {
         const urlParams = new URLSearchParams();
         if (params?.page) urlParams.append("page", params.page.toString());
         if (params?.limit) urlParams.append("limit", params.limit.toString());
+        if (params?.search) urlParams.append("search", params.search);
         return {
           url: `/tags?${urlParams.toString()}`,
         };
@@ -254,8 +255,15 @@ export const api = createApi({
        }),
        invalidatesTags: ["Media"],
      }),
-     getColors: builder.query<{ data: { id: string; color: string }[] }, void>({
-       query: () => "/colors",
+     getColors: builder.query<{ data: { id: string; color: string }[] }, { page?: number; limit?: number } | void>({
+       query: (params) => {
+         const urlParams = new URLSearchParams();
+         if (params?.page) urlParams.append("page", params.page.toString());
+         if (params?.limit) urlParams.append("limit", params.limit.toString());
+         return {
+           url: `/colors?${urlParams.toString()}`,
+         };
+       },
        providesTags: ["Color"],
      }),
      createColor: builder.mutation<{ data: { id: string; color: string } }, any>({

@@ -1,5 +1,5 @@
 import { drizzleDatabase } from "./database";
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray, sql, SQL } from "drizzle-orm";
 import { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { IBaseRepository } from "../interfaces";
 import { PaginationOptions } from "@/types";
@@ -17,9 +17,30 @@ export abstract class DrizzleBaseRepository<
   // each subclass overrides with its own table's concrete Drizzle row type (e.g. `typeof users.$inferSelect`).
   abstract populate(item: Record<string, unknown>): Promise<TPopulated>;
 
+  // Hooks a subclass overrides to add ordering/filtering to getAll() without reimplementing its
+  // limit/offset/page application. Defaults are no-ops (no order, no filter), matching the
+  // original behavior for any repository that doesn't need either.
+  protected getOrderBy(): SQL | AnyPgColumn | undefined {
+    return undefined;
+  }
+
+  protected buildFilter(_options?: TQueryOptions): SQL | undefined {
+    return undefined;
+  }
+
   async getAll(options?: TQueryOptions): Promise<TPopulated[]> {
     let query = drizzleDatabase.getDb().select().from(this.table).$dynamic();
-    
+
+    const filter = this.buildFilter(options);
+    if (filter) {
+      query = query.where(filter);
+    }
+
+    const order = this.getOrderBy();
+    if (order) {
+      query = query.orderBy(order);
+    }
+
     if (options?.limit) {
       query = query.limit(options.limit);
     }

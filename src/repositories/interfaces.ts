@@ -52,7 +52,11 @@ export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, Qu
   countGalleryUsage(mediaId: string): Promise<number>;
 }
 
-export interface ITagRepository extends IBaseRepository<Tag> {
+export interface TagQueryOptions extends PaginationOptions {
+  search?: string;
+}
+
+export interface ITagRepository extends IBaseRepository<Tag, Tag, TagQueryOptions> {
   getBySlug(slug: string): Promise<Tag | undefined>;
 }
 

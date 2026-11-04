@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Plus, Edit, Save, X, Trash2, Loader2 } from "lucide-react";
 import {
-  useGetTagsQuery,
   useCreateTagMutation,
   useUpdateTagMutation,
   useDeleteTagMutation,
 } from "@/store/api";
+import { useTagsList } from "@/hooks/useTagsList";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import VirtualScrollList from "@/components/shared/VirtualScrollList";
 import { useTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,10 +20,8 @@ import { ApiMutationError, Tag } from "@/types";
 
 export default function AdminTags() {
   const { t, loc, locale } = useTranslation();
-  const [page, setPage] = useState(1);
-  const [tags, setTags] = useState<Tag[]>([]);
 
-  const { data: tagsResponse, isLoading, isFetching } = useGetTagsQuery({ page, limit: 15 });
+  const { tags, isLoading, isLoadingMore, loadMore, reload } = useTagsList("");
   const [createTag, { isLoading: isCreating }] = useCreateTagMutation();
   const [updateTag, { isLoading: isUpdating }] = useUpdateTagMutation();
   const [deleteTag, { isLoading: isDeleting }] = useDeleteTagMutation();
@@ -43,54 +42,11 @@ export default function AdminTags() {
   const [deleteTargetId, setDeleteTargetId] = useState("");
   const [editTagName, setEditTagName] = useState("");
 
-  const loaderRef = useRef<HTMLDivElement | null>(null);
-  const hasMore = tagsResponse?.meta?.nextPage != null;
-
-  // Sync loaded page chunk to tags list
-  useEffect(() => {
-    if (tagsResponse?.data) {
-      if (page === 1) {
-        setTags(tagsResponse.data);
-      } else {
-        setTags((prev) => {
-          const existingIds = new Set(prev.map((t) => t.id));
-          const newTags = tagsResponse.data.filter((t) => !existingIds.has(t.id));
-          return [...prev, ...newTags];
-        });
-      }
-    }
-  }, [tagsResponse, page]);
-
-  // IntersectionObserver bottom anchor logic
-  useEffect(() => {
-    if (!hasMore || isFetching || isLoading) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setPage((prev) => prev + 1);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentLoader = loaderRef.current;
-    if (currentLoader) {
-      observer.observe(currentLoader);
-    }
-
-    return () => {
-      if (currentLoader) {
-        observer.unobserve(currentLoader);
-      }
-    };
-  }, [hasMore, isFetching, isLoading]);
-
   const onSubmit = async (values: z.infer<typeof tagSchema>) => {
     try {
       await createTag(values).unwrap();
       form.reset(defaultValues);
-      setPage(1); // Reset to page 1 to fetch the latest
+      reload(); // Reset to page 1 to fetch the latest
     } catch (err: unknown) {
       const apiError = err as ApiMutationError;
       if (apiError?.data?.error?.details) {
@@ -106,14 +62,14 @@ export default function AdminTags() {
     if (!editTagName.trim()) return;
     try {
       const existingName = activeTagObj?.name && typeof activeTagObj.name === "object" ? activeTagObj.name : {};
-      
+
       await updateTag({
         id,
         name: { ...existingName, [locale]: editTagName.trim() },
       }).unwrap();
       setIsEditing(null);
       setActiveTagObj(null);
-      setPage(1); // Reset to reload updated list
+      reload(); // Reset to reload updated list
     } catch (err) {
       console.error("Failed to save tag", err);
     }
@@ -130,7 +86,7 @@ export default function AdminTags() {
       await deleteTag(deleteTargetId).unwrap();
       setIsDeleteOpen(false);
       setDeleteTargetId("");
-      setPage(1); // Reset to reload list
+      reload(); // Reset to reload list
     } catch (err) {
       console.error("Failed to delete tag", err);
     }
@@ -149,88 +105,91 @@ export default function AdminTags() {
         {/* Tags List */}
         <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
           <div className="p-4 border-b border-border bg-muted/30">
-            <h2 className="text-sm font-semibold text-foreground">{t("all_tags")} ({tagsResponse?.meta?.totalItems || tags.length})</h2>
+            <h2 className="text-sm font-semibold text-foreground">{t("all_tags")} ({tags.length})</h2>
           </div>
-          <div className="divide-y divide-border/45">
-            {isLoading && page === 1 ? (
+          <div>
+            {isLoading ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
                 {t("loading_tags")}
               </div>
             ) : tags.length > 0 ? (
-              tags.map((tag) => (
-                <div
-                  key={tag.id}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"
-                >
-                  {isEditing === tag.id ? (
-                    <div className="flex-1 w-full sm:mr-4">
-                      <input
-                        type="text"
-                        value={editTagName}
-                        onChange={(e) => setEditTagName(e.target.value)}
-                        placeholder={t("tag_name_placeholder")}
-                        className="w-full sm:max-w-[300px] px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                        autoFocus
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1 w-full sm:w-auto overflow-hidden">
-                      <span className="font-semibold text-sm text-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/60 w-fit truncate max-w-full">
-                        #{loc(tag.name)}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+              <VirtualScrollList
+                items={tags}
+                estimateSize={76}
+                className="max-h-[70vh] divide-y divide-border/45"
+                onEndReached={loadMore}
+                renderItem={(tag) => (
+                  <div className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
                     {isEditing === tag.id ? (
-                      <>
-                        <button
-                          onClick={() => handleSave(tag.id)}
-                          disabled={isUpdating}
-                          className="p-2 sm:p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
-                        >
-                          <Save size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => setIsEditing(null)}
-                          className="p-2 sm:p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
-                        >
-                          <X size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
-                        </button>
-                      </>
+                      <div className="flex-1 w-full sm:mr-4">
+                        <input
+                          type="text"
+                          value={editTagName}
+                          onChange={(e) => setEditTagName(e.target.value)}
+                          placeholder={t("tag_name_placeholder")}
+                          className="w-full sm:max-w-[300px] px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                          autoFocus
+                        />
+                      </div>
                     ) : (
-                      <>
-                        <button
-                          onClick={() => {
-                            setIsEditing(tag.id);
-                            setActiveTagObj(tag);
-                            const tagTitle = loc(tag.name);
-                            setEditTagName(tagTitle);
-                          }}
-                          className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
-                          title={t("rename_tag")}
-                        >
-                          <Edit size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(tag.id)}
-                          disabled={isDeleting}
-                          className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
-                          title={t("delete_tag")}
-                        >
-                          <Trash2 size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
-                        </button>
-                      </>
+                      <div className="flex flex-col gap-1 w-full sm:w-auto overflow-hidden">
+                        <span className="font-semibold text-sm text-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/60 w-fit truncate max-w-full">
+                          #{loc(tag.name)}
+                        </span>
+                      </div>
                     )}
+
+                    <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+                      {isEditing === tag.id ? (
+                        <>
+                          <button
+                            onClick={() => handleSave(tag.id)}
+                            disabled={isUpdating}
+                            className="p-2 sm:p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
+                          >
+                            <Save size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => setIsEditing(null)}
+                            className="p-2 sm:p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+                          >
+                            <X size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              setIsEditing(tag.id);
+                              setActiveTagObj(tag);
+                              const tagTitle = loc(tag.name);
+                              setEditTagName(tagTitle);
+                            }}
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
+                            title={t("rename_tag")}
+                          >
+                            <Edit size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(tag.id)}
+                            disabled={isDeleting}
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
+                            title={t("delete_tag")}
+                          >
+                            <Trash2 size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                )}
+              />
             ) : (
               <div className="p-8 text-center text-sm text-muted-foreground">{t("no_tags")}</div>
             )}
-            {tags.length > 0 && hasMore && (
-              <div ref={loaderRef} className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border/45 bg-muted/5">
+            {isLoadingMore && (
+              <div className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border/45 bg-muted/5">
                 <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
                 {t("loading_more_tags")}
               </div>

@@ -12,16 +12,21 @@ export class ColorService implements IColorService {
   ) {}
 
   async getAllColors(options?: PaginationOptions): Promise<PaginatedResult<Color>> {
-    const page = options?.page || 1;
-    const limit = options?.limit || 20;
+    if (options?.page || options?.limit) {
+      const page = options.page || 1;
+      const limit = options.limit || 20;
 
-    const colors = await this.colorRepo.getAll({
-      page,
-      limit: limit + 1,
-      offset: (page - 1) * limit,
-    });
+      const colors = await this.colorRepo.getAll({
+        page,
+        limit: limit + 1,
+        offset: (page - 1) * limit,
+      });
 
-    return paginate(colors, { page, limit });
+      return paginate(colors, { page, limit });
+    }
+
+    const colors = await this.colorRepo.getAll();
+    return paginate(colors, { page: 1, limit: colors.length });
   }
 
   async getColorById(id: string): Promise<Color | undefined> {

@@ -28,6 +28,19 @@ export async function tinyPortraitPng(): Promise<Buffer> {
     .toBuffer();
 }
 
+// Large enough to render at a real, interactable on-screen size in a browser — StorageService's
+// resize step never upscales (withoutEnlargement: true), so a 12x8 tinyPng() stays a literal
+// 12x8px <img> in the actual DOM, too small for an e2e test to perform a meaningful mouse drag
+// on without the pointer straying off the element entirely. Only tests that actually interact
+// with the rendered image (not just its presence/attributes) need this over tinyPng().
+export async function mediumPng(): Promise<Buffer> {
+  return sharp({
+    create: { width: 640, height: 480, channels: 3, background: { r: 60, g: 120, b: 200 } },
+  })
+    .png()
+    .toBuffer();
+}
+
 export function oversizedBuffer(megabytes: number): Buffer {
   return Buffer.alloc(megabytes * 1024 * 1024, 1);
 }

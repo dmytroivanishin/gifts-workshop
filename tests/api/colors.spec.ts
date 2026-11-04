@@ -85,4 +85,37 @@ test.describe("colors", () => {
   test("deleting a nonexistent id is a clean 404", async () => {
     await expectError(await admin.delete("/api/v1/colors/00000000-0000-0000-0000-000000000000"), 404);
   });
+
+  // CP-40: colorService.getAllColors previously capped an argument-less call at 20 rows (unlike
+  // tags/categories' "no args = everything" convention) — this is the direct regression test for
+  // that fix. Uses a before/after delta rather than an absolute count so a concurrent insert from
+  // another spec file running in a different worker can't make this flaky.
+  test("list with no args returns more than 20 rows once more than 20 exist", async () => {
+    const before = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/colors"));
+    const baseline = before.data.length;
+
+    const created = [];
+    for (let i = 0; i < 22; i++) created.push(await createColor(admin));
+
+    const after = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/colors"));
+    expect(after.data.length).toBeGreaterThanOrEqual(baseline + 22);
+
+    for (const c of created) await c.cleanup();
+  });
+
+  test("list with no args returns the newest-created color before an older one", async () => {
+    const older = await createColor(admin);
+    const newer = await createColor(admin);
+
+    const res = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/colors"));
+    const ids = res.data.map((c) => c.id);
+    const idxOlder = ids.indexOf(older.id);
+    const idxNewer = ids.indexOf(newer.id);
+    expect(idxOlder).toBeGreaterThanOrEqual(0);
+    expect(idxNewer).toBeGreaterThanOrEqual(0);
+    expect(idxNewer).toBeLessThan(idxOlder);
+
+    await newer.cleanup();
+    await older.cleanup();
+  });
 });

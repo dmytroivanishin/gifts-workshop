@@ -13,8 +13,9 @@ export class TagController {
 
   getTags = withErrorHandling(async (request: Request) => {
     const { page, limit } = getPaginationParams(request);
+    const search = new URL(request.url).searchParams.get("search") ?? undefined;
 
-    const result = await this.tagService.getAllTags({ page, limit });
+    const result = await this.tagService.getAllTags({ page, limit, search });
     return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
   });
 

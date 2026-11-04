@@ -17,16 +17,21 @@ export class CollectionService implements ICollectionService {
   ) {}
 
   async getAllCollections(options?: PaginationOptions): Promise<PaginatedResult<Collection>> {
-    const page = options?.page || 1;
-    const limit = options?.limit || 20;
+    if (options?.page || options?.limit) {
+      const page = options.page || 1;
+      const limit = options.limit || 20;
 
-    const collections = await this.collectionRepo.getAll({
-      page,
-      limit: limit + 1,
-      offset: (page - 1) * limit,
-    });
+      const collections = await this.collectionRepo.getAll({
+        page,
+        limit: limit + 1,
+        offset: (page - 1) * limit,
+      });
 
-    return paginate(collections, { page, limit });
+      return paginate(collections, { page, limit });
+    }
+
+    const collections = await this.collectionRepo.getAll();
+    return paginate(collections, { page: 1, limit: collections.length });
   }
 
   async getCollectionById(id: string): Promise<Collection | undefined> {

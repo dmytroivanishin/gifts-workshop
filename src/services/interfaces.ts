@@ -1,6 +1,6 @@
 import { Category, Collection, Color, LocalizedText, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment, PopulatedCategory, PopulatedPost } from "@/types";
 
-import { QueryOptions } from "@/repositories/interfaces";
+import { QueryOptions, TagQueryOptions } from "@/repositories/interfaces";
 
 export interface ICategoryService {
   getAllCategories(options?: PaginationOptions): Promise<PaginatedResult<PopulatedCategory>>;
@@ -40,7 +40,7 @@ export interface IMediaService {
 }
 
 export interface ITagService {
-  getAllTags(options?: PaginationOptions): Promise<PaginatedResult<Tag>>;
+  getAllTags(options?: TagQueryOptions): Promise<PaginatedResult<Tag>>;
   getTagById(id: string): Promise<Tag | undefined>;
   getTagBySlug(slug: string): Promise<Tag | undefined>;
   saveTag(body: { name: LocalizedText; slug?: string; id?: string; userId?: string }): Promise<Tag>;

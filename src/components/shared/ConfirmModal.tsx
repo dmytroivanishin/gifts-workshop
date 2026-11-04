@@ -57,6 +57,7 @@ export default function ConfirmModal({
             type="button"
             onClick={onClose}
             disabled={isLoading}
+            data-test-id="confirm-modal-cancel"
             className="px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted font-medium text-sm transition-colors disabled:opacity-50 cursor-pointer"
           >
             {cancelText}
@@ -65,6 +66,7 @@ export default function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
+            data-test-id="confirm-modal-confirm"
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#B87070] hover:bg-[#8F4A4A] text-white font-medium text-sm transition-all disabled:opacity-50 cursor-pointer"
           >
             {isLoading && <Loader2 size={14} className="animate-spin" />}

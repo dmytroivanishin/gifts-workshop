@@ -2,7 +2,7 @@ import { DrizzleBaseRepository } from "./baseRepository";
 import { collections } from "./schema";
 import { Collection } from "@/types";
 import { drizzleDatabase } from "./database";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { ICollectionRepository } from "../interfaces";
 
 export class CollectionRepository extends DrizzleBaseRepository<Collection, Collection> implements ICollectionRepository {
@@ -12,6 +12,10 @@ export class CollectionRepository extends DrizzleBaseRepository<Collection, Coll
 
   async populate(item: typeof collections.$inferSelect): Promise<Collection> {
     return item as Collection;
+  }
+
+  protected override getOrderBy() {
+    return desc(collections.createdAt);
   }
 
   async getBySlug(slug: string): Promise<Collection | undefined> {

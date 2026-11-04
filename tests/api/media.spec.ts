@@ -111,6 +111,25 @@ test.describe("media", () => {
     await expectError(await admin.delete("/api/v1/media/00000000-0000-0000-0000-000000000000"), 404);
   });
 
+  // CP-40: media gained a created_at column + desc(createdAt) ordering (previously no
+  // deterministic order at all). Relative index, not an absolute first position, so a concurrent
+  // upload from another spec file running in a different worker can't make this flaky.
+  test("list with no args returns the most-recently-uploaded file before an older one", async () => {
+    const older = await createMedia(admin);
+    const newer = await createMedia(admin);
+
+    const res = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/media"));
+    const ids = res.data.map((m) => m.id);
+    const idxOlder = ids.indexOf(older.id);
+    const idxNewer = ids.indexOf(newer.id);
+    expect(idxOlder).toBeGreaterThanOrEqual(0);
+    expect(idxNewer).toBeGreaterThanOrEqual(0);
+    expect(idxNewer).toBeLessThan(idxOlder);
+
+    await newer.cleanup();
+    await older.cleanup();
+  });
+
   // Opt-in: deliberately exhausts the shared upload rate-limit window (RATE_LIMITS.upload,
   // 30/minute) for this file's synthetic IP, which would otherwise make every other test in this
   // file flaky depending on run order. Run explicitly with RUN_SLOW_TESTS=1.

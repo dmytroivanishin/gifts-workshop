@@ -24,13 +24,15 @@ CREATE TABLE "collections" (
 	"description" jsonb NOT NULL,
 	"main" boolean DEFAULT false NOT NULL,
 	"user_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "collections_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
 CREATE TABLE "colors" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"color" varchar(50) NOT NULL,
-	"user_id" uuid
+	"user_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "comments" (
@@ -50,7 +52,8 @@ CREATE TABLE "media" (
 	"width" integer NOT NULL,
 	"height" integer NOT NULL,
 	"orientation" varchar(50) NOT NULL,
-	"user_id" uuid
+	"user_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "posts" (
@@ -87,6 +90,7 @@ CREATE TABLE "system_texts" (
 	"code" varchar(255) NOT NULL,
 	"content" jsonb NOT NULL,
 	"area" varchar(50) DEFAULT 'admin' NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "system_texts_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
@@ -95,6 +99,7 @@ CREATE TABLE "tags" (
 	"slug" varchar(255) NOT NULL,
 	"name" jsonb NOT NULL,
 	"user_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "tags_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
@@ -112,6 +117,7 @@ CREATE TABLE "users" (
 	"email" varchar(255) NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"password" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint

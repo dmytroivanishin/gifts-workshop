@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   password: text("password").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -41,12 +42,14 @@ export const systemTexts = pgTable("system_texts", {
   code: varchar("code", { length: 255 }).notNull().unique(),
   content: jsonb("content").$type<Record<string, string>>().notNull(),
   area: varchar("area", { length: 50 }).default("admin").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });
 
 export const colors = pgTable("colors", {
   id: uuid("id").primaryKey().defaultRandom(),
   color: varchar("color", { length: 50 }).notNull(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 }, (t) => ({
   userIdIdx: index("colors_user_id_idx").on(t.userId),
 }));
@@ -64,6 +67,7 @@ export const media = pgTable("media", {
   height: integer("height").notNull(),
   orientation: varchar("orientation", { length: 50 }).notNull(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 }, (t) => ({
   userIdIdx: index("media_user_id_idx").on(t.userId),
 }));
@@ -80,6 +84,7 @@ export const collections = pgTable("collections", {
   description: jsonb("description").$type<LocalizedText>().notNull(),
   main: boolean("main").default(false).notNull(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 }, (t) => ({
   userIdIdx: index("collections_user_id_idx").on(t.userId),
 }));
@@ -121,6 +126,7 @@ export const tags = pgTable("tags", {
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   name: jsonb("name").$type<LocalizedText>().notNull(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 }, (t) => ({
   userIdIdx: index("tags_user_id_idx").on(t.userId),
 }));
