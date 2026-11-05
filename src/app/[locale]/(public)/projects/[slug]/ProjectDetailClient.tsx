@@ -59,8 +59,10 @@ export default function ProjectDetailClient({ slug, initialPost }: ProjectDetail
     .filter((m): m is NonNullable<typeof m> => typeof m?.originalUrl === "string");
   const images = galleryMedia.map((m) => m.originalUrl);
 
-  const categoryTitle = loc(post.category.title);
-  const categoryColor = post.category.color!.color;
+  // A Draft/Archived post can legitimately have no category (postSchema only requires one for
+  // Published); an admin previewing such a post by its public URL must not crash on it.
+  const categoryTitle = post.category ? loc(post.category.title) : null;
+  const categoryColor = post.category?.color!.color;
 
   const handleImageClick = (index: number) => {
     setInitialImageIndex(index);
@@ -142,16 +144,18 @@ export default function ProjectDetailClient({ slug, initialPost }: ProjectDetail
           <div className="sticky top-24 space-y-6">
             {/* Category & Availability */}
             <div className="flex items-center gap-3">
-              <span
-                style={{
-                  backgroundColor: `${categoryColor}15`,
-                  color: categoryColor,
-                  border: `1px solid ${categoryColor}30`,
-                }}
-                className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-              >
-                {categoryTitle}
-              </span>
+              {post.category && (
+                <span
+                  style={{
+                    backgroundColor: `${categoryColor}15`,
+                    color: categoryColor,
+                    border: `1px solid ${categoryColor}30`,
+                  }}
+                  className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                >
+                  {categoryTitle}
+                </span>
+              )}
 
               <div className={`px-4 py-1.5 rounded-full text-sm font-medium border ${post.inStock ? "bg-[#DADFC6] border-[#DADFC6] text-[#5C6535]" : "bg-white border-[#DADFC6] text-[#5C6535]"}`}>
                 {post.inStock ? t("in_stock") : t("on_request")}

@@ -37,8 +37,11 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
   });
   const totalImages = mediaItems.length;
   
-  const categoryTitle = loc(post.category.title);
-  const categoryColor = post.category.color!.color;
+  // A Draft/Archived post can legitimately have no category (postSchema only requires one for
+  // Published); not reachable today (this component only renders Published posts), but guard it
+  // the same way ProjectDetailClient.tsx does rather than leave the same crash-prone pattern.
+  const categoryTitle = post.category ? loc(post.category.title) : null;
+  const categoryColor = post.category?.color!.color;
 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -169,23 +172,25 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
         <div className="pt-5 flex flex-col flex-1">
           {/* Meta row: Category Badge & Like Button */}
           <div className="flex items-center justify-between mb-3 shrink-0">
-            <span
-              style={{
-                backgroundColor: `${categoryColor}15`,
-                color: categoryColor,
-                border: `1px solid ${categoryColor}30`,
-              }}
-              className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider cursor-pointer"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (onCategorySelect) {
-                  onCategorySelect(post.category.id);
-                }
-              }}
-            >
-              {categoryTitle}
-            </span>
+            {post.category && (
+              <span
+                style={{
+                  backgroundColor: `${categoryColor}15`,
+                  color: categoryColor,
+                  border: `1px solid ${categoryColor}30`,
+                }}
+                className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (onCategorySelect) {
+                    onCategorySelect(post.category!.id);
+                  }
+                }}
+              >
+                {categoryTitle}
+              </span>
+            )}
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={toggleLike}

@@ -250,9 +250,9 @@ Full detail with file references: `PRODUCTION-READINESS.md`. Summary:
 
 | Problem | Status | Priority |
 |---------|--------|----------|
-| Public `GET /users` and `GET /admin/comments` (proxy guarded only mutating methods): now JWT-gated for every method; `UserRepository` never returns `password` (it was a constant placeholder) | Fixed 2026-09-19, verify by hand (CP-4) | – |
+| Public `GET /users` and `GET /admin/comments` (proxy guarded only mutating methods): now JWT-gated for every method; `UserRepository` never returns `password` (it was a constant placeholder) | Fixed 2026-09-19, verified by hand 2026-11-05 (CP-4) | – |
 | `POST/PUT/DELETE /api/v1/users` had no role model (any valid JWT could create/edit/delete a user row) and zero consumers in the admin UI: removed entirely 2026-10-01, only `GET` remains | Fixed 2026-10-01 | – |
-| Draft/Archived posts readable anonymously (list, by slug, collection posts, page metadata): anonymous callers now get only `Published` | Fixed 2026-09-19, verify by hand (CP-4) | – |
+| Draft/Archived posts readable anonymously (list, by slug, collection posts, page metadata): anonymous callers now get only `Published` | Fixed 2026-09-19, verified by hand 2026-11-05 (CP-4) | – |
 | HTTP 500 returned raw `error.message` (Drizzle errors carry the SQL and parameters): now a generic message, details in the log | Fixed 2026-09-19 | – |
 | `JWT_SECRET` not in the required-env list; `dev-login` guarded only by a build-time flag: `JWT_SECRET` is required now and `dev-login` refuses `NODE_ENV=production` (`NEXT_PUBLIC_DEV_MODE` must still be `false` in the production build) | Fixed 2026-09-19 | – |
 | `proxy.ts` was the only gate for writes; controllers did not re-check (only the media upload did) | **Fixed 2026-10-06**: every write `route.ts` wraps its handler in `withAdminAuth()`, a second, independent token check (CP-5) | – |
