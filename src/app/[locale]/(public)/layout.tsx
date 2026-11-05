@@ -67,8 +67,8 @@ export default async function PublicLayout({ children, params }: PublicLayoutPro
   const { locale } = await params;
   const isEn = locale === 'en';
   const footerText = isEn 
-    ? process.env.SITE_FOOTER_EN || "Kind Gifts. All rights reserved."
-    : process.env.SITE_FOOTER_RU || "Добрые Подарки. Все права защищены.";
+    ? process.env.SITE_FOOTER_EN || "Kind Gifts."
+    : process.env.SITE_FOOTER_RU || "Добрые Подарки.";
 
   return (
     <div className="min-h-screen flex flex-col">

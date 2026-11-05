@@ -59,7 +59,9 @@ export class CommentService implements ICommentService {
       postId: body.postId,
       name: body.name,
       text: body.text,
-      status: "Review",
+      // Published immediately, no moderation queue — the admin can still Reject (hide) or delete
+      // it afterward. "Review"/"Rejected" stay in the schema/enum for a possible future re-enable.
+      status: "Approved",
       replyId: body.replyId ?? undefined,
       createdAt: new Date(),
     };

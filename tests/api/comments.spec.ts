@@ -29,7 +29,7 @@ test.describe("comments", () => {
     await anon.dispose();
   });
 
-  test("public POST needs no auth; 404 for a nonexistent postId; 201-shaped success starts in Review", async () => {
+  test("public POST needs no auth; 404 for a nonexistent postId; 201-shaped success starts Approved", async () => {
     const post = await createPost(admin, { status: "Published" });
     const actor = await commentActor();
 
@@ -42,7 +42,8 @@ test.describe("comments", () => {
 
     const res = await actor.post(`/api/v1/posts/${post.id}/comments`, { data: { name: "Tester", text: "Hello" } });
     const body = await expectSuccess<{ id: string; status: string }>(res);
-    expect(body.data.status).toBe("Review");
+    // Published immediately, no moderation queue (CP-45) — the admin can still Reject or delete it.
+    expect(body.data.status).toBe("Approved");
 
     await deleteCommentAsAdmin(admin, body.data.id);
     await post.cleanup();
@@ -64,11 +65,19 @@ test.describe("comments", () => {
     const post = await createPost(admin, { status: "Published" });
     const actor = await commentActor();
     const comment = await createComment(actor, post.id);
-    expect(comment.status).toBe("Review");
+    // Published immediately, no moderation queue (CP-45) — a fresh comment is Approved by default
+    // and visible right away; only an explicit admin Reject hides it from the public list.
+    expect(comment.status).toBe("Approved");
 
-    const publicList = await expectSuccess<Array<{ id: string }>>(
+    let publicList = await expectSuccess<Array<{ id: string }>>(
       await anon.get(`/api/v1/posts/${post.id}/comments`)
     );
+    expect(publicList.data.map((c) => c.id)).toContain(comment.id);
+
+    await expectSuccess(
+      await admin.patch(`/api/v1/admin/comments/${comment.id}/status`, { data: { status: "Rejected" } })
+    );
+    publicList = await expectSuccess<Array<{ id: string }>>(await anon.get(`/api/v1/posts/${post.id}/comments`));
     expect(publicList.data.map((c) => c.id)).not.toContain(comment.id);
 
     await deleteCommentAsAdmin(admin, comment.id);

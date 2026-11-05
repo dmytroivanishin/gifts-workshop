@@ -145,8 +145,7 @@ export function CommentSection({ postId }: { postId: string }) {
                   
                   <div className="bg-secondary/40 p-4 rounded-2xl border border-border/30 w-full flex flex-col gap-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm text-foreground">{reply.name}</span>
-                      <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-wider rounded-full border border-primary/20">{t("admin") || "Admin"}</span>
+                      <span className="font-semibold text-sm text-foreground">{t("admin") || "Admin"}</span>
                       <span className="text-[10px] text-muted-foreground ml-auto">{new Date(reply.createdAt).toLocaleDateString()}</span>
                     </div>
                     <p className="text-sm text-foreground whitespace-pre-wrap">{reply.text}</p>

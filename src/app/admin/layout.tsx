@@ -57,9 +57,6 @@ export default function AdminLayout({
       
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 border-r bg-secondary flex-shrink-0">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold text-primary">{t("admin_panel")}</h2>
-        </div>
         <nav className="p-4 flex flex-col gap-1">
           {navLinks.map((link) => {
             const isActive = pathname.startsWith(link.href);
@@ -83,8 +80,7 @@ export default function AdminLayout({
       <main className="flex-1 flex flex-col overflow-hidden">
         
         {/* Mobile Header */}
-        <header className="md:hidden h-14 border-b bg-background flex items-center px-4 justify-between flex-shrink-0">
-          <h2 className="text-lg font-semibold text-primary">{t("admin_panel")}</h2>
+        <header className="md:hidden h-14 border-b bg-background flex items-center px-4 justify-end flex-shrink-0">
           <div className="flex items-center space-x-3">
             <button
               onClick={handleLogout}
