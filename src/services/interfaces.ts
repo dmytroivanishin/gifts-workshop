@@ -34,7 +34,7 @@ export interface IMediaService {
   getAllMedia(options?: PaginationOptions): Promise<PaginatedResult<Media>>;
   getMediaById(id: string): Promise<Media | undefined>;
   saveMedia(body: Omit<Media, "id" | "userId"> & { id?: string; userId?: string }): Promise<Media>;
-  uploadAndSaveMedia(buffer: Buffer, originalFilename: string, mimeType: string, userId: string): Promise<Media>;
+  uploadAndSaveMedia(buffer: Buffer, mimeType: string, userId: string): Promise<Media>;
   uploadMedia(file: File, userId: string): Promise<Media>;
   deleteMedia(id: string): Promise<boolean>;
 }

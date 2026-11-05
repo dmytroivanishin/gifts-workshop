@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Check, Loader2 } from "lucide-react";
 import { useGetMediaQuery } from "@/store/api";
+import { handleImageLoadError } from "@/utils/mediaPlaceholder";
 
 import { useTranslation } from "@/i18n";
 
@@ -73,6 +74,7 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
                 return (
                   <div
                     key={media.id}
+                    data-test-id={`media-option-${media.id}`}
                     onClick={() => toggleSelect(media.id)}
                     className={`group relative aspect-square bg-muted rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
                       isSelected
@@ -82,6 +84,7 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
                   >
                     <img
                       src={media.thumbnailUrl || media.originalUrl}
+                      onError={handleImageLoadError}
                       alt="Media thumbnail"
                       className="w-full h-full object-cover"
                     />

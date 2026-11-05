@@ -21,6 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, X, Move, Star } from "lucide-react";
 import { useTranslation } from "@/i18n";
+import { handleImageLoadError } from "@/utils/mediaPlaceholder";
 import { Media, Position } from "@/types";
 
 interface MediaItem {
@@ -77,6 +78,7 @@ function SortableMediaItem({
     <div
       ref={setNodeRef}
       style={style}
+      data-test-id={`media-tile-${item.mediaId}`}
       className={`group relative aspect-square bg-muted rounded-lg overflow-hidden border-2 transition-all ${
         isCover ? "border-primary ring-2 ring-primary/25" : "border-border"
       } ${isDragging ? "opacity-50 ring-2 ring-primary shadow-xl scale-105" : ""}`}
@@ -108,6 +110,7 @@ function SortableMediaItem({
 
       <img
         src={item.url}
+        onError={handleImageLoadError}
         alt=""
         className="absolute pointer-events-none"
         style={{

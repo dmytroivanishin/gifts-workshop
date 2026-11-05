@@ -7,6 +7,7 @@ import { PopulatedPost } from "@/types";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { MEDIA_PLACEHOLDER_DATA_URL, handleImageLoadError } from "@/utils/mediaPlaceholder";
 
 export default function AdminDashboard() {
   const { t, loc } = useTranslation();
@@ -160,13 +161,12 @@ export default function AdminDashboard() {
                     <tr key={post.id} className="hover:bg-muted/30 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          {post.poster && (
-                            <img
-                              src={post.poster.thumbnailUrl}
-                              alt=""
-                              className="w-10 h-10 object-cover rounded-lg bg-muted"
-                            />
-                          )}
+                          <img
+                            src={post.poster?.thumbnailUrl || MEDIA_PLACEHOLDER_DATA_URL}
+                            onError={handleImageLoadError}
+                            alt=""
+                            className="w-10 h-10 object-cover rounded-lg bg-muted"
+                          />
                           <div>
                             <div className="font-semibold text-foreground text-sm">{postTitle}</div>
                             <div className="text-xs text-muted-foreground line-clamp-1 max-w-[250px]">
@@ -241,13 +241,12 @@ export default function AdminDashboard() {
                 return (
                   <div key={`mobile-${post.id}`} className="p-4 space-y-4 hover:bg-muted/10 transition-colors">
                     <div className="flex items-start gap-3">
-                      {post.poster && (
-                        <img
-                          src={post.poster.thumbnailUrl}
-                          alt=""
-                          className="w-16 h-16 object-cover rounded-lg bg-muted flex-shrink-0"
-                        />
-                      )}
+                      <img
+                        src={post.poster?.thumbnailUrl || MEDIA_PLACEHOLDER_DATA_URL}
+                        onError={handleImageLoadError}
+                        alt=""
+                        className="w-16 h-16 object-cover rounded-lg bg-muted flex-shrink-0"
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-foreground text-sm truncate">{postTitle}</div>
                         <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">

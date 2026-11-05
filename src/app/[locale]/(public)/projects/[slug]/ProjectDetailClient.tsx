@@ -10,6 +10,7 @@ import { useGetPostByIdQuery } from "@/store/api";
 import { useTranslation } from "@/i18n";
 import { CommentSection } from "@/components/features/comments/CommentSection";
 import { FullscreenGallery } from "@/components/shared/FullscreenGallery";
+import { MEDIA_PLACEHOLDER_DATA_URL, handleImageLoadError } from "@/utils/mediaPlaceholder";
 import { PopulatedPost } from "@/types";
 
 interface ProjectDetailClientProps {
@@ -54,10 +55,15 @@ export default function ProjectDetailClient({ slug, initialPost }: ProjectDetail
     );
   }
 
-  const galleryMedia = post.media
-    .map((m) => m.media)
-    .filter((m): m is NonNullable<typeof m> => typeof m?.originalUrl === "string");
-  const images = galleryMedia.map((m) => m.originalUrl);
+  // Every posts_to_media entry is kept, even one whose media relation didn't resolve — a
+  // deliberately defended, practically unreachable case (a media row can't be deleted while a post
+  // still uses it, see MediaService.deleteMedia's 409 MEDIA_IN_USE), same spirit as the
+  // post.category guard below. thumbnailUrl and originalUrl are always set together (both the real
+  // upload pipeline and MediaService.saveMedia's external-URL path back-fill one from the other), so
+  // a missing thumbnailUrl means there's no real originalUrl to fall back to either — straight to
+  // the themed placeholder instead of chaining both fields.
+  const galleryMedia = post.media.map((m) => m.media);
+  const images = galleryMedia.map((m) => m?.originalUrl || MEDIA_PLACEHOLDER_DATA_URL);
 
   // A Draft/Archived post can legitimately have no category (postSchema only requires one for
   // Published); an admin previewing such a post by its public URL must not crash on it.
@@ -116,10 +122,11 @@ export default function ProjectDetailClient({ slug, initialPost }: ProjectDetail
                   onClick={() => handleImageClick(index)}
                 >
                   <Image
-                    src={mediaItem.originalUrl}
+                    src={mediaItem?.thumbnailUrl || MEDIA_PLACEHOLDER_DATA_URL}
+                    onError={handleImageLoadError}
                     alt={`${loc(post.title)} - ${index + 1}`}
-                    width={mediaItem.width}
-                    height={mediaItem.height}
+                    width={mediaItem?.width || 400}
+                    height={mediaItem?.height || 400}
                     sizes="(min-width: 640px) 50vw, 100vw"
                     className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                   />

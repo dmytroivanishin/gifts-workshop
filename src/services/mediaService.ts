@@ -25,10 +25,10 @@ export class MediaService implements IMediaService {
     return paginate(mediaList, { page, limit });
   }
 
-  async uploadAndSaveMedia(buffer: Buffer, originalFilename: string, _mimeType: string, userId: string): Promise<Media> {
+  async uploadAndSaveMedia(buffer: Buffer, _mimeType: string, userId: string): Promise<Media> {
     // _mimeType is kept for the interface contract; StorageService now derives the real format
     // from the decoded bytes instead of trusting the client-declared type (CP-6 hardening).
-    const processed = await storageService.uploadImage(buffer, originalFilename);
+    const processed = await storageService.uploadImage(buffer);
     
     const media: Media = {
       id: randomUUID(),
@@ -57,7 +57,7 @@ export class MediaService implements IMediaService {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    return this.uploadAndSaveMedia(buffer, file.name, file.type, userId);
+    return this.uploadAndSaveMedia(buffer, file.type, userId);
   }
 
   async getMediaById(id: string): Promise<Media | undefined> {

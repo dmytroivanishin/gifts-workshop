@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Heart, ChevronRight, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/cn";
+import { MEDIA_PLACEHOLDER_DATA_URL, handleImageLoadError } from "@/utils/mediaPlaceholder";
 import { PopulatedPost } from "@/types";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
@@ -105,7 +106,12 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
                 return (
                   <motion.img
                     key={currentImageIndex}
-                    src={med?.originalUrl || ""}
+                    // thumbnailUrl and originalUrl are always set together (the upload pipeline and
+                    // MediaService.saveMedia's external-URL path both back-fill one from the other),
+                    // so a missing thumbnailUrl means there's no real originalUrl to fall back to
+                    // either — straight to the themed placeholder.
+                    src={med?.thumbnailUrl || MEDIA_PLACEHOLDER_DATA_URL}
+                    onError={handleImageLoadError}
                     alt={loc(post.title)}
                     className="absolute transition-transform duration-700 ease-out group-hover:scale-103"
                     style={{

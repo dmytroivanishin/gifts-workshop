@@ -99,29 +99,26 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
     await expect(publishButton).toBeDisabled();
 
     // --- Add media (opens MediaPickerModal; select both, first picked becomes the cover/poster) ---
+    // The grid's/picker's display is a cosmetically generated string unrelated to the uploaded
+    // filename (StorageService/deriveMediaName) — every tile is located by the media row's own
+    // id (data-test-id) instead of matching against the original filename.
     await page.getByText("add_media").click();
-    await page
-      .locator("div.group.relative.aspect-square", { has: page.locator('img[src*="e2e-editor-media-a"]') })
-      .click();
-    await page
-      .locator("div.group.relative.aspect-square", { has: page.locator('img[src*="e2e-editor-media-b"]') })
-      .click();
+    await page.getByTestId(`media-option-${mediaA.id}`).click();
+    await page.getByTestId(`media-option-${mediaB.id}`).click();
     await page.getByText("confirm_selection").click();
 
     // --- Publish is now enabled (title+collection+category+poster all set) ---
     await expect(publishButton).toBeEnabled();
 
     // --- Gallery drag reorder: drag B's handle onto A's tile to swap them ---
-    const tileFor = (needle: string) =>
-      page.locator("div.group.relative.aspect-square", { has: page.locator(`img[src*="${needle}"]`) });
-    const tileA = tileFor("e2e-editor-media-a");
-    const tileB = tileFor("e2e-editor-media-b");
+    const tileA = page.getByTestId(`media-tile-${mediaA.id}`);
+    const tileB = page.getByTestId(`media-tile-${mediaB.id}`);
 
-    const imagesBefore = await page.locator("div.grid.grid-cols-2.sm\\:grid-cols-4 img").evaluateAll((els) =>
-      els.map((el) => (el as HTMLImageElement).src)
-    );
-    expect(imagesBefore[0]).toContain("e2e-editor-media-a");
-    expect(imagesBefore[1]).toContain("e2e-editor-media-b");
+    const tileOrderBefore = await page
+      .locator("div.grid.grid-cols-2.sm\\:grid-cols-4 [data-test-id^='media-tile-']")
+      .evaluateAll((els) => els.map((el) => el.getAttribute("data-test-id")));
+    expect(tileOrderBefore[0]).toBe(`media-tile-${mediaA.id}`);
+    expect(tileOrderBefore[1]).toBe(`media-tile-${mediaB.id}`);
 
     const handleB = tileB.locator('[data-test-id="media-drag-handle"]');
     const sourceBox = await handleB.boundingBox();
@@ -138,14 +135,14 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
     }
     await page.mouse.up();
 
-    const imagesAfter = await page.locator("div.grid.grid-cols-2.sm\\:grid-cols-4 img").evaluateAll((els) =>
-      els.map((el) => (el as HTMLImageElement).src)
-    );
-    expect(imagesAfter[0]).toContain("e2e-editor-media-b");
-    expect(imagesAfter[1]).toContain("e2e-editor-media-a");
+    const tileOrderAfter = await page
+      .locator("div.grid.grid-cols-2.sm\\:grid-cols-4 [data-test-id^='media-tile-']")
+      .evaluateAll((els) => els.map((el) => el.getAttribute("data-test-id")));
+    expect(tileOrderAfter[0]).toBe(`media-tile-${mediaB.id}`);
+    expect(tileOrderAfter[1]).toBe(`media-tile-${mediaA.id}`);
 
     // --- Crop/position modal: pan via drag, zoom via the range slider, apply ---
-    await tileFor("e2e-editor-media-a").locator('[data-test-id="media-crop-button"]').click();
+    await tileA.locator('[data-test-id="media-crop-button"]').click();
     const cropArea = page.locator("div.relative.w-\\[300px\\].h-\\[300px\\]");
     await expect(cropArea).toBeVisible();
     const cropBox = await cropArea.boundingBox();

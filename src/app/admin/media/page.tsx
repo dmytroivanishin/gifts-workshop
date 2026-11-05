@@ -9,6 +9,8 @@ import { useDispatch } from "react-redux";
 import { addNotification } from "@/store/slices/notificationSlice";
 import { useGetMediaQuery, useUploadMediaMutation, useDeleteMediaMutation } from "@/store/api";
 import { ApiMutationError } from "@/types";
+import { deriveMediaName } from "@/utils/mediaName";
+import { handleImageLoadError } from "@/utils/mediaPlaceholder";
 
 interface MediaItem {
   id: string;
@@ -58,7 +60,7 @@ export default function AdminMedia() {
   const media: MediaItem[] = (mediaData?.data || []).map((m) => ({
     id: m.id,
     url: m.thumbnailUrl || m.originalUrl,
-    name: m.originalUrl.split('/').pop() || 'image',
+    name: deriveMediaName(m.originalUrl),
     size: `${m.width}x${m.height}`
   }));
 
@@ -204,10 +206,11 @@ export default function AdminMedia() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {media.map((item) => (
-            <div key={item.id} className="group relative bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm flex flex-col justify-between">
+            <div key={item.id} data-test-id={`media-card-${item.id}`} className="group relative bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm flex flex-col justify-between">
               <div className="aspect-square relative w-full bg-muted overflow-hidden flex items-center justify-center">
                 <img
                   src={item.url}
+                  onError={handleImageLoadError}
                   alt={item.name}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
                 />

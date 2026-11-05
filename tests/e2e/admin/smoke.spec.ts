@@ -146,7 +146,9 @@ test.describe("admin smoke: every list page loads with real data and no console 
     const errors = collectConsoleErrors(page);
     await loginAsAdmin(page);
     await page.goto("/admin/media");
-    await expect(page.getByText("e2e-smoke-media", { exact: false })).toBeVisible();
+    // The grid's display name is a cosmetically generated string unrelated to the uploaded
+    // filename (StorageService/deriveMediaName) — locate the seeded row by its own id instead.
+    await expect(page.getByTestId(`media-card-${media.id}`)).toBeVisible();
     expect(errors).toEqual([]);
   });
 

@@ -107,7 +107,10 @@ test.describe("admin: error toasts and conflict handling", () => {
       await loginAsAdmin(page);
       await page.goto("/admin/media");
 
-      const card = page.locator("div.group.relative.bg-card", { has: page.locator(`text=${filename}`) });
+      // media/page.tsx's display name is a cosmetically generated string (deriveMediaName/
+      // StorageService), unrelated to the uploaded filename — locate the card by the media row's
+      // own id instead (data-test-id), which createMedia already gives us directly.
+      const card = page.getByTestId(`media-card-${media.id}`);
       await expect(card).toBeVisible();
       await card.getByRole("button").click();
       await page.getByTestId("confirm-modal-confirm").click();
@@ -201,7 +204,8 @@ test.describe("admin: error toasts and conflict handling", () => {
       await loginAsAdmin(page);
       await page.goto("/admin/media");
 
-      const card = page.locator("div.group.relative.bg-card", { has: page.locator(`text=${filename}`) });
+      // See the poster-conflict test above: locate by id, not by the generated display name.
+      const card = page.getByTestId(`media-card-${media.id}`);
       await expect(card).toBeVisible();
       await card.getByRole("button").click();
 

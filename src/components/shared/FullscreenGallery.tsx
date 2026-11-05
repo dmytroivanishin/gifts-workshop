@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { handleImageLoadError } from "@/utils/mediaPlaceholder";
 
 interface FullscreenGalleryProps {
   images: string[];
@@ -113,6 +114,7 @@ export function FullscreenGallery({
             transition={{ duration: 0.2 }}
             className="max-w-full max-h-full object-contain select-none shadow-2xl cursor-default rounded-2xl"
             onClick={(e) => e.stopPropagation()}
+            onError={handleImageLoadError}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}

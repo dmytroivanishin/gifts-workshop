@@ -121,7 +121,9 @@ test.describe("admin on a mobile viewport (390px): dashboard, categories, media 
     await loginAsAdmin(page);
     await page.goto("/admin/media");
 
-    await expect(page.getByText("e2e-mobile-media", { exact: false })).toBeVisible();
+    // The grid's display name is a cosmetically generated string unrelated to the uploaded
+    // filename (StorageService/deriveMediaName) — locate the seeded row by its own id instead.
+    await expect(page.getByTestId(`media-card-${media.id}`)).toBeVisible();
     await expect(page.locator('input[type="file"]')).toBeAttached();
     expect(await hasNoHorizontalOverflow(page)).toBe(true);
     // media/page.tsx: "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5" — 2 columns below `md`.
@@ -144,9 +146,7 @@ test.describe("admin on a mobile viewport (390px): dashboard, categories, media 
     await page.getByRole("button", { name: "E2E Mobile Category", exact: true }).click();
 
     await page.getByText("add_media").click();
-    await page
-      .locator('div.group.relative.aspect-square', { has: page.locator('img[src*="e2e-mobile-media"]') })
-      .click();
+    await page.getByTestId(`media-option-${media.id}`).click();
     await page.getByText("confirm_selection").click();
 
     const publishButton = page.getByTestId("post-publish-button");

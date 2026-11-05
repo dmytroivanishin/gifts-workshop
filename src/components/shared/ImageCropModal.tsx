@@ -4,6 +4,7 @@ import { useState, useRef, MouseEvent, TouchEvent } from "react";
 import { X, ZoomIn, ZoomOut, Check } from "lucide-react";
 import { Media } from "@/types";
 import { useTranslation } from "@/i18n";
+import { handleImageLoadError } from "@/utils/mediaPlaceholder";
 
 interface ImageCropModalProps {
   imageUrl: string;
@@ -115,6 +116,7 @@ export default function ImageCropModal({
           >
             <img
               src={imageUrl}
+              onError={handleImageLoadError}
               alt="Crop workspace"
               className="absolute pointer-events-none transition-transform duration-75"
               style={{
