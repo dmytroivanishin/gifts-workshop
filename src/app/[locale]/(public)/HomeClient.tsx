@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Heart, Loader2, Globe } from "lucide-react";
+import { Heart, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { useGetPostsQuery, useGetCategoriesQuery } from "@/store/api";
@@ -21,7 +21,7 @@ interface HomeClientProps {
 export default function HomeClient({ initialCategories, initialPosts, initialMeta }: HomeClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t, loc, locale, setLocale } = useTranslation();
+  const { t, loc } = useTranslation();
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined);

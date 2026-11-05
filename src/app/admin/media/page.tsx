@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Upload, Trash2, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import { useDispatch } from "react-redux";
 import { addNotification } from "@/store/slices/notificationSlice";
 import { useGetMediaQuery, useUploadMediaMutation, useDeleteMediaMutation } from "@/store/api";
@@ -26,8 +27,6 @@ export default function AdminMedia() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const [dragActive, setDragActive] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStats, setUploadStats] = useState({ total: 0, current: 0 });
   const [failedFiles, setFailedFiles] = useState<string[]>([]);
@@ -35,6 +34,26 @@ export default function AdminMedia() {
   const { data: mediaData, isLoading } = useGetMediaQuery();
   const [uploadMedia] = useUploadMediaMutation();
   const [deleteMedia] = useDeleteMediaMutation();
+  const {
+    isOpen: isDeleteOpen,
+    handleDeleteClick,
+    handleConfirmDelete,
+    handleClose: handleDeleteClose,
+  } = useDeleteConfirm(deleteMedia, {
+    onSuccess: () => {
+      dispatch(addNotification({ type: 'success', messageKey: 'media_deleted' }));
+    },
+    onError: (err: unknown) => {
+      const errorData = (err as ApiMutationError)?.data;
+      const errorCode = errorData?.error?.code || 'DELETE_FAILED';
+      dispatch(addNotification({
+        type: 'error',
+        messageKey: errorCode,
+        details: errorData?.error?.message || 'Failed to delete media'
+      }));
+    },
+    closeOnError: true,
+  });
 
   const media: MediaItem[] = (mediaData?.data || []).map((m) => ({
     id: m.id,
@@ -114,29 +133,6 @@ export default function AdminMedia() {
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setDeleteTargetId(id);
-    setIsDeleteOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteTargetId) return;
-    try {
-      await deleteMedia(deleteTargetId).unwrap();
-      dispatch(addNotification({ type: 'success', messageKey: 'media_deleted' }));
-    } catch (err: unknown) {
-      const errorData = (err as ApiMutationError)?.data;
-      const errorCode = errorData?.error?.code || 'DELETE_FAILED';
-      dispatch(addNotification({
-        type: 'error',
-        messageKey: errorCode,
-        details: errorData?.error?.message || 'Failed to delete media'
-      }));
-    } finally {
-      setIsDeleteOpen(false);
-      setDeleteTargetId("");
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -249,7 +245,7 @@ export default function AdminMedia() {
         confirmText={t("delete") || "Delete"}
         cancelText={t("cancel") || "Cancel"}
         onConfirm={handleConfirmDelete}
-        onClose={() => setIsDeleteOpen(false)}
+        onClose={handleDeleteClose}
       />
     </div>
   );

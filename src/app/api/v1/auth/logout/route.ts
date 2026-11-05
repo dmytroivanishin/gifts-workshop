@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     const cookieStore = await cookies();
     const refreshTokenCookie = cookieStore.get("refreshToken")?.value;

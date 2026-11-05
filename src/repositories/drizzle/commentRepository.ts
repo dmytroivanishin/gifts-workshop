@@ -111,6 +111,7 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
     
     // Strip relational data that shouldn't be saved (present only if a caller passes a
     // PopulatedComment in where a plain Comment is expected; item itself never declares these).
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deliberately excluding these relations from dataToSave, not using them.
     const { post, parent, replies, ...dataToSave } = item as PopulatedComment;
     
     const existing = await db.select({ id: comments.id }).from(comments).where(eq(comments.id, item.id)).limit(1);

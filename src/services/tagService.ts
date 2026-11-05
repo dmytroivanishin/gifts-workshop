@@ -2,7 +2,7 @@ import { ITagRepository, TagQueryOptions } from "@/repositories/interfaces";
 import { ITagService } from "./interfaces";
 import { Tag, LocalizedText, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
-import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
+import { generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";
 
 import { paginate } from "./pagination";

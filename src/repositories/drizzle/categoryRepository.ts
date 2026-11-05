@@ -1,5 +1,5 @@
 import { DrizzleBaseRepository } from "./baseRepository";
-import { categories, colors, collections, tags, categoriesToTags } from "./schema";
+import { categories, colors, tags, categoriesToTags } from "./schema";
 import { Category, PopulatedCategory, PaginationOptions } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, inArray, sql, and, asc } from "drizzle-orm";
@@ -20,6 +20,7 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
   private mapToPopulated(record: CategoryRecord): PopulatedCategory {
     if (!record) return record as unknown as PopulatedCategory;
     const tagsList = record.categoriesToTags?.map((ct) => ct.tag) || [];
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deliberately excluding the relation from restRecord, not using it.
     const { categoriesToTags, ...restRecord } = record;
 
     return {
@@ -154,6 +155,7 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
     if (!items.length) return [];
     
     const recordsToInsert = items.map(item => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deliberately excluding tagsIds from the DB row, not using it.
       const { tagsIds, ...rest } = item;
       return rest;
     });

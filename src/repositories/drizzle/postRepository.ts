@@ -31,6 +31,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     })) || [];
 
     mediaList.sort((a, b) => a.order - b.order);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deliberately excluding these relations from restRecord, not using them.
     const { postsToTags, postsToMedia, ...restRecord } = record;
 
     return {

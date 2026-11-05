@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, use, useRef } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Save, Loader2, Image as ImageIcon, Move, Archive as ArchiveIcon, Send, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, Save, Loader2, Image as ImageIcon, Archive as ArchiveIcon, Send, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
 import {
   useCreatePostMutation,
@@ -52,7 +52,6 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
   const router = useRouter();
   const { id } = use(params);
   const isEditMode = id !== "new";
-  const dateInputRef = useRef<HTMLInputElement>(null);
 
   // Mutations & Queries
   const [createPost, { isLoading: isCreating }] = useCreatePostMutation();

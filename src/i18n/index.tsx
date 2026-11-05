@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, ReactNode, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { SystemText, LocalizedText } from "@/types";
 
 type Locale = string;
@@ -26,8 +26,7 @@ interface I18nProviderProps {
 
 export function I18nProvider({ children, systemTexts, initialLocale, activeLanguages }: I18nProviderProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  
+
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru";

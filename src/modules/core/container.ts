@@ -1,5 +1,3 @@
-import { drizzleDatabase } from "@/repositories/drizzle/database";
-
 import { categoryRepository } from "@/repositories/drizzle/categoryRepository";
 import { collectionRepository } from "@/repositories/drizzle/collectionRepository";
 import { colorRepository } from "@/repositories/drizzle/colorRepository";

@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
 import { tokenRepository } from "@/repositories/drizzle/tokenRepository";
@@ -9,7 +8,7 @@ import { isAllowedAdminEmail, verifyAdminToken, verifyToken } from "@/utils/jwt"
 import { userRepository } from "@/repositories/drizzle/userRepository";
 import { logger } from "@/modules/logger";
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     const cookieStore = await cookies();
     const refreshTokenCookie = cookieStore.get("refreshToken")?.value;

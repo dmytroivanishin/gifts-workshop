@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
-import { Post, Category, Tag, Collection, Media, PopulatedPost, PopulatedCategory, Language, SystemText, Comment, PopulatedComment } from "@/types";
+import { Tag, Collection, Media, PopulatedPost, PopulatedCategory, Language, SystemText, Comment, PopulatedComment } from "@/types";
 
 type PaginationMeta = { page: number; nextPage: number | null; prevPage: number | null; totalItems: number };
 
@@ -66,6 +66,7 @@ export const api = createApi({
       },
       serializeQueryArgs: ({ queryArgs }) => {
         if (!queryArgs) return {};
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deliberately excluding page from the cache key, not using it.
         const { page, ...rest } = queryArgs;
         return rest; // Group cache by filters, ignoring page number
       },
@@ -166,7 +167,7 @@ export const api = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: (result, error, { id }) => ["Tag", "Post"],
+      invalidatesTags: ["Tag", "Post"],
     }),
     deleteTag: builder.mutation<{ success: boolean }, string>({
       query: (id) => ({
@@ -227,7 +228,7 @@ export const api = createApi({
          method: "PUT",
          body,
        }),
-       invalidatesTags: (result, error, { id }) => ["Collection", "Post", "Category"],
+       invalidatesTags: ["Collection", "Post", "Category"],
      }),
      deleteCollection: builder.mutation<{ success: boolean }, string>({
        query: (id) => ({

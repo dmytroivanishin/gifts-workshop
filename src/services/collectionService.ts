@@ -2,7 +2,7 @@ import { ICollectionRepository } from "@/repositories/interfaces";
 import { ICollectionService } from "./interfaces";
 import { Collection, PaginatedResult, PaginationOptions } from "@/types";
 import { randomUUID } from "crypto";
-import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
+import { generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";
 import { ConflictError } from "@/common/errors/conflict";
 import { drizzleDatabase } from "@/repositories/drizzle/database";

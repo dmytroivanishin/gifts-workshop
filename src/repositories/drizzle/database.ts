@@ -5,7 +5,6 @@ import { env } from "@/modules/core/env";
 import { logger } from '@/modules/logger';
 
 declare global {
-  // eslint-disable-next-line no-var
   var __drizzleDatabaseInstance: DrizzleDatabase | undefined;
 }
 

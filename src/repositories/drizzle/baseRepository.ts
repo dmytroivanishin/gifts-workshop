@@ -24,6 +24,7 @@ export abstract class DrizzleBaseRepository<
     return undefined;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- param kept so getAll()'s call site type-checks; this no-op default ignores it, subclasses override with a real use.
   protected buildFilter(_options?: TQueryOptions): SQL | undefined {
     return undefined;
   }

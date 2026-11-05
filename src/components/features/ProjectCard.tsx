@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Heart, ChevronRight, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/cn";
-import { Post, PopulatedPost } from "@/types";
+import { PopulatedPost } from "@/types";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
 
@@ -62,7 +62,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
       ids = JSON.parse(liked) as string[];
     }
     
-    let nextLiked = !isLiked;
+    const nextLiked = !isLiked;
     if (nextLiked) {
       if (!ids.includes(post.id)) ids.push(post.id);
     } else {

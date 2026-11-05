@@ -9,6 +9,7 @@ import {
 } from "@/store/api";
 import { useTagsList } from "@/hooks/useTagsList";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import VirtualScrollList from "@/components/shared/VirtualScrollList";
 import { useTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
@@ -38,9 +39,17 @@ export default function AdminTags() {
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [activeTagObj, setActiveTagObj] = useState<Tag | null>(null);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState("");
   const [editTagName, setEditTagName] = useState("");
+  const {
+    isOpen: isDeleteOpen,
+    handleDeleteClick,
+    handleConfirmDelete,
+    handleClose: handleDeleteClose,
+  } = useDeleteConfirm(deleteTag, {
+    onSuccess: () => reload(),
+    onError: (err) => console.error("Failed to delete tag", err),
+    closeOnError: false,
+  });
 
   const onSubmit = async (values: z.infer<typeof tagSchema>) => {
     try {
@@ -72,23 +81,6 @@ export default function AdminTags() {
       reload(); // Reset to reload updated list
     } catch (err) {
       console.error("Failed to save tag", err);
-    }
-  };
-
-  const handleDeleteClick = (id: string) => {
-    setDeleteTargetId(id);
-    setIsDeleteOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteTargetId) return;
-    try {
-      await deleteTag(deleteTargetId).unwrap();
-      setIsDeleteOpen(false);
-      setDeleteTargetId("");
-      reload(); // Reset to reload list
-    } catch (err) {
-      console.error("Failed to delete tag", err);
     }
   };
 
@@ -242,7 +234,7 @@ export default function AdminTags() {
         confirmText={t("delete") || "Delete"}
         cancelText={t("cancel") || "Cancel"}
         onConfirm={handleConfirmDelete}
-        onClose={() => setIsDeleteOpen(false)}
+        onClose={handleDeleteClose}
         isLoading={isDeleting}
       />
     </div>

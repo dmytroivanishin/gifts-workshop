@@ -2,7 +2,7 @@ import { ICategoryRepository, ITagRepository, IPostRepository } from "@/reposito
 import { ICategoryService } from "./interfaces";
 import { Category, PopulatedCategory, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
-import { generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
+import { generateUniqueSlug } from "@/utils/slug";
 import { ValidationError } from "@/common/errors/validation";
 import { ConflictError } from "@/common/errors/conflict";
 import { isUUID } from "@/utils/uuid";
@@ -64,36 +64,7 @@ export class CategoryService implements ICategoryService {
 
     const categoriesList = await this.categoryRepo.getAll();
 
-    if (body.parentId) {
-      if (body.parentId === id) {
-        throw new ValidationError("Category cannot be its own parent", [
-          { field: "parentId", message: "Self-referencing parent is not allowed" }
-        ]);
-      }
-
-      if (!categoriesList.some((c) => c.id === body.parentId)) {
-        throw new ValidationError("Parent category does not exist", [
-          { field: "parentId", message: "Parent category not found" }
-        ]);
-      }
-
-      let currentParentId = body.parentId;
-      const visited = new Set<string>();
-      
-      while (currentParentId) {
-        if (visited.has(currentParentId)) break;
-        visited.add(currentParentId);
-        
-        if (currentParentId === id) {
-          throw new ValidationError("Circular dependency detected", [
-            { field: "parentId", message: "Parent category cannot be a descendant of the current category" }
-          ]);
-        }
-        
-        const parentCategory = categoriesList.find((c) => c.id === currentParentId);
-        currentParentId = parentCategory?.parentId;
-      }
-    }
+    this.validateParentId(body.parentId, id, categoriesList);
 
     let slug = body.slug;
     if (!slug || (body.title && body.title !== body._originalTitle)) {
@@ -115,6 +86,41 @@ export class CategoryService implements ICategoryService {
     };
 
     return this.categoryRepo.save(category);
+  }
+
+  // Guards a category's own parentId: no self-reference, the parent must exist, and it can't be
+  // a descendant of the category being saved (which would make the tree circular).
+  private validateParentId(parentId: string | undefined, id: string, categoriesList: PopulatedCategory[]): void {
+    if (!parentId) return;
+
+    if (parentId === id) {
+      throw new ValidationError("Category cannot be its own parent", [
+        { field: "parentId", message: "Self-referencing parent is not allowed" }
+      ]);
+    }
+
+    if (!categoriesList.some((c) => c.id === parentId)) {
+      throw new ValidationError("Parent category does not exist", [
+        { field: "parentId", message: "Parent category not found" }
+      ]);
+    }
+
+    let currentParentId: string | undefined = parentId;
+    const visited = new Set<string>();
+
+    while (currentParentId) {
+      if (visited.has(currentParentId)) break;
+      visited.add(currentParentId);
+
+      if (currentParentId === id) {
+        throw new ValidationError("Circular dependency detected", [
+          { field: "parentId", message: "Parent category cannot be a descendant of the current category" }
+        ]);
+      }
+
+      const parentCategory = categoriesList.find((c) => c.id === currentParentId);
+      currentParentId = parentCategory?.parentId;
+    }
   }
 
   async deleteCategory(id: string): Promise<boolean> {

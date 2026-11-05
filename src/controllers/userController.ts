@@ -5,7 +5,7 @@ import { NotFoundError } from "@/common/errors/notFound";
 export class UserController {
   constructor(private userService: IUserService) {}
 
-  getUsers = withErrorHandling(async (request: Request) => {
+  getUsers = withErrorHandling(async () => {
     const result = await this.userService.getAllUsers();
     return sendSuccess(result.data, result.meta);
   });

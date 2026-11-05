@@ -70,7 +70,7 @@ export default function ProjectDetailClient({ slug, initialPost }: ProjectDetail
   let socialLinks: Array<{name: string, link: string, icon: string}> = [];
   try {
     socialLinks = JSON.parse(process.env.NEXT_PUBLIC_SOCIAL_LINKS || '[]');
-  } catch (e) {
+  } catch {
     console.error("Failed to parse NEXT_PUBLIC_SOCIAL_LINKS");
   }
 

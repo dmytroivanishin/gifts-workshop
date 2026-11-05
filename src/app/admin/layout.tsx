@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { LogOut, LayoutDashboard, FolderTree, Layers, Hash, Palette, Globe, Image as ImageIcon, MessageSquare } from "lucide-react";
@@ -14,7 +14,6 @@ export default function AdminLayout({
 }>) {
   const router = useRouter();
   const pathname = usePathname();
-  const [authorized, setAuthorized] = useState(false);
   const { t, locale, setLocale, activeLanguages } = useTranslation();
 
   const handleLanguageSwitch = () => {

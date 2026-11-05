@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { postService, categoryService } from "@/modules/core/container";
+import { postService } from "@/modules/core/container";
 import { env } from "@/modules/core/env";
 import { logger } from "@/modules/logger";
 

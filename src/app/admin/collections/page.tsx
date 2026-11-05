@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Plus, Edit, Save, X, Trash2, Loader2, Star, Check } from "lucide-react";
+import { useState } from "react";
+import { Plus, Edit, Save, X, Trash2, Loader2, Star } from "lucide-react";
 import {
   useGetCollectionsQuery,
   useCreateCollectionMutation,
@@ -9,13 +9,14 @@ import {
   useDeleteCollectionMutation,
 } from "@/store/api";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import VirtualScrollList from "@/components/shared/VirtualScrollList";
 import { useTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { collectionSchema } from "@/common/validation/schemas";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ApiMutationError, Collection } from "@/types";
 
 export default function AdminCollections() {
@@ -42,14 +43,28 @@ export default function AdminCollections() {
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [activeCollectionObj, setActiveCollectionObj] = useState<Collection | null>(null);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState("");
 
   const resetForm = () => {
     setIsEditing(null);
     setActiveCollectionObj(null);
     form.reset(defaultValues);
   };
+
+  const {
+    isOpen: isDeleteOpen,
+    targetId: deleteTargetId,
+    handleDeleteClick,
+    handleConfirmDelete,
+    handleClose: handleDeleteClose,
+  } = useDeleteConfirm(deleteCollection, {
+    onSuccess: () => {
+      if (isEditing === deleteTargetId) {
+        resetForm();
+      }
+    },
+    onError: (err) => console.error("Failed to delete collection", err),
+    closeOnError: false,
+  });
 
   const handleEdit = (col: Collection) => {
     setIsEditing(col.id);
@@ -88,24 +103,6 @@ export default function AdminCollections() {
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setDeleteTargetId(id);
-    setIsDeleteOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteTargetId) return;
-    try {
-      await deleteCollection(deleteTargetId).unwrap();
-      setIsDeleteOpen(false);
-      if (isEditing === deleteTargetId) {
-        resetForm();
-      }
-      setDeleteTargetId("");
-    } catch (err) {
-      console.error("Failed to delete collection", err);
-    }
-  };
 
   return (
     <div className="space-y-6 font-sans">
@@ -306,7 +303,7 @@ export default function AdminCollections() {
         confirmText={t("delete") || "Delete"}
         cancelText={t("cancel") || "Cancel"}
         onConfirm={handleConfirmDelete}
-        onClose={() => setIsDeleteOpen(false)}
+        onClose={handleDeleteClose}
         isLoading={isDeleting}
       />
     </div>

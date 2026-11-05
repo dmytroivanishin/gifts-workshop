@@ -1,4 +1,4 @@
-import { Category, Collection, Color, LocalizedText, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment, PopulatedCategory, PopulatedPost } from "@/types";
+import { Collection, Color, LocalizedText, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment, PopulatedCategory, PopulatedPost } from "@/types";
 
 import { QueryOptions, TagQueryOptions } from "@/repositories/interfaces";
 

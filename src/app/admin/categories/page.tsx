@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Edit, Save, X, Loader2, Trash2 } from "lucide-react";
 import {
   useGetCategoriesQuery,
@@ -14,6 +14,7 @@ import {
   useReorderCategoriesMutation
 } from "@/store/api";
 import { useTagsList } from "@/hooks/useTagsList";
+import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import Combobox from "@/components/ui/combobox";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useTranslation } from "@/i18n";
@@ -66,8 +67,15 @@ export default function AdminCategories() {
   };
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState("");
+  const {
+    isOpen: isDeleteOpen,
+    handleDeleteClick,
+    handleConfirmDelete,
+    handleClose: handleDeleteClose,
+  } = useDeleteConfirm(deleteCategory, {
+    onError: (error) => console.error("Failed to delete category", error),
+    closeOnError: true,
+  });
 
   // Form State
   const form = useForm<z.infer<typeof categorySchema>>({
@@ -294,22 +302,6 @@ export default function AdminCategories() {
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setDeleteTargetId(id);
-    setIsDeleteOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteTargetId) return;
-    try {
-      await deleteCategory(deleteTargetId).unwrap();
-    } catch (error) {
-      console.error("Failed to delete category", error);
-    } finally {
-      setIsDeleteOpen(false);
-      setDeleteTargetId("");
-    }
-  };
 
   return (
     <div className="space-y-6 font-sans">
@@ -741,7 +733,7 @@ export default function AdminCategories() {
         confirmText={t("delete") || "Delete"}
         cancelText={t("cancel") || "Cancel"}
         onConfirm={handleConfirmDelete}
-        onClose={() => setIsDeleteOpen(false)}
+        onClose={handleDeleteClose}
       />
     </div>
   );

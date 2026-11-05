@@ -10,6 +10,7 @@ import {
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import VirtualScrollList from "@/components/shared/VirtualScrollList";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,8 +42,15 @@ export default function AdminColors() {
   const [editColorHex, setEditColorHex] = useState("");
 
   // Delete Confirm State
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState("");
+  const {
+    isOpen: isDeleteOpen,
+    handleDeleteClick,
+    handleConfirmDelete,
+    handleClose: handleDeleteClose,
+  } = useDeleteConfirm(deleteColor, {
+    onError: (err) => console.error("Failed to delete color", err),
+    closeOnError: false,
+  });
 
   const onSubmit = async (values: z.infer<typeof colorSchema>) => {
     try {
@@ -69,22 +77,6 @@ export default function AdminColors() {
       setEditingId(null);
     } catch (err) {
       console.error("Failed to save color", err);
-    }
-  };
-
-  const handleDeleteClick = (id: string) => {
-    setDeleteTargetId(id);
-    setIsDeleteOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteTargetId) return;
-    try {
-      await deleteColor(deleteTargetId).unwrap();
-      setIsDeleteOpen(false);
-      setDeleteTargetId("");
-    } catch (err) {
-      console.error("Failed to delete color", err);
     }
   };
 
@@ -251,7 +243,7 @@ export default function AdminColors() {
         confirmText={t("delete") || "Delete"}
         cancelText={t("cancel") || "Cancel"}
         onConfirm={handleConfirmDelete}
-        onClose={() => setIsDeleteOpen(false)}
+        onClose={handleDeleteClose}
         isLoading={isDeleting}
       />
     </div>

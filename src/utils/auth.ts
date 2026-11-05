@@ -17,7 +17,7 @@ export async function getUserId(): Promise<string | undefined> {
     if (!user) return undefined;
 
     return payload.userId;
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }

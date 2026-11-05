@@ -26,6 +26,11 @@ export const localizedStringSchema = z.record(
   }
 });
 
+// Shared across collectionSchema/categorySchema/tagSchema, which all accept an optional,
+// already-slugified string (postSchemaBase's own slug has different null-coercion needs, so it
+// stays separate rather than reusing this).
+export const slugSchema = z.string().regex(/^[a-z0-9-]+$/, "error_invalid_slug").optional();
+
 const optionalUuidSchema = z.preprocess(
   (v) => (v === "" || v === undefined || v === null ? null : v),
   z.string({ message: "error_invalid_format" })
@@ -59,7 +64,7 @@ export const collectionSchema = z.object({
   title: localizedStringSchema,
   description: optionalLocalizedStringSchema.optional(),
   main: z.boolean().default(false),
-  slug: z.string().regex(/^[a-z0-9-]+$/, "error_invalid_slug").optional(),
+  slug: slugSchema,
 });
 
 export const colorSchema = z.object({
@@ -70,7 +75,7 @@ export const colorSchema = z.object({
 export const categorySchema = z.object({
   title: localizedStringSchema,
   description: optionalLocalizedStringSchema.optional(),
-  slug: z.string().regex(/^[a-z0-9-]+$/, "error_invalid_slug").optional(),
+  slug: slugSchema,
   order: z.number().int().default(0),
   color: colorSchema,
   parentId: optionalUuidSchema,
@@ -80,7 +85,7 @@ export const categorySchema = z.object({
 
 export const tagSchema = z.object({
   name: localizedStringSchema,
-  slug: z.string().regex(/^[a-z0-9-]+$/, "error_invalid_slug").optional(),
+  slug: slugSchema,
 });
 
 export const postMediaSchema = z.object({

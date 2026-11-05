@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { sendSuccess, CACHE_SECONDS, withErrorHandling } from "@/utils/apiResponse";
 import { IPostService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";

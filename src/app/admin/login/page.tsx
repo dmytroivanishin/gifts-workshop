@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { ShieldAlert, Loader2, KeyRound } from "lucide-react";
@@ -13,22 +13,8 @@ function LoginContent() {
   const [isDev, setIsDev] = useState(false);
   const exchangeStarted = useRef(false);
 
-  useEffect(() => {
-    // Detect if we are in local development to show the bypass button
-    if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
-      setIsDev(true);
-    }
-
-    // Google sends the user back with ?code=...&state=...; a code works once and React StrictMode runs effects twice in dev
-    const code = searchParams.get("code");
-    if (code && !exchangeStarted.current) {
-      exchangeStarted.current = true;
-      handleCodeExchange(code, searchParams.get("state") ?? "");
-    }
-  }, [searchParams]);
-
   // Exchange Google Authorization Code for JWT Access/Refresh tokens
-  const handleCodeExchange = async (code: string, state: string) => {
+  const handleCodeExchange = useCallback(async (code: string, state: string) => {
     setIsLoading(true);
     try {
       const res = await fetch("/api/v1/auth/google/exchange", {
@@ -50,7 +36,21 @@ function LoginContent() {
       router.replace("/admin/login");
       setIsLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    // Detect if we are in local development to show the bypass button
+    if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
+      setIsDev(true);
+    }
+
+    // Google sends the user back with ?code=...&state=...; a code works once and React StrictMode runs effects twice in dev
+    const code = searchParams.get("code");
+    if (code && !exchangeStarted.current) {
+      exchangeStarted.current = true;
+      handleCodeExchange(code, searchParams.get("state") ?? "");
+    }
+  }, [searchParams, handleCodeExchange]);
 
   // Standard Google login flow initiation: the server builds the authorize URL and remembers state and PKCE verifier
   const handleGoogleLogin = async () => {
