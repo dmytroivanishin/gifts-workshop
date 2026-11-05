@@ -180,7 +180,7 @@ export default function ProjectDetailClient({ slug, initialPost }: ProjectDetail
                   return (
                     <li
                       key={index}
-                      className="px-2.5 py-1 bg-secondary text-secondary-foreground rounded-full text-xs font-medium"
+                      className="px-2.5 py-1 bg-secondary text-muted-foreground rounded-full text-xs font-medium"
                     >
                       #{name}
                     </li>
@@ -206,7 +206,7 @@ export default function ProjectDetailClient({ slug, initialPost }: ProjectDetail
                       target="_blank"
                       rel="noopener noreferrer"
                       title={social.name}
-                      className="w-12 h-12 flex items-center justify-center rounded-full bg-secondary border border-border text-foreground hover:bg-secondary/70 transition-colors shrink-0"
+                      className="w-12 h-12 flex items-center justify-center rounded-full bg-secondary border border-border text-muted-foreground hover:bg-secondary/70 transition-colors shrink-0"
                     >
                       <IconComponent size={20} />
                     </a>

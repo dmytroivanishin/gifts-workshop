@@ -7,14 +7,14 @@ grouped by what it takes to start, so you can say "бери CP-23" and I know ex
 what that means without you having to scroll `CHANGE-PLAN.md`.
 
 Generated 2026-10-05 from `CHANGE-PLAN.md`, `PRODUCTION-READINESS.md` and
-`DEVIATIONS.md`; refreshed 2026-10-12, 2026-11-04. If these docs change later, this file can
+`DEVIATIONS.md`; refreshed 2026-10-12, 2026-11-04, 2026-11-05. If these docs change later, this file can
 drift — ask me to regenerate it rather than trusting it blindly after a long gap.
 
 ---
 
 ## 🔴 Waiting on you (nothing to pick here — I need an answer/action first)
 
-- **CP-4** — log in by hand and check B1–B6 in the browser (the `JWT_SECRET` mock decision is done, 2026-10-18); also now covers a real Google login + browser image upload against the upgraded `next`/`sharp` (former CP-2 manual-verification step — Google OAuth can't be scripted).
+(none right now)
 
 ## 🟢 Ready to pick right now — pure code, no migration/config/dependency
 
@@ -28,7 +28,6 @@ drift — ask me to regenerate it rather than trusting it blindly after a long g
 ## 🔵 Big pieces — want a scoping conversation before any code, not a quick fix
 
 - **CP-25** — deployment bundle: Dockerfile, health endpoint, migration/rollback strategy, HSTS, rate-limit-at-the-edge decision, swapping dev credentials, backups (this is blocker B8). **Now also carries CP-24** (seed the lookup tables as part of the same first-boot migration step, not a separate loader script) **and CP-8** (set the real `S3_PUBLIC_URL`, not a Coolify temporary domain, in this same first deploy) — merged in 2026-10-12 at your request.
-- **CP-35** — general control-flow/structural code-quality pass: flatten nested `if`/`for`/`while` into guard clauses, remove redundant conditions, apply design patterns only where they'd remove real duplication. Distinct from CP-18 (typing/lint/logging). Raised 2026-10-12, needs a scan before picking what's worth touching.
 - **CP-30** — planned-but-unbuilt **features** (multi-select category filter, Archive view with restore, profile editing, SEO settings page, `Language` table) — kept separate from the fix/quality queue per your decision (2026-10-05); only start on these if you explicitly ask.
 
 ## ⚪ Parked / declined — not on the active queue
@@ -41,6 +40,9 @@ drift — ask me to regenerate it rather than trusting it blindly after a long g
 
 ## ✅ Done (brief — full detail and file lists are in `CHANGE-PLAN.md` → "Done")
 
+- **CP-44 (2026-11-05).** Stale `system_texts` dev-cache cleared (`.next/dev/cache/fetch-cache` was serving a pre-these-keys snapshot, not a code bug — several UI strings were rendering as raw keys on both public and admin). Social-icon and post-tag-chip colors switched from near-black (`text-foreground`/`text-secondary-foreground`) to the existing `text-muted-foreground` token, no new color invented. Admin's RU/EN language switcher removed entirely — `proxy.ts` now forces admin to `ru` unconditionally regardless of any cookie, which also makes every newly-created entity default to `ru` (verified live) and resolves CP-38 (admin is now uniformly Russian, not just the login page). New e2e spec `locale-lockdown.spec.ts` (7 tests) covers all of it, run twice clean; public locale detection/switching reverified untouched.
+- **CP-35 (2026-11-05).** General control-flow/structural code-quality pass, 5 points: `no-unused-vars` sweep (49→0 across ~27 files), a shared `useDeleteConfirm` hook replacing 5× duplicated delete-confirm logic (categories/collections/colors/tags/media pages), flattened `categoryService`'s `parentId` validation into one guard-clause method, a shared `slugSchema` replacing 3× repeated regex, and the login page's `handleCodeExchange` ordering fixed (paired `exhaustive-deps`/`immutability` findings — hoisted into `useCallback`, added to the effect's deps). The login fix was verified live with both the dev-login bypass and a real Google OAuth login in a real browser (via the Claude in Chrome extension).
+- **CP-4 (2026-11-05).** All B1–B6 checks finally verified by hand in a real browser (via the connected Claude in Chrome extension driving the owner's own already-signed-in Chrome) — plus a real, previously-unknown bug found and fixed along the way: `post.category` can legally be null for a Draft/Archived post, and `ProjectDetailClient.tsx`/`ProjectCard.tsx` read it with no guard, crashing an admin's own draft preview. Also closed CP-2's remaining manual-verification ask (a real Google OAuth login and a real browser image upload, both completed and self-cleaned).
 - **CP-42 (2026-11-04).** Code review of CP-40/41's work: removed ~44 lines of duplicated `getAll()` pagination logic across the tag/collection/color/media repositories (two new protected hooks on `baseRepository`); fixed CP-39 for real (categories page's inline tag creation was sending the wrong field name) and added an e2e test proving it through the real UI, not just documenting the bug.
 - **CP-40/CP-41 (2026-11-04).** `created_at` + deterministic `desc(createdAt)` ordering added to tags/colors/media/collections; a real cap-at-20 bug fixed in `collectionService`/`colorService`; server-side `search` added to `GET /tags` with a debounced Combobox; a new shared `VirtualScrollList` (`@tanstack/react-virtual`) applied to the Combobox and the tags/colors/collections admin pages (categories/collections stay fully loaded by design). Followed by a full test-coverage round across all three layers (9 new API tests, 8 new unit tests, 5 new e2e tests) after you pushed back that "code is ready" isn't verification.
 - **CP-31 — testing infrastructure, all 3 phases (2026-11-02/2026-11-03), extended by CP-40/41 (2026-11-04).** API suite (`tests/api/**`, 98 specs), unit suite (`tests/unit/**`, 20 files/177 tests, pure functions only), e2e suite (`tests/e2e/**`, 10 spec files/43 tests, real Chromium via `playwright.config.ts`'s `"e2e"` project) all exist and pass. Confirmed via two consecutive clean e2e runs from the same un-reset test DB each round. No Prettier config remains the one open item under CP-18/testing tooling.

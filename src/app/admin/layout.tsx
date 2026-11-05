@@ -14,15 +14,7 @@ export default function AdminLayout({
 }>) {
   const router = useRouter();
   const pathname = usePathname();
-  const { t, locale, setLocale, activeLanguages } = useTranslation();
-
-  const handleLanguageSwitch = () => {
-    const currentIndex = activeLanguages.indexOf(locale);
-    const nextLocale = activeLanguages.length > 0 
-      ? activeLanguages[(currentIndex + 1) % activeLanguages.length] 
-      : "en";
-    setLocale(nextLocale);
-  };
+  const { t } = useTranslation();
 
   // Remove admin_logged_in from localStorage if it exists to cleanup legacy
   useEffect(() => {
@@ -94,14 +86,6 @@ export default function AdminLayout({
         <header className="md:hidden h-14 border-b bg-background flex items-center px-4 justify-between flex-shrink-0">
           <h2 className="text-lg font-semibold text-primary">{t("admin_panel")}</h2>
           <div className="flex items-center space-x-3">
-            <div className="flex items-center gap-1 border-r pr-3 border-border/80">
-              <button
-                onClick={handleLanguageSwitch}
-                className="px-2 py-1 bg-secondary text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-all rounded-md uppercase tracking-wider cursor-pointer"
-              >
-                {locale.toUpperCase()}
-              </button>
-            </div>
             <button
               onClick={handleLogout}
               className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors cursor-pointer"
@@ -115,17 +99,6 @@ export default function AdminLayout({
         {/* Desktop Header */}
         <header className="hidden md:flex h-14 border-b bg-background items-center px-6 flex-shrink-0">
           <div className="ml-auto flex items-center space-x-4">
-            {/* Admin Area Locale Selector */}
-            <div className="flex items-center gap-1 border-r pr-4 border-border/80">
-              <button
-                onClick={handleLanguageSwitch}
-                className="px-2 py-1 bg-secondary text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-all rounded-md uppercase tracking-wider cursor-pointer"
-                title={t('switch_language')}
-              >
-                {locale.toUpperCase()}
-              </button>
-            </div>
-
             <span className="text-sm font-medium text-foreground">Admin</span>
             <button
               onClick={handleLogout}

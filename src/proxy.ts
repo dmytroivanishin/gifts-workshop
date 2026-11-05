@@ -101,27 +101,10 @@ export async function proxy(request: NextRequest) {
     const supportedLocales = (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || 'ru,en').split(',').map(l => l.trim());
 
     if (isAdmin) {
-      // Admin area locale handling
-      const cookieName = 'admin_locale';
-      let locale = request.cookies.get(cookieName)?.value;
-      
-      if (!locale || !supportedLocales.includes(locale)) {
-        locale = defaultLocale;
-        const requestHeaders = new Headers(request.headers);
-        requestHeaders.set('x-locale', locale);
-        requestHeaders.set('x-is-admin', 'true');
-        
-        const response = NextResponse.next({
-          request: {
-            headers: requestHeaders,
-          }
-        });
-        response.cookies.set(cookieName, locale, { path: '/', maxAge: 31536000 });
-        return response;
-      }
-
+      // Admin has no language switcher — it is Russian-only, always. Force defaultLocale
+      // regardless of any leftover admin_locale cookie from before this was removed.
       const requestHeaders = new Headers(request.headers);
-      requestHeaders.set('x-locale', locale);
+      requestHeaders.set('x-locale', defaultLocale);
       requestHeaders.set('x-is-admin', 'true');
 
       return NextResponse.next({

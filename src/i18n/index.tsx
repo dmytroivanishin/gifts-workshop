@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, ReactNode, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
 import { SystemText, LocalizedText } from "@/types";
 
 type Locale = string;
@@ -25,28 +24,25 @@ interface I18nProviderProps {
 }
 
 export function I18nProvider({ children, systemTexts, initialLocale, activeLanguages }: I18nProviderProps) {
-  const pathname = usePathname();
-
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru";
 
+  // Admin has no language switcher (forced to ru in proxy.ts) — only the public site's own
+  // switcher calls this now, so it only ever needs to persist the public NEXT_LOCALE cookie.
   const setLocale = (newLocale: Locale) => {
     if (!activeLanguages.includes(newLocale)) return;
-    
+
     // 1. Instant client-side update
     setLocaleState(newLocale);
-    
+
     // Update HTML lang attribute immediately
     if (typeof document !== 'undefined') {
       document.documentElement.lang = newLocale;
     }
 
-    const isAdmin = pathname?.startsWith("/admin");
-    const cookieName = isAdmin ? "admin_locale" : "NEXT_LOCALE";
-    
     // 2. Set cookie for future SSR renders
-    document.cookie = `${cookieName}=${newLocale}; path=/; max-age=31536000`; // 1 year
+    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`; // 1 year
   };
 
   const dictionaries = useMemo(() => {
