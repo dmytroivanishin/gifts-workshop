@@ -34,7 +34,9 @@ sessions. Full breakdown: `CLAUDE.md` §1.
    ```
    (`drizzle.config.ts` reads `DB_URI` straight from `process.env`, it does not load
    `config/local.env` itself — hence sourcing it into the shell first.)
-4. **Optionally seed the admin UI strings:**
+4. **Seed the admin UI strings** (required on a brand-new database — without this every
+   label on both the public site and the admin panel renders as its raw key, e.g.
+   `search_placeholder` instead of real text):
    ```bash
    npx tsx src/migrations/seeds/runSystemTextsSeed.ts
    ```
@@ -64,6 +66,32 @@ scripts/run-test.sh test:unit          # vitest run
 scripts/run-test.sh test:api           # playwright --project=api (test:e2e for --project=e2e)
 scripts/run-test.sh test:infra:stop
 ```
+
+## Troubleshooting
+
+**The app throws a database error right after starting Docker** (e.g. a failed query on
+`categories` or any other table): a brand-new or just-recreated Postgres container has an
+empty database — the schema needs to be pushed again, same as step 3 above:
+```bash
+set -a; source config/local.env; set +a
+npx drizzle-kit push
+```
+Then stop any old `next dev` still running and start a clean one with
+`bash scripts/run.sh dev`. (Two dev servers fighting over port 3000 produces a different,
+unrelated error — check `lsof -i :3000` / `pgrep -af "next dev"` first if this is the
+second time you're starting it.)
+
+**The UI shows raw text keys instead of real copy** (e.g. `search_placeholder` or
+`in_stock` literally on the page, on either the public site or the admin panel): this is
+almost always `unstable_cache`'s on-disk dev cache (`.next/dev/cache/fetch-cache`) serving
+a stale snapshot from before a restart or a `DB_URI` change, even when `system_texts` is
+correctly seeded in the database. Fix:
+```bash
+rm -rf .next/dev/cache/fetch-cache
+```
+then restart `bash scripts/run.sh dev`. If this doesn't help, confirm `system_texts`
+actually has rows (`npx tsx src/migrations/seeds/runSystemTextsSeed.ts` is safe to re-run
+on a database that already has them).
 
 ## Where the real documentation lives
 

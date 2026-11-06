@@ -15,6 +15,7 @@ export interface Position {
 
 export interface Media {
   readonly id: string;
+  displayName: string;
   thumbnailUrl: string;
   originalUrl: string;
   userId: string;

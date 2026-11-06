@@ -1,6 +1,6 @@
 import sharp from 'sharp';
 import { env } from "@/modules/core/env";
-import { generateMediaName } from "@/utils/mediaName";
+import { generateMediaName, generateStorageSuffix } from "@/utils/mediaName";
 import { logger } from "@/modules/logger";
 import { ValidationError } from "@/common/errors/validation";
 import { minioClient, BUCKET_NAME, ensureBucket } from './minioClient';
@@ -19,6 +19,7 @@ const PREVIEW_MAX_PX = Number(process.env.MEDIA_PREVIEW_MAX_PX) || 1000;
 export interface ProcessedImageResult {
   originalUrl: string;
   thumbnailUrl: string;
+  displayName: string;
   width: number;
   height: number;
   orientation: "Portrait" | "Landscape";
@@ -50,13 +51,16 @@ export class StorageService {
     const ext = '.jpg';
     const contentType = 'image/jpeg';
 
-    // <generated-name>-<timestamp>/preview.jpg and .../thumb.jpg — grouped per upload, with
-    // standard file names inside. The generated name (not the original filename, which could be
-    // anything, including non-Latin text that a plain ASCII sanitizer would reduce to nothing
-    // useful) is the admin media grid's readable label; the timestamp is only a collision-safety
-    // suffix — see deriveMediaName (src/utils/mediaName.ts) for how the two are told apart.
+    // <display-name>-<timestamp>-<suffix>/preview.jpg and .../thumb.jpg — grouped per upload,
+    // with standard file names inside. The display name (not the original filename, which could
+    // be anything, including non-Latin text that a plain ASCII sanitizer would reduce to nothing
+    // useful) is persisted as-is on the media row (media.displayName) and is the admin media
+    // grid's readable label; the timestamp plus the random suffix are only a collision-safety
+    // margin and are never shown anywhere.
+    const displayName = generateMediaName();
     const timestamp = Date.now();
-    const folderName = `${generateMediaName()}-${timestamp}`;
+    const suffix = generateStorageSuffix();
+    const folderName = `${displayName}-${timestamp}-${suffix}`;
     const uniqueOriginalName = `${folderName}/preview${ext}`;
     const uniqueThumbnailName = `${folderName}/thumb${ext}`;
 
@@ -102,6 +106,7 @@ export class StorageService {
     return {
       originalUrl: `${PUBLIC_BASE_URL}/${uniqueOriginalName}`,
       thumbnailUrl: `${PUBLIC_BASE_URL}/${uniqueThumbnailName}`,
+      displayName,
       width: finalWidth,
       height: finalHeight,
       orientation

@@ -522,6 +522,12 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "display_name": {
+          "name": "display_name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
         "thumbnail_url": {
           "name": "thumbnail_url",
           "type": "text",

@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { paginate } from "./pagination";
 import { ConflictError } from "@/common/errors/conflict";
 import { storageService } from "@/modules/storage/StorageService";
+import { generateMediaName } from "@/utils/mediaName";
 
 export class MediaService implements IMediaService {
   constructor(
@@ -32,6 +33,7 @@ export class MediaService implements IMediaService {
     
     const media: Media = {
       id: randomUUID(),
+      displayName: processed.displayName,
       thumbnailUrl: processed.thumbnailUrl,
       originalUrl: processed.originalUrl,
       width: processed.width,
@@ -64,10 +66,13 @@ export class MediaService implements IMediaService {
     return this.mediaRepo.getById(id);
   }
 
-  async saveMedia(body: Omit<Media, "id" | "userId"> & { id?: string; userId?: string }): Promise<Media> {
+  async saveMedia(body: Omit<Media, "id" | "userId" | "displayName"> & { id?: string; userId?: string }): Promise<Media> {
     const id = body.id || randomUUID();
     const media: Media = {
       id,
+      // This JSON path never runs through StorageService (it exists for externally hosted
+      // URLs), so there's no upload-time display name to carry over — generate one directly.
+      displayName: generateMediaName(),
       thumbnailUrl: body.thumbnailUrl || body.originalUrl,
       originalUrl: body.originalUrl,
       width: body.width,

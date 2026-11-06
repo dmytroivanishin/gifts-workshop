@@ -9,7 +9,6 @@ import { useDispatch } from "react-redux";
 import { addNotification } from "@/store/slices/notificationSlice";
 import { useGetMediaQuery, useUploadMediaMutation, useDeleteMediaMutation } from "@/store/api";
 import { ApiMutationError } from "@/types";
-import { deriveMediaName } from "@/utils/mediaName";
 import { handleImageLoadError } from "@/utils/mediaPlaceholder";
 
 interface MediaItem {
@@ -60,7 +59,7 @@ export default function AdminMedia() {
   const media: MediaItem[] = (mediaData?.data || []).map((m) => ({
     id: m.id,
     url: m.thumbnailUrl || m.originalUrl,
-    name: deriveMediaName(m.originalUrl),
+    name: m.displayName,
     size: `${m.width}x${m.height}`
   }));
 

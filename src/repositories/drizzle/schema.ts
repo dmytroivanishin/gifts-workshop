@@ -61,6 +61,7 @@ export const colorsRelations = relations(colors, ({ one, many }) => ({
 
 export const media = pgTable("media", {
   id: uuid("id").primaryKey().defaultRandom(),
+  displayName: varchar("display_name", { length: 50 }).notNull(),
   thumbnailUrl: text("thumbnail_url").notNull(),
   originalUrl: text("original_url").notNull(),
   width: integer("width").notNull(),

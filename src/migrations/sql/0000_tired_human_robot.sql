@@ -47,6 +47,7 @@ CREATE TABLE "comments" (
 --> statement-breakpoint
 CREATE TABLE "media" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"display_name" varchar(50) NOT NULL,
 	"thumbnail_url" text NOT NULL,
 	"original_url" text NOT NULL,
 	"width" integer NOT NULL,

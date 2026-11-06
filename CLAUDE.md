@@ -227,7 +227,7 @@ GOOGLE_CLIENT_ID  GOOGLE_CLIENT_SECRET  ADMIN_EMAILS
 JWT_SECRET
 NEXT_PUBLIC_APP_URL (also the base of the Google redirect address)  NEXT_PUBLIC_DEFAULT_LOCALE  NEXT_PUBLIC_SUPPORTED_LOCALES
 NEXT_PUBLIC_MAX_FILE_SIZE_MB  NEXT_PUBLIC_DEV_MODE  NEXT_PUBLIC_SOCIAL_LINKS (JSON array)
-SITE_{TITLE,TEMPLATE,DESCRIPTION,KEYWORDS,NAME,FOOTER,PROJECT_NOT_FOUND,PROJECT_DEFAULT}_{RU,EN}
+SITE_{TITLE,TEMPLATE,DESCRIPTION,KEYWORDS,NAME,PROJECT_NOT_FOUND,PROJECT_DEFAULT}_{RU,EN}
 ```
 
 `NEXT_PUBLIC_*` values are inlined at build time. `MAX_FILES_PER_UPLOAD` (an optional variable outside this list, added 2026-10-02 to cap files per upload *request*) was removed 2026-10-12 along with the multi-file upload path it capped — `POST /media` now takes exactly one file per request, so there is no longer anything for the server to cap. The same day it came back in a different shape as `NEXT_PUBLIC_MAX_FILES_PER_UPLOAD` (optional, defaults to 30 if unset — not in this required list) — this one caps how many files the admin media page's own sequential loop will start in one *selection*, a client-only concern now that the server only ever sees one file per request; it defaults to matching `RATE_LIMITS.upload` (30/minute, `src/utils/rateLimit.ts`), so a larger selection doesn't just start failing with 429s partway through.
