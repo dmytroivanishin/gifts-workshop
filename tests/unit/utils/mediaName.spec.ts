@@ -24,6 +24,16 @@ describe("generateMediaName", () => {
     const names = new Set(Array.from({ length: 50 }, () => generateMediaName()));
     expect(names.size).toBeGreaterThan(40);
   });
+
+  it("never produces a run of 3+ vowel-letters or 4+ consonant-letters (the orthography gate)", () => {
+    // Regression check for the "iji"-style vowel-on-vowel noise this was rewritten to avoid: an
+    // empty onset is no longer allowed right after a syllable that itself ended in a bare vowel.
+    for (let i = 0; i < 2000; i++) {
+      const name = generateMediaName();
+      expect(name).not.toMatch(/[aeiou]{3,}/);
+      expect(name).not.toMatch(/[^aeiou]{4,}/);
+    }
+  });
 });
 
 describe("generateStorageSuffix", () => {

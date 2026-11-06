@@ -11,11 +11,33 @@ function pick<T>(items: readonly T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-function randomOnset(): string {
+interface Syllable {
+  onset: string;
+  nucleus: string;
+  coda: string;
+}
+
+// Onset: an empty onset is only allowed right after a syllable that itself ended in a consonant
+// (a non-empty coda) — never right after a bare vowel, which is what used to produce an awkward
+// vowel-on-vowel collision across the syllable boundary (e.g. nucleus "i" immediately followed by
+// another empty-onset "i" reads as the "iji"-style noise this was rewritten to avoid).
+function randomOnset(prev: Syllable | null): string {
+  const prevEndedInVowel = prev !== null && prev.coda === "";
   const r = Math.random();
-  if (r < 0.55) return pick(CONSONANTS);
-  if (r < 0.85) return pick(CONSONANT_CLUSTERS);
-  return "";
+  let onset: string;
+  if (r < 0.55) onset = pick(CONSONANTS);
+  else if (r < 0.85) onset = pick(CONSONANT_CLUSTERS);
+  else onset = prevEndedInVowel ? pick(CONSONANTS) : "";
+
+  // Avoid the new syllable's onset echoing the exact consonant sound that just closed the
+  // previous one (its own onset or coda) — a stutter like "...ar" + "ra..." = "...arra...".
+  if (prev && onset !== "" && (onset === prev.onset || onset === prev.coda)) {
+    const alternatives = [...CONSONANTS, ...CONSONANT_CLUSTERS].filter(
+      (c) => c !== prev.onset && c !== prev.coda
+    );
+    onset = pick(alternatives);
+  }
+  return onset;
 }
 
 function randomNucleus(): string {
@@ -26,24 +48,49 @@ function randomCoda(): string {
   return Math.random() < 0.3 ? pick(CONSONANTS) : "";
 }
 
-function randomSyllable(): string {
-  return randomOnset() + randomNucleus() + randomCoda();
+function randomSyllable(prev: Syllable | null): Syllable {
+  return { onset: randomOnset(prev), nucleus: randomNucleus(), coda: randomCoda() };
 }
 
-// A short, pronounceable-ish cosmetic word — syllables (onset + vowel nucleus + optional coda)
-// chained until the length lands between 6 and 12, stopping a syllable early rather than
-// overshooting once the 6-letter floor is already met. Purely cosmetic (the admin media grid's
-// only readable label, stored as media.displayName), so plain Math.random is fine — nothing
-// security-sensitive reads this.
-export function generateMediaName(): string {
+function syllableText(s: Syllable): string {
+  return s.onset + s.nucleus + s.coda;
+}
+
+// A plain "spelling" gate on the fully assembled word: no run of 3+ vowel-alphabet letters and no
+// run of 4+ consonant-alphabet letters anywhere in it, regardless of which syllable boundary they
+// fall across. A generic rule over the fixed VOWELS alphabet above, not a list of specific words.
+const VOWEL_RUN = /[aeiou]{3,}/;
+const CONSONANT_RUN = /[^aeiou]{4,}/;
+
+function buildWord(): string {
   let name = "";
+  let prev: Syllable | null = null;
   while (name.length < 12) {
-    const syllable = randomSyllable();
-    if (name.length >= 6 && name.length + syllable.length > 12) break;
-    name += syllable;
+    const syllable = randomSyllable(prev);
+    const text = syllableText(syllable);
+    if (name.length >= 6 && name.length + text.length > 12) break;
+    name += text;
+    prev = syllable;
     if (name.length >= 6 && Math.random() < 0.3) break;
   }
-  return name.length >= 1 ? name : "aboka";
+  return name;
+}
+
+const MAX_ATTEMPTS = 30;
+
+// A short, pronounceable-ish cosmetic word — syllables (onset + vowel nucleus + optional coda)
+// chained until the length lands between 6 and 12, with the syllable-boundary rules above plus a
+// final "spelling" check (no vowel/consonant run) and a bounded retry if a candidate still fails
+// it. Purely cosmetic (the admin media grid's only readable label, stored as media.displayName),
+// so plain Math.random is fine — nothing security-sensitive reads this.
+export function generateMediaName(): string {
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const name = buildWord();
+    if (name.length >= 6 && !VOWEL_RUN.test(name) && !CONSONANT_RUN.test(name)) {
+      return name;
+    }
+  }
+  return "aboka";
 }
 
 // A short random suffix appended to the storage folder name (<name>-<timestamp>-<suffix>) as an
