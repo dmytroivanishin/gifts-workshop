@@ -37,7 +37,15 @@ export function PublicHeader() {
   // for one) has its own content starting right at the top — e.g. "back_to_gallery" — which an
   // absolute switcher would sit on top of, so those pages keep the original flow-based block
   // with its own reserved space, exactly as it was before.
-  const isHome = pathname.replace(/\/$/, "") === `/${locale}`;
+  //
+  // Derived from the URL's own shape (exactly one segment, i.e. just "/ru" or "/en" with
+  // nothing after it) rather than comparing against `locale` from the i18n context: `locale`
+  // updates optimistically the instant the switcher is clicked (setLocale's setLocaleState),
+  // before router.push() has actually navigated and pathname has caught up — comparing against
+  // it caused a one-frame isHome=false flicker (pathname still "/ru", locale already "en") that
+  // briefly swapped in the flow-based block, visibly shoving the whole page down and back.
+  const segments = pathname.split("/").filter(Boolean);
+  const isHome = segments.length === 1;
 
   if (isHome) {
     return (
