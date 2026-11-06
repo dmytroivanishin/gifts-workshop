@@ -183,7 +183,7 @@ export default function Combobox({
             ))}
           </div>
         )}
-        <div className="flex items-center gap-1.5 ml-auto pl-1">
+        <div className="flex items-center gap-1.5 ml-auto pl-1 pr-1.5">
           {selectedValues.length > 0 && (
             <button
               type="button"

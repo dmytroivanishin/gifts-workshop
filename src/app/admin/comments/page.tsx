@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Check, X, Trash2, Loader2, MessageCircleReply, MessageSquare } from "lucide-react";
+import { SELECT_CHEVRON_STYLE } from "@/utils/selectChevron";
 import {
   useGetAdminCommentsQuery,
   useUpdateCommentStatusMutation,
@@ -235,9 +236,10 @@ export default function AdminComments() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <select 
+          <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
+            style={SELECT_CHEVRON_STYLE}
             className="px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           >
             <option value="">{t("all_statuses") || "All Statuses"}</option>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Edit, Save, X, Loader2, Trash2 } from "lucide-react";
+import { SELECT_CHEVRON_STYLE } from "@/utils/selectChevron";
 import {
   useGetCategoriesQuery,
   useCreateCategoryMutation,
@@ -374,6 +375,7 @@ export default function AdminCategories() {
                             <select
                               value={editCollectionId}
                               onChange={(e) => setEditCollectionId(e.target.value)}
+                              style={SELECT_CHEVRON_STYLE}
                               className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                               required
                             >
@@ -390,6 +392,7 @@ export default function AdminCategories() {
                             <select
                               value={editParentId}
                               onChange={(e) => setEditParentId(e.target.value)}
+                              style={SELECT_CHEVRON_STYLE}
                               className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                             >
                               <option value="">{t("none_main_category")}</option>
@@ -595,6 +598,7 @@ export default function AdminCategories() {
                     <FormControl>
                       <select
                         {...field}
+                        style={SELECT_CHEVRON_STYLE}
                         className={`w-full px-3.5 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer ${form.formState.errors.collectionId ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
                       >
                         <option value="" disabled>{t("placeholder_select_collection")}</option>
@@ -620,6 +624,7 @@ export default function AdminCategories() {
                       <select
                         {...field}
                         value={field.value || ""}
+                        style={SELECT_CHEVRON_STYLE}
                         className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                       >
                         <option value="">{t("none_main_category")}</option>

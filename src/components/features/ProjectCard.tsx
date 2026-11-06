@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Heart, ChevronRight, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/cn";
@@ -20,6 +20,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
   const { t, loc } = useTranslation();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const wasDraggedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -44,16 +45,19 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
   const categoryTitle = post.category ? loc(post.category.title) : null;
   const categoryColor = post.category?.color!.color;
 
+  const goToNext = () => setCurrentImageIndex((prev) => (prev + 1) % totalImages);
+  const goToPrev = () => setCurrentImageIndex((prev) => (prev - 1 + totalImages) % totalImages);
+
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev + 1) % totalImages);
+    goToNext();
   };
 
   const prevImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev - 1 + totalImages) % totalImages);
+    goToPrev();
   };
 
   const toggleLike = (e: React.MouseEvent) => {
@@ -113,6 +117,26 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
                     src={med?.thumbnailUrl || MEDIA_PLACEHOLDER_DATA_URL}
                     onError={handleImageLoadError}
                     alt={loc(post.title)}
+                    // No `drag` here on purpose: this image already has its own manually-computed
+                    // `style.transform` (pan/zoom position below), and framer-motion's drag system
+                    // also drives `transform` to move the element — the two fought each other,
+                    // producing a diagonal slide instead of a clean crossfade. `onPanEnd` detects
+                    // the swipe gesture without framer touching the element's transform at all, so
+                    // the only visible transition stays the existing opacity crossfade below.
+                    onPanEnd={(_e, info) => {
+                      if (totalImages > 1 && Math.abs(info.offset.x) > 50 && Math.abs(info.offset.x) > Math.abs(info.offset.y)) {
+                        wasDraggedRef.current = true;
+                        if (info.offset.x < 0) goToNext();
+                        else goToPrev();
+                      }
+                    }}
+                    onClick={(e) => {
+                      if (wasDraggedRef.current) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        wasDraggedRef.current = false;
+                      }
+                    }}
                     className="absolute transition-transform duration-700 ease-out group-hover:scale-103"
                     style={{
                       left: pos ? `calc(50% + ${pos.x / 3}%)` : "50%",
@@ -123,9 +147,10 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
                       minHeight: isLandscape ? "100%" : "auto",
                       maxWidth: "none",
                       maxHeight: "none",
+                      touchAction: "pan-y",
                       transformOrigin: "center center",
-                      transform: pos 
-                        ? `translate(-50%, -50%) scale(${pos.zoom})` 
+                      transform: pos
+                        ? `translate(-50%, -50%) scale(${pos.zoom})`
                         : 'translate(-50%, -50%) scale(1)'
                     }}
                     initial={{ opacity: 0 }}
@@ -147,13 +172,13 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-md z-10 cursor-pointer"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-white shadow-md z-10 cursor-pointer"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-md z-10 cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-white shadow-md z-10 cursor-pointer"
               >
                 <ChevronRight size={16} />
               </button>

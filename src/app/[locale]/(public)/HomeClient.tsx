@@ -28,6 +28,20 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
   const [inStockOnly, setInStockOnly] = useState(false);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [likedIds, setLikedIds] = useState<string[]>([]);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const categoryNavRef = useRef<HTMLDivElement>(null);
+
+  // Tap-to-toggle subcategory dropdown (mobile has no hover) — close it on an outside click/tap,
+  // same pattern as the admin Combobox.
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (categoryNavRef.current && !categoryNavRef.current.contains(event.target as Node)) {
+        setOpenDropdownId(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Sync activeCategory from search parameters
   useEffect(() => {
@@ -200,7 +214,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
 
         {/* Categories & Presets Row */}
         <div className="w-full flex justify-center">
-          <div className="flex items-center gap-3 flex-wrap justify-center">
+          <div ref={categoryNavRef} className="flex items-center gap-3 flex-wrap justify-center">
             {/* Favorites (Heart) Filter */}
             <button
               onClick={() => setFavoritesOnly(!favoritesOnly)}
@@ -264,28 +278,51 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                   children.some((c) => activeCategory === c.id || activeCategory === c.slug);
 
                 if (hasChildren) {
+                  const isOpen = openDropdownId === cat.id;
                   return (
                     <div key={cat.id} className="relative group">
-                      {/* Parent Category Button */}
-                      <Link
-                        href={getCategoryUrl(cat.slug || cat.id)}
+                      {/* Parent Category Button: the label navigates (tap/click), the chevron is
+                          its own tap target toggling the dropdown — hover alone can't open it on
+                          a touch device, which has no hover state at all. */}
+                      <div
                         className={cn(
-                          "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer flex items-center gap-1.5",
+                          "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all flex items-center gap-1.5",
                           isSelected
                             ? "bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3] shadow-sm font-semibold"
                             : "bg-transparent text-[#827C6B] border-[#EBE7E3] hover:bg-[#EBE7E3]/45"
                         )}
                       >
-                        {localizedTitle}
-                        <span className="text-[9px] opacity-60 transition-transform duration-200 group-hover:rotate-180">▼</span>
-                      </Link>
+                        <Link href={getCategoryUrl(cat.slug || cat.id)} className="cursor-pointer" onClick={() => setOpenDropdownId(null)}>
+                          {localizedTitle}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setOpenDropdownId((prev) => (prev === cat.id ? null : cat.id))}
+                          aria-expanded={isOpen}
+                          aria-label={localizedTitle}
+                          className={cn(
+                            "text-[9px] opacity-60 transition-transform duration-200 cursor-pointer",
+                            isOpen ? "rotate-180" : "group-hover:rotate-180"
+                          )}
+                        >
+                          ▼
+                        </button>
+                      </div>
 
-                      {/* Glassmorphic Subcategory Hover Dropdown */}
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 pt-2.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out scale-95 group-hover:scale-100 origin-top">
+                      {/* Glassmorphic Subcategory Dropdown: hover on desktop, tap-toggled (via isOpen) on touch */}
+                      <div
+                        className={cn(
+                          "absolute top-full left-1/2 -translate-x-1/2 mt-1 pt-2.5 z-50 transition-all duration-200 ease-out origin-top",
+                          isOpen
+                            ? "opacity-100 visible scale-100"
+                            : "opacity-0 invisible scale-95 group-hover:opacity-100 group-hover:visible group-hover:scale-100"
+                        )}
+                      >
                         <div className="bg-card/95 backdrop-blur-md border border-border shadow-xl rounded-2xl p-2 min-w-[200px] flex flex-col gap-1">
                           {/* Option to explicitly select only the parent */}
                           <Link
                             href={getCategoryUrl(cat.slug || cat.id)}
+                            onClick={() => setOpenDropdownId(null)}
                             className={cn(
                               "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer block",
                               activeCategory === cat.id || activeCategory === cat.slug
@@ -302,6 +339,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                               <Link
                                 key={child.id}
                                 href={getCategoryUrl(child.slug || child.id)}
+                                onClick={() => setOpenDropdownId(null)}
                                 className={cn(
                                   "w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer flex items-center justify-between",
                                   isChildSelected

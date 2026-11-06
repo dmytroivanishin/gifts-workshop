@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, ArrowLeft, Languages } from "lucide-react";
+import { SELECT_CHEVRON_STYLE } from "@/utils/selectChevron";
 import {
   useGetPostByIdQuery,
   useGetCategoryByIdQuery,
@@ -261,6 +262,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                 <select
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
+                  style={SELECT_CHEVRON_STYLE}
                   className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
                 >
                   <option value="public">{t("area_public") || "Public (Visible to everyone)"}</option>

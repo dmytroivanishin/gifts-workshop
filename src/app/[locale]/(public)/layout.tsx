@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function PublicLayout({ children }: PublicLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="relative min-h-screen flex flex-col">
       <PublicHeader />
       <main className="flex-1">
         {children}
