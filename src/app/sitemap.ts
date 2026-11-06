@@ -35,15 +35,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (Array.isArray(posts)) {
       for (const post of posts) {
         for (const locale of locales) {
-          const projectSlug = post.slug || post.id;
+          const postSlug = post.slug || post.id;
           sitemapEntries.push({
-            url: `${appUrl}/${locale}/projects/${projectSlug}`,
+            url: `${appUrl}/${locale}/posts/${postSlug}`,
             lastModified: post.createdAt ? new Date(post.createdAt) : new Date(),
             changeFrequency: "weekly",
             priority: 0.8,
             alternates: {
               languages: locales.reduce((acc, l) => {
-                acc[l] = `${appUrl}/${l}/projects/${projectSlug}`;
+                acc[l] = `${appUrl}/${l}/posts/${postSlug}`;
                 return acc;
               }, {} as Record<string, string>)
             }

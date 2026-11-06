@@ -13,12 +13,12 @@ import { FullscreenGallery } from "@/components/shared/FullscreenGallery";
 import { MEDIA_PLACEHOLDER_DATA_URL, handleImageLoadError } from "@/utils/mediaPlaceholder";
 import { PopulatedPost } from "@/types";
 
-interface ProjectDetailClientProps {
+interface PostDetailClientProps {
   slug: string;
   initialPost: PopulatedPost | undefined;
 }
 
-export default function ProjectDetailClient({ slug, initialPost }: ProjectDetailClientProps) {
+export default function PostDetailClient({ slug, initialPost }: PostDetailClientProps) {
   const { t, loc } = useTranslation();
 
   const { data: response, isLoading } = useGetPostByIdQuery(slug);
@@ -42,10 +42,10 @@ export default function ProjectDetailClient({ slug, initialPost }: ProjectDetail
     return (
       <div className="container mx-auto px-6 py-20 text-center max-w-[600px]">
         <h2 className="font-heading text-2xl font-semibold mb-4">
-          {t('project_not_found')}
+          {t('post_not_found')}
         </h2>
         <p className="text-muted-foreground mb-8">
-          {t('project_not_found_desc')}
+          {t('post_not_found_desc')}
         </p>
         <Link href="/" className="inline-flex items-center text-primary font-medium hover:underline">
           <ChevronLeft size={20} className="mr-1" />

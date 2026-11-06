@@ -41,7 +41,7 @@ export default function AdminLayout({
   }
 
   const navLinks = [
-    { href: "/admin/dashboard", icon: LayoutDashboard, label: t("projects") },
+    { href: "/admin/dashboard", icon: LayoutDashboard, label: t("posts") },
     { href: "/admin/categories", icon: FolderTree, label: t("categories") },
     { href: "/admin/collections", icon: Layers, label: t("collections") },
     { href: "/admin/tags", icon: Hash, label: t("tags_manager") },

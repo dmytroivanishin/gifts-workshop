@@ -6,7 +6,7 @@ import { Heart, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { useGetPostsQuery, useGetCategoriesQuery } from "@/store/api";
-import { ProjectCard } from "@/components/features/ProjectCard";
+import { PostCard } from "@/components/features/PostCard";
 import { useTranslation } from "@/i18n";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -23,7 +23,6 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
   const searchParams = useSearchParams();
   const { t, loc } = useTranslation();
 
-  const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -56,7 +55,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
   // Sync likedIds from localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const liked = localStorage.getItem("liked_projects");
+      const liked = localStorage.getItem("liked_posts");
       if (liked) {
         setLikedIds(JSON.parse(liked) as string[]);
       }
@@ -125,7 +124,6 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
 
   // Fetch posts using RTK Query
   const { data: response, isLoading, isFetching } = useGetPostsQuery({
-    search: search.trim() !== "" ? search : undefined,
     category: categoryQueryParam || undefined,
     inStock: inStockOnly ? true : undefined,
     status: "Published",
@@ -154,7 +152,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [search, activeCategory, inStockOnly, favoritesOnly]);
+  }, [activeCategory, inStockOnly, favoritesOnly]);
 
   // IntersectionObserver bottom anchor logic
   useEffect(() => {
@@ -201,17 +199,8 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
         />
       </div>
 
-      {/* Controls: Search & Filters */}
-      <section aria-label="Search and filters" className="flex flex-col items-center gap-6 mb-10 pb-10 border-b border-border">
-        {/* Search Input */}
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("search_placeholder")}
-          className="w-full max-w-[400px] px-5 py-3 rounded-full border border-border bg-transparent text-base text-foreground outline-none transition-colors focus:border-muted-foreground"
-        />
-
+      {/* Controls: Filters */}
+      <section aria-label="Filters" className="flex flex-col items-center gap-6 mb-10 pb-10 border-b border-border">
         {/* Categories & Presets Row */}
         <div className="w-full flex justify-center">
           <div ref={categoryNavRef} className="flex items-center gap-3 flex-wrap justify-center">
@@ -382,7 +371,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
       {/* Grid Layout */}
       {displayedPosts.length > 0 ? (
         <>
-          <section aria-label="Projects grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px] pb-10">
+          <section aria-label="Posts grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px] pb-10">
             <AnimatePresence mode="popLayout">
               {displayedPosts.map((post) => (
                 <motion.div
@@ -393,7 +382,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <ProjectCard
+                  <PostCard
                     post={post}
                     onLikeToggle={handleLikeToggle}
                     onCategorySelect={handleCategorySelect}
@@ -417,7 +406,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
         </div>
       ) : (
         <div className="text-center py-20 text-muted-foreground">
-          {t("no_projects_found")}
+          {t("no_posts_found")}
         </div>
       )}
     </div>

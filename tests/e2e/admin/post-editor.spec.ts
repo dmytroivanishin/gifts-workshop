@@ -68,7 +68,7 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
 
   test("full flow: fill form, auto-suggested tags follow the category, gallery drag reorder, crop, publish", async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto("/admin/projects/new");
+    await page.goto("/admin/posts/new");
 
     // --- Title ---
     await page.getByLabel("title").fill("E2E Editor Post");
@@ -176,7 +176,7 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
 
     // --- Crop/position actually persisted, not just that the modal closed ---
     // PUT/POST /posts sends media: [{ mediaId, order, position: { x, y, zoom } }, ...]
-    // (src/app/admin/projects/[id]/page.tsx's form.setValue("media", ...)) and GET /posts/:id
+    // (src/app/admin/posts/[id]/page.tsx's form.setValue("media", ...)) and GET /posts/:id
     // returns the same shape per item (postRepository.ts's mapToPopulated); zoom is a decimal
     // scale factor (1 = 100%), not the UI's displayed percentage text.
     const postRes = await admin.get(`/api/v1/posts/${createdPostId}`);
@@ -202,7 +202,7 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
 
     try {
       await loginAsAdmin(page);
-      await page.goto("/admin/projects/new");
+      await page.goto("/admin/posts/new");
 
       await page.getByLabel("title").fill("E2E Adhoc Tag Test Post");
       await page.getByText("placeholder_select_collection").click();
@@ -239,7 +239,7 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
       await page.getByLabel("title").click();
       await expect.poll(chipCount).toBe(3); // TagX + the 2 ad-hoc tags
 
-      // Switch to CatY. The categoryId FormField's onChange (admin/projects/[id]/page.tsx) only
+      // Switch to CatY. The categoryId FormField's onChange (admin/posts/[id]/page.tsx) only
       // removes tags that were in the OLD category's own tagsIds (TagX here) and adds the NEW
       // category's own tagsIds (TagY) — it has no way to tell an ad-hoc tag apart from a
       // manually-picked one, so both ad-hoc tags are untouched by the switch and survive.

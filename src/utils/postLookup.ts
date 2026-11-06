@@ -4,7 +4,7 @@ import { isUUID } from "@/utils/uuid";
 import { visibleToViewer } from "@/utils/postVisibility";
 import { PopulatedPost } from "@/types";
 
-// Shared by the project page's layout (generateMetadata + the UUID->slug redirect check) and the
+// Shared by the post page's layout (generateMetadata + the UUID->slug redirect check) and the
 // page itself, all of which need the exact same post. React.cache() scopes the memoization to a
 // single request only (never shared between different visitors/requests), so this collapses what
 // would otherwise be up to 3 identical DB round trips per request into 1, with no behavior change.

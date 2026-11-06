@@ -179,7 +179,7 @@ export default function AdminCollections() {
                 )}
               />
             ) : (
-              <div className="p-8 text-center text-sm text-muted-foreground">{t("no_projects")}</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">{t("no_posts")}</div>
             )}
           </div>
         </div>

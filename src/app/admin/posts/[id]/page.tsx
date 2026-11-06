@@ -43,11 +43,11 @@ interface SelectedMedia {
   position?: { x: number; y: number; zoom: number };
 }
 
-interface ProjectFormPageProps {
+interface PostFormPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function ProjectFormPage({ params }: ProjectFormPageProps) {
+export default function PostFormPage({ params }: PostFormPageProps) {
   const { t, loc, locale } = useTranslation();
   const router = useRouter();
   const { id } = use(params);
@@ -278,7 +278,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
 
       if (values.status === "Draft") {
         if (!isEditMode && postId) {
-          router.replace(`/admin/projects/${postId}`);
+          router.replace(`/admin/posts/${postId}`);
         }
       } else {
         router.push("/admin/dashboard");
@@ -290,7 +290,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }
-      console.error("Failed to save project", err);
+      console.error("Failed to save post", err);
     }
   };
 
@@ -364,10 +364,10 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
           </Link>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-foreground">
-              {isEditMode ? t("edit_project") : t("create_project")}
+              {isEditMode ? t("edit_post") : t("create_post")}
             </h1>
             <p className="text-xs text-muted-foreground">
-              {isEditMode ? t("edit_project_subtitle") : t("create_project_subtitle")}
+              {isEditMode ? t("edit_post_subtitle") : t("create_post_subtitle")}
             </p>
           </div>
         </div>
@@ -392,7 +392,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                       {...field}
                       value={field.value || ""}
                       type="text"
-                      placeholder={t("placeholder_project_title")}
+                      placeholder={t("placeholder_post_title")}
                       className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.title ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
                     />
                   </FormControl>
@@ -483,7 +483,7 @@ export default function ProjectFormPage({ params }: ProjectFormPageProps) {
                     <textarea
                       {...field}
                       value={field.value || ""}
-                      placeholder={t("placeholder_project_desc")}
+                      placeholder={t("placeholder_post_desc")}
                       rows={4}
                       className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.description ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
                     />

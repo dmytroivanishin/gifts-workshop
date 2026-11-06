@@ -9,14 +9,14 @@ import { PopulatedPost } from "@/types";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
 
-interface ProjectCardProps {
+interface PostCardProps {
   post: PopulatedPost;
   className?: string;
   onLikeToggle?: (id: string, liked: boolean) => void;
   onCategorySelect?: (categoryId?: string) => void;
 }
 
-export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }: ProjectCardProps) {
+export function PostCard({ post, className, onLikeToggle, onCategorySelect }: PostCardProps) {
   const { t, loc } = useTranslation();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -24,7 +24,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const liked = localStorage.getItem("liked_projects");
+      const liked = localStorage.getItem("liked_posts");
       if (liked) {
         const ids = JSON.parse(liked) as string[];
         setIsLiked(ids.includes(post.id));
@@ -41,7 +41,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
   
   // A Draft/Archived post can legitimately have no category (postSchema only requires one for
   // Published); not reachable today (this component only renders Published posts), but guard it
-  // the same way ProjectDetailClient.tsx does rather than leave the same crash-prone pattern.
+  // the same way PostDetailClient.tsx does rather than leave the same crash-prone pattern.
   const categoryTitle = post.category ? loc(post.category.title) : null;
   const categoryColor = post.category?.color!.color;
 
@@ -64,20 +64,20 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
     e.preventDefault();
     e.stopPropagation();
     
-    const liked = localStorage.getItem("liked_projects");
+    const liked = localStorage.getItem("liked_posts");
     let ids: string[] = [];
     if (liked) {
       ids = JSON.parse(liked) as string[];
     }
-    
+
     const nextLiked = !isLiked;
     if (nextLiked) {
       if (!ids.includes(post.id)) ids.push(post.id);
     } else {
       ids = ids.filter((id) => id !== post.id);
     }
-    
-    localStorage.setItem("liked_projects", JSON.stringify(ids));
+
+    localStorage.setItem("liked_posts", JSON.stringify(ids));
     setIsLiked(nextLiked);
     
     if (onLikeToggle) {
@@ -94,7 +94,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
         className
       )}
     >
-      <Link href={`/projects/${post.slug || post.id}`} className="flex flex-col h-full">
+      <Link href={`/posts/${post.slug || post.id}`} className="flex flex-col h-full">
         {/* Image Gallery */}
         <div className="relative aspect-square w-full overflow-hidden bg-muted rounded-2xl shrink-0">
           <AnimatePresence initial={false}>
@@ -248,7 +248,7 @@ export function ProjectCard({ post, className, onLikeToggle, onCategorySelect }:
 
           {/* Action Button */}
           <div className="font-sans flex items-center text-sm font-medium transition-colors mt-auto" style={{ color: "#AFAA9E" }}>
-            {t("view_project")}
+            {t("view_post")}
             <ChevronRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
           </div>
         </div>

@@ -16,14 +16,14 @@ test.describe("admin categories: on-the-fly tag and color creation", () => {
   });
 
   test("typing a brand-new tag name in the Combobox creates and selects it", async ({ page }) => {
-    // Driven from the post editor (/admin/projects/new). categories/page.tsx has its own
+    // Driven from the post editor (/admin/posts/new). categories/page.tsx has its own
     // handleCreateTag too (covered by the categories-page test below, now that CP-39 is fixed).
     const newTagName = `E2E Inline Tag ${Date.now()}`;
     let createdTagId: string | undefined;
 
     try {
       await loginAsAdmin(page);
-      await page.goto("/admin/projects/new");
+      await page.goto("/admin/posts/new");
 
       const tagsTrigger = page.locator("div.min-h-11").first();
       await page.getByText("placeholder_select_tags").click();

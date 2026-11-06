@@ -28,7 +28,7 @@ test.describe("virtualized lists: Combobox server search/scroll, admin pages, ca
 
     try {
       await loginAsAdmin(page);
-      await page.goto("/admin/projects/new");
+      await page.goto("/admin/posts/new");
 
       let searchRequestCount = 0;
       page.on("request", (req) => {
@@ -74,7 +74,7 @@ test.describe("virtualized lists: Combobox server search/scroll, admin pages, ca
 
     try {
       await loginAsAdmin(page);
-      await page.goto("/admin/projects/new");
+      await page.goto("/admin/posts/new");
 
       await page.getByText("placeholder_select_tags").click();
       const list = page.getByTestId("virtual-scroll-list");

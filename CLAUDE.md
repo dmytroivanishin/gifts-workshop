@@ -32,7 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Infra: Docker Compose for local dev; production target is a VPS with Coolify, deployed from a Dockerfile (neither exists yet; nothing is deployed).
 
 **Status**
-- Core feature set is implemented: public catalog + project pages, admin CMS (projects, categories, collections, tags, colors, media, comments, localization), Google login, uploads, i18n, SEO metadata/sitemap.
+- Core feature set is implemented: public catalog + post pages, admin CMS (posts, categories, collections, tags, colors, media, comments, localization), Google login, uploads, i18n, SEO metadata/sitemap.
 - **Not production-ready**: security blockers, no deployment config, no tests. See §11–12.
 - Checked 2026-09-23: `next build` passes (also without a reachable database), `tsc --noEmit` is clean, `npm run lint` fails (345 errors, 73 warnings), `npm audit` reports 28 findings (1 critical, on Next; the 8 names added since 2026-09-19 are dev tooling, `CHANGE-PLAN.md` CP-2).
 - 2026-09-19: blockers B1–B6 (anonymous reads of admin data, unpublished posts, leaking 500s, `JWT_SECRET` and dev-login guards) are fixed in code but not yet verified by hand (`CHANGE-PLAN.md` CP-4).
@@ -131,8 +131,8 @@ Nothing runs migrations at app startup or deploy time. The MinIO bucket is prepa
 
 ```
 app/
-  [locale]/(public)/        home (page.tsx), projects/[slug]/{layout,page}.tsx
-  admin/                    login, dashboard, projects/[id], categories, collections, tags,
+  [locale]/(public)/        home (page.tsx), posts/[slug]/{layout,page}.tsx
+  admin/                    login, dashboard, posts/[id], categories, collections, tags,
                             colors, media, comments, localizations/[entityType]/[id]
   api/v1/                   auth/*, posts, categories, collections, tags, colors, media, users,
                             system-texts, admin/comments; each folder has route.ts (+ [id])
@@ -187,7 +187,7 @@ The 6 `created_at` columns above (2026-11-04) were added by hand-editing the exi
 - **Logout:** `POST /api/v1/auth/logout` marks the current refresh session (`token_sessions`, found via the `refreshToken` cookie's `jti`) `isUsed` so it can't be replayed, then clears both the `accessToken` and `refreshToken` cookies. No error if there is no refresh cookie to find.
 - **Guard (`src/proxy.ts`):** `/admin/*` (except `/admin/login`) needs a valid `accessToken` cookie, otherwise redirect to login. `/api/v1/*`: `/auth/*` needs no token (but is rate limited); any `POST/PUT/PATCH/DELETE` needs a valid JWT, except public `POST /api/v1/posts/:id/comments`; every method on `/api/v1/users/**`, `/api/v1/admin/**` and (since 2026-09-28) `/api/v1/media/**` needs a JWT too — media joined the pattern because it backs only the admin media picker and previously leaked images of unpublished posts to anonymous `GET` callers; `/users/**` now only has `GET` methods left (its writes were dead code with no UI consumer, removed 2026-10-01); all other `GET` are unauthenticated at the proxy. Since 2026-10-02 both checks call `verifyAdminToken()` (`utils/jwt.ts`), which verifies signature/expiry, `role === "admin"` **and** that the token's `email` is still in `ADMIN_EMAILS` — previously only signature/role were checked, so removing an admin's email had no effect until their refresh chain expired. Since 2026-10-06 every write `route.ts` also wraps its handler in `withAdminAuth()` (`utils/withAdminAuth.ts`), a second, independent check re-verifying the same token — so a bypass of the proxy no longer leaves writes open (`CHANGE-PLAN.md` CP-5). Controllers themselves stay unaware of authorization (the check lives at the route layer, not in controller methods).
 - `utils/auth.ts → getUserId()` and `isAdminRequest()` both call the same `verifyAdminToken()` (no DB lookup beyond confirming the user row exists for `getUserId()`); `isAdminRequest()` decides what a reader may see.
-- **Post visibility:** anonymous readers get only `Published` posts. `utils/postVisibility.ts` (`resolveStatusFilter`, `visibleToViewer`) is used by `GET /posts`, `GET /posts/:slugOrId` (404 for unpublished), `GET /collections/:id/posts` and the server-rendered metadata and UUID→slug redirect in `projects/[slug]/layout.tsx`. A valid admin cookie sees every status; `status=all` is the admin dashboard's explicit request for every status (`resolveStatusFilter` returns no filter for it when admin, and 401s for it otherwise, since 2026-09-28) — every other status value still degrades silently to `Published` for a non-admin caller, unchanged. New code that returns posts must go through the same helpers.
+- **Post visibility:** anonymous readers get only `Published` posts. `utils/postVisibility.ts` (`resolveStatusFilter`, `visibleToViewer`) is used by `GET /posts`, `GET /posts/:slugOrId` (404 for unpublished), `GET /collections/:id/posts` and the server-rendered metadata and UUID→slug redirect in `posts/[slug]/layout.tsx`. A valid admin cookie sees every status; `status=all` is the admin dashboard's explicit request for every status (`resolveStatusFilter` returns no filter for it when admin, and 401s for it otherwise, since 2026-09-28) — every other status value still degrades silently to `Published` for a non-admin caller, unchanged. New code that returns posts must go through the same helpers.
 - **Rate limiting** (`proxy.ts` + `utils/rateLimit.ts`, `rate-limiter-flexible`, in memory, per client address): `/api/v1/auth/*` 20 per minute, public comment `POST` 5 per 10 minutes, `POST /media` 30 per minute, and (since 2026-10-02) every other authenticated `POST/PUT/PATCH/DELETE` under `/api/v1/` 300 per minute (`RATE_LIMITS.adminWrite`) — deliberately loose, sized only to catch a leaked token or a runaway script, not to throttle normal admin work. Over the limit: 429 `TOO_MANY_REQUESTS` (standard envelope) with `Retry-After`. The address is the last `X-Forwarded-For` entry (assumes Traefik as the only proxy in front; in `next dev` every request shares the key `unknown`). Ordinary GETs are not limited. Single instance only; several instances need Redis or Traefik's middleware — declined 2026-10-06 (CP-27) since more than one instance isn't planned. A new limited route means extending `resolveRateLimitRule` in `proxy.ts`.
 - No CSRF token (SameSite=Strict only), no CORS headers (same-origin).
 
@@ -227,7 +227,7 @@ GOOGLE_CLIENT_ID  GOOGLE_CLIENT_SECRET  ADMIN_EMAILS
 JWT_SECRET
 NEXT_PUBLIC_APP_URL (also the base of the Google redirect address)  NEXT_PUBLIC_DEFAULT_LOCALE  NEXT_PUBLIC_SUPPORTED_LOCALES
 NEXT_PUBLIC_MAX_FILE_SIZE_MB  NEXT_PUBLIC_DEV_MODE  NEXT_PUBLIC_SOCIAL_LINKS (JSON array)
-SITE_{TITLE,TEMPLATE,DESCRIPTION,KEYWORDS,NAME,PROJECT_NOT_FOUND,PROJECT_DEFAULT}_{RU,EN}
+SITE_{TITLE,TEMPLATE,DESCRIPTION,KEYWORDS,NAME,POST_NOT_FOUND,POST_DEFAULT}_{RU,EN}
 ```
 
 `NEXT_PUBLIC_*` values are inlined at build time. `MAX_FILES_PER_UPLOAD` (an optional variable outside this list, added 2026-10-02 to cap files per upload *request*) was removed 2026-10-12 along with the multi-file upload path it capped — `POST /media` now takes exactly one file per request, so there is no longer anything for the server to cap. The same day it came back in a different shape as `NEXT_PUBLIC_MAX_FILES_PER_UPLOAD` (optional, defaults to 30 if unset — not in this required list) — this one caps how many files the admin media page's own sequential loop will start in one *selection*, a client-only concern now that the server only ever sees one file per request; it defaults to matching `RATE_LIMITS.upload` (30/minute, `src/utils/rateLimit.ts`), so a larger selection doesn't just start failing with 429s partway through.
@@ -238,7 +238,7 @@ Also optional, outside the required list (added 2026-10-17, CP-17): `NEXT_PUBLIC
 
 ## 10. Current Status
 
-Working: Google login + token rotation, public catalog with search / category / in-stock / favorites (localStorage) filters and infinite scroll, project page (masonry gallery, contact links, moderated comments), admin CRUD for all entities, drag-and-drop ordering (categories, media in a post), crop modal, media library with delete protection, localization editor (DB-driven texts), slug URLs with UUID→slug redirect, OpenGraph/hreflang metadata, sitemap.xml, robots.txt.
+Working: Google login + token rotation, public catalog with category / in-stock / favorites (localStorage) filters and infinite scroll, post page (masonry gallery, contact links, moderated comments), admin CRUD for all entities, drag-and-drop ordering (categories, media in a post), crop modal, media library with delete protection, localization editor (DB-driven texts), slug URLs with UUID→slug redirect, OpenGraph/hreflang metadata, sitemap.xml, robots.txt.
 
 In progress / missing: see `DEVIATIONS.md` (`[gap]` items). API tests (`tests/api/**`), unit tests (`tests/unit/**`) and e2e tests (`tests/e2e/**`) all exist (CP-31 phases 1–3, done).
 

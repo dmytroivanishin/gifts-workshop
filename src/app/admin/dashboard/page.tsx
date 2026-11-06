@@ -86,7 +86,7 @@ export default function AdminDashboard() {
       setDeleteTargetId("");
       setPage(1); // Reset to page 1 to reload
     } catch (err) {
-      console.error("Failed to delete project", err);
+      console.error("Failed to delete post", err);
     }
   };
 
@@ -95,14 +95,14 @@ export default function AdminDashboard() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("projects_manager")}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("posts_manager")}</h1>
         </div>
         <Link
-          href="/admin/projects/new"
+          href="/admin/posts/new"
           className="flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 w-full sm:w-auto bg-primary text-primary-foreground font-sans text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity"
         >
           <Plus size={16} />
-          {t("add_project")}
+          {t("add_post")}
         </Link>
       </div>
 
@@ -114,16 +114,16 @@ export default function AdminDashboard() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("search_projects")}
+            placeholder={t("search_posts")}
             className="w-full pl-9 pr-4 py-2.5 sm:py-2 rounded-lg border border-border bg-transparent font-sans text-sm outline-none focus:border-primary"
           />
         </div>
       </div>
 
-      {/* Projects List */}
+      {/* Posts List */}
       <div className="bg-card rounded-xl border border-border/40 overflow-hidden">
         {isLoading && page === 1 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">{t("loading_projects")}</div>
+          <div className="p-8 text-center text-sm text-muted-foreground">{t("loading_posts")}</div>
         ) : posts.length > 0 ? (
           <>
             {/* Desktop Table */}
@@ -189,14 +189,14 @@ export default function AdminDashboard() {
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <Link
-                            href={`/projects/${post.slug || post.id}`}
+                            href={`/posts/${post.slug || post.id}`}
                             className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                             title={t("view")}
                           >
                             <Eye size={16} />
                           </Link>
                           <Link
-                            href={`/admin/projects/${post.id}`}
+                            href={`/admin/posts/${post.id}`}
                             className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex items-center justify-center"
                             title={t("edit")}
                           >
@@ -268,14 +268,14 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Link
-                          href={`/projects/${post.slug || post.id}`}
+                          href={`/posts/${post.slug || post.id}`}
                           className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                           title={t("view")}
                         >
                           <Eye size={18} />
                         </Link>
                         <Link
-                          href={`/admin/projects/${post.id}`}
+                          href={`/admin/posts/${post.id}`}
                           className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                           title={t("edit")}
                         >
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
           </>
         ) : (
           <div className="p-8 text-center text-sm text-muted-foreground">
-            {t("no_projects")}
+            {t("no_posts")}
           </div>
         )}
         
@@ -305,14 +305,14 @@ export default function AdminDashboard() {
         {posts.length > 0 && hasMore && (
           <div ref={loaderRef} className="p-4 text-center text-sm text-muted-foreground bg-muted/5 border-t border-border/40 flex items-center justify-center">
             <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
-            {t("loading_more_projects")}
+            {t("loading_more_posts")}
           </div>
         )}
       </div>
 
       <ConfirmModal
         isOpen={isDeleteOpen}
-        title={t("projects")}
+        title={t("posts")}
         message={t("delete_confirm")}
         confirmText={t("delete") || "Delete"}
         cancelText={t("cancel") || "Cancel"}

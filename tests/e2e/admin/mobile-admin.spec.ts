@@ -31,7 +31,7 @@ test.describe("admin on a mobile viewport (390px): dashboard, categories, media 
   let admin: APIRequestContext;
   let collection: Awaited<ReturnType<typeof createCollection>>;
   // The new-post form auto-selects collectionId/categoryId when exactly one of each exists
-  // system-wide (admin/projects/[id]/page.tsx's "Auto-select defaults when only one option
+  // system-wide (admin/posts/[id]/page.tsx's "Auto-select defaults when only one option
   // exists" effect — the same thing post-editor.spec.ts already works around). These decoys
   // keep both lists at length > 1 so the trimmed mobile post-creation test's manual-select
   // flow actually exercises the real Combobox interaction instead of a pre-filled field.
@@ -135,7 +135,7 @@ test.describe("admin on a mobile viewport (390px): dashboard, categories, media 
     page,
   }) => {
     await loginAsAdmin(page);
-    await page.goto("/admin/projects/new");
+    await page.goto("/admin/posts/new");
 
     await page.getByLabel("title").fill("E2E Mobile New Post");
 

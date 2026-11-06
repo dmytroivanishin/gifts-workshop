@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       // closest ANCESTOR's own template (the root layout's) — so with `default` here, this value
       // (already a complete site title) was being wrapped twice, producing a doubled title like
       // "X | Site | Site". `absolute` provides the same fallback for this route's own children
-      // (the project page) without being re-wrapped itself.
+      // (the post page) without being re-wrapped itself.
       absolute: title || "Мастерская подарков | Kind Gifts",
       template: isEn ? process.env.SITE_TEMPLATE_EN || "%s | Kind Gifts" : process.env.SITE_TEMPLATE_RU || "%s | Мастерская подарков"
     },

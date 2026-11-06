@@ -3,7 +3,7 @@ import { adminContext } from "../../api/helpers/auth";
 import { createCategory, createCollection, createColor, createMedia } from "../../api/helpers/fixtures";
 import { mediumPng } from "../../api/helpers/images";
 
-const FILE_KEY = "e2e-project-detail";
+const FILE_KEY = "e2e-post-detail";
 
 async function createPublishedPostWithGallery(
   admin: APIRequestContext,
@@ -24,7 +24,7 @@ async function createPublishedPostWithGallery(
   return body.data;
 }
 
-test.describe("public project page: fullscreen gallery, comment form, next/image", () => {
+test.describe("public post page: fullscreen gallery, comment form, next/image", () => {
   let admin: APIRequestContext;
   let collection: Awaited<ReturnType<typeof createCollection>>;
   let color: Awaited<ReturnType<typeof createColor>>;
@@ -64,7 +64,7 @@ test.describe("public project page: fullscreen gallery, comment form, next/image
   });
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/en/projects/${post.slug}`);
+    await page.goto(`/en/posts/${post.slug}`);
     await page.evaluate(() => localStorage.clear());
     await page.reload();
   });

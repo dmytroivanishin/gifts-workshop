@@ -5,7 +5,7 @@ import { tinyPng } from "../../api/helpers/images";
 
 const FILE_KEY = "e2e-home";
 
-test.describe("public homepage: infinite scroll, category filter, search, favorites", () => {
+test.describe("public homepage: infinite scroll, category filter, favorites", () => {
   let admin: APIRequestContext;
   let collection: Awaited<ReturnType<typeof createCollection>>;
   let color: Awaited<ReturnType<typeof createColor>>;
@@ -136,13 +136,6 @@ test.describe("public homepage: infinite scroll, category filter, search, favori
     await expect(page.getByText("E2E Home B1")).not.toBeVisible();
   });
 
-  test("search narrows the grid to matching posts only", async ({ page }) => {
-    await page.reload();
-    await page.getByPlaceholder("search_placeholder").fill("E2E Home A2");
-    await expect(page.getByText("E2E Home A2", { exact: true })).toBeVisible();
-    await expect(page.getByText("E2E Home A1", { exact: true })).not.toBeVisible();
-  });
-
   test("liking a post and toggling favorites-only narrows the grid to just that post", async ({ page }) => {
     await page.reload();
     // B4 (most recently created) is guaranteed to be on page 1 without scrolling; A1 is not
@@ -158,7 +151,7 @@ test.describe("public homepage: infinite scroll, category filter, search, favori
     await expect(page.getByText("E2E Home B1")).not.toBeVisible();
 
     // Persisted in localStorage, not just component state.
-    const liked = await page.evaluate(() => localStorage.getItem("liked_projects"));
+    const liked = await page.evaluate(() => localStorage.getItem("liked_posts"));
     expect(JSON.parse(liked ?? "[]")).toContain(postsB[3].id);
   });
 

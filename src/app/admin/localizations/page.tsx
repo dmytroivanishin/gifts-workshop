@@ -137,7 +137,7 @@ export default function AdminLocalizations() {
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-2">
             {[
-              { id: "post", label: t("projects") || "Projects" },
+              { id: "post", label: t("posts") || "Posts" },
               { id: "category", label: t("categories") || "Categories" },
               { id: "tag", label: t("tags") || "Tags" },
               { id: "collection", label: t("collections") || "Коллекции" },

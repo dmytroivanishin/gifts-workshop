@@ -1,23 +1,5 @@
 [
   {
-    "id": "5d91b84c-1936-41c9-8ee4-a5f0e2fe6f6f",
-    "content": {
-      "en": "Admin Panel",
-      "ru": "Панель Администратора"
-    },
-    "area": "admin",
-    "code": "admin_panel"
-  },
-  {
-    "id": "fb53f674-57ff-4678-953c-9cada8ab5218",
-    "content": {
-      "en": "Search by title or description...",
-      "ru": "Поиск по названию или описанию..."
-    },
-    "area": "public",
-    "code": "search_placeholder"
-  },
-  {
     "id": "c4e9019b-33c2-481b-8c42-77b9f5c2288f",
     "content": {
       "en": "Made to Order",
@@ -51,7 +33,7 @@
       "ru": "Работы не найдены. Попробуйте изменить параметры поиска."
     },
     "area": "public",
-    "code": "no_projects_found"
+    "code": "no_posts_found"
   },
   {
     "id": "06fd2c4b-f2f6-4db5-9566-38a5c8cb0674",
@@ -96,7 +78,7 @@
       "ru": "Смотреть работу"
     },
     "area": "shared",
-    "code": "view_project"
+    "code": "view_post"
   },
   {
     "id": "503fca71-0b27-4d1a-8183-efcb65f6eba9",
@@ -366,7 +348,7 @@
       "ru": "Работы"
     },
     "area": "admin",
-    "code": "projects"
+    "code": "posts"
   },
   {
     "id": "9232c9ee-475a-4aa2-9863-5a67165e7f56",
@@ -375,7 +357,7 @@
       "ru": "Управление работами"
     },
     "area": "admin",
-    "code": "projects_manager"
+    "code": "posts_manager"
   },
   {
     "id": "ab264016-3605-4a8c-bae8-67492d090992",
@@ -618,7 +600,7 @@
       "ru": "Добавить работу"
     },
     "area": "admin",
-    "code": "add_project"
+    "code": "add_post"
   },
   {
     "id": "3b2a7cf4-f70c-45c8-9bb4-5326528d00f8",
@@ -627,7 +609,7 @@
       "ru": "Поиск работ..."
     },
     "area": "admin",
-    "code": "search_projects"
+    "code": "search_posts"
   },
   {
     "id": "9a51b806-cec3-44e2-bb2e-a7caecaa6b15",
@@ -663,7 +645,7 @@
       "ru": "Загрузка работ..."
     },
     "area": "admin",
-    "code": "loading_projects"
+    "code": "loading_posts"
   },
   {
     "id": "048abf46-b239-49dc-8a83-3d03a40a898d",
@@ -672,7 +654,7 @@
       "ru": "Работы не найдены."
     },
     "area": "admin",
-    "code": "no_projects"
+    "code": "no_posts"
   },
   {
     "id": "bc5da684-4757-49ee-ab90-ef3d356fe3a3",
@@ -690,7 +672,7 @@
       "ru": "Загрузка работ..."
     },
     "area": "admin",
-    "code": "loading_more_projects"
+    "code": "loading_more_posts"
   },
   {
     "id": "4165f0ed-a8bb-4db0-8b4b-c8132e14d29b",
@@ -990,42 +972,6 @@
     "code": "key"
   },
   {
-    "id": "829816ca-559a-4c29-a54c-eba5cd97c2e3",
-    "content": {
-      "en": "Translation (RU)",
-      "ru": "Перевод (RU)"
-    },
-    "area": "admin",
-    "code": "translation_ru"
-  },
-  {
-    "id": "45d5baec-d8b6-4906-a5a3-359887b4b6f5",
-    "content": {
-      "en": "Translation (EN)",
-      "ru": "Перевод (EN)"
-    },
-    "area": "admin",
-    "code": "translation_en"
-  },
-  {
-    "id": "b4a78a9e-d35f-42d2-bf40-adce8bbb0cc3",
-    "content": {
-      "en": "Loading translations...",
-      "ru": "Загрузка переводов..."
-    },
-    "area": "admin",
-    "code": "loading_translations"
-  },
-  {
-    "id": "3b88438b-fe57-4f00-8aca-a174a046c378",
-    "content": {
-      "en": "No translation keys found.",
-      "ru": "Строки переводов не найдены."
-    },
-    "area": "admin",
-    "code": "no_translations"
-  },
-  {
     "id": "3a7c24e3-b593-46cd-849e-967ae4c48dbc",
     "content": {
       "en": "Manage catalog collections.",
@@ -1149,7 +1095,7 @@
       "ru": "Редактировать проект"
     },
     "area": "admin",
-    "code": "edit_project"
+    "code": "edit_post"
   },
   {
     "id": "d0f5ba08-71fd-42a5-b8a3-a3f1012d05db",
@@ -1158,7 +1104,7 @@
       "ru": "Создать проект"
     },
     "area": "admin",
-    "code": "create_project"
+    "code": "create_post"
   },
   {
     "id": "83a1099e-9712-4783-9278-72da3ababdd5",
@@ -1167,7 +1113,7 @@
       "ru": "Изменение деталей существующего проекта."
     },
     "area": "admin",
-    "code": "edit_project_subtitle"
+    "code": "edit_post_subtitle"
   },
   {
     "id": "2db735fa-cffe-4a62-8070-c0377594ea68",
@@ -1176,7 +1122,7 @@
       "ru": "Добавление новой работы ручной работы в каталог портфолио."
     },
     "area": "admin",
-    "code": "create_project_subtitle"
+    "code": "create_post_subtitle"
   },
   {
     "id": "75f7e2cf-0157-4e07-9075-543b638f7a2f",
@@ -1185,7 +1131,7 @@
       "ru": "Название проекта..."
     },
     "area": "admin",
-    "code": "placeholder_project_title"
+    "code": "placeholder_post_title"
   },
   {
     "id": "ec3e28ec-db41-424c-9ff8-93b289ca4372",
@@ -1212,7 +1158,7 @@
       "ru": "Описание проекта..."
     },
     "area": "admin",
-    "code": "placeholder_project_desc"
+    "code": "placeholder_post_desc"
   },
   {
     "id": "55fecccb-b89b-45d2-b605-e897a67d9d99",
@@ -1458,15 +1404,6 @@
     "code": "status_label"
   },
   {
-    "id": "eb089b8f-e217-403c-8c0f-5c424ff7c359",
-    "content": {
-      "en": "Checking translation...",
-      "ru": "Проверка перевода..."
-    },
-    "area": "admin",
-    "code": "checking_translation"
-  },
-  {
     "id": "738db2ed-9214-42d8-ac10-d008766137e5",
     "content": {
       "en": "Fully translated (RU/EN)",
@@ -1474,24 +1411,6 @@
     },
     "area": "admin",
     "code": "translated_fully"
-  },
-  {
-    "id": "cd041c85-aa70-418d-b806-d458f64ff4db",
-    "content": {
-      "en": "Missing English translation",
-      "ru": "Отсутствует английский перевод"
-    },
-    "area": "admin",
-    "code": "missing_en_translation"
-  },
-  {
-    "id": "a3824713-5b36-4d58-a2db-63f1ab404b8e",
-    "content": {
-      "en": "Russian translation",
-      "ru": "Русский перевод"
-    },
-    "area": "admin",
-    "code": "russian_translation"
   },
   {
     "id": "5fa07472-cabc-4fde-8ceb-f019097afa0d",
@@ -1510,15 +1429,6 @@
     },
     "area": "admin",
     "code": "placeholder_desc_ru"
-  },
-  {
-    "id": "34fb1119-cb9a-42d0-9525-7127bd5b6ae8",
-    "content": {
-      "en": "English translation",
-      "ru": "Английский перевод"
-    },
-    "area": "admin",
-    "code": "english_translation"
   },
   {
     "id": "c21a3bc3-5423-41a1-bc6b-5de176219fb0",
@@ -1690,15 +1600,6 @@
     },
     "area": "admin",
     "code": "missing_translation"
-  },
-  {
-    "id": "975dd285-c5d0-4990-90f8-bb1a37f57d57",
-    "content": {
-      "en": "Manage Languages",
-      "ru": "Управление языками"
-    },
-    "area": "admin",
-    "code": "manage_languages"
   },
   {
     "id": "f981ad71-9b93-4fda-a6b0-eb8258182bf2",
@@ -2058,7 +1959,7 @@
       "en": "Project not found"
     },
     "area": "public",
-    "code": "project_not_found"
+    "code": "post_not_found"
   },
   {
     "id": "ee0869c9-9081-445f-a493-ddb79710b661",
@@ -2067,7 +1968,7 @@
       "en": "The requested project does not exist or has been deleted."
     },
     "area": "public",
-    "code": "project_not_found_desc"
+    "code": "post_not_found_desc"
   },
   {
     "id": "ad21477c-6cb8-4294-ab9f-745ab02b39da",
@@ -2104,15 +2005,6 @@
     },
     "area": "admin",
     "code": "select_date"
-  },
-  {
-    "id": "9890decd-ba0f-40e0-b118-84953bfc609d",
-    "content": {
-      "ru": "Переключить язык",
-      "en": "Switch language"
-    },
-    "area": "admin",
-    "code": "switch_language"
   },
   {
     "id": "c79f5228-8653-4c9e-81c1-cf4cb1a93c48",

@@ -9,7 +9,7 @@ import { logger } from "@/modules/logger";
 
 const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-interface ProjectLayoutProps {
+interface PostLayoutProps {
   children: React.ReactNode;
   params: Promise<{ locale: string, slug: string }>;
 }
@@ -17,7 +17,7 @@ interface ProjectLayoutProps {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string, slug: string }> }): Promise<Metadata> {
   const { locale, slug } = await params;
   const isEn = locale === 'en';
-  
+
   try {
     // The page metadata is server-rendered into the HTML, so unpublished posts must be filtered here as well.
     // getVisiblePostBySlugOrId is React.cache()'d, so this and the page's own lookup of the same slug
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
     if (!post) {
       return {
-        title: isEn ? process.env.SITE_PROJECT_NOT_FOUND_EN || "Project not found" : process.env.SITE_PROJECT_NOT_FOUND_RU || "Проект не найден",
+        title: isEn ? env.SITE_POST_NOT_FOUND_EN || "Project not found" : env.SITE_POST_NOT_FOUND_RU || "Проект не найден",
       };
     }
 
@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       }
     }
 
-    const projectSlug = post.slug || slug;
+    const postSlug = post.slug || slug;
 
     return {
       title: titleText,
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       openGraph: {
         title: title,
         description: description,
-        url: `${appUrl}/${locale}/projects/${projectSlug}`,
+        url: `${appUrl}/${locale}/posts/${postSlug}`,
         siteName: siteName,
         images: [
           {
@@ -69,15 +69,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         type: "article",
       },
       alternates: {
-        canonical: `${appUrl}/${locale}/projects/${projectSlug}`,
+        canonical: `${appUrl}/${locale}/posts/${postSlug}`,
         languages: {
           ...env.SUPPORTED_LOCALES.reduce((acc, l) => {
-            acc[l] = `${appUrl}/${l}/projects/${projectSlug}`;
+            acc[l] = `${appUrl}/${l}/posts/${postSlug}`;
             return acc;
           }, {} as Record<string, string>),
           // Matches proxy.ts's own fallback for a visitor with no saved locale and no matching
           // Accept-Language (NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC, "en" by default).
-          'x-default': `${appUrl}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC || "en"}/projects/${projectSlug}`,
+          'x-default': `${appUrl}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC || "en"}/posts/${postSlug}`,
         },
       },
       twitter: {
@@ -93,12 +93,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   }
 }
 
-export default async function ProjectLayout({ children, params }: ProjectLayoutProps) {
+export default async function PostLayout({ children, params }: PostLayoutProps) {
   const { locale, slug } = await params;
   if (isUUID(slug)) {
     const post = await getVisiblePostBySlugOrId(slug);
     if (post && post.slug) {
-      redirect(`/${locale}/projects/${post.slug}`);
+      redirect(`/${locale}/posts/${post.slug}`);
     }
   }
   return <>{children}</>;
