@@ -153,8 +153,12 @@ export default function AdminMedia() {
           await uploadMedia(formData).unwrap();
           anySucceeded = true;
         } catch (err: unknown) {
+          // No dispatch(addNotification(...)) here: notificationMiddleware.ts already toasts
+          // every rejected RTK Query mutation app-wide (isRejectedWithValue), including this one
+          // — a toast dispatched here too was a duplicate of that one, not a second real error.
+          // This block only needs to feed the inline uploadIssues panel.
           const errorData = (err as ApiMutationError)?.data;
-          const errorCode = errorData?.error?.code || 'UPLOAD_FAILED';
+          const errorCode = errorData?.error?.code;
 
           if (errorCode === 'DUPLICATE_MEDIA') {
             const existingMediaName = errorData?.error?.details?.find(
@@ -164,12 +168,6 @@ export default function AdminMedia() {
           } else {
             setUploadIssues(prev => [...prev, { fileName: files[i].name, kind: 'failed' }]);
           }
-
-          dispatch(addNotification({
-            type: 'error',
-            messageKey: errorCode,
-            details: errorData?.error?.message || 'Upload failed'
-          }));
         }
       }
 
