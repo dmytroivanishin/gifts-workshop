@@ -237,8 +237,13 @@ export const api = createApi({
        }),
        invalidatesTags: ["Collection", "Post", "Category"],
      }),
-     getMedia: builder.query<{ data: Media[] }, void>({
-       query: () => "/media",
+     getMedia: builder.query<{ data: Media[] }, { search?: string } | void>({
+       query: (params) => {
+         const urlParams = new URLSearchParams();
+         if (params?.search) urlParams.append("search", params.search);
+         const qs = urlParams.toString();
+         return qs ? `/media?${qs}` : "/media";
+       },
        providesTags: ["Media"],
      }),
      uploadMedia: builder.mutation<{ data: Media }, FormData>({

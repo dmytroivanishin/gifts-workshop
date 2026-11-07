@@ -42,7 +42,11 @@ export interface ICollectionRepository extends IBaseRepository<Collection> {
 
 export interface IColorRepository extends IBaseRepository<Color> {}
 
-export interface IMediaRepository extends IBaseRepository<Media> {}
+export interface MediaQueryOptions extends PaginationOptions {
+  search?: string;
+}
+
+export interface IMediaRepository extends IBaseRepository<Media, Media, MediaQueryOptions> {}
 
 export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, QueryOptions> {
   getBySlug(slug: string): Promise<PopulatedPost | undefined>;

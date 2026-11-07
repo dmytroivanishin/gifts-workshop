@@ -2077,5 +2077,14 @@
     },
     "area": "admin",
     "code": "content_label"
+  },
+  {
+    "id": "98689b6d-e4bc-4153-b441-d7107d60cca6",
+    "content": {
+      "en": "Search media by name...",
+      "ru": "Поиск медиа по имени..."
+    },
+    "area": "admin",
+    "code": "placeholder_search_media"
   }
 ]

@@ -115,7 +115,7 @@ export async function createMedia(
   admin: APIRequestContext,
   buffer?: Buffer,
   opts: { filename?: string; mimeType?: string } = {}
-): Promise<{ id: string; originalUrl: string; thumbnailUrl: string; orientation: string } & Cleanup> {
+): Promise<{ id: string; originalUrl: string; thumbnailUrl: string; orientation: string; displayName: string } & Cleanup> {
   const fileBuffer = buffer ?? (await tinyPng());
   const res = await admin.post("/api/v1/media", {
     multipart: {

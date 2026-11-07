@@ -1,6 +1,6 @@
-import { IMediaRepository, IPostRepository } from "@/repositories/interfaces";
+import { IMediaRepository, IPostRepository, MediaQueryOptions } from "@/repositories/interfaces";
 import { IMediaService } from "./interfaces";
-import { Media, PaginatedResult, PaginationOptions } from "@/types";
+import { Media, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
 import { paginate } from "./pagination";
 import { ConflictError } from "@/common/errors/conflict";
@@ -13,17 +13,26 @@ export class MediaService implements IMediaService {
     private postRepo: IPostRepository
   ) { }
 
-  async getAllMedia(options?: PaginationOptions): Promise<PaginatedResult<Media>> {
-    const page = options?.page || 1;
-    const limit = options?.limit || 20;
+  async getAllMedia(options?: MediaQueryOptions): Promise<PaginatedResult<Media>> {
+    // Same "no page/limit args = everything" convention as tagService/categoryService: the
+    // admin media library has never been paginated (it loads the whole list), only `search`
+    // narrows it. A caller that does pass page/limit still gets real pagination.
+    if (options?.page || options?.limit) {
+      const page = options.page || 1;
+      const limit = options.limit || 20;
 
-    const mediaList = await this.mediaRepo.getAll({
-      page,
-      limit: limit + 1,
-      offset: (page - 1) * limit,
-    });
+      const mediaList = await this.mediaRepo.getAll({
+        page,
+        limit: limit + 1,
+        offset: (page - 1) * limit,
+        search: options.search,
+      });
 
-    return paginate(mediaList, { page, limit });
+      return paginate(mediaList, { page, limit });
+    }
+
+    const mediaList = await this.mediaRepo.getAll({ search: options?.search });
+    return paginate(mediaList, { page: 1, limit: mediaList.length });
   }
 
   async uploadAndSaveMedia(buffer: Buffer, _mimeType: string, userId: string): Promise<Media> {

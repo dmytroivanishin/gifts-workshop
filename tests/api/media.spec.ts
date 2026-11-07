@@ -111,6 +111,45 @@ test.describe("media", () => {
     await expectError(await admin.delete("/api/v1/media/00000000-0000-0000-0000-000000000000"), 404);
   });
 
+  // CP-50: media gained an optional `search` param on the display name (same escape-then-ILIKE
+  // convention as tags/posts). displayName is server-generated (not client-controllable), so
+  // these tests search by a real fragment of the generated name instead of a planted marker.
+  test("search matches a partial, case-insensitive substring of the generated name", async () => {
+    const media = await createMedia(admin);
+    const partialUpper = media.displayName.slice(0, Math.min(4, media.displayName.length)).toUpperCase();
+
+    const res = await expectSuccess<Array<{ id: string }>>(
+      await admin.get(`/api/v1/media?search=${encodeURIComponent(partialUpper)}`)
+    );
+    expect(res.data.map((m) => m.id)).toContain(media.id);
+
+    const noMatch = await expectSuccess<Array<{ id: string }>>(
+      // Digits can never appear in a generated display name (letters-only), so this is a safe,
+      // deterministic non-match regardless of what this run's real name happens to be.
+      await admin.get("/api/v1/media?search=zzz-not-a-real-match-9999")
+    );
+    expect(noMatch.data.map((m) => m.id)).not.toContain(media.id);
+
+    await media.cleanup();
+  });
+
+  test("search escapes a literal % instead of treating it as a SQL wildcard", async () => {
+    const media = await createMedia(admin);
+    const name = media.displayName;
+    const prefix = name.slice(0, 3);
+    const suffix = name.slice(3);
+    // If the inner "%" were passed straight into ILIKE unescaped, it would act as "zero or more
+    // characters" and this pattern would still match `name` itself (prefix + anything + suffix,
+    // trivially satisfied since name === prefix + suffix with nothing in between). Escaping
+    // forces a literal match against a "%" character that no display name actually contains.
+    const res = await expectSuccess<Array<{ id: string }>>(
+      await admin.get(`/api/v1/media?search=${encodeURIComponent(`${prefix}%${suffix}`)}`)
+    );
+    expect(res.data.map((m) => m.id)).not.toContain(media.id);
+
+    await media.cleanup();
+  });
+
   // CP-40: media gained a created_at column + desc(createdAt) ordering (previously no
   // deterministic order at all). Relative index, not an absolute first position, so a concurrent
   // upload from another spec file running in a different worker can't make this flaky.

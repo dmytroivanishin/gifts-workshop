@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, Trash2, Loader2 } from "lucide-react";
+import { Upload, Trash2, Loader2, Search } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
@@ -31,8 +31,9 @@ export default function AdminMedia() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStats, setUploadStats] = useState({ total: 0, current: 0 });
   const [failedFiles, setFailedFiles] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
 
-  const { data: mediaData, isLoading } = useGetMediaQuery();
+  const { data: mediaData, isLoading } = useGetMediaQuery(search ? { search } : undefined);
   const [uploadMedia] = useUploadMediaMutation();
   const [deleteMedia] = useDeleteMediaMutation();
   const {
@@ -195,6 +196,18 @@ export default function AdminMedia() {
             </ul>
           </div>
         )}
+      </div>
+
+      {/* Search */}
+      <div className="relative w-full sm:max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t("placeholder_search_media")}
+          className="w-full pl-9 pr-4 py-2.5 sm:py-2 rounded-lg border border-border bg-transparent font-sans text-sm outline-none focus:border-primary"
+        />
       </div>
 
       {/* Media Grid */}

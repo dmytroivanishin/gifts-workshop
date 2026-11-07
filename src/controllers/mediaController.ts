@@ -14,7 +14,8 @@ export class MediaController {
 
   getMedia = withErrorHandling(async (request: Request) => {
     const { page, limit } = getPaginationParams(request);
-    const result = await this.mediaService.getAllMedia({ page, limit });
+    const search = new URL(request.url).searchParams.get("search") ?? undefined;
+    const result = await this.mediaService.getAllMedia({ page, limit, search });
     return sendSuccess(result.data, result.meta);
   });
 

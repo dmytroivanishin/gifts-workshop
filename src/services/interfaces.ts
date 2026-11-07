@@ -1,6 +1,6 @@
 import { Collection, Color, LocalizedText, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment, PopulatedCategory, PopulatedPost } from "@/types";
 
-import { QueryOptions, TagQueryOptions } from "@/repositories/interfaces";
+import { QueryOptions, TagQueryOptions, MediaQueryOptions } from "@/repositories/interfaces";
 
 export interface ICategoryService {
   getAllCategories(options?: PaginationOptions): Promise<PaginatedResult<PopulatedCategory>>;
@@ -31,7 +31,7 @@ export interface IColorService {
 }
 
 export interface IMediaService {
-  getAllMedia(options?: PaginationOptions): Promise<PaginatedResult<Media>>;
+  getAllMedia(options?: MediaQueryOptions): Promise<PaginatedResult<Media>>;
   getMediaById(id: string): Promise<Media | undefined>;
   saveMedia(body: Omit<Media, "id" | "userId" | "displayName"> & { id?: string; userId?: string }): Promise<Media>;
   uploadAndSaveMedia(buffer: Buffer, mimeType: string, userId: string): Promise<Media>;

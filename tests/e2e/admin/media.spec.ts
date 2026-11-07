@@ -102,6 +102,50 @@ test.describe("admin media: real file upload, failed-filename list, delete via C
     }
   });
 
+  test("search filters the grid to media whose display name matches, and un-filters when cleared", async ({
+    page,
+  }) => {
+    const grid = page.locator("div.group.relative.bg-card");
+    const before = await grid.count();
+
+    const [uploadResponse] = await Promise.all([
+      page.waitForResponse(
+        (res) => res.url().includes("/api/v1/media") && res.request().method() === "POST" && res.ok()
+      ),
+      page.locator('input[type="file"]').setInputFiles({
+        name: `e2e-media-search-${Date.now()}.png`,
+        mimeType: "image/png",
+        buffer: await tinyPng(),
+      }),
+    ]);
+    const uploaded = (await uploadResponse.json()).data as { id: string; displayName: string };
+    await expect(grid).toHaveCount(before + 1, { timeout: 15_000 });
+
+    const card = page.getByTestId(`media-card-${uploaded.id}`);
+    // No seeded system_texts in the test DB, so t() falls back to the raw key — the same
+    // convention every other admin e2e test already relies on (placeholder_search_tags, etc).
+    const search = page.getByPlaceholder("placeholder_search_media");
+
+    // The exact generated name, case-flipped partway through: proves both the partial-substring
+    // match and the case-insensitivity in one query, without needing a planted marker (the real
+    // name is server-generated and not client-controllable).
+    const mixedCase = uploaded.displayName.slice(0, 3).toUpperCase() + uploaded.displayName.slice(3);
+    await search.fill(mixedCase);
+    await expect(card).toBeVisible({ timeout: 10_000 });
+
+    // A search that can never match (display names are letters-only) hides it.
+    await search.fill("zzz-not-a-real-match-9999");
+    await expect(card).not.toBeVisible({ timeout: 10_000 });
+
+    // Clearing the search brings the full grid back.
+    await search.fill("");
+    await expect(grid).toHaveCount(before + 1, { timeout: 10_000 });
+
+    await card.locator("button").click();
+    await page.getByTestId("confirm-modal-confirm").click();
+    await expect(grid).toHaveCount(before, { timeout: 15_000 });
+  });
+
   test("selecting more files than NEXT_PUBLIC_MAX_FILES_PER_UPLOAD rejects the whole batch up front", async ({
     page,
   }) => {
