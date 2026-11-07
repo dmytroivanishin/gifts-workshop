@@ -133,6 +133,33 @@ export class StorageService {
       )
     );
   }
+
+  /**
+   * Bulk-delete counterpart to deleteImage: one native S3 Multi-Object Delete call
+   * (minioClient.removeObjects, already supported by the installed minio client) instead of a
+   * per-row removeObject loop. Best-effort, same as deleteImage — the DB rows are already gone by
+   * the time this runs, so a MinIO failure is logged, not thrown.
+   */
+  async deleteImages(items: { originalUrl: string; thumbnailUrl: string }[]): Promise<void> {
+    const prefix = `${PUBLIC_BASE_URL}/`;
+    const keys = new Set<string>();
+    for (const { originalUrl, thumbnailUrl } of items) {
+      for (const url of [originalUrl, thumbnailUrl]) {
+        if (url && url.startsWith(prefix)) keys.add(url.slice(prefix.length));
+      }
+    }
+    if (keys.size === 0) return;
+
+    try {
+      const results = await minioClient.removeObjects(BUCKET_NAME, [...keys]);
+      const failures = results.filter((r) => r?.Error);
+      if (failures.length > 0) {
+        logger.error("Some media objects failed to remove from MinIO", { code: "MINIO_DELETE_FAILED", failures });
+      }
+    } catch (error) {
+      logger.error("Failed to batch-remove media objects from MinIO", { code: "MINIO_DELETE_FAILED", error });
+    }
+  }
 }
 
 export const storageService = new StorageService();

@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { test, expect, APIRequestContext } from "@playwright/test";
 import { adminContext, anonContext } from "./helpers/auth";
 import { expectSuccess, expectError } from "./helpers/client";
@@ -101,6 +102,67 @@ test.describe("media", () => {
 
     await post.cleanup();
     await expectSuccess(await admin.delete(`/api/v1/media/${media.id}`));
+  });
+
+  // CP-50 point 1: bulk delete. One batched POST, not a per-id loop on either side — these tests
+  // prove the in-use protection carries over to the batch unchanged (an id used as a poster is
+  // reported back as blocked, never silently force-deleted), that the rest of the batch still
+  // deletes, and that the request is validated/gated the same way every other write is.
+  test("bulk delete removes every requested id in one request, reported back as deleted", async () => {
+    const a = await createMedia(admin);
+    const b = await createMedia(admin);
+
+    try {
+      const res = await expectSuccess<{ deleted: string[]; blocked: { id: string; reason: string }[] }>(
+        await admin.post("/api/v1/media/bulk-delete", { data: { ids: [a.id, b.id] } })
+      );
+      expect(res.data.deleted.sort()).toEqual([a.id, b.id].sort());
+      expect(res.data.blocked).toEqual([]);
+
+      await expectError(await admin.get(`/api/v1/media/${a.id}`), 404);
+      await expectError(await admin.get(`/api/v1/media/${b.id}`), 404);
+    } finally {
+      await a.cleanup();
+      await b.cleanup();
+    }
+  });
+
+  test("bulk delete blocks an id used as a post's poster while still deleting the rest", async () => {
+    const protectedMedia = await createMedia(admin);
+    const freeMedia = await createMedia(admin);
+    const post = await createPost(admin, { status: "Published", posterId: protectedMedia.id });
+
+    try {
+      const res = await expectSuccess<{ deleted: string[]; blocked: { id: string; reason: string }[] }>(
+        await admin.post("/api/v1/media/bulk-delete", { data: { ids: [protectedMedia.id, freeMedia.id] } })
+      );
+      expect(res.data.deleted).toEqual([freeMedia.id]);
+      expect(res.data.blocked).toEqual([{ id: protectedMedia.id, reason: "MEDIA_IN_USE" }]);
+
+      // Never silently force-deleted: the protected row is still there afterward.
+      await expectSuccess(await admin.get(`/api/v1/media/${protectedMedia.id}`));
+      await expectError(await admin.get(`/api/v1/media/${freeMedia.id}`), 404);
+    } finally {
+      await post.cleanup();
+      await protectedMedia.cleanup();
+      await freeMedia.cleanup();
+    }
+  });
+
+  test("bulk delete validates its body: empty or oversized ids arrays are a clean 400", async () => {
+    await expectError(await admin.post("/api/v1/media/bulk-delete", { data: { ids: [] } }), 400, "VALIDATION_ERROR");
+
+    const tooMany = Array.from({ length: 501 }, () => crypto.randomUUID());
+    await expectError(await admin.post("/api/v1/media/bulk-delete", { data: { ids: tooMany } }), 400, "VALIDATION_ERROR");
+  });
+
+  test("bulk delete requires admin", async () => {
+    const media = await createMedia(admin);
+    try {
+      await expectError(await anon.post("/api/v1/media/bulk-delete", { data: { ids: [media.id] } }), 401);
+    } finally {
+      await media.cleanup();
+    }
   });
 
   test("a non-UUID id on GET/DELETE is a clean 404", async () => {

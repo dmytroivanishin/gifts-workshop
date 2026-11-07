@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, Trash2, Loader2, Search } from "lucide-react";
+import { Upload, Trash2, Loader2, Search, Check } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import { useDispatch } from "react-redux";
 import { addNotification } from "@/store/slices/notificationSlice";
-import { useGetMediaQuery, useUploadMediaMutation, useDeleteMediaMutation } from "@/store/api";
+import {
+  useGetMediaQuery,
+  useUploadMediaMutation,
+  useDeleteMediaMutation,
+  useBulkDeleteMediaMutation,
+} from "@/store/api";
 import { ApiMutationError } from "@/types";
 import { handleImageLoadError } from "@/utils/mediaPlaceholder";
 
@@ -32,10 +37,13 @@ export default function AdminMedia() {
   const [uploadStats, setUploadStats] = useState({ total: 0, current: 0 });
   const [failedFiles, setFailedFiles] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
   const { data: mediaData, isLoading } = useGetMediaQuery(search ? { search } : undefined);
   const [uploadMedia] = useUploadMediaMutation();
   const [deleteMedia] = useDeleteMediaMutation();
+  const [bulkDeleteMedia, { isLoading: isBulkDeleting }] = useBulkDeleteMediaMutation();
   const {
     isOpen: isDeleteOpen,
     handleDeleteClick,
@@ -56,6 +64,47 @@ export default function AdminMedia() {
     },
     closeOnError: true,
   });
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    try {
+      const result = await bulkDeleteMedia(ids).unwrap();
+      const { deleted, blocked } = result.data;
+      setIsBulkDeleteOpen(false);
+      setSelectedIds(new Set());
+
+      if (blocked.length > 0) {
+        dispatch(addNotification({
+          type: deleted.length > 0 ? 'warning' : 'error',
+          messageKey: 'media_bulk_partial',
+          details: `Deleted ${deleted.length} of ${ids.length}; ${blocked.length} skipped because they're used in a post.`,
+        }));
+      } else {
+        dispatch(addNotification({ type: 'success', messageKey: 'media_bulk_deleted' }));
+      }
+    } catch (err: unknown) {
+      setIsBulkDeleteOpen(false);
+      const errorData = (err as ApiMutationError)?.data;
+      const errorCode = errorData?.error?.code || 'DELETE_FAILED';
+      dispatch(addNotification({
+        type: 'error',
+        messageKey: errorCode,
+        details: errorData?.error?.message || 'Failed to delete selected media'
+      }));
+    }
+  };
 
   const media: MediaItem[] = (mediaData?.data || []).map((m) => ({
     id: m.id,
@@ -210,6 +259,36 @@ export default function AdminMedia() {
         />
       </div>
 
+      {/* Bulk-selection action bar */}
+      {selectedIds.size > 0 && (
+        <div
+          data-test-id="bulk-action-bar"
+          className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3"
+        >
+          <span className="text-sm font-medium text-foreground">
+            {selectedIds.size} {t("items_selected")}
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="px-3 py-1.5 rounded-lg border border-border text-foreground hover:bg-muted font-medium text-xs transition-colors cursor-pointer"
+            >
+              {t("cancel") || "Cancel"}
+            </button>
+            <button
+              type="button"
+              data-test-id="bulk-delete-button"
+              onClick={() => setIsBulkDeleteOpen(true)}
+              className="px-3 py-1.5 rounded-lg border border-destructive/20 hover:border-destructive bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+            >
+              <Trash2 size={14} />
+              {t("delete_selected")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Media Grid */}
       {isLoading ? (
         <div className="flex justify-center items-center py-20 text-muted-foreground">
@@ -217,9 +296,38 @@ export default function AdminMedia() {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {media.map((item) => (
-            <div key={item.id} data-test-id={`media-card-${item.id}`} className="group relative bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm flex flex-col justify-between">
+          {media.map((item) => {
+            const isSelected = selectedIds.has(item.id);
+            return (
+            <div
+              key={item.id}
+              data-test-id={`media-card-${item.id}`}
+              className={`group relative bg-card rounded-xl border overflow-hidden shadow-sm flex flex-col justify-between transition-all ${
+                isSelected ? "border-primary ring-2 ring-primary/20" : "border-border/40"
+              }`}
+            >
               <div className="aspect-square relative w-full bg-muted overflow-hidden flex items-center justify-center">
+                {/* A <label>+checkbox, not a <button> — every existing media test locates the
+                    card's delete action via card.locator("button"), expecting exactly one; a
+                    second <button> here would make that ambiguous across every test file that
+                    already relies on it. */}
+                <label
+                  data-test-id={`media-select-${item.id}`}
+                  title={t("select") || "Select"}
+                  className={`absolute top-2 left-2 z-10 w-6 h-6 rounded-md border-2 flex items-center justify-center shadow-sm transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "bg-white/80 border-border text-transparent hover:border-primary"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSelect(item.id)}
+                    className="sr-only"
+                  />
+                  <Check size={14} strokeWidth={3} />
+                </label>
                 <img
                   src={item.url}
                   onError={handleImageLoadError}
@@ -244,7 +352,8 @@ export default function AdminMedia() {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
           {media.length === 0 && !isUploading && (
             <div className="col-span-full text-center py-10 text-muted-foreground text-sm">
               {t("no_media") || "No media found. Upload some images!"}
@@ -261,6 +370,17 @@ export default function AdminMedia() {
         cancelText={t("cancel") || "Cancel"}
         onConfirm={handleConfirmDelete}
         onClose={handleDeleteClose}
+      />
+
+      <ConfirmModal
+        isOpen={isBulkDeleteOpen}
+        title={t("media_library")}
+        message={`${selectedIds.size} ${t("items_selected")}. ${t("confirm_bulk_delete_media")}`}
+        confirmText={t("delete_selected")}
+        cancelText={t("cancel") || "Cancel"}
+        onConfirm={handleConfirmBulkDelete}
+        onClose={() => setIsBulkDeleteOpen(false)}
+        isLoading={isBulkDeleting}
       />
     </div>
   );

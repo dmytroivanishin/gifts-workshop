@@ -64,5 +64,18 @@ export class MediaController {
     }
     return sendSuccess({ success: true });
   });
+
+  bulkDeleteMedia = withErrorHandling(async (request: Request) => {
+    const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
+    // A generous sanity ceiling, not a "justify a loop" cap like the old per-request upload
+    // limit — this endpoint is one batched query either way, no matter how many ids are sent.
+    const { ids } = await validateRequest(
+      z.object({ ids: z.array(z.string().uuid()).min(1).max(500) }),
+      rawBody
+    );
+
+    const result = await this.mediaService.bulkDeleteMedia(ids);
+    return sendSuccess(result);
+  });
 }
 

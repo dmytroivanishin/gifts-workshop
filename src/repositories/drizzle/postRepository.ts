@@ -152,6 +152,24 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     return Number(count);
   }
 
+  // Batched version of countByPoster/countGalleryUsage for the bulk-delete path: one query each
+  // across every requested id (not one pair of queries per id in a loop), returning the subset
+  // that's in use either as a poster or a gallery item.
+  async findUsedMediaIds(mediaIds: string[]): Promise<Set<string>> {
+    const validIds = mediaIds.filter(isUUID);
+    if (!validIds.length) return new Set();
+
+    const [posterRows, galleryRows] = await Promise.all([
+      drizzleDatabase.getDb().select({ id: posts.posterId }).from(posts).where(inArray(posts.posterId, validIds)),
+      drizzleDatabase.getDb().select({ id: postsToMedia.mediaId }).from(postsToMedia).where(inArray(postsToMedia.mediaId, validIds)),
+    ]);
+
+    const used = new Set<string>();
+    for (const row of posterRows) if (row.id) used.add(row.id);
+    for (const row of galleryRows) used.add(row.id);
+    return used;
+  }
+
   async getBySlug(slug: string): Promise<PopulatedPost | undefined> {
     const record = await drizzleDatabase.getDb().query.posts.findFirst({
       where: eq(posts.slug, slug),

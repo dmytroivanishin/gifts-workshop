@@ -1,6 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { tinyPng, fakeImageBytes } from "../../api/helpers/images";
+import { adminContext } from "../../api/helpers/auth";
+import { createPost } from "../../api/helpers/fixtures";
 import { loginAsAdmin } from "../helpers/auth";
+
+const FILE_KEY = "e2e-admin-media";
 
 // Makes CP-16b's own ad-hoc Playwright verification (described in prose in CHANGE-PLAN.md —
 // "uploaded one valid PNG and one invalid .txt together through the actual file input, grid
@@ -144,6 +148,73 @@ test.describe("admin media: real file upload, failed-filename list, delete via C
     await card.locator("button").click();
     await page.getByTestId("confirm-modal-confirm").click();
     await expect(grid).toHaveCount(before, { timeout: 15_000 });
+  });
+
+  test("bulk select and delete: a protected card survives, the rest are removed", async ({ page }) => {
+    const grid = page.locator("div.group.relative.bg-card");
+    const before = await grid.count();
+    const admin = await adminContext(FILE_KEY);
+
+    try {
+      const uploadedIds: string[] = [];
+      for (let i = 0; i < 2; i++) {
+        const [uploadResponse] = await Promise.all([
+          page.waitForResponse(
+            (res) => res.url().includes("/api/v1/media") && res.request().method() === "POST" && res.ok()
+          ),
+          page.locator('input[type="file"]').setInputFiles({
+            name: `e2e-media-bulk-${Date.now()}-${i}.png`,
+            mimeType: "image/png",
+            buffer: await tinyPng(),
+          }),
+        ]);
+        uploadedIds.push((await uploadResponse.json()).data.id as string);
+      }
+      await expect(grid).toHaveCount(before + 2, { timeout: 15_000 });
+      const [freeIdA, freeIdB] = uploadedIds;
+
+      // A third media, attached to a published post as its poster through the real API — the same
+      // in-use protection deleteMedia already enforces for a single delete must carry over to the
+      // bulk path unchanged, never silently force-deleted.
+      const protectedMediaRes = await admin.post("/api/v1/media", {
+        multipart: { file: { name: "poster.png", mimeType: "image/png", buffer: await tinyPng() } },
+      });
+      const protectedMedia = (await protectedMediaRes.json()).data as { id: string };
+      const post = await createPost(admin, { status: "Published", posterId: protectedMedia.id });
+
+      try {
+        await page.reload();
+        await expect(grid).toHaveCount(before + 3, { timeout: 15_000 });
+
+        await page.getByTestId(`media-select-${freeIdA}`).click();
+        await page.getByTestId(`media-select-${freeIdB}`).click();
+        await page.getByTestId(`media-select-${protectedMedia.id}`).click();
+
+        const actionBar = page.getByTestId("bulk-action-bar");
+        await expect(actionBar).toBeVisible();
+        await expect(actionBar).toContainText("3");
+
+        await page.getByTestId("bulk-delete-button").click();
+        await page.getByTestId("confirm-modal-confirm").click();
+
+        // Partial result: the two free cards are gone, the protected one survives untouched.
+        await expect(page.getByTestId(`media-card-${freeIdA}`)).not.toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId(`media-card-${freeIdB}`)).not.toBeVisible();
+        await expect(page.getByTestId(`media-card-${protectedMedia.id}`)).toBeVisible();
+        await expect(grid).toHaveCount(before + 1, { timeout: 15_000 });
+
+        // The page's own partial-result notification (this request is a 200 with a mixed
+        // deleted/blocked body, not a rejection the global middleware would toast on its own) —
+        // t() falls back to its raw key in this empty-system_texts test DB, so GlobalToaster shows
+        // the notification's `details` text instead, which is where this real sentence comes from.
+        await expect(page.getByText("skipped because they're used in a post", { exact: false })).toBeVisible();
+      } finally {
+        await post.cleanup();
+        await admin.delete(`/api/v1/media/${protectedMedia.id}`);
+      }
+    } finally {
+      await admin.dispose();
+    }
   });
 
   test("selecting more files than NEXT_PUBLIC_MAX_FILES_PER_UPLOAD rejects the whole batch up front", async ({

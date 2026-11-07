@@ -37,6 +37,7 @@ export interface IMediaService {
   uploadAndSaveMedia(buffer: Buffer, mimeType: string, userId: string): Promise<Media>;
   uploadMedia(file: File, userId: string): Promise<Media>;
   deleteMedia(id: string): Promise<boolean>;
+  bulkDeleteMedia(ids: string[]): Promise<{ deleted: string[]; blocked: { id: string; reason: string }[] }>;
 }
 
 export interface ITagService {

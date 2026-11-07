@@ -261,6 +261,14 @@ export const api = createApi({
        }),
        invalidatesTags: ["Media"],
      }),
+     bulkDeleteMedia: builder.mutation<{ data: { deleted: string[]; blocked: { id: string; reason: string }[] } }, string[]>({
+       query: (ids) => ({
+         url: "/media/bulk-delete",
+         method: "POST",
+         body: { ids },
+       }),
+       invalidatesTags: ["Media"],
+     }),
      getColors: builder.query<{ data: { id: string; color: string }[] }, { page?: number; limit?: number } | void>({
        query: (params) => {
          const urlParams = new URLSearchParams();
@@ -452,6 +460,7 @@ export const api = createApi({
    useGetMediaQuery,
    useUploadMediaMutation,
    useDeleteMediaMutation,
+   useBulkDeleteMediaMutation,
    useGetColorsQuery,
    useCreateColorMutation,
    useUpdateColorMutation,

@@ -2086,5 +2086,41 @@
     },
     "area": "admin",
     "code": "placeholder_search_media"
+  },
+  {
+    "id": "e8f50160-01f7-44e0-8474-cecc5be3c6cb",
+    "content": {
+      "en": "Delete selected",
+      "ru": "Удалить выбранное"
+    },
+    "area": "admin",
+    "code": "delete_selected"
+  },
+  {
+    "id": "708044c0-fee5-4f0d-abed-8dca5256cb2c",
+    "content": {
+      "en": "Are you sure you want to delete the selected files? This can't be undone.",
+      "ru": "Вы уверены, что хотите удалить выбранные файлы? Это действие нельзя отменить."
+    },
+    "area": "admin",
+    "code": "confirm_bulk_delete_media"
+  },
+  {
+    "id": "e3cbffcc-2cc7-42d4-a27e-9b239345e69b",
+    "content": {
+      "en": "Selected files deleted.",
+      "ru": "Выбранные файлы удалены."
+    },
+    "area": "admin",
+    "code": "media_bulk_deleted"
+  },
+  {
+    "id": "4d08d00d-d782-4b3f-b562-f2615f4df022",
+    "content": {
+      "en": "Some files are still in use and were not deleted.",
+      "ru": "Некоторые файлы используются и не были удалены."
+    },
+    "area": "admin",
+    "code": "media_bulk_partial"
   }
 ]

@@ -114,4 +114,14 @@ export abstract class DrizzleBaseRepository<
     const result = await drizzleDatabase.getDb().delete(this.table).where(eq(this.table.id, id)).returning({ id: this.table.id });
     return result.length > 0;
   }
+
+  // One DELETE ... WHERE id IN (...) instead of a per-id loop; returns only the ids that actually
+  // existed and were removed, so a caller can tell a real deletion apart from a no-op on a
+  // nonexistent id without a separate existence check.
+  async deleteMany(ids: string[]): Promise<string[]> {
+    const validIds = ids.filter(isUUID);
+    if (!validIds.length) return [];
+    const result = await drizzleDatabase.getDb().delete(this.table).where(inArray(this.table.id, validIds)).returning({ id: this.table.id });
+    return result.map((r) => r.id as string);
+  }
 }

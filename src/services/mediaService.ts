@@ -113,4 +113,36 @@ export class MediaService implements IMediaService {
 
     return deleted;
   }
+
+  async bulkDeleteMedia(ids: string[]): Promise<{ deleted: string[]; blocked: { id: string; reason: string }[] }> {
+    const uniqueIds = [...new Set(ids)];
+
+    // One batched check across every requested id (findUsedMediaIds), instead of the two
+    // per-id checks deleteMedia() above runs in a loop — the same in-use protection, just
+    // evaluated once for the whole request. An id already deleted/never existed ends up neither
+    // deleted nor blocked below; the caller only needs to know what did and didn't happen.
+    const usedIds = await this.postRepo.findUsedMediaIds(uniqueIds);
+    const blocked = uniqueIds
+      .filter((id) => usedIds.has(id))
+      .map((id) => ({ id, reason: "MEDIA_IN_USE" }));
+    const candidateIds = uniqueIds.filter((id) => !usedIds.has(id));
+
+    if (candidateIds.length === 0) {
+      return { deleted: [], blocked };
+    }
+
+    // Object URLs are needed to clean up MinIO, so fetch the rows before deleting them.
+    const mediaRows = await this.mediaRepo.getByIds(candidateIds);
+    const deleted = await this.mediaRepo.deleteMany(candidateIds);
+    const deletedSet = new Set(deleted);
+
+    const rowsToPurge = mediaRows.filter((m) => deletedSet.has(m.id));
+    if (rowsToPurge.length > 0) {
+      await storageService.deleteImages(
+        rowsToPurge.map((m) => ({ originalUrl: m.originalUrl, thumbnailUrl: m.thumbnailUrl }))
+      );
+    }
+
+    return { deleted, blocked };
+  }
 }
