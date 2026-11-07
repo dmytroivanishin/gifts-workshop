@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, Trash2, Loader2, Search, Check, AlertTriangle } from "lucide-react";
+import { Upload, Trash2, Loader2, Check, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import SearchInput from "@/components/shared/SearchInput";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import { useDispatch } from "react-redux";
 import { addNotification } from "@/store/slices/notificationSlice";
@@ -294,17 +295,13 @@ export default function AdminMedia() {
       {/* Toolbar: search on the left, bulk-selection controls on the right — one persistent
           panel (not a separate block that mounts/unmounts) so selecting or clearing cards never
           shifts the grid below. */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-secondary p-3">
-        <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("placeholder_search_media")}
-            className="w-full pl-9 pr-4 py-2.5 sm:py-2 rounded-lg border border-border bg-card font-sans text-sm outline-none focus:border-primary"
-          />
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/50 p-3">
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder={t("placeholder_search_media")}
+          className="sm:max-w-sm"
+        />
 
         {selectedIds.size > 0 && (
           <div data-test-id="bulk-action-bar" className="flex items-center gap-3 shrink-0">

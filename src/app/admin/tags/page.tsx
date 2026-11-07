@@ -96,8 +96,8 @@ export default function AdminTags() {
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Tags List */}
         <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-border bg-muted/30">
-            <h2 className="text-sm font-semibold text-foreground">{t("all_tags")} ({tags.length})</h2>
+          <div className="p-4 border-b border-border/60 bg-muted/50">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("all_tags")} ({tags.length})</h2>
           </div>
           <div>
             {isLoading ? (
@@ -190,8 +190,11 @@ export default function AdminTags() {
         </div>
 
         {/* Add New Tag */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
-          <h3 className="font-semibold text-sm text-foreground border-b pb-2">{t("add_new_tag")}</h3>
+        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border/40 overflow-hidden h-fit shadow-sm">
+          <div className="p-4 border-b border-border/60 bg-muted/50">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("add_new_tag")}</h3>
+          </div>
+          <div className="p-5 space-y-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
               <FormField
@@ -224,6 +227,7 @@ export default function AdminTags() {
               </button>
             </form>
           </Form>
+          </div>
         </div>
       </div>
 

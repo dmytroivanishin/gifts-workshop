@@ -89,9 +89,11 @@ export default function AdminColors() {
 
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Left column: Add color form */}
-        <div className="lg:col-span-4 order-1 p-6 rounded-xl border border-border bg-card shadow-sm space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">{t("add_color")}</h2>
-          
+        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border/40 overflow-hidden h-fit shadow-sm">
+          <div className="p-4 border-b border-border/60 bg-muted/50">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("add_color")}</h2>
+          </div>
+          <div className="p-5 space-y-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
               <FormField
@@ -132,13 +134,14 @@ export default function AdminColors() {
               </button>
             </form>
           </Form>
+          </div>
         </div>
 
         {/* Right column: Color list */}
-        <div className="lg:col-span-8 order-2 p-6 rounded-xl border border-border bg-card shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">{t("colors_manager")}</h2>
-            {isLoading && <Loader2 size={20} className="animate-spin text-muted-foreground" />}
+        <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
+          <div className="p-4 border-b border-border/60 bg-muted/50 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("colors_manager")}</h2>
+            {isLoading && <Loader2 size={16} className="animate-spin text-muted-foreground" />}
           </div>
 
           <div>
@@ -146,11 +149,11 @@ export default function AdminColors() {
               <VirtualScrollList
                 items={colors}
                 estimateSize={88}
-                className="max-h-[70vh] divide-y divide-border/60"
+                className="max-h-[70vh] divide-y divide-border/45"
                 renderItem={(c) => {
                 const isEditingThis = editingId === c.id;
                 return (
-                  <div className="py-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
+                  <div className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
                     {isEditingThis ? (
                       <div className="flex items-center gap-3 flex-1 w-full">
                         <input

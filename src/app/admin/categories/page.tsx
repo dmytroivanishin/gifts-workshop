@@ -314,8 +314,8 @@ export default function AdminCategories() {
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Category List */}
         <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-border bg-muted/30">
-            <h2 className="text-sm font-semibold text-foreground">{t("categories")}</h2>
+          <div className="p-4 border-b border-border/60 bg-muted/50">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("categories")}</h2>
           </div>
           <div className="divide-y divide-border/45">
             {isLoading ? (
@@ -544,8 +544,11 @@ export default function AdminCategories() {
         </div>
 
         {/* Add New Category */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border/40 p-5 h-fit space-y-4 shadow-sm">
-          <h3 className="font-semibold text-sm text-foreground border-b pb-2">{t("add_category")}</h3>
+        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border/40 overflow-hidden h-fit shadow-sm">
+          <div className="p-4 border-b border-border/60 bg-muted/50">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("add_category")}</h3>
+          </div>
+          <div className="p-5 space-y-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-4" noValidate>
               
@@ -728,6 +731,7 @@ export default function AdminCategories() {
               </button>
             </form>
           </Form>
+          </div>
         </div>
       </div>
 

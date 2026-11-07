@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Search, Edit, Trash2, Eye, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Loader2 } from "lucide-react";
 import { useGetPostsQuery, useDeletePostMutation } from "@/store/api";
 import { PopulatedPost } from "@/types";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import SearchInput from "@/components/shared/SearchInput";
 import { MEDIA_PLACEHOLDER_DATA_URL, handleImageLoadError } from "@/utils/mediaPlaceholder";
 
 export default function AdminDashboard() {
@@ -107,17 +108,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-4 rounded-xl border border-border/40">
-        <div className="relative w-full sm:flex-1 sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("search_posts")}
-            className="w-full pl-9 pr-4 py-2.5 sm:py-2 rounded-lg border border-border bg-transparent font-sans text-sm outline-none focus:border-primary"
-          />
-        </div>
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/50 p-4 rounded-xl border border-border/60">
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder={t("search_posts")}
+          className="sm:flex-1 sm:max-w-sm"
+        />
       </div>
 
       {/* Posts List */}
