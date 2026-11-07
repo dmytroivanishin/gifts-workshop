@@ -2122,5 +2122,14 @@
     },
     "area": "admin",
     "code": "media_bulk_partial"
+  },
+  {
+    "id": "24c4e865-83c1-4099-a4f3-bdf3965a3b35",
+    "content": {
+      "en": "Select",
+      "ru": "Выбрать"
+    },
+    "area": "admin",
+    "code": "select"
   }
 ]
