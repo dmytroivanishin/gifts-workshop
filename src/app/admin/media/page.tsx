@@ -64,15 +64,10 @@ export default function AdminMedia() {
     onSuccess: () => {
       dispatch(addNotification({ type: 'success', messageKey: 'media_deleted' }));
     },
-    onError: (err: unknown) => {
-      const errorData = (err as ApiMutationError)?.data;
-      const errorCode = errorData?.error?.code || 'DELETE_FAILED';
-      dispatch(addNotification({
-        type: 'error',
-        messageKey: errorCode,
-        details: errorData?.error?.message || 'Failed to delete media'
-      }));
-    },
+    // No dispatch(addNotification(...)) here: notificationMiddleware.ts already toasts every
+    // rejected RTK Query mutation app-wide, including this one (e.g. 409 MEDIA_IN_USE) — same
+    // reasoning as handleFiles' catch block below.
+    onError: (err: unknown) => console.error("Failed to delete media", err),
     closeOnError: true,
   });
 
@@ -106,14 +101,10 @@ export default function AdminMedia() {
         dispatch(addNotification({ type: 'success', messageKey: 'media_bulk_deleted' }));
       }
     } catch (err: unknown) {
+      // No dispatch(addNotification(...)) here either: same reasoning as the single-delete
+      // onError above — the middleware already toasts the rejection.
       setIsBulkDeleteOpen(false);
-      const errorData = (err as ApiMutationError)?.data;
-      const errorCode = errorData?.error?.code || 'DELETE_FAILED';
-      dispatch(addNotification({
-        type: 'error',
-        messageKey: errorCode,
-        details: errorData?.error?.message || 'Failed to delete selected media'
-      }));
+      console.error("Failed to bulk-delete media", err);
     }
   };
 
