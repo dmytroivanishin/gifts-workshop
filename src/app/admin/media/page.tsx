@@ -305,7 +305,7 @@ export default function AdminMedia() {
 
         {selectedIds.size > 0 && (
           <div data-test-id="bulk-action-bar" className="flex items-center gap-3 shrink-0">
-            <span className="text-sm font-medium text-foreground whitespace-nowrap">
+            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
               {selectedIds.size} {t("items_selected")}
             </span>
             <div className="flex gap-2">
