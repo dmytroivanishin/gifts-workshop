@@ -5,7 +5,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // MinIO, same convention postVisibility.spec.ts/categoryService.spec.ts already use for an
 // imported-not-injected dependency.
 vi.mock("@/modules/storage/StorageService", () => ({
-  storageService: { deleteImages: vi.fn().mockResolvedValue(undefined), deleteImage: vi.fn().mockResolvedValue(undefined) },
+  storageService: {
+    deleteImages: vi.fn().mockResolvedValue(undefined),
+    deleteImage: vi.fn().mockResolvedValue(undefined),
+    uploadImage: vi.fn().mockResolvedValue({
+      originalUrl: "http://example.com/original.jpg",
+      thumbnailUrl: "http://example.com/thumb.jpg",
+      displayName: "generatedname",
+      width: 100,
+      height: 100,
+      orientation: "Landscape",
+    }),
+  },
 }));
 
 import { MediaService } from "@/services/mediaService";
@@ -20,6 +31,8 @@ const makeMediaRepo = (mediaList: Media[] = []) =>
     getAll: vi.fn().mockResolvedValue(mediaList),
     getByIds: vi.fn().mockImplementation((ids: string[]) => Promise.resolve(mediaList.filter((m) => ids.includes(m.id)))),
     deleteMany: vi.fn().mockImplementation((ids: string[]) => Promise.resolve(ids)),
+    save: vi.fn().mockImplementation((m: Media) => Promise.resolve(m)),
+    findByContentHash: vi.fn().mockResolvedValue(undefined),
   }) as unknown as IMediaRepository;
 
 const makePostRepo = (usedIds: string[] = []) =>
@@ -36,6 +49,7 @@ const media = (id: string): Media => ({
   width: 100,
   height: 100,
   orientation: "Landscape",
+  contentHash: `${id}-hash`,
 });
 
 describe("MediaService.getAllMedia", () => {
@@ -146,5 +160,68 @@ describe("MediaService.bulkDeleteMedia", () => {
     expect(postRepo.findUsedMediaIds).toHaveBeenCalledWith(["a"]);
     expect(mediaRepo.deleteMany).toHaveBeenCalledWith(["a"]);
     expect(result.deleted).toEqual(["a"]);
+  });
+});
+
+// CP-50 point 4: binary-content hash dedup, hard block. uploadMedia hashes the raw file bytes
+// before any resizing and checks the repo for an existing match before ever calling
+// storageService.uploadImage — these tests prove both the block itself and that the (much more
+// expensive) resize/upload work is skipped for a rejected duplicate.
+describe("MediaService.uploadMedia — duplicate detection", () => {
+  beforeEach(() => {
+    vi.mocked(storageService.uploadImage).mockClear();
+  });
+
+  const makeFile = (content: string, name = "photo.png") => new File([content], name, { type: "image/png" });
+
+  it("uploads normally and stores a real sha256 hash when no existing row matches", async () => {
+    const mediaRepo = makeMediaRepo([]);
+    const service = new MediaService(mediaRepo, makePostRepo());
+
+    const result = await service.uploadMedia(makeFile("unique-bytes-1"), "user-1");
+
+    expect(mediaRepo.findByContentHash).toHaveBeenCalledTimes(1);
+    expect(storageService.uploadImage).toHaveBeenCalledTimes(1);
+    expect(mediaRepo.save).toHaveBeenCalledTimes(1);
+    expect(result.contentHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("hard-blocks a duplicate (409 DUPLICATE_MEDIA) before touching storage, naming the existing match", async () => {
+    const existing = media("existing-id");
+    const mediaRepo = makeMediaRepo([]);
+    mediaRepo.findByContentHash = vi.fn().mockResolvedValue(existing);
+    const service = new MediaService(mediaRepo, makePostRepo());
+
+    const error: unknown = await service.uploadMedia(makeFile("same-bytes"), "user-1").catch((e) => e);
+
+    expect(error).toMatchObject({ statusCode: 409, errorCode: "DUPLICATE_MEDIA" });
+    expect((error as { serialize: () => { details: unknown } }).serialize().details).toEqual([
+      { field: "existingMediaId", message: "existing-id" },
+      { field: "existingMediaName", message: "existing-id" },
+    ]);
+    expect(storageService.uploadImage).not.toHaveBeenCalled();
+    expect(mediaRepo.save).not.toHaveBeenCalled();
+  });
+
+  it("two files with identical bytes but different names hash to the same value", async () => {
+    const mediaRepo = makeMediaRepo([]);
+    const service = new MediaService(mediaRepo, makePostRepo());
+
+    await service.uploadMedia(makeFile("identical-content", "a.png"), "user-1");
+    await service.uploadMedia(makeFile("identical-content", "a-totally-different-name.png"), "user-1");
+
+    const calls = (mediaRepo.findByContentHash as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).toBe(calls[1][0]);
+  });
+
+  it("different file content hashes to a different value", async () => {
+    const mediaRepo = makeMediaRepo([]);
+    const service = new MediaService(mediaRepo, makePostRepo());
+
+    await service.uploadMedia(makeFile("content-a"), "user-1");
+    await service.uploadMedia(makeFile("content-b"), "user-1");
+
+    const calls = (mediaRepo.findByContentHash as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).not.toBe(calls[1][0]);
   });
 });

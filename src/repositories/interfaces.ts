@@ -48,6 +48,7 @@ export interface MediaQueryOptions extends PaginationOptions {
 
 export interface IMediaRepository extends IBaseRepository<Media, Media, MediaQueryOptions> {
   deleteMany(ids: string[]): Promise<string[]>;
+  findByContentHash(hash: string): Promise<Media | undefined>;
 }
 
 export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, QueryOptions> {

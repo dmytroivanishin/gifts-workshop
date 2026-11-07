@@ -2131,5 +2131,23 @@
     },
     "area": "admin",
     "code": "select"
+  },
+  {
+    "id": "8d1f6d23-31b4-4582-abaf-457b5faef80d",
+    "content": {
+      "en": "Upload issues:",
+      "ru": "Проблемы при загрузке:"
+    },
+    "area": "admin",
+    "code": "upload_issues"
+  },
+  {
+    "id": "582e9711-a402-4fd6-be22-5d61264b4ff0",
+    "content": {
+      "en": "Duplicate of",
+      "ru": "Дубликат"
+    },
+    "area": "admin",
+    "code": "duplicate_of"
   }
 ]

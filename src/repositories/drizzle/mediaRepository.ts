@@ -1,8 +1,9 @@
 import { DrizzleBaseRepository } from "./baseRepository";
 import { media } from "./schema";
 import { Media } from "@/types";
-import { desc, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { IMediaRepository, MediaQueryOptions } from "../interfaces";
+import { drizzleDatabase } from "./database";
 
 export class MediaRepository extends DrizzleBaseRepository<Media, Media, MediaQueryOptions> implements IMediaRepository {
   constructor() {
@@ -25,6 +26,12 @@ export class MediaRepository extends DrizzleBaseRepository<Media, Media, MediaQu
     const escapedSearch = options.search.replace(/[\\%_]/g, "\\$&");
     const pattern = `%${escapedSearch}%`;
     return sql`${media.displayName} ILIKE ${pattern}`;
+  }
+
+  async findByContentHash(hash: string): Promise<Media | undefined> {
+    const records = await drizzleDatabase.getDb().select().from(media).where(eq(media.contentHash, hash)).limit(1);
+    if (!records.length) return undefined;
+    return this.populate(records[0]);
   }
 }
 

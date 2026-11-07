@@ -81,6 +81,43 @@ test.describe("media", () => {
     await expectError(res, 400, "VALIDATION_ERROR");
   });
 
+  // CP-50 point 4: binary-content hash dedup, hard block. The second upload of byte-identical
+  // content is rejected with a 409 naming the existing match, even under a totally different
+  // filename — and the original row is completely unaffected.
+  test("a second upload of byte-identical content is a hard 409 DUPLICATE_MEDIA naming the existing match", async () => {
+    const buffer = await tinyPng();
+    const original = await createMedia(admin, buffer, { filename: "first-upload.png" });
+
+    const res = await admin.post("/api/v1/media", {
+      multipart: {
+        file: { name: "a-totally-different-name.png", mimeType: "image/png", buffer },
+      },
+    });
+    const body = await expectError(res, 409, "DUPLICATE_MEDIA");
+    expect(body.error.details).toEqual(
+      expect.arrayContaining([
+        { field: "existingMediaId", message: original.id },
+        { field: "existingMediaName", message: original.displayName },
+      ])
+    );
+
+    // The original is completely unaffected by the rejected duplicate.
+    await expectSuccess(await admin.get(`/api/v1/media/${original.id}`));
+
+    await original.cleanup();
+  });
+
+  test("two uploads with different content both succeed and coexist", async () => {
+    const a = await createMedia(admin, await tinyPng());
+    const b = await createMedia(admin, await tinyPng());
+
+    await expectSuccess(await admin.get(`/api/v1/media/${a.id}`));
+    await expectSuccess(await admin.get(`/api/v1/media/${b.id}`));
+
+    await a.cleanup();
+    await b.cleanup();
+  });
+
   test("GET /media (list) and GET /media/:id require admin", async () => {
     const media = await createMedia(admin);
 

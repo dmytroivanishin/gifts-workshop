@@ -22,6 +22,7 @@ export interface Media {
   width: number;
   height: number;
   orientation: "Portrait" | "Landscape";
+  contentHash: string;
 }
 
 export interface Collection {

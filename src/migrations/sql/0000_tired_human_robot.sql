@@ -54,7 +54,8 @@ CREATE TABLE "media" (
 	"height" integer NOT NULL,
 	"orientation" varchar(50) NOT NULL,
 	"user_id" uuid,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"content_hash" varchar(64) NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "posts" (

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, Trash2, Loader2, Search, Check } from "lucide-react";
+import { Upload, Trash2, Loader2, Search, Check, AlertTriangle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
@@ -15,6 +16,16 @@ import {
 } from "@/store/api";
 import { ApiMutationError } from "@/types";
 import { handleImageLoadError } from "@/utils/mediaPlaceholder";
+
+// A single upload's outcome once it didn't simply succeed: either the server found this file's
+// content already stored under a different name (CP-50 point 4 — a hard 409 block, not just a
+// warning) or the upload genuinely failed for some other reason (bad type, too large, network).
+// Rendered as one unified list so clicking a duplicate's name can jump straight to it via search.
+interface UploadIssue {
+  fileName: string;
+  kind: "duplicate" | "failed";
+  existingMediaName?: string;
+}
 
 interface MediaItem {
   id: string;
@@ -35,7 +46,7 @@ export default function AdminMedia() {
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStats, setUploadStats] = useState({ total: 0, current: 0 });
-  const [failedFiles, setFailedFiles] = useState<string[]>([]);
+  const [uploadIssues, setUploadIssues] = useState<UploadIssue[]>([]);
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
@@ -127,7 +138,7 @@ export default function AdminMedia() {
 
     setIsUploading(true);
     setUploadStats({ total: files.length, current: 0 });
-    setFailedFiles([]);
+    setUploadIssues([]);
 
     try {
       let anySucceeded = false;
@@ -144,7 +155,16 @@ export default function AdminMedia() {
         } catch (err: unknown) {
           const errorData = (err as ApiMutationError)?.data;
           const errorCode = errorData?.error?.code || 'UPLOAD_FAILED';
-          setFailedFiles(prev => [...prev, files[i].name]);
+
+          if (errorCode === 'DUPLICATE_MEDIA') {
+            const existingMediaName = errorData?.error?.details?.find(
+              (d) => d.field === 'existingMediaName'
+            )?.message;
+            setUploadIssues(prev => [...prev, { fileName: files[i].name, kind: 'duplicate', existingMediaName }]);
+          } else {
+            setUploadIssues(prev => [...prev, { fileName: files[i].name, kind: 'failed' }]);
+          }
+
           dispatch(addNotification({
             type: 'error',
             messageKey: errorCode,
@@ -235,17 +255,52 @@ export default function AdminMedia() {
           </label>
         )}
 
-        {failedFiles.length > 0 && (
-          <div className="w-full max-w-md mt-2 text-xs text-destructive">
-            <p className="font-semibold mb-1">{t("upload_failed") || "Failed to upload:"}</p>
-            <ul className="list-disc list-inside space-y-0.5">
-              {failedFiles.map((name, i) => (
-                <li key={i} className="truncate">{name}</li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
+
+      {/* Upload issues: a unified popup-style panel for this batch's problems — a duplicate
+          (CP-50 point 4) is a normal-colored, clickable label naming the existing match (click
+          jumps the search box to it); a genuine failure stays red and non-clickable, as before.
+          Rendered outside the dropzone's dashed border (not nested inside it) so it reads as its
+          own transient notice rather than part of the drop target, and animates in/out instead of
+          abruptly appearing. */}
+      <AnimatePresence>
+        {uploadIssues.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -8, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                <AlertTriangle size={14} className="text-muted-foreground" />
+                {t("upload_issues")}
+              </p>
+              <ul className="space-y-1 text-xs">
+                {uploadIssues.map((issue, i) => (
+                  <li key={i}>
+                    {issue.kind === "duplicate" ? (
+                      <button
+                        type="button"
+                        onClick={() => setSearch(issue.existingMediaName || issue.fileName)}
+                        className="text-left truncate text-foreground hover:text-primary underline decoration-dotted cursor-pointer"
+                      >
+                        <span className="truncate">{issue.fileName}</span>
+                        {issue.existingMediaName && (
+                          <span className="text-muted-foreground"> — {t("duplicate_of")} &ldquo;{issue.existingMediaName}&rdquo;</span>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="truncate text-destructive block">{issue.fileName}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Toolbar: search on the left, bulk-selection controls on the right — one persistent
           panel (not a separate block that mounts/unmounts) so selecting or clearing cards never

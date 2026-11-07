@@ -1,7 +1,7 @@
 import { IMediaRepository, IPostRepository, MediaQueryOptions } from "@/repositories/interfaces";
 import { IMediaService } from "./interfaces";
 import { Media, PaginatedResult } from "@/types";
-import { randomUUID } from "crypto";
+import { randomUUID, createHash } from "crypto";
 import { paginate } from "./pagination";
 import { ConflictError } from "@/common/errors/conflict";
 import { storageService } from "@/modules/storage/StorageService";
@@ -35,11 +35,13 @@ export class MediaService implements IMediaService {
     return paginate(mediaList, { page: 1, limit: mediaList.length });
   }
 
-  async uploadAndSaveMedia(buffer: Buffer, _mimeType: string, userId: string): Promise<Media> {
+  async uploadAndSaveMedia(buffer: Buffer, _mimeType: string, userId: string, contentHash?: string): Promise<Media> {
     // _mimeType is kept for the interface contract; StorageService now derives the real format
     // from the decoded bytes instead of trusting the client-declared type (CP-6 hardening).
+    // contentHash is optional so this method still works for any caller that doesn't already have
+    // one computed (uploadMedia below always passes it, to avoid hashing the buffer twice).
     const processed = await storageService.uploadImage(buffer);
-    
+
     const media: Media = {
       id: randomUUID(),
       displayName: processed.displayName,
@@ -49,6 +51,7 @@ export class MediaService implements IMediaService {
       height: processed.height,
       orientation: processed.orientation,
       userId: userId,
+      contentHash: contentHash ?? createHash("sha256").update(buffer).digest("hex"),
     };
 
     return this.mediaRepo.save(media);
@@ -68,14 +71,32 @@ export class MediaService implements IMediaService {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    return this.uploadAndSaveMedia(buffer, file.type, userId);
+    // CP-50 point 4: hash the raw bytes before any resizing, and check for a match before doing
+    // the (much more expensive) resize/MinIO-upload work in uploadAndSaveMedia — a duplicate is
+    // rejected without ever touching sharp or MinIO. A hard block (409), not a soft warning, per
+    // the owner's explicit decision: the error names the existing match so the client can offer
+    // to find it (the admin media page's search), rather than the admin guessing.
+    const contentHash = createHash("sha256").update(buffer).digest("hex");
+    const existing = await this.mediaRepo.findByContentHash(contentHash);
+    if (existing) {
+      throw new ConflictError(
+        `This file's content is identical to an existing image, "${existing.displayName}".`,
+        "DUPLICATE_MEDIA",
+        [
+          { field: "existingMediaId", message: existing.id },
+          { field: "existingMediaName", message: existing.displayName },
+        ]
+      );
+    }
+
+    return this.uploadAndSaveMedia(buffer, file.type, userId, contentHash);
   }
 
   async getMediaById(id: string): Promise<Media | undefined> {
     return this.mediaRepo.getById(id);
   }
 
-  async saveMedia(body: Omit<Media, "id" | "userId" | "displayName"> & { id?: string; userId?: string }): Promise<Media> {
+  async saveMedia(body: Omit<Media, "id" | "userId" | "displayName" | "contentHash"> & { id?: string; userId?: string }): Promise<Media> {
     const id = body.id || randomUUID();
     const media: Media = {
       id,
@@ -89,6 +110,10 @@ export class MediaService implements IMediaService {
       orientation: body.orientation,
       // Route-level withAdminAuth() already guarantees an authenticated admin before this runs.
       userId: body.userId!,
+      // No uploaded bytes to hash here (an externally hosted URL, never fetched server-side) —
+      // a random placeholder satisfies the NOT NULL column without ever colliding with a real
+      // upload's sha256 digest.
+      contentHash: createHash("sha256").update(randomUUID()).digest("hex"),
     };
     return this.mediaRepo.save(media);
   }

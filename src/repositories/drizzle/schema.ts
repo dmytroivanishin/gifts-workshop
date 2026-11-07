@@ -69,6 +69,11 @@ export const media = pgTable("media", {
   orientation: varchar("orientation", { length: 50 }).notNull(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  // sha256 of the raw uploaded bytes, computed before resizing (CP-50 point 4) — lets a second
+  // upload of the same file's content be caught and blocked even under a different filename. No
+  // DB-level uniqueness/index: the app-level check in MediaService is the sole gate, same call as
+  // CP-22 (self-referencing FKs) made for an equivalent app-vs-DB tradeoff.
+  contentHash: varchar("content_hash", { length: 64 }).notNull(),
 }, (t) => ({
   userIdIdx: index("media_user_id_idx").on(t.userId),
 }));

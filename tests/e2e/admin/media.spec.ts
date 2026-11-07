@@ -57,7 +57,6 @@ test.describe("admin media: real file upload, failed-filename list, delete via C
     const grid = page.locator("div.group.relative.bg-card");
     const before = await grid.count();
 
-    const buffer = await tinyPng();
     const stamp = Date.now();
     // Kept modest (5), not a larger "bulk" number: RATE_LIMITS.upload is 30/minute
     // (src/utils/rateLimit.ts), and in `next dev` with no X-Forwarded-For header,
@@ -65,8 +64,12 @@ test.describe("admin media: real file upload, failed-filename list, delete via C
     // whole run that POSTs to /media shares that one bucket (the same shared-bucket risk
     // tests/api/comments.spec.ts already hit in phase 1). 5 requests here, on top of the 2 the
     // file's other test already makes, stays comfortably under the limit.
+    // Each file needs its own real tinyPng() call (CP-50 point 4): the hash-dedup hard block
+    // would otherwise reject all but the first of 5 files sharing one buffer as duplicates.
     const names = Array.from({ length: 5 }, (_, i) => `e2e-media-bulk-${stamp}-${i}.png`);
-    const files = names.map((name) => ({ name, mimeType: "image/png" as const, buffer }));
+    const files = await Promise.all(
+      names.map(async (name) => ({ name, mimeType: "image/png" as const, buffer: await tinyPng() }))
+    );
 
     // The grid's display name is a cosmetically generated string, unrelated to the uploaded
     // filename (see the test above) — collect each successful upload's real row id from its own
@@ -215,6 +218,62 @@ test.describe("admin media: real file upload, failed-filename list, delete via C
     } finally {
       await admin.dispose();
     }
+  });
+
+  // CP-50 point 4: binary-content hash dedup. A second upload of the exact same bytes (different
+  // filename) is hard-blocked (409), surfaced in the upload-issues panel as a clickable label
+  // naming the existing match — clicking it should jump the search box to find the original.
+  test("re-uploading the same file's content shows a clickable duplicate label that jumps search to the original", async ({
+    page,
+  }) => {
+    const grid = page.locator("div.group.relative.bg-card");
+    const before = await grid.count();
+    const buffer = await tinyPng();
+
+    const [firstUploadResponse] = await Promise.all([
+      page.waitForResponse(
+        (res) => res.url().includes("/api/v1/media") && res.request().method() === "POST" && res.ok()
+      ),
+      page.locator('input[type="file"]').setInputFiles({
+        name: `e2e-media-dup-original-${Date.now()}.png`,
+        mimeType: "image/png",
+        buffer,
+      }),
+    ]);
+    const original = (await firstUploadResponse.json()).data as { id: string; displayName: string };
+    await expect(grid).toHaveCount(before + 1, { timeout: 15_000 });
+
+    const duplicateName = `e2e-media-dup-copy-${Date.now()}.png`;
+    await page.locator('input[type="file"]').setInputFiles({
+      name: duplicateName,
+      mimeType: "image/png",
+      buffer, // same bytes as the first upload
+    });
+
+    // No-op upload: the grid never grows past the one real row created above.
+    await page.waitForTimeout(1000);
+    await expect(grid).toHaveCount(before + 1);
+
+    // t() falls back to its raw key in this empty-system_texts test DB (same convention every
+    // other admin e2e test relies on) — "upload_issues"/"duplicate_of" are the literal fallbacks.
+    const issuesPanel = page.getByText("upload_issues");
+    await expect(issuesPanel).toBeVisible({ timeout: 10_000 });
+    const duplicateLabel = page.getByRole("button", { name: new RegExp(duplicateName) });
+    await expect(duplicateLabel).toBeVisible();
+    await expect(duplicateLabel).toContainText("duplicate_of");
+    await expect(duplicateLabel).toContainText(original.displayName);
+
+    const search = page.getByPlaceholder("placeholder_search_media");
+    await duplicateLabel.click();
+    await expect(search).toHaveValue(original.displayName);
+    await expect(page.getByTestId(`media-card-${original.id}`)).toBeVisible({ timeout: 10_000 });
+    await expect(grid).toHaveCount(1, { timeout: 10_000 });
+
+    await search.fill("");
+    const card = page.getByTestId(`media-card-${original.id}`);
+    await card.locator("button").click();
+    await page.getByTestId("confirm-modal-confirm").click();
+    await expect(grid).toHaveCount(before, { timeout: 15_000 });
   });
 
   test("selecting more files than NEXT_PUBLIC_MAX_FILES_PER_UPLOAD rejects the whole batch up front", async ({

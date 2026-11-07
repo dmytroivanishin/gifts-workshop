@@ -1,11 +1,25 @@
 import sharp from "sharp";
+import crypto from "crypto";
 
 // Generated at test time, never committed as binary fixtures — keeps the repo diff-free and
 // means the "real" dimensions/format are always known exactly by the test that made them.
+//
+// CP-50 point 4 (binary-content hash dedup) made these need one more property they didn't
+// before: byte-uniqueness per call. A fixed `background` color produces byte-identical encoded
+// output every time (no timestamp/random metadata in a sharp-generated PNG/JPEG), so two calls
+// used to be indistinguishable content-wise — harmless before dedup existed, but now a second
+// upload of "the same" fixture is a real 409 DUPLICATE_MEDIA, not a test bug. Randomizing all
+// three color channels (~16.7M combinations, not just one ~256) keeps dimensions/format — what
+// every test actually asserts on — unchanged while making a same-run collision negligible; no
+// test checks exact pixel color.
+const randomColor = () => {
+  const bytes = crypto.randomBytes(3);
+  return { r: bytes[0], g: bytes[1], b: bytes[2] };
+};
 
 export async function tinyJpeg(): Promise<Buffer> {
   return sharp({
-    create: { width: 12, height: 8, channels: 3, background: { r: 200, g: 60, b: 60 } },
+    create: { width: 12, height: 8, channels: 3, background: randomColor() },
   })
     .jpeg()
     .toBuffer();
@@ -13,7 +27,7 @@ export async function tinyJpeg(): Promise<Buffer> {
 
 export async function tinyPng(): Promise<Buffer> {
   return sharp({
-    create: { width: 12, height: 8, channels: 3, background: { r: 60, g: 200, b: 60 } },
+    create: { width: 12, height: 8, channels: 3, background: randomColor() },
   })
     .png()
     .toBuffer();
@@ -22,7 +36,7 @@ export async function tinyPng(): Promise<Buffer> {
 // Taller than wide, to exercise StorageService.uploadImage's "Portrait" branch.
 export async function tinyPortraitPng(): Promise<Buffer> {
   return sharp({
-    create: { width: 8, height: 14, channels: 3, background: { r: 60, g: 60, b: 200 } },
+    create: { width: 8, height: 14, channels: 3, background: randomColor() },
   })
     .png()
     .toBuffer();
@@ -35,7 +49,7 @@ export async function tinyPortraitPng(): Promise<Buffer> {
 // with the rendered image (not just its presence/attributes) need this over tinyPng().
 export async function mediumPng(): Promise<Buffer> {
   return sharp({
-    create: { width: 640, height: 480, channels: 3, background: { r: 60, g: 120, b: 200 } },
+    create: { width: 640, height: 480, channels: 3, background: randomColor() },
   })
     .png()
     .toBuffer();

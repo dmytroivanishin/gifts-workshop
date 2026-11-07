@@ -570,6 +570,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {
