@@ -34,9 +34,9 @@ function categoryTone(hex: string | undefined, selected: boolean): { className: 
       color: hex,
       // Same rule as the neutral pills: the outline stays as is and the selected fill is that
       // very outline colour (it must not get darker when selected).
-      borderColor: `${hex}40`,
-      backgroundColor: selected ? `${hex}40` : undefined,
-      "--cat-soft": `${hex}1A`,
+      borderColor: `${hex}29`,
+      backgroundColor: selected ? `${hex}29` : undefined,
+      "--cat-soft": `${hex}12`,
     } as CSSProperties,
   };
 }
