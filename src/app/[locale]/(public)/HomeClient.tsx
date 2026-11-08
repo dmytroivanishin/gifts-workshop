@@ -32,9 +32,11 @@ function categoryTone(hex: string | undefined, selected: boolean): { className: 
     className: selected ? "" : "hover:bg-(--cat-soft)",
     style: {
       color: hex,
-      borderColor: selected ? `${hex}80` : `${hex}40`,
-      backgroundColor: selected ? `${hex}26` : undefined,
-      "--cat-soft": `${hex}14`,
+      // Same rule as the neutral pills: the outline stays as is and the selected fill is that
+      // very outline colour (it must not get darker when selected).
+      borderColor: `${hex}40`,
+      backgroundColor: selected ? `${hex}40` : undefined,
+      "--cat-soft": `${hex}1A`,
     } as CSSProperties,
   };
 }
