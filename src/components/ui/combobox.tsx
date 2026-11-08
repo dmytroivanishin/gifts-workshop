@@ -240,7 +240,8 @@ export default function Combobox({
                     handleCreate();
                   }
                 }}
-                inputClassName="h-9"
+                // Radix focuses the field when the popover opens, so the usual teal focus border would be permanent here.
+                inputClassName="h-9 focus:border-border"
               />
             </div>
           )}
