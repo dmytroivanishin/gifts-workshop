@@ -256,8 +256,8 @@ export default function AdminComments() {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
-        <div className="divide-y divide-border/45">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="divide-y divide-border/60">
           {isLoading && page === 1 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
               <Loader2 className="animate-spin inline mr-2" size={16} />
@@ -265,7 +265,7 @@ export default function AdminComments() {
             </div>
           ) : sortedComments.length > 0 ? (
             sortedComments.map((parent) => (
-              <div key={parent.id} className="flex flex-col divide-y divide-border/20 border-b border-border/45 last:border-b-0">
+              <div key={parent.id} className="flex flex-col divide-y divide-border/20 border-b border-border last:border-b-0">
                 <div className="p-4 hover:bg-muted/10 transition-colors">
                   {renderCommentNode(parent, false)}
                   
@@ -303,7 +303,7 @@ export default function AdminComments() {
                   <div className="bg-black/5 divide-y divide-border/20">
                     {parent.adminReplies.map((reply) => (
                       <div key={reply.id} className="p-4 pl-12 relative hover:bg-muted/10 transition-colors">
-                        <div className="absolute left-6 top-0 w-4 h-8 border-l-2 border-b-2 border-border/60 rounded-bl-xl z-0"></div>
+                        <div className="absolute left-6 top-0 w-4 h-8 border-l-2 border-b-2 border-border rounded-bl-xl z-0"></div>
                         {renderCommentNode(reply, true)}
                       </div>
                     ))}
@@ -324,7 +324,7 @@ export default function AdminComments() {
           )}
           
           {comments.length > 0 && hasMore && (
-            <div ref={loaderRef} className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border/45 bg-muted/5">
+            <div ref={loaderRef} className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border bg-muted/5">
               <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
               {t("loading") || "Loading..."}
             </div>

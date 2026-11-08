@@ -38,24 +38,43 @@ export default function AdminColors() {
   });
 
   // Edit State
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editColorHex, setEditColorHex] = useState("");
+  const [isEditing, setIsEditing] = useState<string | null>(null);
+
+  const resetForm = () => {
+    setIsEditing(null);
+    form.reset(defaultValues);
+  };
 
   // Delete Confirm State
   const {
     isOpen: isDeleteOpen,
+    targetId: deleteTargetId,
     handleDeleteClick,
     handleConfirmDelete,
     handleClose: handleDeleteClose,
   } = useDeleteConfirm(deleteColor, {
+    onSuccess: () => {
+      if (isEditing === deleteTargetId) {
+        resetForm();
+      }
+    },
     onError: (err) => console.error("Failed to delete color", err),
     closeOnError: false,
   });
 
+  const handleEdit = (c: { id: string; color: string }) => {
+    setIsEditing(c.id);
+    form.reset({ color: c.color });
+  };
+
   const onSubmit = async (values: z.infer<typeof colorSchema>) => {
     try {
-      await createColor(values).unwrap();
-      form.reset(defaultValues);
+      if (isEditing) {
+        await updateColor({ id: isEditing, color: values.color }).unwrap();
+      } else {
+        await createColor(values).unwrap();
+      }
+      resetForm();
     } catch (err: unknown) {
       const apiError = err as ApiMutationError;
       if (apiError?.data?.error?.details) {
@@ -67,19 +86,6 @@ export default function AdminColors() {
     }
   };
 
-  const handleSave = async (id: string) => {
-    if (!editColorHex.trim()) return;
-    try {
-      await updateColor({
-        id,
-        color: editColorHex,
-      }).unwrap();
-      setEditingId(null);
-    } catch (err) {
-      console.error("Failed to save color", err);
-    }
-  };
-
   return (
     <div className="space-y-6 font-sans">
       <div>
@@ -88,10 +94,21 @@ export default function AdminColors() {
       </div>
 
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
-        {/* Left column: Add color form */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border/40 overflow-hidden h-fit shadow-sm">
-          <div className="p-4 border-b border-border/60 bg-muted/50">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("add_color")}</h2>
+        {/* Left column: Add / Edit color form */}
+        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
+          <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {isEditing ? t("edit_color") : t("add_color")}
+            </h2>
+            {isEditing && (
+              <button
+                onClick={resetForm}
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+              >
+                <X size={12} />
+                {t("cancel_action")}
+              </button>
+            )}
           </div>
           <div className="p-5 space-y-4">
           <Form {...form}>
@@ -126,11 +143,17 @@ export default function AdminColors() {
 
               <button
                 type="submit"
-                disabled={!form.formState.isValid || isCreating}
+                disabled={!form.formState.isValid || isCreating || isUpdating}
                 className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
               >
-                {isCreating ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-                {t("add_color")}
+                {isCreating || isUpdating ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : isEditing ? (
+                  <Save size={16} />
+                ) : (
+                  <Plus size={16} />
+                )}
+                {isEditing ? t("save") : t("add_color")}
               </button>
             </form>
           </Form>
@@ -138,8 +161,8 @@ export default function AdminColors() {
         </div>
 
         {/* Right column: Color list */}
-        <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-border/60 bg-muted/50 flex items-center justify-between">
+        <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border overflow-hidden">
+          <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("colors_manager")}</h2>
             {isLoading && <Loader2 size={16} className="animate-spin text-muted-foreground" />}
           </div>
@@ -149,84 +172,41 @@ export default function AdminColors() {
               <VirtualScrollList
                 items={colors}
                 estimateSize={88}
-                className="max-h-[70vh] divide-y divide-border/45"
-                renderItem={(c) => {
-                const isEditingThis = editingId === c.id;
-                return (
+                className="max-h-[70vh] divide-y divide-border/60"
+                renderItem={(c) => (
                   <div className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
-                    {isEditingThis ? (
-                      <div className="flex items-center gap-3 flex-1 w-full">
-                        <input
-                          type="color"
-                          value={editColorHex}
-                          onChange={(e) => setEditColorHex(e.target.value)}
-                          className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent flex-shrink-0"
-                        />
-                        <input
-                          type="text"
-                          value={editColorHex}
-                          onChange={(e) => setEditColorHex(e.target.value)}
-                          className="w-full sm:w-40 px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary uppercase"
-                          maxLength={7}
-                          required
-                        />
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full border border-border/40 shadow-inner flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: c.color }}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-sm uppercase text-foreground tracking-wider">{c.color}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono">ID: {c.id.substring(0, 8)}...</span>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-10 h-10 rounded-full border border-border/40 shadow-inner flex items-center justify-center flex-shrink-0"
-                          style={{ backgroundColor: c.color }}
-                        />
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-sm uppercase text-foreground tracking-wider">{c.color}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono">ID: {c.id.substring(0, 8)}...</span>
-                        </div>
-                      </div>
-                    )}
+                    </div>
 
                     <div className="flex items-center gap-2 self-end sm:self-auto">
-                      {isEditingThis ? (
-                        <>
-                          <button
-                            onClick={() => handleSave(c.id)}
-                            disabled={isUpdating}
-                            className="p-2 sm:p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center"
-                          >
-                            {isUpdating ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingId(null);
-                            }}
-                            className="p-2 sm:p-1.5 rounded-md border border-border text-subtle-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                          >
-                            <X size={18} />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => {
-                              setEditingId(c.id);
-                              setEditColorHex(c.color);
-                            }}
-                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(c.id)}
-                            disabled={isDeleting}
-                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-destructive disabled:opacity-50 cursor-pointer"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </>
-                      )}
+                      <button
+                        onClick={() => handleEdit(c)}
+                        className={`p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer ${
+                          isEditing === c.id ? "bg-muted text-foreground" : ""
+                        }`}
+                        title={t("edit_color")}
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(c.id)}
+                        disabled={isDeleting}
+                        className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-destructive disabled:opacity-50 cursor-pointer"
+                        title={t("delete")}
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </div>
-                );
-                }}
+                )}
               />
             ) : (
               !isLoading && (

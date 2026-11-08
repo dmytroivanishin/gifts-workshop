@@ -130,17 +130,16 @@ test.describe("admin categories: on-the-fly tag and color creation", () => {
 
       // The debounced auto-create effect (admin/categories/page.tsx, 450ms) fires once the typed
       // hex doesn't match any existing color: isCreatingColorPending flips true synchronously,
-      // the hardcoded (not t()-driven, so locale-independent) "Сохранение цвета..." label
-      // appears, then disappears once the debounced createColor call resolves — on success OR
+      // the t("saving_color") label (the empty test DB renders the raw key) appears, then disappears once the debounced createColor call resolves — on success OR
       // failure (the effect's finally runs either way), so the spinner alone doesn't prove
       // success. Waiting on the real POST /colors response does.
-      await expect(page.getByText("Сохранение цвета...")).toBeVisible();
+      await expect(page.getByText("saving_color")).toBeVisible();
       const createResponse = await createResponsePromise;
       expect(createResponse.ok()).toBe(true);
       const createdColor = (await createResponse.json()).data as { id: string; color: string };
       createdColorId = createdColor.id;
       expect(createdColor.color.toLowerCase()).toBe(hex.toLowerCase());
-      await expect(page.getByText("Сохранение цвета...")).toBeHidden({ timeout: 5_000 });
+      await expect(page.getByText("saving_color")).toBeHidden({ timeout: 5_000 });
 
       const checkRes = await admin.get(`/api/v1/colors/${createdColorId}`);
       expect(checkRes.ok()).toBe(true);

@@ -219,7 +219,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.push("/admin/localizations")}
-          className="p-2 rounded-lg bg-card border border-border/40 text-subtle-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="p-2 rounded-lg bg-card border border-border text-subtle-foreground hover:text-foreground transition-colors cursor-pointer"
           title={t("back_to_list")}
         >
           <ArrowLeft size={20} />
@@ -237,7 +237,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
       <form onSubmit={handleSave} className="space-y-6" noValidate>
         {isSystem && (
-          <div className="bg-card rounded-xl border border-border/40 p-6 shadow-sm space-y-4">
+          <div className="bg-card rounded-xl border border-border p-6 space-y-4">
             <h3 className="font-bold text-sm text-foreground mb-2 uppercase">{t("system_text_settings") || "System Text Settings"}</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -276,7 +276,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
         <div className={`grid grid-cols-1 md:grid-cols-${Math.min(activeLanguages.length, 3)} gap-6`}>
           {activeLanguages.map((lang) => (
-            <div key={lang} className="bg-card rounded-xl border border-border/40 p-6 shadow-sm space-y-4 relative">
+            <div key={lang} className="bg-card rounded-xl border border-border p-6 space-y-4 relative">
               <div className="absolute top-4 right-4 bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase">
                 {lang}
               </div>
@@ -319,7 +319,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
         </div>
 
         {/* Action Row */}
-        <div className="flex items-center justify-between bg-card rounded-xl border border-border/40 px-6 py-4 shadow-sm">
+        <div className="flex items-center justify-between bg-card rounded-xl border border-border px-6 py-4">
           <div>
             {saveStatus && (
               <div

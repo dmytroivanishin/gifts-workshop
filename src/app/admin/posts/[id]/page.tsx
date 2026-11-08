@@ -354,7 +354,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
   return (
     <div className="max-w-2xl mx-auto space-y-6 font-sans">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-border/60">
+      <div className="flex items-center justify-between pb-4 border-b border-border">
         <div className="flex items-center gap-3">
           <Link
             href="/admin/dashboard"
@@ -376,7 +376,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
       {/* Form */}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
-          <div className="bg-card rounded-xl border border-border/40 p-6 space-y-4 shadow-sm">
+          <div className="bg-card rounded-xl border border-border p-6 space-y-4">
 
             {/* Title */}
             <FormField
@@ -579,7 +579,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                             </span>
                           </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-4 rounded-2xl border-border/60 bg-card shadow-xl admin-area font-sans" align="start">
+                        <PopoverContent className="w-auto p-4 rounded-2xl border-border bg-card shadow-xl admin-area font-sans" align="start">
                           <Calendar
                             mode="single"
                             locale={dateLocales[locale] || enUS}
@@ -597,7 +597,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
           </div>
 
           {/* Media Selector with crop positioning */}
-          <div className="bg-card rounded-xl border border-border/40 p-6 space-y-4 shadow-sm">
+          <div className="bg-card rounded-xl border border-border p-6 space-y-4">
             <div className="flex items-center justify-between border-b pb-2">
               <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
                 <ImageIcon size={16} />

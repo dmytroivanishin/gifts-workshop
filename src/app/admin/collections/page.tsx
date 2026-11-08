@@ -115,8 +115,8 @@ export default function AdminCollections() {
 
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Collections List */}
-        <div className="lg:col-span-7 order-2 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-border/60 bg-muted/50">
+        <div className="lg:col-span-7 order-2 bg-card rounded-xl border border-border overflow-hidden">
+          <div className="p-4 border-b border-border bg-muted/50">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("collections")} ({collections.length})
             </h2>
@@ -131,7 +131,7 @@ export default function AdminCollections() {
               <VirtualScrollList
                 items={collections}
                 estimateSize={100}
-                className="max-h-[70vh] divide-y divide-border/45"
+                className="max-h-[70vh] divide-y divide-border/60"
                 renderItem={(col) => (
                 <div
                   className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"
@@ -185,8 +185,8 @@ export default function AdminCollections() {
         </div>
 
         {/* Add / Edit Form */}
-        <div className="lg:col-span-5 order-1 bg-card rounded-xl border border-border/40 overflow-hidden h-fit shadow-sm">
-          <div className="p-4 border-b border-border/60 bg-muted/50 flex items-center justify-between">
+        <div className="lg:col-span-5 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
+          <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {isEditing ? t("edit_collection") : t("add_collection")}
             </h3>

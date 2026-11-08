@@ -295,7 +295,7 @@ export default function AdminMedia() {
       {/* Toolbar: search on the left, bulk-selection controls on the right — one persistent
           panel (not a separate block that mounts/unmounts) so selecting or clearing cards never
           shifts the grid below. */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/50 p-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border bg-muted/50 p-3">
         <SearchInput
           value={search}
           onChange={setSearch}
@@ -343,8 +343,8 @@ export default function AdminMedia() {
             <div
               key={item.id}
               data-test-id={`media-card-${item.id}`}
-              className={`group relative bg-card rounded-xl border overflow-hidden shadow-sm flex flex-col justify-between transition-all ${
-                isSelected ? "border-primary ring-2 ring-primary/20" : "border-border/40"
+              className={`group relative bg-card rounded-xl border overflow-hidden flex flex-col justify-between transition-all ${
+                isSelected ? "border-primary ring-2 ring-primary/20" : "border-border"
               }`}
             >
               <div className="aspect-square relative w-full bg-muted overflow-hidden flex items-center justify-center">
@@ -396,7 +396,7 @@ export default function AdminMedia() {
             );
           })}
           {media.length === 0 && !isUploading && (
-            <div className="col-span-full p-8 text-center text-sm text-muted-foreground bg-card rounded-xl border border-border/40">
+            <div className="col-span-full p-8 text-center text-sm text-muted-foreground bg-card rounded-xl border border-border">
               {t("no_media") || "No media found. Upload some images!"}
             </div>
           )}

@@ -32,11 +32,8 @@ export default function AdminCategories() {
   const { t, loc, locale } = useTranslation();
 
   const { data: categoriesResponse, isLoading } = useGetCategoriesQuery();
-  // Two independent search states/hooks, one per Combobox instance — the inline edit row and
-  // the always-visible "Add New Category" form can both be on screen at once, so sharing one
-  // search state would make typing in either combobox's search box narrow both of them.
-  const [editTagSearch, setEditTagSearch] = useState("");
-  const { tags: editSearchedTags, hasMore: hasMoreEditTags, loadMore: loadMoreEditTags } = useTagsList(editTagSearch);
+  // One form serves both adding and editing a category, so there is one tags Combobox and one
+  // search state for it.
   const [newTagSearch, setNewTagSearch] = useState("");
   const { tags: newSearchedTags, hasMore: hasMoreNewTags, loadMore: loadMoreNewTags } = useTagsList(newTagSearch);
   // Tags that must always resolve to a real name in the Combobox even when outside the current
@@ -54,10 +51,6 @@ export default function AdminCategories() {
 
   const categories = categoriesResponse?.data || [];
   const colorsList = colorsResponse?.data || [];
-  const editTagOptions = editSearchedTags.map((tag) => ({
-    value: tag.id,
-    label: loc(tag.name)
-  }));
   const newTagOptions = newSearchedTags.map((tag) => ({
     value: tag.id,
     label: loc(tag.name)
@@ -70,10 +63,16 @@ export default function AdminCategories() {
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const {
     isOpen: isDeleteOpen,
+    targetId: deleteTargetId,
     handleDeleteClick,
     handleConfirmDelete,
     handleClose: handleDeleteClose,
   } = useDeleteConfirm(deleteCategory, {
+    onSuccess: () => {
+      if (isEditing === deleteTargetId) {
+        resetForm();
+      }
+    },
     onError: (error) => console.error("Failed to delete category", error),
     closeOnError: true,
   });
@@ -100,15 +99,6 @@ export default function AdminCategories() {
   const collections = collectionsResponse?.data || [];
 
   // Edit State
-  const [editTitle, setEditTitle] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editColor, setEditColor] = useState("");
-  const [editSelectedColorId, setEditSelectedColorId] = useState("");
-  const [editSessionColorId, setEditSessionColorId] = useState("");
-  const [isEditingColorPending, setIsEditingColorPending] = useState(false);
-  const [editCollectionId, setEditCollectionId] = useState("");
-  const [editParentId, setEditParentId] = useState("");
-  const [editSelectedTags, setEditSelectedTags] = useState<string[]>([]);
   const [activeCategoryObj, setActiveCategoryObj] = useState<PopulatedCategory | null>(null);
 
   // Opportunistically cache any currently-selected tag the moment it's visible in its
@@ -131,9 +121,6 @@ export default function AdminCategories() {
       return changed ? Array.from(merged.values()) : prev;
     });
   };
-  useEffect(() => {
-    cacheSelectedTags(editSearchedTags, editSelectedTags);
-  }, [editSearchedTags, editSelectedTags]);
   useEffect(() => {
     cacheSelectedTags(newSearchedTags, newSelectedTagIds);
   }, [newSearchedTags, newSelectedTagIds]);
@@ -184,37 +171,6 @@ export default function AdminCategories() {
     }
   }, [collections, form]);
 
-  // Auto-create / select color for edit form
-  useEffect(() => {
-    if (!editColor || !isEditing) return;
-    const existing = colorsList.find((c) => c.color.toLowerCase() === editColor.toLowerCase());
-    if (existing) {
-      setEditSelectedColorId(existing.id);
-      setIsEditingColorPending(false);
-      return;
-    }
-
-    setIsEditingColorPending(true);
-    const timer = setTimeout(async () => {
-      try {
-        if (editSessionColorId) {
-          await updateColor({ id: editSessionColorId, color: editColor }).unwrap();
-          setEditSelectedColorId(editSessionColorId);
-        } else {
-          const res = await createColor({ color: editColor }).unwrap();
-          setEditSelectedColorId(res.data.id);
-          setEditSessionColorId(res.data.id);
-        }
-      } catch (err) {
-        console.error("Failed to create color dynamically in edit modal", err);
-      } finally {
-        setIsEditingColorPending(false);
-      }
-    }, 450);
-
-    return () => clearTimeout(timer);
-  }, [editColor, colorsList, createColor, updateColor, isEditing, editSessionColorId]);
-
   const handleCreateTag = async (name: string) => {
     try {
       const res = await createTag({
@@ -228,72 +184,37 @@ export default function AdminCategories() {
     }
   };
 
-  const handleAdd = async (values: z.infer<typeof categorySchema>) => {
-    if (!selectedColorId || isCreatingColorPending) return;
-
-    try {
-      // Use the actual selected color details from state
-      const submissionValues = {
-        ...values,
-        color: { id: selectedColorId, color: color },
-      };
-
-      await saveCategory(submissionValues).unwrap();
-
-      form.reset();
-      setColor("");
-      setSelectedColorId("");
-      setSessionColorId("");
-    } catch (err: unknown) {
-      const apiError = err as ApiMutationError;
-      if (apiError?.data?.error?.details) {
-        apiError.data.error.details.forEach((detail) => {
-          form.setError(detail.field as any, { type: "server", message: detail.message });
-        });
-      }
-      console.error("Failed to add category", err);
-    }
+  const resetForm = () => {
+    setIsEditing(null);
+    setActiveCategoryObj(null);
+    form.reset({
+      title: {},
+      description: {},
+      collectionId: collections[0]?.id ?? "",
+      parentId: null,
+      tagsIds: [],
+      color: { id: "", color: "" },
+    });
+    // Empty color state makes the "default color" effect pick the first palette color again.
+    setColor("");
+    setSelectedColorId("");
+    setSessionColorId("");
   };
 
-  // Sync color state to form to ensure validation passes
-  useEffect(() => {
-    form.setValue("color.id", selectedColorId, { shouldValidate: true });
-    form.setValue("color.color", color || "#000000", { shouldValidate: true });
-  }, [selectedColorId, color, form]);
-
-  const handleSave = async (id: string) => {
-    if (!editTitle || !editCollectionId || !editSelectedColorId || isEditingColorPending) return;
-    try {
-      const existingTitle = activeCategoryObj?.title && typeof activeCategoryObj.title === "object" ? activeCategoryObj.title : {};
-      const existingDesc = activeCategoryObj?.description && typeof activeCategoryObj.description === "object" ? activeCategoryObj.description : {};
-
-      await saveCategory({
-        id,
-        title: { ...existingTitle, [locale]: editTitle },
-        description: { ...existingDesc, [locale]: editDescription },
-        color: { id: editSelectedColorId, color: editColor },
-        collectionId: editCollectionId,
-        parentId: editParentId || null,
-        tagsIds: editSelectedTags,
-      }).unwrap();
-      setIsEditing(null);
-      setActiveCategoryObj(null);
-      setEditSessionColorId("");
-    } catch (err) {
-      console.error("Failed to save category", err);
-    }
-  };
-
-  const handleStartEdit = (cat: PopulatedCategory) => {
+  const handleEdit = (cat: PopulatedCategory) => {
     setIsEditing(cat.id);
     setActiveCategoryObj(cat);
-    setEditTitle(getLocalizedField(cat.title, locale));
-    setEditDescription(getLocalizedField(cat.description, locale));
-    setEditColor(cat.color?.color || (colorsList.length > 0 ? colorsList[0].color : "#000000"));
-    setEditSelectedColorId(cat.color?.id || (colorsList.length > 0 ? colorsList[0].id : ""));
-    setEditCollectionId(cat.collectionId || "");
-    setEditParentId(cat.parentId || "");
-    setEditSelectedTags(cat.tagsIds || cat.tags?.map((t) => t.id) || []);
+    setSessionColorId("");
+    form.reset({
+      title: typeof cat.title === "string" ? { [locale]: cat.title } : cat.title || {},
+      description: typeof cat.description === "string" ? { [locale]: cat.description } : cat.description || {},
+      collectionId: cat.collectionId || "",
+      parentId: cat.parentId || null,
+      tagsIds: cat.tagsIds || cat.tags?.map((t) => t.id) || [],
+      color: { id: cat.color?.id || "", color: cat.color?.color || "" },
+    });
+    setColor(cat.color?.color || "");
+    setSelectedColorId(cat.color?.id || "");
     if (cat.tags?.length) {
       setExtraTags((prev) => {
         const merged = new Map(prev.map((tag) => [tag.id, tag]));
@@ -303,6 +224,48 @@ export default function AdminCategories() {
     }
   };
 
+  const onSubmit = async (values: z.infer<typeof categorySchema>) => {
+    if (!selectedColorId || isCreatingColorPending) return;
+
+    try {
+      // Use the actual selected color details from state
+      const submissionValues = {
+        ...values,
+        color: { id: selectedColorId, color: color },
+      };
+
+      if (isEditing) {
+        // Keep the other locales' text: the form only edits the admin's own locale.
+        const existingTitle = activeCategoryObj?.title && typeof activeCategoryObj.title === "object" ? activeCategoryObj.title : {};
+        const existingDesc = activeCategoryObj?.description && typeof activeCategoryObj.description === "object" ? activeCategoryObj.description : {};
+        await saveCategory({
+          ...submissionValues,
+          id: isEditing,
+          title: { ...existingTitle, ...values.title },
+          description: { ...existingDesc, ...values.description },
+          parentId: values.parentId || null,
+        }).unwrap();
+      } else {
+        await saveCategory(submissionValues).unwrap();
+      }
+
+      resetForm();
+    } catch (err: unknown) {
+      const apiError = err as ApiMutationError;
+      if (apiError?.data?.error?.details) {
+        apiError.data.error.details.forEach((detail) => {
+          form.setError(detail.field as any, { type: "server", message: detail.message });
+        });
+      }
+      console.error("Failed to save category", err);
+    }
+  };
+
+  // Sync color state to form to ensure validation passes
+  useEffect(() => {
+    form.setValue("color.id", selectedColorId, { shouldValidate: true });
+    form.setValue("color.color", color || "#000000", { shouldValidate: true });
+  }, [selectedColorId, color, form]);
 
   return (
     <div className="space-y-6 font-sans">
@@ -313,11 +276,11 @@ export default function AdminCategories() {
 
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Category List */}
-        <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-border/60 bg-muted/50">
+        <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border overflow-hidden">
+          <div className="p-4 border-b border-border bg-muted/50">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("categories")}</h2>
           </div>
-          <div className="divide-y divide-border/45">
+          <div className="divide-y divide-border/60">
             {isLoading ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
@@ -350,186 +313,49 @@ export default function AdminCategories() {
 
                   return (
                     <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/10 transition-colors w-full">
-                      {isEditing === cat.id ? (
-                        <div className="flex-1 space-y-4 sm:space-y-3 w-full">
-                          <div className="grid grid-cols-1 gap-2">
-                            <input
-                              type="text"
-                              value={editTitle}
-                              onChange={(e) => setEditTitle(e.target.value)}
-                              placeholder={t("title")}
-                              className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="grid grid-cols-1 gap-2">
-                            <textarea
-                              value={editDescription}
-                              onChange={(e) => setEditDescription(e.target.value)}
-                              placeholder={t("description")}
-                              className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
-                              rows={2}
-                            />
-                          </div>
-                          <div className="grid grid-cols-1 gap-2">
-                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("collections")}</label>
-                            <select
-                              value={editCollectionId}
-                              onChange={(e) => setEditCollectionId(e.target.value)}
-                              style={SELECT_CHEVRON_STYLE}
-                              className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
-                              required
-                            >
-                              <option value="" disabled>{t("placeholder_select_collection")}</option>
-                              {collections.map((col) => (
-                                <option key={col.id} value={col.id} className="bg-card text-foreground">
-                                  {getLocalizedField(col.title, locale)}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="grid grid-cols-1 gap-2">
-                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("parent_category")}</label>
-                            <select
-                              value={editParentId}
-                              onChange={(e) => setEditParentId(e.target.value)}
-                              style={SELECT_CHEVRON_STYLE}
-                              className="w-full px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
-                            >
-                              <option value="">{t("none_main_category")}</option>
-                              {categories
-                                .filter((c) => c.id !== cat.id)
-                                .map((c) => (
-                                  <option key={c.id} value={c.id} className="bg-card text-foreground">
-                                    {getLocalizedField(c.title, locale)}
-                                  </option>
-                                ))}
-                            </select>
-                          </div>
-                          <div className="grid grid-cols-1 gap-2">
-                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("tags")}</label>
-                            <Combobox
-                              options={editTagOptions}
-                              value={editSelectedTags}
-                              onChange={(val) => setEditSelectedTags(val as string[])}
-                              placeholder={t("placeholder_select_tags")}
-                              searchPlaceholder={t("placeholder_search_tags")}
-                              allowCreate
-                              createLabel={t("add_new_tag_prompt")}
-                              multiple
-                              onCreate={handleCreateTag}
-                              serverSearch
-                              onSearchChange={setEditTagSearch}
-                              onEndReached={hasMoreEditTags ? loadMoreEditTags : undefined}
-                              resolveLabel={resolveTagLabel}
-                            />
-                          </div>
-                          <div className="grid grid-cols-1 gap-2">
-                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("color_accent")}</label>
-                            {/* Presets Grid */}
-                            {colorsList.length > 0 && (
-                              <div className="flex flex-wrap gap-2 sm:gap-1.5 p-2 sm:p-1.5 rounded-lg bg-muted/30 border border-border/40">
-                                {colorsList.map((c) => (
-                                  <button
-                                    key={c.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setEditColor(c.color);
-                                      setEditSelectedColorId(c.id);
-                                    }}
-                                    className={`w-6 h-6 sm:w-5 sm:h-5 rounded-full border transition-all hover:scale-110 cursor-pointer ${
-                                      editColor.toLowerCase() === c.color.toLowerCase()
-                                        ? "border-primary ring-2 ring-primary/20 scale-105"
-                                        : "border-border/60"
-                                    }`}
-                                    style={{ backgroundColor: c.color }}
-                                    title={c.color}
-                                  />
-                                ))}
-                              </div>
-                            )}
-  
-                            <div className="flex items-center gap-3">
-                              <input
-                                type="color"
-                                value={editColor}
-                                onChange={(e) => setEditColor(e.target.value)}
-                                className="w-10 h-10 sm:w-8 sm:h-8 rounded-lg border border-border cursor-pointer bg-transparent"
-                              />
-                              <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{editColor}</span>
-                              {isEditingColorPending && (
-                                <span className="text-[10px] text-muted-foreground animate-pulse flex items-center gap-1">
-                                  <Loader2 size={10} className="animate-spin" />
-                                  {t("saving_color")}
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm text-foreground truncate">{catTitleLoc}</span>
+                          <span
+                            className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider"
+                            style={{
+                              backgroundColor: `${catColor}25`,
+                              color: catColor,
+                              border: `1px solid ${catColor}40`,
+                            }}
+                          >
+                            HEX: {catColor}
+                          </span>
+                          {cat.parentId && (() => {
+                            const parentCat = categories.find((c) => c.id === cat.parentId);
+                            const parentTitle = parentCat ? getLocalizedField(parentCat.title, locale) : "";
+                            return parentTitle ? (
+                              <span className="text-[11px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
+                                {t("subcategory_of")} <strong className="truncate max-w-[100px] sm:max-w-[150px]">{parentTitle}</strong>
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
-                      ) : (
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-sm text-foreground truncate">{catTitleLoc}</span>
-                            <span
-                              className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider"
-                              style={{
-                                backgroundColor: `${catColor}25`,
-                                color: catColor,
-                                border: `1px solid ${catColor}40`,
-                              }}
-                            >
-                              HEX: {catColor}
-                            </span>
-                            {cat.parentId && (() => {
-                              const parentCat = categories.find((c) => c.id === cat.parentId);
-                              const parentTitle = parentCat ? getLocalizedField(parentCat.title, locale) : "";
-                              return parentTitle ? (
-                                <span className="text-[11px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
-                                  {t("subcategory_of")} <strong className="truncate max-w-[100px] sm:max-w-[150px]">{parentTitle}</strong>
-                                </span>
-                              ) : null;
-                            })()}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1.5 sm:mt-0.5 line-clamp-2">{catDescLoc}</p>
-                        </div>
-                      )}
+                        <p className="text-xs text-muted-foreground mt-1.5 sm:mt-0.5 line-clamp-2">{catDescLoc}</p>
+                      </div>
   
                       <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
-                        {isEditing === cat.id ? (
-                          <>
-                             <button
-                               onClick={() => handleSave(cat.id)}
-                               disabled={isEditingColorPending}
-                               className="p-2 sm:p-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center"
-                             >
-                               {isEditingColorPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                             </button>
-                            <button
-                              onClick={() => {
-                                setIsEditing(null);
-                                setActiveCategoryObj(null);
-                              }}
-                              className="p-2 sm:p-1.5 rounded-md border border-border text-subtle-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                            >
-                              <X size={18} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleStartEdit(cat)}
-                              className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteClick(cat.id)}
-                              className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-subtle-foreground cursor-pointer"
-                              title={t("delete")}
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </>
-                        )}
+                        <button
+                          onClick={() => handleEdit(cat)}
+                          className={`p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer ${
+                            isEditing === cat.id ? "bg-muted text-foreground" : ""
+                          }`}
+                          title={t("edit_category")}
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(cat.id)}
+                          className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-subtle-foreground cursor-pointer"
+                          title={t("delete")}
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </div>
                   );
@@ -543,14 +369,25 @@ export default function AdminCategories() {
           </div>
         </div>
 
-        {/* Add New Category */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border/40 overflow-hidden h-fit shadow-sm">
-          <div className="p-4 border-b border-border/60 bg-muted/50">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("add_category")}</h3>
+        {/* Add / Edit Category */}
+        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
+          <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {isEditing ? t("edit_category") : t("add_category")}
+            </h3>
+            {isEditing && (
+              <button
+                onClick={resetForm}
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+              >
+                <X size={12} />
+                {t("cancel_action")}
+              </button>
+            )}
           </div>
           <div className="p-5 space-y-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleAdd)} className="space-y-4" noValidate>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
               
               <FormField
                 control={form.control}
@@ -631,7 +468,7 @@ export default function AdminCategories() {
                         className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
                       >
                         <option value="">{t("none_main_category")}</option>
-                        {categories.map((c) => {
+                        {categories.filter((c) => c.id !== isEditing).map((c) => {
                           const titleStr = getLocalizedField(c.title, locale);
                           return (
                             <option key={c.id} value={c.id} className="bg-card text-foreground">
@@ -691,7 +528,7 @@ export default function AdminCategories() {
                         className={`w-6 h-6 rounded-full border transition-all hover:scale-110 cursor-pointer ${
                           color.toLowerCase() === c.color.toLowerCase()
                             ? "border-primary ring-2 ring-primary/20 scale-105"
-                            : "border-border/60"
+                            : "border-border"
                         }`}
                         style={{ backgroundColor: c.color }}
                         title={c.color}
@@ -724,10 +561,12 @@ export default function AdminCategories() {
               >
                 {(isSaving || isCreatingColorPending) ? (
                   <Loader2 size={16} className="animate-spin" />
+                ) : isEditing ? (
+                  <Save size={16} />
                 ) : (
                   <Plus size={16} />
                 )}
-                {t("add_category")}
+                {isEditing ? t("save") : t("add_category")}
               </button>
             </form>
           </Form>

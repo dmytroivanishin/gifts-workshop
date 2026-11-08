@@ -200,4 +200,15 @@
   html {
     @apply font-sans;
   }
+  /* Tailwind 4's preflight resets buttons to the default arrow; every real action should show a pointer. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled),
+  label[for] {
+    cursor: pointer;
+  }
 }

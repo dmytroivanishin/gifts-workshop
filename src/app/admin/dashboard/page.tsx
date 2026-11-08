@@ -108,7 +108,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/50 p-4 rounded-xl border border-border/60">
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/50 p-4 rounded-xl border border-border">
         <SearchInput
           value={search}
           onChange={setSearch}
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Posts List */}
-      <div className="bg-card rounded-xl border border-border/40 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
         {isLoading && page === 1 ? (
           <div className="p-8 text-center text-sm text-muted-foreground">{t("loading_posts")}</div>
         ) : posts.length > 0 ? (
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
             {/* Desktop Table */}
             <table className="hidden md:table w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-border/60 bg-muted/50">
+                <tr className="border-b border-border bg-muted/50">
                   <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("title")}</th>
                   <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("category")}</th>
                   <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("status")}</th>
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
                   <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">{t("actions")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/40">
+              <tbody className="divide-y divide-border/60">
                 {posts.map((post) => {
                   const categoryObject = post.category && typeof post.category === "object" ? post.category : null;
                   const rawCatTitle = categoryObject ? categoryObject.title : "";
@@ -217,7 +217,7 @@ export default function AdminDashboard() {
             </table>
 
             {/* Mobile Cards */}
-            <div className="md:hidden divide-y divide-border/40">
+            <div className="md:hidden divide-y divide-border/60">
               {posts.map((post) => {
                 const categoryObject = post.category && typeof post.category === "object" ? post.category : null;
                 const rawCatTitle = categoryObject ? categoryObject.title : "";
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
         
         {/* Unified Loader */}
         {posts.length > 0 && hasMore && (
-          <div ref={loaderRef} className="p-4 text-center text-sm text-muted-foreground bg-muted/5 border-t border-border/40 flex items-center justify-center">
+          <div ref={loaderRef} className="p-4 text-center text-sm text-muted-foreground bg-muted/5 border-t border-border flex items-center justify-center">
             <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
             {t("loading_more_posts")}
           </div>

@@ -13,8 +13,8 @@ interface SearchInputProps {
 // Shared by admin/media and admin/dashboard — previously each page styled its own search box
 // (different fill/border), so the same kind of control looked like two different components.
 // The field itself stays the lightest element on the page (bg-card) — the surrounding toolbar
-// div each page wraps it in carries the muted/border-border/60 "plashka" tone, matching the
-// dashboard table's own tr (border-b border-border/60 bg-muted/50); see admin/media/page.tsx
+// div each page wraps it in carries the muted/border-border "plashka" tone, matching the
+// dashboard table's own tr (border-b border-border bg-muted/50); see admin/media/page.tsx
 // and admin/dashboard/page.tsx's filter bar for that wrapper.
 export default function SearchInput({ value, onChange, placeholder, className = "" }: SearchInputProps) {
   const { t } = useTranslation();

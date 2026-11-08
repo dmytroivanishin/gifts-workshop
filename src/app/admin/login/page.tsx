@@ -104,7 +104,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="w-full max-w-[400px] bg-white rounded-3xl border border-border/40 p-8 shadow-sm flex flex-col items-center space-y-8">
+    <div className="w-full max-w-[400px] bg-white rounded-3xl border border-border/40 p-8 flex flex-col items-center space-y-8">
       
       {/* Logo */}
       <Image
@@ -130,7 +130,7 @@ function LoginContent() {
       <button
         onClick={handleGoogleLogin}
         disabled={isLoading}
-        className="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-full border border-border bg-white text-subtle-foreground hover:text-foreground hover:bg-muted/30 transition-all font-medium text-sm cursor-pointer shadow-sm disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-full border border-border bg-white text-subtle-foreground hover:text-foreground hover:bg-muted/30 transition-all font-medium text-sm cursor-pointer disabled:opacity-50"
       >
         {isLoading ? (
           <Loader2 className="animate-spin text-muted-foreground" size={18} />
