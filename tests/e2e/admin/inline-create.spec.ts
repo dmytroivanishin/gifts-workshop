@@ -1,5 +1,6 @@
 import { test, expect, APIRequestContext } from "@playwright/test";
 import { adminContext } from "../../api/helpers/auth";
+import { createColor } from "../../api/helpers/fixtures";
 import { loginAsAdmin } from "../helpers/auth";
 
 const FILE_KEY = "e2e-inline-create";
@@ -106,20 +107,28 @@ test.describe("admin categories: on-the-fly tag and color creation", () => {
     // form seeds `color` state from colorsList[0] on load).
     const hex = `#${Math.floor(Date.now() % 0xffffff).toString(16).padStart(6, "0")}`;
     let createdColorId: string | undefined;
+    // Precondition data through the API (not what the test verifies): one existing colour, so the
+    // add form's default-colour effect has something to apply. Its value showing up in the input
+    // proves React has hydrated, the colour list has loaded and that effect has run — without that
+    // wait the hand-dispatched events below could land before hydration, and the controlled
+    // input's reset to "" (which the browser shows as #000000) made the page create "#000000".
+    const baseColor = await createColor(admin);
 
     try {
       await loginAsAdmin(page);
       await page.goto("/admin/categories");
 
       const colorInput = page.locator('input[type="color"]');
-      // Not colorInput.fill(hex): confirmed by debugging (a native <input type="color"> with an
-      // initially-empty controlled `value=""` displays the browser's own "#000000" default, and
-      // Playwright's .fill() on it never registered as a real change against React's controlled
-      // value here — the debounced create effect never fired, reproducibly, in isolation).
-      // Setting the native value property directly and dispatching the events by hand is the
-      // reliable way to drive a React-controlled color input.
+      await expect(colorInput).toHaveValue(new RegExp(baseColor.color, "i"));
+      // Not colorInput.fill(hex): confirmed by debugging (Playwright's .fill() on a React-controlled
+      // native <input type="color"> never registered as a real change). Setting the native value
+      // property directly and dispatching the events by hand is the reliable way to drive it.
+      // Only a POST /colors carrying this test's own hex counts, never another request's.
       const createResponsePromise = page.waitForResponse(
-        (res) => res.url().includes("/api/v1/colors") && res.request().method() === "POST"
+        (res) =>
+          res.url().includes("/api/v1/colors") &&
+          res.request().method() === "POST" &&
+          String(res.request().postDataJSON()?.color ?? "").toLowerCase() === hex.toLowerCase()
       );
       await colorInput.evaluate((el: HTMLInputElement, value: string) => {
         const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")!.set!;
@@ -148,6 +157,7 @@ test.describe("admin categories: on-the-fly tag and color creation", () => {
       // reasoning as the tag test above; a listing search here would only risk leaking this one
       // row on cleanup, not failing the test itself, but it's the same latent flake either way.
       if (createdColorId) await admin.delete(`/api/v1/colors/${createdColorId}`).catch(() => {});
+      await baseColor.cleanup();
     }
   });
 });

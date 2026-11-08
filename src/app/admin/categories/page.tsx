@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Edit, Save, X, Loader2, Trash2 } from "lucide-react";
-import { SELECT_CHEVRON_STYLE } from "@/utils/selectChevron";
 import {
   useGetCategoriesQuery,
   useCreateCategoryMutation,
@@ -17,6 +16,10 @@ import {
 import { useTagsList } from "@/hooks/useTagsList";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import Combobox from "@/components/ui/combobox";
+import { RowAction, RowActions } from "@/components/shared/RowAction";
+import { Input } from "@/components/ui/input";
+import { ColorPicker } from "@/components/ui/color-picker";
+import { Textarea } from "@/components/ui/textarea";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
@@ -280,7 +283,7 @@ export default function AdminCategories() {
           <div className="p-4 border-b border-border bg-muted/50">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("categories")}</h2>
           </div>
-          <div className="divide-y divide-border/60">
+          <div className="divide-y divide-border/45">
             {isLoading ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
@@ -317,7 +320,7 @@ export default function AdminCategories() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-sm text-foreground truncate">{catTitleLoc}</span>
                           <span
-                            className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider"
+                            className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider"
                             style={{
                               backgroundColor: `${catColor}25`,
                               color: catColor,
@@ -330,7 +333,7 @@ export default function AdminCategories() {
                             const parentCat = categories.find((c) => c.id === cat.parentId);
                             const parentTitle = parentCat ? getLocalizedField(parentCat.title, locale) : "";
                             return parentTitle ? (
-                              <span className="text-[11px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
+                              <span className="text-[10px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
                                 {t("subcategory_of")} <strong className="truncate max-w-[100px] sm:max-w-[150px]">{parentTitle}</strong>
                               </span>
                             ) : null;
@@ -339,24 +342,10 @@ export default function AdminCategories() {
                         <p className="text-xs text-muted-foreground mt-1.5 sm:mt-0.5 line-clamp-2">{catDescLoc}</p>
                       </div>
   
-                      <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
-                        <button
-                          onClick={() => handleEdit(cat)}
-                          className={`p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer ${
-                            isEditing === cat.id ? "bg-muted text-foreground" : ""
-                          }`}
-                          title={t("edit_category")}
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(cat.id)}
-                          className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-subtle-foreground cursor-pointer"
-                          title={t("delete")}
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                      <RowActions>
+                        <RowAction icon={Edit} title={t("edit_category")} active={isEditing === cat.id} onClick={() => handleEdit(cat)} />
+                        <RowAction icon={Trash2} tone="destructive" title={t("delete")} onClick={() => handleDeleteClick(cat.id)} />
+                      </RowActions>
                     </div>
                   );
                 }}
@@ -396,12 +385,11 @@ export default function AdminCategories() {
                   <FormItem className="space-y-1.5">
                     <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("title")}</FormLabel>
                     <FormControl>
-                      <input
+                      <Input
                         {...field}
                         value={field.value || ""}
                         type="text"
                         placeholder={t("placeholder_category_title")}
-                        className={`w-full px-3.5 py-2 rounded-lg border bg-transparent text-sm outline-none focus:border-primary ${form.formState.errors.title ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
                       />
                     </FormControl>
                     <FormMessage className="text-[0.8rem] font-medium text-destructive" />
@@ -416,11 +404,10 @@ export default function AdminCategories() {
                   <FormItem className="space-y-1.5">
                     <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("description")}</FormLabel>
                     <FormControl>
-                      <textarea
+                      <Textarea
                         {...field}
                         value={field.value || ""}
                         placeholder={t("placeholder_category_desc")}
-                        className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary"
                         rows={3}
                       />
                     </FormControl>
@@ -436,18 +423,14 @@ export default function AdminCategories() {
                   <FormItem className="space-y-1.5">
                     <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("collections")}</FormLabel>
                     <FormControl>
-                      <select
-                        {...field}
-                        style={SELECT_CHEVRON_STYLE}
-                        className={`w-full px-3.5 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer ${form.formState.errors.collectionId ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
-                      >
-                        <option value="" disabled>{t("placeholder_select_collection")}</option>
-                        {collections.map((col) => (
-                          <option key={col.id} value={col.id} className="bg-card text-foreground">
-                            {getLocalizedField(col.title, locale)}
-                          </option>
-                        ))}
-                      </select>
+                      <Combobox
+                        options={collections.map((col) => ({ value: col.id, label: getLocalizedField(col.title, locale) }))}
+                        value={field.value || ""}
+                        onChange={(val) => field.onChange(val)}
+                        placeholder={t("placeholder_select_collection")}
+                        searchPlaceholder={t("placeholder_search_collections")}
+                        clearable={false}
+                      />
                     </FormControl>
                     <FormMessage className="text-[0.8rem] font-medium text-destructive" />
                   </FormItem>
@@ -461,22 +444,15 @@ export default function AdminCategories() {
                   <FormItem className="space-y-1.5">
                     <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("parent_category")}</FormLabel>
                     <FormControl>
-                      <select
-                        {...field}
+                      <Combobox
+                        options={categories
+                          .filter((c) => c.id !== isEditing)
+                          .map((c) => ({ value: c.id, label: getLocalizedField(c.title, locale) }))}
                         value={field.value || ""}
-                        style={SELECT_CHEVRON_STYLE}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-colors cursor-pointer"
-                      >
-                        <option value="">{t("none_main_category")}</option>
-                        {categories.filter((c) => c.id !== isEditing).map((c) => {
-                          const titleStr = getLocalizedField(c.title, locale);
-                          return (
-                            <option key={c.id} value={c.id} className="bg-card text-foreground">
-                              {titleStr}
-                            </option>
-                          );
-                        })}
-                      </select>
+                        onChange={(val) => field.onChange(val)}
+                        placeholder={t("none_main_category")}
+                        searchPlaceholder={t("placeholder_search_categories")}
+                      />
                     </FormControl>
                     <FormMessage className="text-[0.8rem] font-medium text-destructive" />
                   </FormItem>
@@ -525,7 +501,7 @@ export default function AdminCategories() {
                           setColor(c.color);
                           setSelectedColorId(c.id);
                         }}
-                        className={`w-6 h-6 rounded-full border transition-all hover:scale-110 cursor-pointer ${
+                        className={`w-6 h-6 rounded-[6px] border transition-all hover:scale-110 cursor-pointer ${
                           color.toLowerCase() === c.color.toLowerCase()
                             ? "border-primary ring-2 ring-primary/20 scale-105"
                             : "border-border"
@@ -538,12 +514,7 @@ export default function AdminCategories() {
                 )}
 
                 <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent"
-                  />
+                  <ColorPicker value={color} onChange={(e) => setColor(e.target.value)} />
                   <span className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">{color}</span>
                   {isCreatingColorPending && (
                     <span className="text-xs text-muted-foreground animate-pulse flex items-center gap-1">

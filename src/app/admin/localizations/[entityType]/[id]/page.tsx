@@ -2,8 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, ArrowLeft, Languages } from "lucide-react";
-import { SELECT_CHEVRON_STYLE } from "@/utils/selectChevron";
+import { Save, Loader2, ArrowLeft } from "lucide-react";
 import {
   useGetPostByIdQuery,
   useGetCategoryByIdQuery,
@@ -18,6 +17,9 @@ import {
   useCreateSystemTextMutation,
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
+import Combobox from "@/components/ui/combobox";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ApiMutationError, SystemText, PopulatedPost, PopulatedCategory, Tag, Collection, LocalizedText } from "@/types";
 
 interface PageProps {
@@ -214,6 +216,15 @@ export default function LocalizationDetailPage({ params }: PageProps) {
     );
   }
 
+  const entityTypeLabels: Record<string, string> = {
+    post: t("posts"),
+    category: t("categories"),
+    tag: t("tags"),
+    collection: t("collections"),
+    system: t("system_texts"),
+  };
+  const entityTypeLabel = entityTypeLabels[entityType] ?? entityType;
+
   return (
     <div className="space-y-6 font-sans">
       <div className="flex items-center gap-4">
@@ -225,32 +236,34 @@ export default function LocalizationDetailPage({ params }: PageProps) {
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Languages className="text-primary" size={24} />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {t("translations_title") || "Localizations"}
           </h1>
-          <p className="text-sm text-muted-foreground capitalize">
-            {entityType} - {id}
+          <p className="text-sm text-muted-foreground">
+            {entityTypeLabel}
           </p>
         </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6" noValidate>
         {isSystem && (
-          <div className="bg-card rounded-xl border border-border p-6 space-y-4">
-            <h3 className="font-bold text-sm text-foreground mb-2 uppercase">{t("system_text_settings") || "System Text Settings"}</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="p-4 border-b border-border bg-muted/50">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t("system_text_settings") || "System Text Settings"}
+              </h3>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {t("text_code_key") || "Text Code / Key"}
                 </label>
-                <input
+                <Input
                   type="text"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   placeholder="e.g. save_button"
-                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
                   required
                 />
               </div>
@@ -259,16 +272,17 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {t("visibility_area") || "Visibility Area"}
                 </label>
-                <select
+                <Combobox
+                  options={[
+                    { value: "public", label: t("area_public") || "Public (Visible to everyone)" },
+                    { value: "admin", label: t("area_admin") || "Admin (Visible only in admin panel)" },
+                    { value: "shared", label: t("area_shared") || "Shared (Visible in both)" },
+                  ]}
                   value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  style={SELECT_CHEVRON_STYLE}
-                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary transition-all"
-                >
-                  <option value="public">{t("area_public") || "Public (Visible to everyone)"}</option>
-                  <option value="admin">{t("area_admin") || "Admin (Visible only in admin panel)"}</option>
-                  <option value="shared">{t("area_shared") || "Shared (Visible in both)"}</option>
-                </select>
+                  onChange={(val) => setArea(val as string)}
+                  clearable={false}
+                  searchable={false}
+                />
               </div>
             </div>
           </div>
@@ -276,24 +290,24 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
         <div className={`grid grid-cols-1 md:grid-cols-${Math.min(activeLanguages.length, 3)} gap-6`}>
           {activeLanguages.map((lang) => (
-            <div key={lang} className="bg-card rounded-xl border border-border p-6 space-y-4 relative">
-              <div className="absolute top-4 right-4 bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase">
-                {lang}
+            <div key={lang} className="bg-card rounded-xl border border-border overflow-hidden h-fit">
+              <div className="p-4 border-b border-border bg-muted/50">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {lang} {isSystem ? "Translation" : ""}
+                </h3>
               </div>
-              <h3 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2 uppercase">
-                {lang} {isSystem ? "Translation" : ""}
-              </h3>
 
+              <div className="p-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {isSystem ? (t("content_label") || "Content") : (t("title") || "Title")} ({lang})
                 </label>
-                  <input
+                  <Input
                     type="text"
                     value={titles[lang] || ""}
                     onChange={(e) => updateField(lang, "title", e.target.value)}
                     placeholder="..."
-                    className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary transition-all ${((lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")) && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title") ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
+                    invalid={Boolean(((lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")) && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title"))}
                     required={lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")}
                   />
                   {(((lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")) && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title")) && <p className="text-[0.8rem] font-medium text-destructive mt-1.5">{getFieldError(`title.${lang}`) || getFieldError("title") || t("VALIDATION_ERROR") || "This field is required"}</p>}
@@ -304,22 +318,23 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     {t("description") || "Description"} ({lang})
                   </label>
-                  <textarea
+                  <Textarea
                     value={descriptions[lang] || ""}
                     onChange={(e) => updateField(lang, "desc", e.target.value)}
                     placeholder="..."
                     rows={6}
-                    className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary transition-all ${getFieldError(`description.${lang}`) || getFieldError("description") ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
+                    invalid={Boolean(getFieldError(`description.${lang}`) || getFieldError("description"))}
                   />
                   {(getFieldError(`description.${lang}`) || getFieldError("description")) && <p className="text-[0.8rem] font-medium text-destructive mt-1.5">{getFieldError(`description.${lang}`) || getFieldError("description")}</p>}
                 </div>
               )}
+              </div>
             </div>
           ))}
         </div>
 
         {/* Action Row */}
-        <div className="flex items-center justify-between bg-card rounded-xl border border-border px-6 py-4">
+        <div className="flex items-center justify-between">
           <div>
             {saveStatus && (
               <div

@@ -1,8 +1,8 @@
 "use client";
 
+import { RowAction, RowActions } from "@/components/shared/RowAction";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Check, X, Trash2, Loader2, MessageCircleReply, MessageSquare } from "lucide-react";
-import { SELECT_CHEVRON_STYLE } from "@/utils/selectChevron";
 import {
   useGetAdminCommentsQuery,
   useUpdateCommentStatusMutation,
@@ -10,6 +10,8 @@ import {
   useDeleteAdminCommentMutation,
 } from "@/store/api";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import Combobox from "@/components/ui/combobox";
+import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/i18n";
 import { PopulatedComment } from "@/types";
 
@@ -173,7 +175,7 @@ export default function AdminComments() {
         <div className="flex items-center gap-2">
           <span className="font-semibold text-sm text-foreground">{comment.name}</span>
           {isReply && (
-            <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-wider rounded-full border border-primary/20">
+            <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider rounded-full border border-primary/20">
               {t("admin")}
             </span>
           )}
@@ -190,44 +192,19 @@ export default function AdminComments() {
         )}
       </div>
       
-      <div className="flex items-center gap-1.5 self-end sm:self-auto flex-shrink-0 relative z-10">
-        {comment.status !== "Approved" && (
-          <button
-            onClick={() => handleStatusChange(comment.id, "Approved")}
-            disabled={isUpdating}
-            className="p-1.5 rounded-md hover:bg-[#7D8945]/10 text-muted-foreground hover:text-[#5C6535] transition-colors cursor-pointer"
-            title={t("approve")}
-          >
-            <Check size={16} />
-          </button>
-        )}
-        {comment.status !== "Rejected" && (
-          <button
-            onClick={() => handleStatusChange(comment.id, "Rejected")}
-            disabled={isUpdating}
-            className="p-1.5 rounded-md hover:bg-[#B87070]/10 text-muted-foreground hover:text-[#8F4A4A] transition-colors cursor-pointer"
-            title={t("reject")}
-          >
-            <X size={16} />
-          </button>
-        )}
-        {!isReply && (
-          <button
-            onClick={() => setReplyingToId(replyingToId === comment.id ? null : comment.id)}
-            className={`p-1.5 rounded-md transition-colors cursor-pointer ${replyingToId === comment.id ? "bg-primary text-primary-foreground" : "hover:bg-muted text-subtle-foreground hover:text-foreground"}`}
-            title={t("reply")}
-          >
-            <MessageCircleReply size={16} />
-          </button>
-        )}
-        <button
-          onClick={() => handleDeleteClick(comment.id)}
-          disabled={isDeleting}
-          className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-subtle-foreground cursor-pointer"
-          title={t("delete")}
-        >
-          <Trash2 size={16} />
-        </button>
+      <div className="relative z-10">
+        <RowActions>
+          {comment.status !== "Approved" && (
+            <RowAction icon={Check} tone="success" title={t("approve")} disabled={isUpdating} onClick={() => handleStatusChange(comment.id, "Approved")} />
+          )}
+          {comment.status !== "Rejected" && (
+            <RowAction icon={X} tone="danger" title={t("reject")} disabled={isUpdating} onClick={() => handleStatusChange(comment.id, "Rejected")} />
+          )}
+          {!isReply && (
+            <RowAction icon={MessageCircleReply} title={t("reply")} active={replyingToId === comment.id} onClick={() => setReplyingToId(replyingToId === comment.id ? null : comment.id)} />
+          )}
+          <RowAction icon={Trash2} tone="destructive" title={t("delete")} disabled={isDeleting} onClick={() => handleDeleteClick(comment.id)} />
+        </RowActions>
       </div>
     </div>
   );
@@ -242,22 +219,23 @@ export default function AdminComments() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <select
+          <Combobox
+            className="w-52"
+            options={[
+              { value: "Review", label: t("comment_status_review") },
+              { value: "Approved", label: t("comment_status_approved") },
+              { value: "Rejected", label: t("comment_status_rejected") },
+            ]}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={SELECT_CHEVRON_STYLE}
-            className="px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-          >
-            <option value="">{t("all_statuses") || "All Statuses"}</option>
-            <option value="Review">{t("comment_status_review")}</option>
-            <option value="Approved">{t("comment_status_approved")}</option>
-            <option value="Rejected">{t("comment_status_rejected")}</option>
-          </select>
+            onChange={(val) => setStatusFilter(val as string)}
+            placeholder={t("all_statuses") || "All Statuses"}
+            searchable={false}
+          />
         </div>
       </div>
 
       <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <div className="divide-y divide-border/60">
+        <div className="divide-y divide-border/45">
           {isLoading && page === 1 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
               <Loader2 className="animate-spin inline mr-2" size={16} />
@@ -271,11 +249,10 @@ export default function AdminComments() {
                   
                   {replyingToId === parent.id && (
                     <div className="mt-4 pl-4 border-l-2 border-border/50 flex flex-col gap-2 relative z-10">
-                      <textarea
+                      <Textarea
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
                         placeholder={t("placeholder_reply")}
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all min-h-[80px] resize-none"
                       />
                       <div className="flex justify-end gap-2">
                         <button

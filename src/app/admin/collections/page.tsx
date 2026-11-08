@@ -9,7 +9,11 @@ import {
   useDeleteCollectionMutation,
 } from "@/store/api";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
+import { RowAction, RowActions } from "@/components/shared/RowAction";
 import VirtualScrollList from "@/components/shared/VirtualScrollList";
 import { useTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
@@ -131,7 +135,7 @@ export default function AdminCollections() {
               <VirtualScrollList
                 items={collections}
                 estimateSize={100}
-                className="max-h-[70vh] divide-y divide-border/60"
+                className="max-h-[70vh] divide-y divide-border/45"
                 renderItem={(col) => (
                 <div
                   className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"
@@ -151,30 +155,15 @@ export default function AdminCollections() {
                     <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
                       {loc(col.description) || t("no_description")}
                     </p>
-                    <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5">
+                    <p className="text-xs text-muted-foreground/60 font-mono mt-0.5">
                       slug: {col.slug}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
-                    <button
-                      onClick={() => handleEdit(col)}
-                      className={`p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer ${
-                        isEditing === col.id ? "bg-muted text-foreground" : ""
-                      }`}
-                      title={t("edit_collection")}
-                    >
-                      <Edit size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(col.id)}
-                      disabled={isDeleting}
-                      className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-subtle-foreground cursor-pointer disabled:opacity-50"
-                      title={t("delete_collection")}
-                    >
-                      <Trash2 size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
-                    </button>
-                  </div>
+                  <RowActions>
+                    <RowAction icon={Edit} title={t("edit_collection")} active={isEditing === col.id} onClick={() => handleEdit(col)} />
+                    <RowAction icon={Trash2} tone="destructive" title={t("delete_collection")} disabled={isDeleting} onClick={() => handleDeleteClick(col.id)} />
+                  </RowActions>
                 </div>
                 )}
               />
@@ -215,12 +204,11 @@ export default function AdminCollections() {
                       {t("title")}
                     </FormLabel>
                     <FormControl>
-                      <input
+                      <Input
                         {...field}
                         value={field.value || ""}
                         type="text"
                         placeholder={t("placeholder_collection_title")}
-                        className={`w-full px-3.5 py-2 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.title ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
                       />
                     </FormControl>
                     <FormMessage className="text-[0.8rem] font-medium text-destructive" />
@@ -238,12 +226,11 @@ export default function AdminCollections() {
                       {t("description")}
                     </FormLabel>
                     <FormControl>
-                      <textarea
+                      <Textarea
                         {...field}
                         value={field.value || ""}
                         placeholder={t("placeholder_collection_desc")}
                         rows={4}
-                        className="w-full px-3.5 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </FormControl>
                     <FormMessage className="text-[0.8rem] font-medium text-destructive" />
@@ -258,12 +245,10 @@ export default function AdminCollections() {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-2">
                     <FormControl>
-                      <input
+                      <Checkbox
                         id="mainCollectionCheckbox"
-                        type="checkbox"
                         checked={field.value}
-                        onChange={field.onChange}
-                        className="rounded border-border bg-transparent text-primary focus:ring-0 w-4 h-4 cursor-pointer mt-1"
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">

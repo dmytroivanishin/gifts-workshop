@@ -1,5 +1,6 @@
 "use client";
 
+import { RowAction, RowActions } from "@/components/shared/RowAction";
 import { useState, useEffect, useRef } from "react";
 import { Plus, Edit, Trash2, Eye, Loader2 } from "lucide-react";
 import { useGetPostsQuery, useDeletePostMutation } from "@/store/api";
@@ -134,7 +135,7 @@ export default function AdminDashboard() {
                   <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">{t("actions")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/60">
+              <tbody className="divide-y divide-border/45">
                 {posts.map((post) => {
                   const categoryObject = post.category && typeof post.category === "object" ? post.category : null;
                   const rawCatTitle = categoryObject ? categoryObject.title : "";
@@ -184,30 +185,10 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Link
-                            href={`/posts/${post.slug || post.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground"
-                            title={t("view")}
-                          >
-                            <Eye size={16} />
-                          </Link>
-                          <Link
-                            href={`/admin/posts/${post.id}`}
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground flex items-center justify-center"
-                            title={t("edit")}
-                          >
-                            <Edit size={16} />
-                          </Link>
-                          <button
-                            onClick={() => handleDeleteClick(post.id)}
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-destructive cursor-pointer"
-                            title={t("delete")}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <RowAction icon={Eye} title={t("view")} href={`/posts/${post.slug || post.id}`} external />
+                          <RowAction icon={Edit} title={t("edit")} href={`/admin/posts/${post.id}`} />
+                          <RowAction icon={Trash2} tone="destructive" title={t("delete")} onClick={() => handleDeleteClick(post.id)} />
                         </div>
                       </td>
                     </tr>
@@ -217,7 +198,7 @@ export default function AdminDashboard() {
             </table>
 
             {/* Mobile Cards */}
-            <div className="md:hidden divide-y divide-border/60">
+            <div className="md:hidden divide-y divide-border/45">
               {posts.map((post) => {
                 const categoryObject = post.category && typeof post.category === "object" ? post.category : null;
                 const rawCatTitle = categoryObject ? categoryObject.title : "";
@@ -265,31 +246,11 @@ export default function AdminDashboard() {
                           {post.inStock ? t("in_stock") : t("on_request")}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Link
-                          href={`/posts/${post.slug || post.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground"
-                          title={t("view")}
-                        >
-                          <Eye size={18} />
-                        </Link>
-                        <Link
-                          href={`/admin/posts/${post.id}`}
-                          className="p-2 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground"
-                          title={t("edit")}
-                        >
-                          <Edit size={18} />
-                        </Link>
-                        <button
-                          onClick={() => handleDeleteClick(post.id)}
-                          className="p-2 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-destructive cursor-pointer"
-                          title={t("delete")}
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                      <RowActions>
+                        <RowAction icon={Eye} title={t("view")} href={`/posts/${post.slug || post.id}`} external />
+                        <RowAction icon={Edit} title={t("edit")} href={`/admin/posts/${post.id}`} />
+                        <RowAction icon={Trash2} tone="destructive" title={t("delete")} onClick={() => handleDeleteClick(post.id)} />
+                      </RowActions>
                     </div>
                   </div>
                 );

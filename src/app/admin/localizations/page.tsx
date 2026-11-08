@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Languages, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import {
   useGetPostsQuery,
   useGetCategoriesQuery,
@@ -111,8 +111,7 @@ export default function AdminLocalizations() {
     <div className="space-y-6 font-sans">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Languages className="text-primary" size={24} />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {t("translations_title") || "Localizations"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -192,7 +191,7 @@ export default function AdminLocalizations() {
                     {title}
                   </h3>
                   
-                  <div className="mt-4 flex items-center gap-1.5 text-[11px] font-medium">
+                  <div className="mt-4 flex items-center gap-1.5 text-xs font-medium">
                     {isTranslated ? (
                       <span className="text-emerald-600 bg-emerald-600/10 px-2 py-1 rounded-md flex items-center gap-1">
                         <CheckCircle2 size={12} /> {t("translated_fully")}

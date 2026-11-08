@@ -9,7 +9,9 @@ import {
 } from "@/store/api";
 import { useTagsList } from "@/hooks/useTagsList";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { Input } from "@/components/ui/input";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
+import { RowAction, RowActions } from "@/components/shared/RowAction";
 import VirtualScrollList from "@/components/shared/VirtualScrollList";
 import { useTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
@@ -120,35 +122,20 @@ export default function AdminTags() {
               <VirtualScrollList
                 items={tags}
                 estimateSize={76}
-                className="max-h-[70vh] divide-y divide-border/60"
+                className="max-h-[70vh] divide-y divide-border/45"
                 onEndReached={loadMore}
                 renderItem={(tag) => (
                   <div className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
                     <div className="flex flex-col gap-1 w-full sm:w-auto overflow-hidden">
-                      <span className="font-semibold text-sm text-subtle-foreground bg-secondary px-2.5 py-1 rounded-full border border-border w-fit truncate max-w-full">
+                      <span className="font-semibold text-sm text-foreground truncate">
                         #{loc(tag.name)}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
-                      <button
-                        onClick={() => handleEdit(tag)}
-                        className={`p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer ${
-                          isEditing === tag.id ? "bg-muted text-foreground" : ""
-                        }`}
-                        title={t("rename_tag")}
-                      >
-                        <Edit size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(tag.id)}
-                        disabled={isDeleting}
-                        className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-subtle-foreground cursor-pointer disabled:opacity-50"
-                        title={t("delete_tag")}
-                      >
-                        <Trash2 size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
-                      </button>
-                    </div>
+                    <RowActions>
+                      <RowAction icon={Edit} title={t("rename_tag")} active={isEditing === tag.id} onClick={() => handleEdit(tag)} />
+                      <RowAction icon={Trash2} tone="destructive" title={t("delete_tag")} disabled={isDeleting} onClick={() => handleDeleteClick(tag.id)} />
+                    </RowActions>
                   </div>
                 )}
               />
@@ -190,12 +177,11 @@ export default function AdminTags() {
                   <FormItem className="space-y-1.5">
                     <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tag_name")}</FormLabel>
                     <FormControl>
-                      <input
+                      <Input
                         {...field}
                         value={field.value || ""}
                         type="text"
                         placeholder={t("placeholder_vintage")}
-                        className={`w-full px-3.5 py-2 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.name ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
                       />
                     </FormControl>
                     <FormMessage className="text-[0.8rem] font-medium text-destructive" />

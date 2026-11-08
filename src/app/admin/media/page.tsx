@@ -355,7 +355,7 @@ export default function AdminMedia() {
                 <label
                   data-test-id={`media-select-${item.id}`}
                   title={t("select")}
-                  className={`absolute top-2 left-2 z-10 w-6 h-6 rounded-md border-2 flex items-center justify-center shadow-sm transition-all cursor-pointer ${
+                  className={`absolute top-2 left-2 z-10 size-5 rounded-[7px] border flex items-center justify-center transition-colors cursor-pointer ${
                     isSelected
                       ? "bg-primary border-primary text-primary-foreground"
                       : "bg-white/80 border-border text-transparent hover:border-primary"
@@ -367,7 +367,7 @@ export default function AdminMedia() {
                     onChange={() => toggleSelect(item.id)}
                     className="sr-only"
                   />
-                  <Check size={14} strokeWidth={3} />
+                  <Check size={14} />
                 </label>
                 <img
                   src={item.url}

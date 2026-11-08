@@ -17,6 +17,9 @@ import { useTagsList } from "@/hooks/useTagsList";
 import ImageCropModal from "@/components/shared/ImageCropModal";
 import MediaPickerModal from "@/components/shared/MediaPickerModal";
 import Combobox from "@/components/ui/combobox";
+import { Input, FIELD_BASE } from "@/components/ui/input";
+import { cn } from "@/utils/cn";
+import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -260,7 +263,6 @@ export default function PostFormPage({ params }: PostFormPageProps) {
 
   const onSubmit = async (values: z.infer<typeof postSchema>) => {
     try {
-      let postId = id;
       if (isEditMode) {
         const existingTitle = postResponse?.data?.title && typeof postResponse.data.title === "object" ? postResponse.data.title : {};
         const existingDesc = postResponse?.data?.description && typeof postResponse.data.description === "object" ? postResponse.data.description : {};
@@ -272,17 +274,11 @@ export default function PostFormPage({ params }: PostFormPageProps) {
           description: { ...existingDesc, ...values.description },
         }).unwrap();
       } else {
-        const res = await createPost(values).unwrap();
-        postId = res.data?.id;
+        await createPost(values).unwrap();
       }
 
-      if (values.status === "Draft") {
-        if (!isEditMode && postId) {
-          router.replace(`/admin/posts/${postId}`);
-        }
-      } else {
-        router.push("/admin/dashboard");
-      }
+      // A draft and a publish both return to the list.
+      router.push("/admin/dashboard");
     } catch (err: unknown) {
       const apiError = err as ApiMutationError;
       if (apiError?.data?.error?.details) {
@@ -388,12 +384,11 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                     {t("title")}
                   </FormLabel>
                   <FormControl>
-                    <input
+                    <Input
                       {...field}
                       value={field.value || ""}
                       type="text"
                       placeholder={t("placeholder_post_title")}
-                      className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.title ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
                     />
                   </FormControl>
                   <FormMessage className="text-[0.8rem] font-medium text-destructive" />
@@ -480,12 +475,11 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                     {t("description")}
                   </FormLabel>
                   <FormControl>
-                    <textarea
+                    <Textarea
                       {...field}
                       value={field.value || ""}
                       placeholder={t("placeholder_post_desc")}
                       rows={4}
-                      className={`w-full px-4 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all ${form.formState.errors.description ? "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20" : "border-border"}`}
                     />
                   </FormControl>
                   <FormMessage className="text-[0.8rem] font-medium text-destructive" />
@@ -543,7 +537,6 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                           id="inStockCheckbox"
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          className="rounded-[6px] border-border/80 w-5 h-5 cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </FormControl>
                       <label htmlFor="inStockCheckbox" className="text-sm font-medium text-muted-foreground cursor-pointer select-none">
@@ -567,19 +560,18 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                         <PopoverTrigger asChild>
                           <button
                             type="button"
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border bg-transparent cursor-pointer text-sm transition-all hover:bg-muted/50 ${form.formState.errors.createdAt ? "border-destructive text-destructive" : "border-border hover:border-border/80"}`}
+                            aria-invalid={!!form.formState.errors.createdAt}
+                            className={cn(FIELD_BASE, "flex h-10 items-center gap-2.5 px-3.5 text-left cursor-pointer")}
                           >
-                            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-                              <CalendarIcon size={16} />
-                            </div>
-                            <span className={field.value ? "text-foreground font-medium" : "text-muted-foreground"}>
+                            <CalendarIcon size={16} className="shrink-0 text-muted-foreground" />
+                            <span className={field.value ? "text-foreground" : "text-muted-foreground"}>
                               {field.value
                                 ? new Date(field.value).toLocaleString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
                                 : t("select_date")}
                             </span>
                           </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-4 rounded-2xl border-border bg-card shadow-xl admin-area font-sans" align="start">
+                        <PopoverContent className="w-auto p-4 rounded-xl border-border bg-card shadow-lg admin-area font-sans" align="start">
                           <Calendar
                             mode="single"
                             locale={dateLocales[locale] || enUS}

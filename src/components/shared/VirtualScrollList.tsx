@@ -60,6 +60,8 @@ export default function VirtualScrollList<T>({
         {virtualItems.map((virtualRow) => (
           <div
             key={virtualRow.key}
+            // Rows are absolutely positioned, so a parent's divide-y cannot draw the separators.
+            className={virtualRow.index < items.length - 1 ? "border-b border-border/45" : undefined}
             style={{
               position: "absolute",
               top: 0,

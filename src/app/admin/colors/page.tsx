@@ -10,7 +10,10 @@ import {
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { Input } from "@/components/ui/input";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
+import { RowAction, RowActions } from "@/components/shared/RowAction";
 import VirtualScrollList from "@/components/shared/VirtualScrollList";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -120,18 +123,16 @@ export default function AdminColors() {
                   <FormItem className="space-y-2">
                     <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">HEX</FormLabel>
                     <div className="flex items-center gap-3">
-                      <input
-                        type="color"
+                      <ColorPicker
                         value={field.value}
                         onChange={(e) => field.onChange(e.target.value)}
-                        className="w-12 h-12 rounded-lg border border-border cursor-pointer bg-transparent shrink-0"
                       />
                       <FormControl>
-                        <input
+                        <Input
                           {...field}
                           type="text"
                           placeholder="#HEX"
-                          className={`flex-1 w-full px-3.5 py-2.5 rounded-lg border bg-transparent text-sm outline-none focus:border-primary uppercase transition-colors ${form.formState.errors.color ? "border-destructive text-destructive focus:border-destructive" : "border-border"}`}
+                          className="flex-1 uppercase"
                           maxLength={7}
                         />
                       </FormControl>
@@ -172,39 +173,21 @@ export default function AdminColors() {
               <VirtualScrollList
                 items={colors}
                 estimateSize={88}
-                className="max-h-[70vh] divide-y divide-border/60"
+                className="max-h-[70vh] divide-y divide-border/45"
                 renderItem={(c) => (
                   <div className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-10 h-10 rounded-full border border-border/40 shadow-inner flex items-center justify-center flex-shrink-0"
+                        className="size-10 rounded-[9px] border border-border flex-shrink-0"
                         style={{ backgroundColor: c.color }}
                       />
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-sm uppercase text-foreground tracking-wider">{c.color}</span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono">ID: {c.id.substring(0, 8)}...</span>
-                      </div>
+                      <span className="font-semibold text-sm uppercase text-foreground tracking-wider truncate">{c.color}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
-                      <button
-                        onClick={() => handleEdit(c)}
-                        className={`p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer ${
-                          isEditing === c.id ? "bg-muted text-foreground" : ""
-                        }`}
-                        title={t("edit_color")}
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(c.id)}
-                        disabled={isDeleting}
-                        className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-destructive disabled:opacity-50 cursor-pointer"
-                        title={t("delete")}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+                    <RowActions>
+                      <RowAction icon={Edit} title={t("edit_color")} active={isEditing === c.id} onClick={() => handleEdit(c)} />
+                      <RowAction icon={Trash2} tone="destructive" title={t("delete")} disabled={isDeleting} onClick={() => handleDeleteClick(c.id)} />
+                    </RowActions>
                   </div>
                 )}
               />

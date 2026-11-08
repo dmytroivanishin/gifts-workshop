@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Check, ChevronsUpDown, X, Plus } from "lucide-react";
 import VirtualScrollList from "@/components/shared/VirtualScrollList";
+import SearchInput from "@/components/shared/SearchInput";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 
 interface ComboboxOption {
   value: string;
@@ -34,6 +36,15 @@ interface ComboboxProps {
   // page (e.g. a server-search combobox showing a chip for a value outside the loaded page) —
   // used only for the selected-chip display, never for the dropdown's own option list.
   resolveLabel?: (value: string) => string | undefined;
+  // Whether the dropdown shows its search box. Defaults to on only for long lists (more than 6
+  // options) or server-search mode, so a short pick-one list (a status, an area) stays compact.
+  searchable?: boolean;
+  // Whether the trigger shows the clear (x) button. Turn off for a required single choice.
+  clearable?: boolean;
+  // Marks the trigger with the destructive outline (same as an invalid text field).
+  invalid?: boolean;
+  "aria-invalid"?: boolean;
+  id?: string;
 }
 
 export default function Combobox({
@@ -51,7 +62,13 @@ export default function Combobox({
   onSearchChange,
   onEndReached,
   resolveLabel,
+  searchable,
+  clearable = true,
+  invalid = false,
+  "aria-invalid": ariaInvalid,
+  id,
 }: ComboboxProps) {
+  const showSearch = searchable ?? (serverSearch || allowCreate || options.length > 6);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -87,17 +104,6 @@ export default function Combobox({
     const query = search.toLowerCase();
     return options.filter((opt) => opt.label.toLowerCase().includes(query));
   }, [options, search, serverSearch]);
-
-  // Click outside to close dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleSelect = (val: string) => {
     if (multiple) {
@@ -156,20 +162,28 @@ export default function Combobox({
   }, [selectedValues, options, resolveLabel]);
 
   return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
     <div ref={containerRef} className={`relative w-full ${className}`}>
       {/* Target trigger area */}
+      <PopoverAnchor asChild>
       <div
+        id={id}
         onClick={() => setIsOpen(!isOpen)}
-        className="min-h-11 w-full flex flex-wrap items-center justify-between gap-1.5 px-3 py-2 rounded-lg border border-border bg-card hover:bg-card/80 cursor-pointer focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm"
+        aria-invalid={invalid || ariaInvalid || undefined}
+        className="min-h-10 w-full flex flex-wrap items-center justify-between gap-1.5 px-3.5 py-1.5 rounded-lg border border-border bg-card cursor-pointer focus-within:border-primary aria-invalid:border-destructive transition-colors"
       >
         {selectedOptions.length === 0 ? (
           <span className="text-sm text-muted-foreground">{placeholder}</span>
         ) : (
+          !multiple ? (
+            // A single choice reads as the field's value, not as a removable chip.
+            <span className="text-sm text-foreground">{selectedOptions[0].label}</span>
+          ) : (
           <div className="flex flex-wrap gap-1">
             {selectedOptions.map((opt) => (
               <span
                 key={opt.value}
-                className="inline-flex items-center gap-1 bg-secondary text-secondary-foreground text-xs font-semibold px-2 py-1 rounded-md border border-border/40 shadow-sm transition-all hover:bg-secondary/80"
+                className="inline-flex items-center gap-1 bg-secondary text-secondary-foreground text-xs font-semibold px-2 py-1 rounded-md border border-border transition-colors hover:bg-secondary/80"
               >
                 {opt.label}
                 <button
@@ -182,9 +196,10 @@ export default function Combobox({
               </span>
             ))}
           </div>
+          )
         )}
         <div className="flex items-center gap-1.5 ml-auto pl-1 pr-1.5">
-          {selectedValues.length > 0 && (
+          {clearable && selectedValues.length > 0 && (
             <button
               type="button"
               onClick={(e) => {
@@ -200,26 +215,35 @@ export default function Combobox({
           <ChevronsUpDown size={14} className="text-muted-foreground" />
         </div>
       </div>
+      </PopoverAnchor>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute z-50 w-full mt-1.5 rounded-xl border border-border/80 bg-popover text-popover-foreground shadow-lg backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
-          <div className="p-2 border-b border-border/40">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => handleSearchInput(e.target.value)}
-              placeholder={searchPlaceholder}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && allowCreate && search) {
-                  e.preventDefault();
-                  handleCreate();
-                }
-              }}
-              className="w-full px-3 py-1.5 text-sm bg-muted/65 rounded-lg border border-transparent focus:border-border outline-none transition-colors"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
+      {/* Dropdown menu: rendered in a portal so a panel's overflow-hidden never clips it. */}
+        <PopoverContent
+          align="start"
+          sideOffset={6}
+          collisionPadding={12}
+          // A click on the trigger itself is handled by the trigger's own toggle.
+          onInteractOutside={(e) => {
+            if (containerRef.current?.contains(e.target as Node)) e.preventDefault();
+          }}
+          className="admin-area w-(--radix-popover-trigger-width) gap-0 overflow-hidden rounded-xl border border-border bg-popover p-0 font-sans shadow-lg ring-0"
+        >
+          {showSearch && (
+            <div className="p-2 border-b border-border">
+              <SearchInput
+                value={search}
+                onChange={handleSearchInput}
+                placeholder={searchPlaceholder}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && allowCreate && search) {
+                    e.preventDefault();
+                    handleCreate();
+                  }
+                }}
+                inputClassName="h-9"
+              />
+            </div>
+          )}
 
           <div className="p-1.5">
             {filteredOptions.length === 0 ? (
@@ -259,8 +283,8 @@ export default function Combobox({
               />
             )}
           </div>
-        </div>
-      )}
+        </PopoverContent>
     </div>
+    </Popover>
   );
 }
