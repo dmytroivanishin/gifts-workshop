@@ -92,7 +92,7 @@ test.describe("admin smoke: every list page loads with real data and no console 
 
   test("login via the real UI", async ({ page }) => {
     await loginAsAdmin(page);
-    await expect(page).toHaveURL(/\/admin\/dashboard/);
+    await expect(page).toHaveURL(/\/admin\/posts$/);
   });
 
   test("dashboard shows drafts too (status=all) with no console errors", async ({ page }) => {

@@ -132,7 +132,7 @@ Nothing runs migrations at app startup or deploy time. The MinIO bucket is prepa
 ```
 app/
   [locale]/(public)/        home (page.tsx), posts/[slug]/{layout,page}.tsx
-  admin/                    login, dashboard, posts/[id], categories, collections, tags,
+  admin/                    login, posts (list) + posts/[id], categories, collections, tags,
                             colors, media, comments, localizations/[entityType]/[id]
   api/v1/                   auth/*, posts, categories, collections, tags, colors, media, users,
                             system-texts, admin/comments; each folder has route.ts (+ [id])

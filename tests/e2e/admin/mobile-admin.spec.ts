@@ -159,7 +159,7 @@ test.describe("admin on a mobile viewport (390px): dashboard, categories, media 
     const createResponse = await createResponsePromise;
     const createdPostId = (await createResponse.json()).data.id as string;
     try {
-      await page.waitForURL(/\/admin\/dashboard/);
+      await page.waitForURL(/\/admin\/posts$/);
     } finally {
       await admin.delete(`/api/v1/posts/${createdPostId}`);
     }

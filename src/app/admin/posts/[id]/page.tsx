@@ -313,7 +313,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
       }
 
       // A draft and a publish both return to the list.
-      router.push("/admin/dashboard");
+      router.push("/admin/posts");
     } catch (err: unknown) {
       const apiError = err as ApiMutationError;
       if (apiError?.data?.error?.details) {
@@ -388,7 +388,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
       <div className="flex items-center justify-between pb-4 border-b border-border">
         <div className="flex items-center gap-3">
           <Link
-            href="/admin/dashboard"
+            href="/admin/posts"
             className="p-1.5 rounded-lg border border-border bg-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             <ChevronLeft size={16} />

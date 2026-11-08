@@ -168,7 +168,7 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
     await publishButton.click();
     const createResponse = await createResponsePromise;
     createdPostId = (await createResponse.json()).data.id;
-    await page.waitForURL(/\/admin\/dashboard/);
+    await page.waitForURL(/\/admin\/posts$/);
     // The dashboard renders both a desktop <table> and a "md:hidden" mobile card list at once
     // (CSS-hidden, not removed from the DOM) — the title appears in both, so .first() avoids a
     // strict-mode violation (see the same note in smoke.spec.ts).

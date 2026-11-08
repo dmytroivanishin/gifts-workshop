@@ -21,5 +21,5 @@ export async function loginAsAdmin(page: Page): Promise<void> {
   await page.context().setExtraHTTPHeaders({ "x-forwarded-for": crypto.randomUUID().replace(/-/g, "").slice(0, 15) });
   await page.goto("/admin/login");
   await page.getByRole("button", { name: /login_dev_bypass|Быстрый вход/i }).click();
-  await page.waitForURL(/\/admin\/dashboard/);
+  await page.waitForURL(/\/admin\/posts$/);
 }

@@ -63,10 +63,10 @@ based on their browser's language settings.
 ## Admin panel
 
 Reached by logging in with Google (restricted to pre-approved admin accounts). The
-sidebar is organized around one section per content type: Projects (the dashboard),
+sidebar is organized around one section per content type: Projects (the posts list, `/admin/posts`),
 Categories, Collections, Tags, Colors, Translations, Media Library, and Comments.
 
-### Projects (the dashboard)
+### Projects (the posts list, `/admin/posts`)
 
 This is the main item-management screen: a searchable, infinitely-scrolling table of
 every item regardless of status, each row showing its thumbnail, title, category,

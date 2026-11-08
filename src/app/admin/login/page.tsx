@@ -40,7 +40,7 @@ function LoginContent() {
         throw new Error(errorText(data, "GOOGLE_LOGIN_FAILED"));
       }
 
-      router.push("/admin/dashboard");
+      router.push("/admin/posts");
     } catch (err: unknown) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : t("GOOGLE_LOGIN_FAILED"));
@@ -96,7 +96,7 @@ function LoginContent() {
         throw new Error(errorText(data, "UNKNOWN_ERROR"));
       }
 
-      router.push("/admin/dashboard");
+      router.push("/admin/posts");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t("UNKNOWN_ERROR"));
       setIsLoading(false);
