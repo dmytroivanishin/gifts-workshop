@@ -36,6 +36,8 @@ function categoryTone(hex: string | undefined, selected: boolean): { className: 
       // very outline colour (it must not get darker when selected).
       borderColor: `${hex}29`,
       backgroundColor: selected ? `${hex}29` : undefined,
+      // Without this the translucent fill also sits under the translucent border, doubling it up.
+      backgroundClip: "padding-box",
       "--cat-soft": `${hex}12`,
     } as CSSProperties,
   };
