@@ -119,7 +119,7 @@ export default function AdminCollections() {
 
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Collections List */}
-        <div className="lg:col-span-7 order-2 bg-card rounded-xl border border-border overflow-hidden">
+        <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/50">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("collections")} ({collections.length})
@@ -174,7 +174,7 @@ export default function AdminCollections() {
         </div>
 
         {/* Add / Edit Form */}
-        <div className="lg:col-span-5 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
+        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
           <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {isEditing ? t("edit_collection") : t("add_collection")}
