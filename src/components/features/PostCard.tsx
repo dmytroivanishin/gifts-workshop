@@ -172,13 +172,13 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-white shadow-md z-10 cursor-pointer"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 max-md:hidden pointer-coarse:hidden transition-opacity hover:bg-white shadow-md z-10 cursor-pointer"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-white shadow-md z-10 cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/85 text-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 max-md:hidden pointer-coarse:hidden transition-opacity hover:bg-white shadow-md z-10 cursor-pointer"
               >
                 <ChevronRight size={16} />
               </button>

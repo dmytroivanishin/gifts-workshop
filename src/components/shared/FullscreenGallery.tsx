@@ -80,10 +80,10 @@ export function FullscreenGallery({
               e.stopPropagation();
               goToPrev();
             }}
-            className="absolute left-4 md:left-8 z-[110] p-3 rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
+            className="absolute left-4 lg:left-8 z-[110] p-2 lg:p-3 max-md:hidden pointer-coarse:hidden rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
             aria-label={t("previous_image")}
           >
-            <ChevronLeft size={32} />
+            <ChevronLeft className="size-6 lg:size-8" />
           </button>
 
           <button
@@ -92,10 +92,10 @@ export function FullscreenGallery({
               e.stopPropagation();
               goToNext();
             }}
-            className="absolute right-4 md:right-8 z-[110] p-3 rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
+            className="absolute right-4 lg:right-8 z-[110] p-2 lg:p-3 max-md:hidden pointer-coarse:hidden rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
             aria-label={t("next_image")}
           >
-            <ChevronRight size={32} />
+            <ChevronRight className="size-6 lg:size-8" />
           </button>
         </>
       )}
