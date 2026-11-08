@@ -150,7 +150,7 @@ export default function AdminLocalizations() {
                 className={`w-full lg:w-auto px-4 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer border ${
                   entityType === type.id 
                     ? "bg-primary text-primary-foreground border-primary shadow-sm" 
-                    : "bg-secondary border-border/40 text-muted-foreground hover:text-foreground"
+                    : "bg-secondary border-border/40 text-subtle-foreground hover:text-foreground"
                 }`}
               >
                 {type.label}
@@ -163,7 +163,7 @@ export default function AdminLocalizations() {
       {/* Entities Grid */}
       <div className="space-y-6">
         {items.length === 0 && !isFetching ? (
-          <div className="text-center py-12 text-muted-foreground bg-card rounded-xl border border-border/40">
+          <div className="p-8 text-center text-sm text-muted-foreground bg-card rounded-xl border border-border/40">
             {t("items_not_found") || "No items found"}
           </div>
         ) : (
@@ -218,7 +218,7 @@ export default function AdminLocalizations() {
           ) : hasMore ? (
             <button
               onClick={handleLoadMore}
-              className="px-6 py-2.5 bg-secondary text-foreground text-sm font-semibold rounded-lg border border-border/40 hover:bg-secondary/80 transition-colors cursor-pointer"
+              className="px-6 py-2.5 bg-secondary text-subtle-foreground hover:text-foreground text-sm font-semibold rounded-lg border border-border/40 hover:bg-secondary/80 transition-colors cursor-pointer"
             >
               {t("load_more") !== "load_more" ? t("load_more") : "Загрузить еще"}
             </button>

@@ -161,6 +161,12 @@ export default function AdminComments() {
     return parents;
   }, [comments]);
 
+  const statusLabel = (status: string): string => {
+    if (status === "Approved") return t("comment_status_approved");
+    if (status === "Rejected") return t("comment_status_rejected");
+    return t("comment_status_review");
+  };
+
   const renderCommentNode = (comment: PopulatedComment, isReply: boolean = false) => (
     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
       <div className="flex flex-col gap-1.5 flex-1 relative z-10">
@@ -168,18 +174,18 @@ export default function AdminComments() {
           <span className="font-semibold text-sm text-foreground">{comment.name}</span>
           {isReply && (
             <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-wider rounded-full border border-primary/20">
-              Admin
+              {t("admin")}
             </span>
           )}
           <span className="text-xs text-muted-foreground">{new Date(comment.createdAt).toLocaleString()}</span>
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusBadgeColor(comment.status)}`}>
-            {comment.status}
+            {statusLabel(comment.status)}
           </span>
         </div>
         <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
         {!isReply && comment.post && (
           <p className="text-xs text-muted-foreground mt-1">
-            on Post: <span className="font-medium text-primary">{getLocalizedField(comment.post.title, locale) || comment.post.slug}</span>
+            {t("on_post")} <span className="font-medium text-primary">{getLocalizedField(comment.post.title, locale) || comment.post.slug}</span>
           </p>
         )}
       </div>
@@ -190,7 +196,7 @@ export default function AdminComments() {
             onClick={() => handleStatusChange(comment.id, "Approved")}
             disabled={isUpdating}
             className="p-1.5 rounded-md hover:bg-[#7D8945]/10 text-muted-foreground hover:text-[#5C6535] transition-colors cursor-pointer"
-            title="Approve"
+            title={t("approve")}
           >
             <Check size={16} />
           </button>
@@ -200,7 +206,7 @@ export default function AdminComments() {
             onClick={() => handleStatusChange(comment.id, "Rejected")}
             disabled={isUpdating}
             className="p-1.5 rounded-md hover:bg-[#B87070]/10 text-muted-foreground hover:text-[#8F4A4A] transition-colors cursor-pointer"
-            title="Reject"
+            title={t("reject")}
           >
             <X size={16} />
           </button>
@@ -208,8 +214,8 @@ export default function AdminComments() {
         {!isReply && (
           <button
             onClick={() => setReplyingToId(replyingToId === comment.id ? null : comment.id)}
-            className={`p-1.5 rounded-md transition-colors cursor-pointer ${replyingToId === comment.id ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground hover:text-foreground"}`}
-            title="Reply"
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${replyingToId === comment.id ? "bg-primary text-primary-foreground" : "hover:bg-muted text-subtle-foreground hover:text-foreground"}`}
+            title={t("reply")}
           >
             <MessageCircleReply size={16} />
           </button>
@@ -217,8 +223,8 @@ export default function AdminComments() {
         <button
           onClick={() => handleDeleteClick(comment.id)}
           disabled={isDeleting}
-          className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer"
-          title="Delete"
+          className="p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-subtle-foreground cursor-pointer"
+          title={t("delete")}
         >
           <Trash2 size={16} />
         </button>
@@ -243,9 +249,9 @@ export default function AdminComments() {
             className="px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           >
             <option value="">{t("all_statuses") || "All Statuses"}</option>
-            <option value="Review">Review</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
+            <option value="Review">{t("comment_status_review")}</option>
+            <option value="Approved">{t("comment_status_approved")}</option>
+            <option value="Rejected">{t("comment_status_rejected")}</option>
           </select>
         </div>
       </div>
@@ -268,7 +274,7 @@ export default function AdminComments() {
                       <textarea
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
-                        placeholder="Write your reply..."
+                        placeholder={t("placeholder_reply")}
                         className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all min-h-[80px] resize-none"
                       />
                       <div className="flex justify-end gap-2">
@@ -277,16 +283,16 @@ export default function AdminComments() {
                             setReplyingToId(null);
                             setReplyText("");
                           }}
-                          className="px-3 py-1.5 text-xs font-medium text-foreground bg-secondary hover:bg-muted border border-border rounded-lg transition-colors cursor-pointer"
+                          className="px-3 py-1.5 text-xs font-medium text-subtle-foreground hover:text-foreground bg-secondary hover:bg-muted border border-border rounded-lg transition-colors cursor-pointer"
                         >
-                          Cancel
+                          {t("cancel")}
                         </button>
                         <button
                           onClick={() => handleReplySubmit(parent.id)}
                           disabled={!replyText.trim() || isReplying}
                           className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 rounded-lg transition-opacity disabled:opacity-50 cursor-pointer"
                         >
-                          {isReplying ? "Sending..." : "Send Reply"}
+                          {isReplying ? t("sending") : t("send_reply")}
                         </button>
                       </div>
                     </div>
@@ -312,8 +318,8 @@ export default function AdminComments() {
               <div className="bg-muted/50 p-4 rounded-full mb-3">
                 <MessageSquare className="w-8 h-8 text-muted-foreground/50" />
               </div>
-              <p className="text-sm font-medium text-foreground">{t("no_comments") || "No comments found"}</p>
-              <p className="text-xs text-muted-foreground mt-1">When users post comments, they will appear here.</p>
+              <p className="text-sm font-medium text-muted-foreground">{t("no_comments")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("comments_empty_hint")}</p>
             </div>
           )}
           
@@ -328,10 +334,10 @@ export default function AdminComments() {
 
       <ConfirmModal
         isOpen={isDeleteOpen}
-        title="Delete Comment"
-        message="Are you sure you want to delete this comment? This will also delete all replies to it. This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t("delete_comment")}
+        message={t("delete_confirm_comment")}
+        confirmText={t("delete")}
+        cancelText={t("cancel")}
         onConfirm={handleConfirmDelete}
         onClose={() => setIsDeleteOpen(false)}
         isLoading={isDeleting}

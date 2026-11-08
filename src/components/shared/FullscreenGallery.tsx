@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { handleImageLoadError } from "@/utils/mediaPlaceholder";
+import { useTranslation } from "@/i18n";
 
 interface FullscreenGalleryProps {
   images: string[];
@@ -18,6 +19,7 @@ export function FullscreenGallery({
   isOpen,
   onClose,
 }: FullscreenGalleryProps) {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
   // Sync state when opened with a specific image
@@ -64,7 +66,7 @@ export function FullscreenGallery({
         type="button"
         onClick={onClose}
         className="absolute top-6 right-6 z-[110] p-2.5 rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
-        aria-label="Close"
+        aria-label={t("close")}
       >
         <X size={24} />
       </button>
@@ -79,7 +81,7 @@ export function FullscreenGallery({
               goToPrev();
             }}
             className="absolute left-4 md:left-8 z-[110] p-3 rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
-            aria-label="Previous image"
+            aria-label={t("previous_image")}
           >
             <ChevronLeft size={32} />
           </button>
@@ -91,7 +93,7 @@ export function FullscreenGallery({
               goToNext();
             }}
             className="absolute right-4 md:right-8 z-[110] p-3 rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
-            aria-label="Next image"
+            aria-label={t("next_image")}
           >
             <ChevronRight size={32} />
           </button>

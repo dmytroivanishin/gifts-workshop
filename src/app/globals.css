@@ -54,6 +54,7 @@
   --color-lime-bg: var(--color-lime-bg);
   --color-lime-text: var(--color-lime-text);
   --color-lime-active: var(--color-lime-active);
+  --color-subtle-foreground: var(--subtle-foreground);
   --color-tan-bg: var(--color-tan-bg);
   --color-tan-text: var(--color-tan-text);
   --color-sand-bg: var(--color-sand-bg);
@@ -127,6 +128,10 @@
   --color-lime-text: #5C6535;
   --color-lime-active: #DADFC6;
   
+  /* Palette step; components use --subtle-foreground, never this directly. */
+  --ivory-700: #4C4940;
+  /* Middle text tier: between --foreground (primary) and --muted-foreground (hints). */
+  --subtle-foreground: var(--ivory-700);
   --color-tan-bg: #EBE7E3;
   --color-tan-text: #63523F;
   

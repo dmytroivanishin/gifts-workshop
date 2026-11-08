@@ -34,7 +34,7 @@ export function PublicHeader() {
 
   // The homepage has nothing at its own top edge, so the switcher can overlay it (absolute,
   // reserving no layout space, per your request). Every other public page (the post page,
-  // for one) has its own content starting right at the top — e.g. "back_to_gallery" — which an
+  // for one) has its own content starting right at the top — e.g. "back_to_home" — which an
   // absolute switcher would sit on top of, so those pages keep the original flow-based block
   // with its own reserved space, exactly as it was before.
   //

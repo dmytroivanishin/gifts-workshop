@@ -141,7 +141,7 @@ test.describe("admin: error toasts and conflict handling", () => {
       await loginAsAdmin(page);
       await page.goto("/admin/colors");
 
-      const row = page.locator("div.py-4", { hasText: color.color.toUpperCase() });
+      const row = page.locator("div.p-4.h-full", { hasText: color.color.toUpperCase() });
       await expect(row).toBeVisible();
       await row.getByRole("button").last().click();
       await page.getByTestId("confirm-modal-confirm").click();

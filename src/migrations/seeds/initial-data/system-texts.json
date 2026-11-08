@@ -9,15 +9,6 @@
     "code": "made_to_order"
   },
   {
-    "id": "95f5e380-4f83-48f6-bc2d-f8ab1e73c14c",
-    "content": {
-      "en": "Back to gallery",
-      "ru": "Назад к галерее"
-    },
-    "area": "public",
-    "code": "back_to_gallery"
-  },
-  {
     "id": "53c0e638-d943-4ee3-bb81-0e07f29b3746",
     "content": {
       "en": "Order or ask about this item:",
@@ -1875,7 +1866,7 @@
     "id": "419c3103-cae5-46eb-8459-14a1a389183a",
     "content": {
       "en": "Archive",
-      "ru": "Archive"
+      "ru": "Архив"
     },
     "area": "admin",
     "code": "archive"
@@ -1884,7 +1875,7 @@
     "id": "97e9fe20-d172-4ad2-bb3c-f316537f60e1",
     "content": {
       "en": "Drag To Reorder",
-      "ru": "Drag To Reorder"
+      "ru": "Перетащите, чтобы изменить порядок"
     },
     "area": "admin",
     "code": "drag_to_reorder"
@@ -2149,5 +2140,338 @@
     },
     "area": "admin",
     "code": "duplicate_of"
+  },
+  {
+    "id": "1c035a5c-ee05-4ecf-8f05-99b53b4c1d83",
+    "content": {
+      "en": "Clear search",
+      "ru": "Очистить поиск"
+    },
+    "area": "admin",
+    "code": "clear_search"
+  },
+  {
+    "id": "89d4dd21-d5d3-4b58-b2eb-d32d60d3fc3b",
+    "content": {
+      "en": "Cannot delete media because it is used in a post.",
+      "ru": "Нельзя удалить медиа: оно используется в работе."
+    },
+    "area": "admin",
+    "code": "MEDIA_IN_USE"
+  },
+  {
+    "id": "f1cb2896-03a6-464e-b0b5-19664bd9744e",
+    "content": {
+      "en": "This file is already in the media library.",
+      "ru": "Такой файл уже есть в медиатеке."
+    },
+    "area": "admin",
+    "code": "DUPLICATE_MEDIA"
+  },
+  {
+    "id": "df29ca29-7464-4403-9159-95591433d143",
+    "content": {
+      "en": "Cannot delete a category that has child categories.",
+      "ru": "Нельзя удалить категорию, у которой есть дочерние категории."
+    },
+    "area": "admin",
+    "code": "CATEGORY_HAS_CHILDREN"
+  },
+  {
+    "id": "0adc5827-d5ce-42af-86c9-64f4b432603d",
+    "content": {
+      "en": "Cannot delete a category that is linked to posts.",
+      "ru": "Нельзя удалить категорию: к ней привязаны работы."
+    },
+    "area": "admin",
+    "code": "CATEGORY_HAS_POSTS"
+  },
+  {
+    "id": "ac47cd82-54f4-4ac8-b832-67efc7509744",
+    "content": {
+      "en": "Cannot delete a collection that is linked to posts.",
+      "ru": "Нельзя удалить коллекцию: к ней привязаны работы."
+    },
+    "area": "admin",
+    "code": "COLLECTION_HAS_POSTS"
+  },
+  {
+    "id": "2118c029-336a-4539-9517-c803f33e5e1f",
+    "content": {
+      "en": "Cannot delete a collection that is linked to categories.",
+      "ru": "Нельзя удалить коллекцию: к ней привязаны категории."
+    },
+    "area": "admin",
+    "code": "COLLECTION_HAS_CATEGORIES"
+  },
+  {
+    "id": "bc66d4e1-c761-463a-bf47-657892126c0d",
+    "content": {
+      "en": "Too many requests. Please wait a moment and try again.",
+      "ru": "Слишком много запросов. Немного подождите и повторите."
+    },
+    "area": "admin",
+    "code": "TOO_MANY_REQUESTS"
+  },
+  {
+    "id": "2883341b-29e7-47b5-afac-fa3badec56d3",
+    "content": {
+      "en": "Google sign-in failed. Please try again.",
+      "ru": "Не удалось войти через Google. Повторите попытку."
+    },
+    "area": "admin",
+    "code": "GOOGLE_LOGIN_FAILED"
+  },
+  {
+    "id": "c6b95069-e71c-40f5-8a86-712d31a79d1b",
+    "content": {
+      "en": "Too many files selected. Please upload fewer files at once.",
+      "ru": "Выбрано слишком много файлов. Загружайте меньше файлов за один раз."
+    },
+    "area": "admin",
+    "code": "TOO_MANY_FILES"
+  },
+  {
+    "id": "6a8345cd-c0c3-43a2-8a6a-8f7df2b9869b",
+    "content": {
+      "en": "File uploaded",
+      "ru": "Файл загружен"
+    },
+    "area": "admin",
+    "code": "media_uploaded"
+  },
+  {
+    "id": "bcbead09-6631-4647-b15c-f659671e67eb",
+    "content": {
+      "en": "File deleted",
+      "ru": "Файл удалён"
+    },
+    "area": "admin",
+    "code": "media_deleted"
+  },
+  {
+    "id": "a36f73dc-7320-4023-9f2f-c19b29b9e364",
+    "content": {
+      "en": "Approve",
+      "ru": "Одобрить"
+    },
+    "area": "admin",
+    "code": "approve"
+  },
+  {
+    "id": "f9fb48c4-7902-4a65-89e9-2b41a8672bf7",
+    "content": {
+      "en": "Reject",
+      "ru": "Отклонить"
+    },
+    "area": "admin",
+    "code": "reject"
+  },
+  {
+    "id": "e344a2a9-1e5e-4fea-8c7e-0c7d2930b0e1",
+    "content": {
+      "en": "Reply",
+      "ru": "Ответить"
+    },
+    "area": "admin",
+    "code": "reply"
+  },
+  {
+    "id": "3baf9877-c95c-4928-9206-ba9a13de60e1",
+    "content": {
+      "en": "Send reply",
+      "ru": "Отправить ответ"
+    },
+    "area": "admin",
+    "code": "send_reply"
+  },
+  {
+    "id": "1eba2f33-6f88-46b6-b033-1ff0860dd5ee",
+    "content": {
+      "en": "Sending...",
+      "ru": "Отправка..."
+    },
+    "area": "admin",
+    "code": "sending"
+  },
+  {
+    "id": "4da88ca8-35cf-42a9-8c43-99715c8b4ca4",
+    "content": {
+      "en": "Write your reply...",
+      "ru": "Напишите ответ..."
+    },
+    "area": "admin",
+    "code": "placeholder_reply"
+  },
+  {
+    "id": "1d270f46-0b95-4bcc-bfa3-0e4a899376cb",
+    "content": {
+      "en": "In review",
+      "ru": "На проверке"
+    },
+    "area": "admin",
+    "code": "comment_status_review"
+  },
+  {
+    "id": "12b2b490-7ff6-4726-baae-2c579a07610f",
+    "content": {
+      "en": "Approved",
+      "ru": "Одобрен"
+    },
+    "area": "admin",
+    "code": "comment_status_approved"
+  },
+  {
+    "id": "2973abb8-3f76-4b2c-9702-40dd9fdd7629",
+    "content": {
+      "en": "Rejected",
+      "ru": "Отклонён"
+    },
+    "area": "admin",
+    "code": "comment_status_rejected"
+  },
+  {
+    "id": "34394c43-2005-4e30-bc22-fed317de5a6f",
+    "content": {
+      "en": "On post:",
+      "ru": "К работе:"
+    },
+    "area": "admin",
+    "code": "on_post"
+  },
+  {
+    "id": "d78eb72e-69eb-405c-b086-9e7af550cc64",
+    "content": {
+      "en": "Delete comment",
+      "ru": "Удалить комментарий"
+    },
+    "area": "admin",
+    "code": "delete_comment"
+  },
+  {
+    "id": "36d5cdba-2c63-44f5-8583-8a182ddb3ff5",
+    "content": {
+      "en": "Are you sure you want to delete this comment? All replies to it will be deleted too. This action cannot be undone.",
+      "ru": "Вы уверены, что хотите удалить этот комментарий? Все ответы на него тоже будут удалены. Это действие нельзя отменить."
+    },
+    "area": "admin",
+    "code": "delete_confirm_comment"
+  },
+  {
+    "id": "0b04a29b-6bb3-4527-8d81-0bfbfd5d7d65",
+    "content": {
+      "en": "When visitors post comments, they will appear here.",
+      "ru": "Когда посетители оставят комментарии, они появятся здесь."
+    },
+    "area": "admin",
+    "code": "comments_empty_hint"
+  },
+  {
+    "id": "076b51f8-0a90-4c6b-9f31-3eeb5e889bff",
+    "content": {
+      "en": "Sign out",
+      "ru": "Выйти"
+    },
+    "area": "admin",
+    "code": "sign_out"
+  },
+  {
+    "id": "0478ac80-b6c1-4edd-9a5b-0c2266600aa5",
+    "content": {
+      "en": "Back to list",
+      "ru": "Назад к списку"
+    },
+    "area": "admin",
+    "code": "back_to_list"
+  },
+  {
+    "id": "db336d39-904d-44d8-86bc-0cdea28bc0e6",
+    "content": {
+      "en": "Close",
+      "ru": "Закрыть"
+    },
+    "area": "shared",
+    "code": "close"
+  },
+  {
+    "id": "2a4b82ee-6ca1-4cc1-ae0d-725e22293bfa",
+    "content": {
+      "en": "Previous image",
+      "ru": "Предыдущее фото"
+    },
+    "area": "shared",
+    "code": "previous_image"
+  },
+  {
+    "id": "d57ac00a-d73f-458c-b1f9-a932f06db9a1",
+    "content": {
+      "en": "Next image",
+      "ru": "Следующее фото"
+    },
+    "area": "shared",
+    "code": "next_image"
+  },
+  {
+    "id": "0700fc37-996e-4ddc-8812-9cc0257ada81",
+    "content": {
+      "en": "No colors found.",
+      "ru": "Цвета не найдены."
+    },
+    "area": "admin",
+    "code": "colors_not_found"
+  },
+  {
+    "id": "4fb67242-edfc-4c70-ab43-ba8c84c0d4e3",
+    "content": {
+      "en": "Saving color...",
+      "ru": "Сохранение цвета..."
+    },
+    "area": "admin",
+    "code": "saving_color"
+  },
+  {
+    "id": "a5a7101a-8285-49fa-bb72-9281daad48ca",
+    "content": {
+      "en": "Sign in to the panel",
+      "ru": "Вход в Панель"
+    },
+    "area": "admin",
+    "code": "login_title"
+  },
+  {
+    "id": "5303ebb1-1dcf-4521-a07d-0c3abd3d27e8",
+    "content": {
+      "en": "Sign in with your Google account to manage the portfolio.",
+      "ru": "Авторизуйтесь через Google аккаунт для управления портфолио."
+    },
+    "area": "admin",
+    "code": "login_subtitle"
+  },
+  {
+    "id": "b503bd68-56a2-4502-8a5d-8c3baa6e0273",
+    "content": {
+      "en": "Sign in with Google",
+      "ru": "Войти через Google"
+    },
+    "area": "admin",
+    "code": "login_with_google"
+  },
+  {
+    "id": "a229c5fd-5653-4f48-b8fb-1b49b078e77f",
+    "content": {
+      "en": "Developer: quick sign-in (no Google)",
+      "ru": "Разработчик: Быстрый Вход (Без Google)"
+    },
+    "area": "admin",
+    "code": "login_dev_bypass"
+  },
+  {
+    "id": "6c503748-6713-4839-8041-bd1ba38bb1d4",
+    "content": {
+      "en": "Access is allowed only for the registered administrator account.",
+      "ru": "Доступ разрешен только зарегистрированному аккаунту администратора."
+    },
+    "area": "admin",
+    "code": "login_admin_only"
   }
 ]

@@ -198,7 +198,7 @@ export default function AdminColors() {
                             onClick={() => {
                               setEditingId(null);
                             }}
-                            className="p-2 sm:p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md border border-border text-subtle-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                           >
                             <X size={18} />
                           </button>
@@ -210,14 +210,14 @@ export default function AdminColors() {
                               setEditingId(c.id);
                               setEditColorHex(c.color);
                             }}
-                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer"
                           >
                             <Edit size={18} />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(c.id)}
                             disabled={isDeleting}
-                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-destructive disabled:opacity-50 cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-destructive disabled:opacity-50 cursor-pointer"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -231,7 +231,7 @@ export default function AdminColors() {
             ) : (
               !isLoading && (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                  Цвета не найдены.
+                  {t("colors_not_found")}
                 </div>
               )
             )}

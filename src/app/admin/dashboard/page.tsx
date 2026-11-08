@@ -187,21 +187,23 @@ export default function AdminDashboard() {
                         <div className="flex items-center justify-end gap-1.5">
                           <Link
                             href={`/posts/${post.slug || post.id}`}
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground"
                             title={t("view")}
                           >
                             <Eye size={16} />
                           </Link>
                           <Link
                             href={`/admin/posts/${post.id}`}
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex items-center justify-center"
+                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground flex items-center justify-center"
                             title={t("edit")}
                           >
                             <Edit size={16} />
                           </Link>
                           <button
                             onClick={() => handleDeleteClick(post.id)}
-                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-destructive cursor-pointer"
+                            className="p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-destructive cursor-pointer"
                             title={t("delete")}
                           >
                             <Trash2 size={16} />
@@ -266,21 +268,23 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-1">
                         <Link
                           href={`/posts/${post.slug || post.id}`}
-                          className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground"
                           title={t("view")}
                         >
                           <Eye size={18} />
                         </Link>
                         <Link
                           href={`/admin/posts/${post.id}`}
-                          className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                          className="p-2 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground"
                           title={t("edit")}
                         >
                           <Edit size={18} />
                         </Link>
                         <button
                           onClick={() => handleDeleteClick(post.id)}
-                          className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-destructive cursor-pointer"
+                          className="p-2 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-destructive cursor-pointer"
                           title={t("delete")}
                         >
                           <Trash2 size={18} />

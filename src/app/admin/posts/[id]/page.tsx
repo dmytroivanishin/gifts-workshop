@@ -606,7 +606,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
               <button
                 type="button"
                 onClick={() => setIsMediaPickerOpen(true)}
-                className="text-xs font-semibold px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                className="text-xs font-semibold px-3 py-1.5 bg-secondary text-subtle-foreground hover:text-foreground rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
               >
                 {t("add_media")}
               </button>
@@ -654,7 +654,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                 type="button"
                 onClick={() => handleActionClick("Archived")}
                 disabled={isSaving}
-                className="p-2.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+                className="p-2.5 rounded-lg bg-secondary text-subtle-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
                 title={t("archive")}
               >
                 <ArchiveIcon size={18} />

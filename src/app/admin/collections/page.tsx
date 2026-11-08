@@ -159,7 +159,7 @@ export default function AdminCollections() {
                   <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
                     <button
                       onClick={() => handleEdit(col)}
-                      className={`p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer ${
+                      className={`p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer ${
                         isEditing === col.id ? "bg-muted text-foreground" : ""
                       }`}
                       title={t("edit_collection")}
@@ -169,7 +169,7 @@ export default function AdminCollections() {
                     <button
                       onClick={() => handleDeleteClick(col.id)}
                       disabled={isDeleting}
-                      className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
+                      className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-subtle-foreground cursor-pointer disabled:opacity-50"
                       title={t("delete_collection")}
                     >
                       <Trash2 size={18} className="sm:w-4 sm:h-4 w-5 h-5" />

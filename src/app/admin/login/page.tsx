@@ -5,13 +5,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { ShieldAlert, Loader2, KeyRound } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { useTranslation } from "@/i18n";
 
 function LoginContent() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [isDev, setIsDev] = useState(false);
   const exchangeStarted = useRef(false);
+
+  // Server messages are English; show the localized text for the error code, or a generic one.
+  const errorText = useCallback(
+    (data: { error?: { code?: string } } | undefined, fallbackKey: string): string => {
+      const code = data?.error?.code;
+      const translated = code ? t(code) : "";
+      return translated && translated !== code ? translated : t(fallbackKey);
+    },
+    [t]
+  );
 
   // Exchange Google Authorization Code for JWT Access/Refresh tokens
   const handleCodeExchange = useCallback(async (code: string, state: string) => {
@@ -25,18 +37,18 @@ function LoginContent() {
 
       const data = await res.json();
       if (!res.ok || data.error) {
-        throw new Error(data.error?.message || "Failed to authenticate with Google");
+        throw new Error(errorText(data, "GOOGLE_LOGIN_FAILED"));
       }
 
       router.push("/admin/dashboard");
     } catch (err: unknown) {
       console.error(err);
-      toast.error(err instanceof Error ? err.message : "Authentication error occurred");
+      toast.error(err instanceof Error ? err.message : t("GOOGLE_LOGIN_FAILED"));
       // Drops the used code and state from the address bar
       router.replace("/admin/login");
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, t, errorText]);
 
   useEffect(() => {
     // Detect if we are in local development to show the bypass button
@@ -61,12 +73,12 @@ function LoginContent() {
       const googleAuthUrl: unknown = data.data?.url;
 
       if (!res.ok || typeof googleAuthUrl !== "string") {
-        throw new Error(data.error?.message || "Google login is not configured on the server. Use Developer Bypass or check the server settings.");
+        throw new Error(errorText(data, "GOOGLE_LOGIN_FAILED"));
       }
 
       window.location.href = googleAuthUrl;
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to start Google login");
+      toast.error(err instanceof Error ? err.message : t("GOOGLE_LOGIN_FAILED"));
       setIsLoading(false);
     }
   };
@@ -81,12 +93,12 @@ function LoginContent() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        throw new Error(data.error?.message || "Developer login failed");
+        throw new Error(errorText(data, "UNKNOWN_ERROR"));
       }
 
       router.push("/admin/dashboard");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Bypass failed");
+      toast.error(err instanceof Error ? err.message : t("UNKNOWN_ERROR"));
       setIsLoading(false);
     }
   };
@@ -107,10 +119,10 @@ function LoginContent() {
       {/* Text */}
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-semibold text-foreground">
-          Вход в Панель
+          {t("login_title")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Авторизуйтесь через Google аккаунт для управления портфолио.
+          {t("login_subtitle")}
         </p>
       </div>
 
@@ -118,7 +130,7 @@ function LoginContent() {
       <button
         onClick={handleGoogleLogin}
         disabled={isLoading}
-        className="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-full border border-border bg-white text-foreground hover:bg-muted/30 transition-all font-medium text-sm cursor-pointer shadow-sm disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-full border border-border bg-white text-subtle-foreground hover:text-foreground hover:bg-muted/30 transition-all font-medium text-sm cursor-pointer shadow-sm disabled:opacity-50"
       >
         {isLoading ? (
           <Loader2 className="animate-spin text-muted-foreground" size={18} />
@@ -142,7 +154,7 @@ function LoginContent() {
             />
           </svg>
         )}
-        <span>Войти через Google</span>
+        <span>{t("login_with_google")}</span>
       </button>
 
       {/* Dev Bypass Login Option */}
@@ -150,17 +162,17 @@ function LoginContent() {
         <button
           onClick={handleDevBypass}
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all font-medium text-xs cursor-pointer disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-secondary text-subtle-foreground hover:text-foreground hover:bg-secondary/80 transition-all font-medium text-xs cursor-pointer disabled:opacity-50"
         >
           <KeyRound size={14} />
-          <span>Разработчик: Быстрый Вход (Без Google)</span>
+          <span>{t("login_dev_bypass")}</span>
         </button>
       )}
 
       {/* Warning / Guard Info */}
       <div className="flex gap-2.5 items-start bg-amber-500/10 p-3 rounded-2xl border border-amber-500/25 text-amber-800 text-[11px] leading-relaxed">
         <ShieldAlert size={16} className="flex-shrink-0 mt-0.5" />
-        <span>Доступ разрешен только зарегистрированному аккаунту администратора.</span>
+        <span>{t("login_admin_only")}</span>
       </div>
 
     </div>

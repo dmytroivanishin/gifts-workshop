@@ -96,7 +96,7 @@ export default function ImageCropModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-full border border-border hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
+            className="p-1 rounded-full border border-border hover:bg-muted text-subtle-foreground transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>

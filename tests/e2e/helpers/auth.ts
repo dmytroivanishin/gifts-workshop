@@ -4,8 +4,9 @@ import crypto from "crypto";
 // Drives the real UI (not a direct cookie injection) so the login flow itself stays covered —
 // clicking "Dev Bypass" does a plain fetch("/api/v1/auth/dev-login") + router.push, NOT a full
 // page navigation (confirmed by reading admin/login/page.tsx), so waiting on a Playwright
-// navigation/load event would hang. The button's own text is hardcoded Russian JSX (not a t()
-// call), so it's stable regardless of the test DB's system_texts state. Wait on the URL changing
+// navigation/load event would hang. The button's text comes from t("login_dev_bypass"): the test DB's
+// system_texts is empty, so it renders as the raw key; the Russian copy is matched too in case
+// the table was seeded. Wait on the URL changing
 // rather than any dashboard text — see the note in smoke.spec.ts about t()'s fallback behavior.
 //
 // /api/v1/auth/* is rate-limited to 20/minute (RATE_LIMITS.auth, proxy.ts), and in `next dev` a
@@ -19,6 +20,6 @@ import crypto from "crypto";
 export async function loginAsAdmin(page: Page): Promise<void> {
   await page.context().setExtraHTTPHeaders({ "x-forwarded-for": crypto.randomUUID().replace(/-/g, "").slice(0, 15) });
   await page.goto("/admin/login");
-  await page.getByRole("button", { name: /Быстрый Вход/ }).click();
+  await page.getByRole("button", { name: /login_dev_bypass|Быстрый вход/i }).click();
   await page.waitForURL(/\/admin\/dashboard/);
 }

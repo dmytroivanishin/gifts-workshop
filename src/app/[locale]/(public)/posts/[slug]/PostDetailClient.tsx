@@ -104,7 +104,7 @@ export default function PostDetailClient({ slug, initialPost }: PostDetailClient
         className="inline-flex items-center text-muted-foreground hover:text-foreground font-medium mb-10 transition-colors"
       >
         <ChevronLeft size={20} className="mr-1" />
-        {t("back_to_gallery")}
+        {t("back_to_home")}
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">

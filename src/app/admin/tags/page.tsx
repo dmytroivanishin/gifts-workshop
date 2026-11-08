@@ -126,7 +126,7 @@ export default function AdminTags() {
                       </div>
                     ) : (
                       <div className="flex flex-col gap-1 w-full sm:w-auto overflow-hidden">
-                        <span className="font-semibold text-sm text-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/60 w-fit truncate max-w-full">
+                        <span className="font-semibold text-sm text-subtle-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/60 w-fit truncate max-w-full">
                           #{loc(tag.name)}
                         </span>
                       </div>
@@ -144,7 +144,7 @@ export default function AdminTags() {
                           </button>
                           <button
                             onClick={() => setIsEditing(null)}
-                            className="p-2 sm:p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md border border-border text-subtle-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                           >
                             <X size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
                           </button>
@@ -158,7 +158,7 @@ export default function AdminTags() {
                               const tagTitle = loc(tag.name);
                               setEditTagName(tagTitle);
                             }}
-                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer"
                             title={t("rename_tag")}
                           >
                             <Edit size={18} className="sm:w-4 sm:h-4 w-5 h-5" />
@@ -166,7 +166,7 @@ export default function AdminTags() {
                           <button
                             onClick={() => handleDeleteClick(tag.id)}
                             disabled={isDeleting}
-                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer disabled:opacity-50"
+                            className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-subtle-foreground cursor-pointer disabled:opacity-50"
                             title={t("delete_tag")}
                           >
                             <Trash2 size={18} className="sm:w-4 sm:h-4 w-5 h-5" />

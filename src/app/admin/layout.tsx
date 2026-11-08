@@ -85,7 +85,7 @@ export default function AdminLayout({
             <button
               onClick={handleLogout}
               className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors cursor-pointer"
-              title="Sign Out"
+              title={t("sign_out")}
             >
               <LogOut size={16} />
             </button>
@@ -95,11 +95,11 @@ export default function AdminLayout({
         {/* Desktop Header */}
         <header className="hidden md:flex h-14 border-b bg-background items-center px-6 flex-shrink-0">
           <div className="ml-auto flex items-center space-x-4">
-            <span className="text-sm font-medium text-foreground">Admin</span>
+            <span className="text-sm font-medium text-foreground">{t("admin")}</span>
             <button
               onClick={handleLogout}
               className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors cursor-pointer"
-              title="Sign Out"
+              title={t("sign_out")}
             >
               <LogOut size={16} />
             </button>

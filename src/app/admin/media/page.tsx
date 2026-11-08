@@ -217,7 +217,7 @@ export default function AdminMedia() {
           <Upload size={24} />
         </div>
         <div className="text-center space-y-1">
-          <p className="text-sm font-semibold text-foreground">{t("drag_drop_files")}</p>
+          <p className="text-sm font-semibold text-muted-foreground">{t("drag_drop_files")}</p>
           <p className="text-xs text-muted-foreground">{t("media_limits")} {process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB || "10"}MB</p>
         </div>
 
@@ -235,7 +235,7 @@ export default function AdminMedia() {
             </div>
           </div>
         ) : (
-          <label className="px-4 py-2 bg-secondary border border-border rounded-lg text-sm font-semibold text-foreground hover:bg-secondary/70 transition-colors cursor-pointer mt-2">
+          <label className="px-4 py-2 bg-secondary border border-border rounded-lg text-sm font-semibold text-subtle-foreground hover:text-foreground hover:bg-secondary/70 transition-colors cursor-pointer mt-2">
             {t("select_files")}
             <input type="file" multiple className="hidden" accept="image/jpeg,image/png,image/jpg" onChange={(e) => {
               if (e.target.files) {
@@ -263,7 +263,7 @@ export default function AdminMedia() {
             className="overflow-hidden"
           >
             <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                 <AlertTriangle size={14} className="text-muted-foreground" />
                 {t("upload_issues")}
               </p>
@@ -274,7 +274,7 @@ export default function AdminMedia() {
                       <button
                         type="button"
                         onClick={() => setSearch(issue.existingMediaName || issue.fileName)}
-                        className="text-left truncate text-foreground hover:text-primary underline decoration-dotted cursor-pointer"
+                        className="text-left truncate text-muted-foreground hover:text-primary underline decoration-dotted cursor-pointer"
                       >
                         <span className="truncate">{issue.fileName}</span>
                         {issue.existingMediaName && (
@@ -312,7 +312,7 @@ export default function AdminMedia() {
               <button
                 type="button"
                 onClick={() => setSelectedIds(new Set())}
-                className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted font-medium text-xs transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-border bg-card text-subtle-foreground hover:text-foreground hover:bg-muted font-medium text-xs transition-colors cursor-pointer"
               >
                 {t("cancel") || "Cancel"}
               </button>
@@ -396,7 +396,7 @@ export default function AdminMedia() {
             );
           })}
           {media.length === 0 && !isUploading && (
-            <div className="col-span-full text-center py-10 text-muted-foreground text-sm">
+            <div className="col-span-full p-8 text-center text-sm text-muted-foreground bg-card rounded-xl border border-border/40">
               {t("no_media") || "No media found. Upload some images!"}
             </div>
           )}

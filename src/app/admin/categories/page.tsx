@@ -459,7 +459,7 @@ export default function AdminCategories() {
                               {isEditingColorPending && (
                                 <span className="text-[10px] text-muted-foreground animate-pulse flex items-center gap-1">
                                   <Loader2 size={10} className="animate-spin" />
-                                  Сохранение цвета...
+                                  {t("saving_color")}
                                 </span>
                               )}
                             </div>
@@ -508,7 +508,7 @@ export default function AdminCategories() {
                                 setIsEditing(null);
                                 setActiveCategoryObj(null);
                               }}
-                              className="p-2 sm:p-1.5 rounded-md border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+                              className="p-2 sm:p-1.5 rounded-md border border-border text-subtle-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                             >
                               <X size={18} />
                             </button>
@@ -517,13 +517,13 @@ export default function AdminCategories() {
                           <>
                             <button
                               onClick={() => handleStartEdit(cat)}
-                              className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
+                              className="p-2 sm:p-1.5 rounded-md hover:bg-muted transition-colors text-subtle-foreground hover:text-foreground cursor-pointer"
                             >
                               <Edit size={18} />
                             </button>
                             <button
                               onClick={() => handleDeleteClick(cat.id)}
-                              className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-muted-foreground cursor-pointer"
+                              className="p-2 sm:p-1.5 rounded-md hover:bg-muted hover:text-destructive transition-colors text-subtle-foreground cursor-pointer"
                               title={t("delete")}
                             >
                               <Trash2 size={18} />
@@ -711,7 +711,7 @@ export default function AdminCategories() {
                   {isCreatingColorPending && (
                     <span className="text-xs text-muted-foreground animate-pulse flex items-center gap-1">
                       <Loader2 size={12} className="animate-spin" />
-                      Сохранение цвета...
+                      {t("saving_color")}
                     </span>
                   )}
                 </div>

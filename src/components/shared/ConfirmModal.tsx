@@ -40,7 +40,7 @@ export default function ConfirmModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-full border border-border hover:bg-muted text-muted-foreground transition-colors"
+            className="p-1 rounded-full border border-border hover:bg-muted text-subtle-foreground transition-colors"
           >
             <X size={16} />
           </button>
@@ -58,7 +58,7 @@ export default function ConfirmModal({
             onClick={onClose}
             disabled={isLoading}
             data-test-id="confirm-modal-cancel"
-            className="px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted font-medium text-sm transition-colors disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 rounded-lg border border-border text-subtle-foreground hover:text-foreground hover:bg-muted font-medium text-sm transition-colors disabled:opacity-50 cursor-pointer"
           >
             {cancelText}
           </button>

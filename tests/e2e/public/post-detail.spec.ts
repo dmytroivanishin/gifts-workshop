@@ -87,7 +87,7 @@ test.describe("public post page: fullscreen gallery, comment form, next/image", 
     await firstTile.click();
 
     await expect(page.getByText("1 / 3")).toBeVisible();
-    await page.getByLabel("Next image").click();
+    await page.getByLabel("next_image").click();
     await expect(page.getByText("2 / 3")).toBeVisible();
     await page.keyboard.press("ArrowLeft");
     await expect(page.getByText("1 / 3")).toBeVisible();

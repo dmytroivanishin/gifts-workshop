@@ -219,8 +219,8 @@ export default function LocalizationDetailPage({ params }: PageProps) {
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.push("/admin/localizations")}
-          className="p-2 rounded-lg bg-card border border-border/40 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          title="Back to list"
+          className="p-2 rounded-lg bg-card border border-border/40 text-subtle-foreground hover:text-foreground transition-colors cursor-pointer"
+          title={t("back_to_list")}
         >
           <ArrowLeft size={20} />
         </button>
