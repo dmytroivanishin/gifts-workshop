@@ -210,7 +210,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
   if (!entity && id !== "new") {
     return (
-      <div className="text-center py-20 text-muted-foreground">
+      <div className="py-20 text-center text-sm text-muted-foreground">
         {t("items_not_found") || "Entity not found"}
       </div>
     );

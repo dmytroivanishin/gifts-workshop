@@ -2473,5 +2473,77 @@
     },
     "area": "admin",
     "code": "login_admin_only"
+  },
+  {
+    "id": "da32c8af-f9e6-4ec8-bebd-20a7648202a1",
+    "content": {
+      "en": "Copy selected",
+      "ru": "Скопировать выбранные"
+    },
+    "area": "admin",
+    "code": "media_copy"
+  },
+  {
+    "id": "df340c81-0b79-4461-b647-b379253c08de",
+    "content": {
+      "en": "Copied. Paste them in the post editor.",
+      "ru": "Скопировано в буфер. Вставьте в редакторе работы."
+    },
+    "area": "admin",
+    "code": "media_copied"
+  },
+  {
+    "id": "71d99464-e415-4a06-9637-97d11651a3d7",
+    "content": {
+      "en": "Paste from clipboard",
+      "ru": "Вставить из буфера"
+    },
+    "area": "admin",
+    "code": "media_paste"
+  },
+  {
+    "id": "e38d78e2-d3b7-49c6-b633-e20dc663d9f9",
+    "content": {
+      "en": "Media pasted",
+      "ru": "Медиа вставлено"
+    },
+    "area": "admin",
+    "code": "media_pasted"
+  },
+  {
+    "id": "90a19098-4d6f-4167-b7fd-1de0866ea6ac",
+    "content": {
+      "en": "Some files were skipped: they no longer exist in the library",
+      "ru": "Часть файлов пропущена: их уже нет в медиатеке"
+    },
+    "area": "admin",
+    "code": "media_paste_skipped"
+  },
+  {
+    "id": "3d8a634d-a695-44d7-b497-61517c3c5d17",
+    "content": {
+      "en": "Nothing to paste: these files are already added",
+      "ru": "Нечего вставлять: эти файлы уже добавлены"
+    },
+    "area": "admin",
+    "code": "media_paste_nothing_new"
+  },
+  {
+    "id": "1d97db74-5238-4b12-b074-5bcf8ab8569e",
+    "content": {
+      "en": "In clipboard",
+      "ru": "В буфере"
+    },
+    "area": "admin",
+    "code": "media_clipboard_label"
+  },
+  {
+    "id": "7dac66b0-7235-4d45-924b-d5d39d26bcce",
+    "content": {
+      "en": "Clear clipboard",
+      "ru": "Очистить буфер"
+    },
+    "area": "admin",
+    "code": "media_clipboard_clear"
   }
 ]

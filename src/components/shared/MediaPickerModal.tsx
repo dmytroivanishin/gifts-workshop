@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, Check, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
+import { SelectionMark } from "@/components/shared/SelectionMark";
 import { useGetMediaQuery } from "@/store/api";
 import { handleImageLoadError } from "@/utils/mediaPlaceholder";
 
@@ -21,11 +22,10 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
   const [currentSelected, setCurrentSelected] = useState<string[]>(selectedIds);
 
   const toggleSelect = (id: string) => {
-    if (currentSelected.includes(id)) {
-      setCurrentSelected(currentSelected.filter((existingId) => existingId !== id));
-    } else {
-      setCurrentSelected([...currentSelected, id]);
-    }
+    // Functional update: two quick clicks in a row must both count, not overwrite each other.
+    setCurrentSelected((prev) =>
+      prev.includes(id) ? prev.filter((existingId) => existingId !== id) : [...prev, id]
+    );
   };
 
   const handleSave = () => {
@@ -88,11 +88,7 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
                       alt="Media thumbnail"
                       className="w-full h-full object-cover"
                     />
-                    {isSelected && (
-                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground p-1 rounded-full shadow-md animate-in zoom-in duration-200">
-                        <Check size={14} strokeWidth={3} />
-                      </div>
-                    )}
+                    <SelectionMark selected={isSelected} className="absolute top-2 left-2 z-10" />
                   </div>
                 );
               })}

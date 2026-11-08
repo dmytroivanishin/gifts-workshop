@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Save, Loader2, Image as ImageIcon, Archive as ArchiveIcon, Send, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, Save, Loader2, Image as ImageIcon, Archive as ArchiveIcon, Send, Calendar as CalendarIcon, ClipboardPaste, X } from "lucide-react";
 import Link from "next/link";
 import {
   useCreatePostMutation,
@@ -16,6 +16,10 @@ import {
 import { useTagsList } from "@/hooks/useTagsList";
 import ImageCropModal from "@/components/shared/ImageCropModal";
 import MediaPickerModal from "@/components/shared/MediaPickerModal";
+import { useMediaClipboard } from "@/hooks/useMediaClipboard";
+import { resolvePaste } from "@/utils/mediaClipboard";
+import { addNotification } from "@/store/slices/notificationSlice";
+import { useDispatch } from "react-redux";
 import Combobox from "@/components/ui/combobox";
 import { Input, FIELD_BASE } from "@/components/ui/input";
 import { cn } from "@/utils/cn";
@@ -80,6 +84,8 @@ export default function PostFormPage({ params }: PostFormPageProps) {
   const collections = collectionsResponse?.data || [];
   const { data: mediaResponse } = useGetMediaQuery();
   const mediaList = mediaResponse?.data || [];
+  const dispatch = useDispatch();
+  const clipboard = useMediaClipboard();
 
   // Form State
   const defaultValues = {
@@ -241,6 +247,35 @@ export default function PostFormPage({ params }: PostFormPageProps) {
     } else if (newSelected.length === 0) {
       setCoverImage("");
       setCoverPosition(null);
+    }
+  };
+
+  // Pastes the media copied in the library: merges into the current gallery (never replaces it,
+  // never adds a duplicate) and always empties the buffer afterwards, so a paste is one-shot and
+  // nothing stays copied by accident. Media deleted since copying is skipped and reported.
+  const handlePasteMedia = () => {
+    if (!mediaResponse) return;
+    const byId = new Map(mediaList.map((m) => [m.id, m]));
+    const { toAdd, missing } = resolvePaste(
+      clipboard.ids,
+      new Set(byId.keys()),
+      new Set(selectedImages.map((img) => img.mediaId))
+    );
+
+    if (toAdd.length > 0) {
+      handleMediaSelect([
+        ...selectedImages,
+        ...toAdd.map((mediaId) => ({ mediaId, url: byId.get(mediaId)?.originalUrl || "" })),
+      ]);
+    }
+    clipboard.clear();
+
+    if (missing > 0) {
+      dispatch(addNotification({ type: "warning", messageKey: "media_paste_skipped" }));
+    } else if (toAdd.length > 0) {
+      dispatch(addNotification({ type: "success", messageKey: "media_pasted" }));
+    } else {
+      dispatch(addNotification({ type: "info", messageKey: "media_paste_nothing_new" }));
     }
   };
 
@@ -595,13 +630,44 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                 <ImageIcon size={16} />
                 <span>{t("gallery_and_media")}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsMediaPickerOpen(true)}
-                className="text-xs font-semibold px-3 py-1.5 bg-secondary text-subtle-foreground hover:text-foreground rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
-              >
-                {t("add_media")}
-              </button>
+              <div className="flex items-center gap-2">
+                {clipboard.ids.length > 0 && (
+                  <div
+                    data-test-id="paste-media-group"
+                    className="flex items-center rounded-lg bg-secondary text-subtle-foreground"
+                  >
+                    <button
+                      type="button"
+                      data-test-id="paste-media-button"
+                      title={t("media_paste")}
+                      aria-label={t("media_paste")}
+                      disabled={!mediaResponse}
+                      onClick={handlePasteMedia}
+                      className="flex items-center gap-1.5 rounded-l-lg px-3 py-1.5 text-xs font-semibold hover:text-foreground disabled:opacity-50 transition-colors cursor-pointer"
+                    >
+                      <ClipboardPaste size={14} />
+                      <span data-test-id="paste-media-count">{clipboard.ids.length}</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-test-id="paste-media-clear"
+                      title={t("media_clipboard_clear")}
+                      aria-label={t("media_clipboard_clear")}
+                      onClick={clipboard.clear}
+                      className="rounded-r-lg px-2 py-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsMediaPickerOpen(true)}
+                  className="text-xs font-semibold px-3 py-1.5 bg-secondary text-subtle-foreground hover:text-foreground rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  {t("add_media")}
+                </button>
+              </div>
             </div>
 
             {selectedImages.length === 0 ? (

@@ -221,10 +221,6 @@ export default function AdminLocalizations() {
             >
               {t("load_more") !== "load_more" ? t("load_more") : "Загрузить еще"}
             </button>
-          ) : items.length > 0 ? (
-            <div className="text-xs text-muted-foreground">
-              {t("all_items_loaded") !== "all_items_loaded" ? t("all_items_loaded") : "Все элементы загружены"}
-            </div>
           ) : null}
         </div>
       </div>

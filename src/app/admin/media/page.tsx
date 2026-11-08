@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, Trash2, Loader2, Check, AlertTriangle } from "lucide-react";
+import { Upload, Trash2, Loader2, AlertTriangle, Copy, X, ZoomIn } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import SearchInput from "@/components/shared/SearchInput";
+import { SelectionMark } from "@/components/shared/SelectionMark";
+import { FullscreenGallery } from "@/components/shared/FullscreenGallery";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
+import { useMediaClipboard } from "@/hooks/useMediaClipboard";
 import { useDispatch } from "react-redux";
 import { addNotification } from "@/store/slices/notificationSlice";
 import {
@@ -31,6 +34,7 @@ interface UploadIssue {
 interface MediaItem {
   id: string;
   url: string;
+  originalUrl: string;
   name: string;
   size: string;
 }
@@ -49,8 +53,11 @@ export default function AdminMedia() {
   const [uploadStats, setUploadStats] = useState({ total: 0, current: 0 });
   const [uploadIssues, setUploadIssues] = useState<UploadIssue[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [rawSelectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  // Index (in the list as currently shown) of the image open in the full-size viewer.
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const clipboard = useMediaClipboard();
 
   const { data: mediaData, isLoading } = useGetMediaQuery(search ? { search } : undefined);
   const [uploadMedia] = useUploadMediaMutation();
@@ -72,6 +79,11 @@ export default function AdminMedia() {
     closeOnError: true,
   });
 
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setSelectedIds(new Set());
+  };
+
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -84,6 +96,17 @@ export default function AdminMedia() {
     });
   };
 
+  // Copies the selection into the shared buffer and drops the selection: the buffer is the
+  // single place the choice lives afterwards (visible as the chip in the toolbar), so nothing
+  // stays half-selected after the action.
+  const handleCopySelected = () => {
+    const stored = clipboard.copy(Array.from(selectedIds));
+    setSelectedIds(new Set());
+    if (stored.length > 0) {
+      dispatch(addNotification({ type: 'success', messageKey: 'media_copied' }));
+    }
+  };
+
   const handleConfirmBulkDelete = async () => {
     const ids = Array.from(selectedIds);
     try {
@@ -91,6 +114,8 @@ export default function AdminMedia() {
       const { deleted, blocked } = result.data;
       setIsBulkDeleteOpen(false);
       setSelectedIds(new Set());
+      // Deleted media can no longer be pasted anywhere: drop it from the buffer too.
+      clipboard.remove(deleted);
 
       if (blocked.length > 0) {
         dispatch(addNotification({
@@ -112,9 +137,17 @@ export default function AdminMedia() {
   const media: MediaItem[] = (mediaData?.data || []).map((m) => ({
     id: m.id,
     url: m.thumbnailUrl || m.originalUrl,
+    originalUrl: m.originalUrl || m.thumbnailUrl,
     name: m.displayName,
     size: `${m.width}x${m.height}`
   }));
+
+  // The selection only ever covers what is on screen: ids of cards that are gone (deleted, or
+  // filtered out) are ignored, so a bulk action can never touch a card the user cannot see.
+  // A new search also drops the raw selection (handleSearchChange), so hidden picks do not
+  // come back when the search is cleared.
+  const visibleIds = new Set(media.map((m) => m.id));
+  const selectedIds = new Set(Array.from(rawSelectedIds).filter((id) => visibleIds.has(id)));
 
   const handleFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
@@ -273,7 +306,7 @@ export default function AdminMedia() {
                     {issue.kind === "duplicate" ? (
                       <button
                         type="button"
-                        onClick={() => setSearch(issue.existingMediaName || issue.fileName)}
+                        onClick={() => handleSearchChange(issue.existingMediaName || issue.fileName)}
                         className="text-left truncate text-muted-foreground hover:text-primary underline decoration-dotted cursor-pointer"
                       >
                         <span className="truncate">{issue.fileName}</span>
@@ -298,11 +331,33 @@ export default function AdminMedia() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border bg-muted/50 p-3">
         <SearchInput
           value={search}
-          onChange={setSearch}
+          onChange={handleSearchChange}
           placeholder={t("placeholder_search_media")}
           className="sm:max-w-sm"
         />
 
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+        {clipboard.ids.length > 0 && (
+          <div
+            data-test-id="clipboard-chip"
+            className="flex items-center gap-1 rounded-lg border border-border bg-card pl-3 pr-1 py-1 text-xs font-medium text-subtle-foreground"
+          >
+            <Copy size={12} />
+            <span data-test-id="clipboard-count">
+              {t("media_clipboard_label")}: {clipboard.ids.length}
+            </span>
+            <button
+              type="button"
+              data-test-id="clipboard-clear"
+              title={t("media_clipboard_clear")}
+              aria-label={t("media_clipboard_clear")}
+              onClick={clipboard.clear}
+              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
         {selectedIds.size > 0 && (
           <div data-test-id="bulk-action-bar" className="flex items-center gap-3 shrink-0">
             <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
@@ -318,6 +373,16 @@ export default function AdminMedia() {
               </button>
               <button
                 type="button"
+                data-test-id="bulk-copy-button"
+                title={t("media_copy")}
+                aria-label={t("media_copy")}
+                onClick={handleCopySelected}
+                className="p-2 rounded-lg border border-border bg-card text-subtle-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <Copy size={14} />
+              </button>
+              <button
+                type="button"
                 data-test-id="bulk-delete-button"
                 title={t("delete_selected")}
                 onClick={() => setIsBulkDeleteOpen(true)}
@@ -328,16 +393,17 @@ export default function AdminMedia() {
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* Media Grid */}
       {isLoading ? (
-        <div className="flex justify-center items-center py-20 text-muted-foreground">
-          <Loader2 className="animate-spin mr-2" size={24} /> {t("loading_media")}
+        <div className="flex justify-center items-center p-8 text-sm text-muted-foreground">
+          <Loader2 className="animate-spin mr-2" size={16} /> {t("loading_media")}
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {media.map((item) => {
+          {media.map((item, index) => {
             const isSelected = selectedIds.has(item.id);
             return (
             <div
@@ -355,11 +421,7 @@ export default function AdminMedia() {
                 <label
                   data-test-id={`media-select-${item.id}`}
                   title={t("select")}
-                  className={`absolute top-2 left-2 z-10 size-5 rounded-[7px] border flex items-center justify-center transition-colors cursor-pointer ${
-                    isSelected
-                      ? "bg-primary border-primary text-primary-foreground"
-                      : "bg-white/80 border-border text-transparent hover:border-primary"
-                  }`}
+                  className="absolute top-2 left-2 z-10 cursor-pointer"
                 >
                   <input
                     type="checkbox"
@@ -367,14 +429,34 @@ export default function AdminMedia() {
                     onChange={() => toggleSelect(item.id)}
                     className="sr-only"
                   />
-                  <Check size={14} />
+                  <SelectionMark selected={isSelected} />
                 </label>
-                <img
-                  src={item.url}
-                  onError={handleImageLoadError}
-                  alt={item.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
-                />
+                {/* A div, not a <button>: see the note above about card.locator("button"). */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  data-test-id={`media-view-${item.id}`}
+                  title={t("view")}
+                  aria-label={t("view")}
+                  onClick={() => setViewerIndex(index)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setViewerIndex(index);
+                    }
+                  }}
+                  className="w-full h-full cursor-zoom-in"
+                >
+                  <img
+                    src={item.url}
+                    onError={handleImageLoadError}
+                    alt={item.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
+                  />
+                  <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-black/50 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                    <ZoomIn size={14} />
+                  </span>
+                </div>
               </div>
 
               <div className="p-3 border-t bg-muted/20 space-y-2.5">
@@ -402,6 +484,13 @@ export default function AdminMedia() {
           )}
         </div>
       )}
+
+      <FullscreenGallery
+        images={media.map((m) => m.originalUrl)}
+        initialIndex={viewerIndex ?? 0}
+        isOpen={viewerIndex !== null}
+        onClose={() => setViewerIndex(null)}
+      />
 
       <ConfirmModal
         isOpen={isDeleteOpen}
