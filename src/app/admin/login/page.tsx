@@ -104,7 +104,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="w-full max-w-[400px] bg-white rounded-3xl border border-border/40 p-8 flex flex-col items-center space-y-8">
+    <div className="w-full max-w-[400px] bg-white rounded-3xl border border-border p-8 flex flex-col items-center space-y-8">
       
       {/* Logo */}
       <Image
