@@ -6,7 +6,7 @@ import { resolveId } from "@/utils/idResolver";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { tagSchema } from "@/common/validation/schemas";
 import { getPaginationParams } from "@/utils/paginationUtils";
-import { getUserId } from "@/utils/auth";
+import { getUserId, isAdminRequest } from "@/utils/auth";
 
 export class TagController {
   constructor(private tagService: ITagService) {}
@@ -16,7 +16,10 @@ export class TagController {
     const search = new URL(request.url).searchParams.get("search") ?? undefined;
 
     const result = await this.tagService.getAllTags({ page, limit, search });
-    return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
+    // An admin's own session must always see its own just-made writes, not a cached response
+    // shared with anonymous callers (CP-37).
+    const cacheSeconds = (await isAdminRequest()) ? undefined : CACHE_SECONDS.lookup;
+    return sendSuccess(result.data, result.meta, cacheSeconds);
   });
 
   getTagById = withErrorHandling(async (request: Request, id: string) => {
@@ -24,7 +27,8 @@ export class TagController {
     if (!tag) {
       throw new NotFoundError("Tag not found");
     }
-    return sendSuccess(tag, undefined, CACHE_SECONDS.lookup);
+    const cacheSeconds = (await isAdminRequest()) ? undefined : CACHE_SECONDS.lookup;
+    return sendSuccess(tag, undefined, cacheSeconds);
   });
 
   saveTag = withErrorHandling(async (request: Request, id?: string) => {

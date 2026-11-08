@@ -1,3 +1,4 @@
+import { unstable_cache, revalidateTag } from "next/cache";
 import { ITagRepository, TagQueryOptions } from "@/repositories/interfaces";
 import { ITagService } from "./interfaces";
 import { Tag, LocalizedText, PaginatedResult } from "@/types";
@@ -7,15 +8,24 @@ import { isUUID } from "@/utils/uuid";
 
 import { paginate } from "./pagination";
 
+// Same unstable_cache + revalidateTag pattern as SystemTextService/CategoryService (CP-26/CP-37).
+const TAGS_CACHE_TAG = "tags";
+
 export class TagService implements ITagService {
   constructor(private tagRepo: ITagRepository) {}
+
+  private getAllCached = unstable_cache(
+    async (options?: TagQueryOptions) => this.tagRepo.getAll(options),
+    ["tags-get-all"],
+    { tags: [TAGS_CACHE_TAG] }
+  );
 
   async getAllTags(options?: TagQueryOptions): Promise<PaginatedResult<Tag>> {
     if (options?.page || options?.limit) {
       const page = options.page || 1;
       const limit = options.limit || 20;
 
-      const tags = await this.tagRepo.getAll({
+      const tags = await this.getAllCached({
         page,
         limit: limit + 1,
         offset: (page - 1) * limit,
@@ -25,7 +35,7 @@ export class TagService implements ITagService {
       return paginate(tags, { page, limit });
     }
 
-    const tags = await this.tagRepo.getAll({ search: options?.search });
+    const tags = await this.getAllCached({ search: options?.search });
     return paginate(tags, { page: 1, limit: tags.length });
   }
 
@@ -53,13 +63,17 @@ export class TagService implements ITagService {
       slug,
     };
 
-    return this.tagRepo.save(tag);
+    const saved = await this.tagRepo.save(tag);
+    revalidateTag(TAGS_CACHE_TAG, { expire: 0 });
+    return saved;
   }
 
   async deleteTag(id: string): Promise<boolean> {
     // categories_to_tags.tag_id has ON DELETE CASCADE (schema.ts), so Postgres already
     // removes the category/tag links as part of this delete — no app-level cleanup needed.
-    return this.tagRepo.delete(id);
+    const success = await this.tagRepo.delete(id);
+    revalidateTag(TAGS_CACHE_TAG, { expire: 0 });
+    return success;
   }
 }
 

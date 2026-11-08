@@ -3,12 +3,25 @@ import { BaseError } from "@/common/errors/base";
 import { InternalServerError } from "@/common/errors/internalServer";
 import { logger } from "@/modules/logger";
 
-// Durations for the cacheable list/read endpoints (CP-23), named once instead of as a bare
+// Durations for the cacheable list/read endpoints (CP-23/CP-37), named once instead of as a bare
 // number at each call site. The decision of *which* one applies (and, for posts, whether the
 // caller is an admin) is made by the controller, not here — this stays a plain response helper.
+//
+// categories/collections/tags/colors/system-texts are now also backed by a server-side
+// unstable_cache tagged per entity, invalidated via revalidateTag the instant an admin writes
+// (CP-37) — so this duration only controls how long an anonymous visitor's own browser skips
+// asking the server again, never whether the data is actually fresh (the server always answers
+// correctly regardless). That's what makes a long duration safe here.
 export const CACHE_SECONDS = {
-  lookup: 60, // categories/collections/tags/colors/system-texts: identical for every caller
-  posts: 30, // posts: pass this only for the anonymous-safe response, never an admin's
+  // categories/collections/tags/colors/system-texts: identical for every caller. These barely
+  // change (admin-only, rare edits), so they get the longer duration — posts are comparatively
+  // dynamic (new posts, stock/status changes) and get the shorter one.
+  lookup: 43200, // 12h
+  // posts: pass this only for the anonymous-safe response, never an admin's. Also backed by a
+  // server-side unstable_cache tagged across posts/categories/collections/tags/colors (CP-37),
+  // invalidated the instant any of those is written — so, like `lookup` above, this duration
+  // only controls an anonymous browser's own repeat-request skipping, not data freshness.
+  posts: 7200, // 2h
 } as const;
 
 export function sendSuccess(data: unknown, meta?: Record<string, unknown>, cacheSeconds?: number) {

@@ -1,5 +1,5 @@
 import { test, expect, APIRequestContext } from "@playwright/test";
-import { adminContext } from "./helpers/auth";
+import { adminContext, anonContext } from "./helpers/auth";
 import { expectSuccess, expectError } from "./helpers/client";
 import { createColor, createCategory } from "./helpers/fixtures";
 
@@ -7,13 +7,16 @@ const FILE_KEY = "colors";
 
 test.describe("colors", () => {
   let admin: APIRequestContext;
+  let anon: APIRequestContext;
 
   test.beforeAll(async () => {
     admin = await adminContext(FILE_KEY);
+    anon = await anonContext(FILE_KEY);
   });
 
   test.afterAll(async () => {
     await admin.dispose();
+    await anon.dispose();
   });
 
   test("accepts 3- and 6-digit hex, rejects malformed hex", async () => {
@@ -65,9 +68,12 @@ test.describe("colors", () => {
     await expectSuccess(await admin.delete(`/api/v1/colors/${color.id}`));
   });
 
-  test("list carries Cache-Control: max-age=60", async () => {
-    const res = await admin.get("/api/v1/colors");
-    expect(res.headers()["cache-control"]).toContain("max-age=60");
+  test("list carries Cache-Control: max-age=43200 for anonymous, absent for admin", async () => {
+    const res = await anon.get("/api/v1/colors");
+    expect(res.headers()["cache-control"]).toContain("max-age=43200");
+
+    const adminRes = await admin.get("/api/v1/colors");
+    expect(adminRes.headers()["cache-control"]).toBeUndefined();
   });
 
   test("malformed JSON body is a clean 400", async () => {

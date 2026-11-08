@@ -1,5 +1,5 @@
 import { test, expect, APIRequestContext } from "@playwright/test";
-import { adminContext } from "./helpers/auth";
+import { adminContext, anonContext } from "./helpers/auth";
 import { expectSuccess, expectError } from "./helpers/client";
 import { createCategory, createCollection, createColor, createTag, createPost } from "./helpers/fixtures";
 
@@ -7,13 +7,16 @@ const FILE_KEY = "categories";
 
 test.describe("categories", () => {
   let admin: APIRequestContext;
+  let anon: APIRequestContext;
 
   test.beforeAll(async () => {
     admin = await adminContext(FILE_KEY);
+    anon = await anonContext(FILE_KEY);
   });
 
   test.afterAll(async () => {
     await admin.dispose();
+    await anon.dispose();
   });
 
   test("requires collectionId to create", async () => {
@@ -233,13 +236,19 @@ test.describe("categories", () => {
     await collection.cleanup();
   });
 
-  test("list and by-id responses carry Cache-Control: max-age=60", async () => {
-    const listRes = await admin.get("/api/v1/categories");
-    expect(listRes.headers()["cache-control"]).toContain("max-age=60");
-
+  test("list and by-id responses carry Cache-Control: max-age=43200 for anonymous, absent for admin", async () => {
     const category = await createCategory(admin);
-    const byIdRes = await admin.get(`/api/v1/categories/${category.id}`);
-    expect(byIdRes.headers()["cache-control"]).toContain("max-age=60");
+
+    const listRes = await anon.get("/api/v1/categories");
+    expect(listRes.headers()["cache-control"]).toContain("max-age=43200");
+    const byIdRes = await anon.get(`/api/v1/categories/${category.id}`);
+    expect(byIdRes.headers()["cache-control"]).toContain("max-age=43200");
+
+    const adminListRes = await admin.get("/api/v1/categories");
+    expect(adminListRes.headers()["cache-control"]).toBeUndefined();
+    const adminByIdRes = await admin.get(`/api/v1/categories/${category.id}`);
+    expect(adminByIdRes.headers()["cache-control"]).toBeUndefined();
+
     await category.cleanup();
   });
 

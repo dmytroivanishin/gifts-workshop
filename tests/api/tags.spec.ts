@@ -1,6 +1,6 @@
 import { test, expect, APIRequestContext } from "@playwright/test";
 import crypto from "crypto";
-import { adminContext } from "./helpers/auth";
+import { adminContext, anonContext } from "./helpers/auth";
 import { expectSuccess, expectError } from "./helpers/client";
 import { createTag, createCategory, createPost } from "./helpers/fixtures";
 
@@ -8,13 +8,16 @@ const FILE_KEY = "tags";
 
 test.describe("tags", () => {
   let admin: APIRequestContext;
+  let anon: APIRequestContext;
 
   test.beforeAll(async () => {
     admin = await adminContext(FILE_KEY);
+    anon = await anonContext(FILE_KEY);
   });
 
   test.afterAll(async () => {
     await admin.dispose();
+    await anon.dispose();
   });
 
   test("name is required, slug auto-generated", async () => {
@@ -49,9 +52,12 @@ test.describe("tags", () => {
 
   // "Inline tag creation" from the post/category editor is a frontend convenience — it calls this
   // exact same POST /tags endpoint, there is no separate server-side code path to test here.
-  test("list carries Cache-Control: max-age=60", async () => {
-    const res = await admin.get("/api/v1/tags");
-    expect(res.headers()["cache-control"]).toContain("max-age=60");
+  test("list carries Cache-Control: max-age=43200 for anonymous, absent for admin", async () => {
+    const res = await anon.get("/api/v1/tags");
+    expect(res.headers()["cache-control"]).toContain("max-age=43200");
+
+    const adminRes = await admin.get("/api/v1/tags");
+    expect(adminRes.headers()["cache-control"]).toBeUndefined();
   });
 
   test("malformed JSON body is a clean 400", async () => {

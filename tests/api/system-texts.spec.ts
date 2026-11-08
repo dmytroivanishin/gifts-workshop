@@ -1,5 +1,5 @@
 import { test, expect, APIRequestContext } from "@playwright/test";
-import { adminContext } from "./helpers/auth";
+import { adminContext, anonContext } from "./helpers/auth";
 import { expectSuccess, expectError } from "./helpers/client";
 
 const FILE_KEY = "system-texts";
@@ -7,13 +7,16 @@ const rnd = (): string => Math.random().toString(36).slice(2, 10);
 
 test.describe("system-texts", () => {
   let admin: APIRequestContext;
+  let anon: APIRequestContext;
 
   test.beforeAll(async () => {
     admin = await adminContext(FILE_KEY);
+    anon = await anonContext(FILE_KEY);
   });
 
   test.afterAll(async () => {
     await admin.dispose();
+    await anon.dispose();
   });
 
   // The CP-36 regression this test exists to prevent: the server used to require a field
@@ -96,9 +99,12 @@ test.describe("system-texts", () => {
     await admin.delete(`/api/v1/system-texts/${first.data.id}`);
   });
 
-  test("list carries Cache-Control: max-age=60", async () => {
-    const res = await admin.get("/api/v1/system-texts");
-    expect(res.headers()["cache-control"]).toContain("max-age=60");
+  test("list carries Cache-Control: max-age=43200 for anonymous, absent for admin", async () => {
+    const res = await anon.get("/api/v1/system-texts");
+    expect(res.headers()["cache-control"]).toContain("max-age=43200");
+
+    const adminRes = await admin.get("/api/v1/system-texts");
+    expect(adminRes.headers()["cache-control"]).toBeUndefined();
   });
 
   test("a non-UUID id on GET/DELETE is a clean 404", async () => {

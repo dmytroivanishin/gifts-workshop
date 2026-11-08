@@ -3,6 +3,14 @@ import { CollectionService } from "@/services/collectionService";
 import type { ICollectionRepository } from "@/repositories/interfaces";
 import type { Collection } from "@/types";
 
+// unstable_cache/revalidateTag need a real Next.js request context (CP-37); outside one they
+// throw "incrementalCache missing". A passthrough mock keeps the service's own branching under
+// test with no caching behavior involved.
+vi.mock("next/cache", () => ({
+  unstable_cache: (fn: unknown) => fn,
+  revalidateTag: vi.fn(),
+}));
+
 // Hand-rolled repo stub, same convention as categoryService.spec.ts — only the method
 // getAllCollections actually calls, no DB involved.
 const makeCollectionRepo = (collections: Collection[] = []) =>
@@ -24,7 +32,10 @@ describe("CollectionService.getAllCollections", () => {
 
     const result = await service.getAllCollections();
 
-    expect(repo.getAll).toHaveBeenCalledWith();
+    // The cached wrapper (CP-37) always forwards its own `options` parameter explicitly, so an
+    // args-less call reaches the repo as `getAll(undefined)`, not a truly zero-argument call —
+    // behaviorally identical (the repo already treats a missing/undefined options the same way).
+    expect(repo.getAll).toHaveBeenCalledWith(undefined);
     expect(result.data).toHaveLength(25);
     expect(result.meta.nextPage).toBeNull();
   });

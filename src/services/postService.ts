@@ -1,3 +1,4 @@
+import { unstable_cache, revalidateTag } from "next/cache";
 import { IPostRepository, ICategoryRepository, ITagRepository, ICollectionRepository, QueryOptions } from "@/repositories/interfaces";
 import { IPostService } from "./interfaces";
 import { Post, PopulatedPost, Category, PaginatedResult } from "@/types";
@@ -8,6 +9,14 @@ import { resolveId, resolveMultipleIds } from "@/utils/idResolver";
 
 import { paginate } from "./pagination";
 
+// Same unstable_cache + revalidateTag pattern as CategoryService/CollectionService/TagService/
+// ColorService (CP-26/CP-37). A PopulatedPost embeds a live-joined category (itself embedding
+// color and collection), collection, tags and poster/media — so every cache entry here also
+// carries those entities' own tags, meaning the revalidateTag calls already made in those 4
+// services (on their own writes) flush the posts cache too, with no extra fan-out code needed.
+const POSTS_CACHE_TAG = "posts";
+const POSTS_RELATED_TAGS = [POSTS_CACHE_TAG, "categories", "collections", "tags", "colors"];
+
 export class PostService implements IPostService {
   constructor(
     private postRepo: IPostRepository,
@@ -16,9 +25,27 @@ export class PostService implements IPostService {
     private collectionRepo: ICollectionRepository
   ) {}
 
+  private getAllCached = unstable_cache(
+    async (options?: QueryOptions) => this.postRepo.getAll(options),
+    ["posts-get-all"],
+    { tags: POSTS_RELATED_TAGS }
+  );
+
+  private getByIdCached = unstable_cache(
+    async (id: string) => this.postRepo.getById(id),
+    ["posts-get-by-id"],
+    { tags: POSTS_RELATED_TAGS }
+  );
+
+  private getBySlugCached = unstable_cache(
+    async (slug: string) => this.postRepo.getBySlug(slug),
+    ["posts-get-by-slug"],
+    { tags: POSTS_RELATED_TAGS }
+  );
+
   private async syncCategoryTags(categoryId: string | null | undefined, tagsIds: string[] | undefined) {
     if (!categoryId || !tagsIds || tagsIds.length === 0) return;
-    
+
     const category = await this.categoryRepo.getById(categoryId);
     if (!category) return;
 
@@ -30,6 +57,9 @@ export class PostService implements IPostService {
         ...category,
         tagsIds: newTags
       } as Category);
+      // This writes to categories directly through the repo, bypassing CategoryService's own
+      // save (and its revalidateTag) — the categories cache needs invalidating here too.
+      revalidateTag("categories", { expire: 0 });
     }
   }
 
@@ -77,7 +107,7 @@ export class PostService implements IPostService {
       const page = filters.page || 1;
       const limit = filters.limit || 20;
 
-      const posts = await this.postRepo.getAll({
+      const posts = await this.getAllCached({
         ...dbOptions,
         page,
         limit: limit + 1,
@@ -87,7 +117,7 @@ export class PostService implements IPostService {
       return paginate(posts, { page, limit });
     }
 
-    const posts = await this.postRepo.getAll(dbOptions);
+    const posts = await this.getAllCached(dbOptions);
     return {
       data: posts,
       meta: {
@@ -101,13 +131,13 @@ export class PostService implements IPostService {
 
   async getPostById(id: string): Promise<PopulatedPost | undefined> {
     if (isUUID(id)) {
-      return this.postRepo.getById(id);
+      return this.getByIdCached(id);
     }
-    return this.postRepo.getBySlug(id);
+    return this.getBySlugCached(id);
   }
 
   async getPostBySlug(slug: string): Promise<PopulatedPost | undefined> {
-    return this.postRepo.getBySlug(slug);
+    return this.getBySlugCached(slug);
   }
 
   async createPost(body: any): Promise<PopulatedPost> {
@@ -132,6 +162,7 @@ export class PostService implements IPostService {
 
     const saved = await this.postRepo.save(flatPost);
     await this.syncCategoryTags(flatPost.categoryId, flatPost.tagsIds);
+    revalidateTag(POSTS_CACHE_TAG, { expire: 0 });
     return saved;
   }
 
@@ -167,10 +198,13 @@ export class PostService implements IPostService {
 
     const saved = await this.postRepo.save(flatPost);
     await this.syncCategoryTags(flatPost.categoryId, flatPost.tagsIds);
+    revalidateTag(POSTS_CACHE_TAG, { expire: 0 });
     return saved;
   }
 
   async deletePost(id: string): Promise<boolean> {
-    return this.postRepo.delete(id);
+    const success = await this.postRepo.delete(id);
+    revalidateTag(POSTS_CACHE_TAG, { expire: 0 });
+    return success;
   }
 }

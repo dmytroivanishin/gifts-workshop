@@ -5,7 +5,7 @@ import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { categorySchema } from "@/common/validation/schemas";
-import { getUserId } from "@/utils/auth";
+import { getUserId, isAdminRequest } from "@/utils/auth";
 import { getPaginationParams } from "@/utils/paginationUtils";
 
 export class CategoryController {
@@ -15,7 +15,10 @@ export class CategoryController {
     const { page, limit } = getPaginationParams(request);
 
     const result = await this.categoryService.getAllCategories({ page, limit });
-    return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
+    // An admin's own session must always see its own just-made writes, not a cached response
+    // shared with anonymous callers (CP-37).
+    const cacheSeconds = (await isAdminRequest()) ? undefined : CACHE_SECONDS.lookup;
+    return sendSuccess(result.data, result.meta, cacheSeconds);
   });
 
   getCategoryById = withErrorHandling(async (request: Request, id: string) => {
@@ -23,7 +26,8 @@ export class CategoryController {
     if (!category) {
       throw new NotFoundError("Category not found");
     }
-    return sendSuccess(category, undefined, CACHE_SECONDS.lookup);
+    const cacheSeconds = (await isAdminRequest()) ? undefined : CACHE_SECONDS.lookup;
+    return sendSuccess(category, undefined, cacheSeconds);
   });
 
   saveCategory = withErrorHandling(async (request: Request, id?: string) => {

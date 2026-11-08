@@ -3,6 +3,14 @@ import { TagService } from "@/services/tagService";
 import type { ITagRepository } from "@/repositories/interfaces";
 import type { Tag } from "@/types";
 
+// unstable_cache/revalidateTag need a real Next.js request context (CP-37); outside one they
+// throw "incrementalCache missing". A passthrough mock keeps the service's own branching under
+// test with no caching behavior involved.
+vi.mock("next/cache", () => ({
+  unstable_cache: (fn: unknown) => fn,
+  revalidateTag: vi.fn(),
+}));
+
 // Hand-rolled repo stub, same convention as categoryService.spec.ts — only the methods
 // getAllTags actually calls, no DB involved.
 const makeTagRepo = (tags: Tag[] = []) =>

@@ -62,9 +62,12 @@ test.describe("collections", () => {
     await collection.cleanup();
   });
 
-  test("list carries Cache-Control: max-age=60", async () => {
-    const res = await admin.get("/api/v1/collections");
-    expect(res.headers()["cache-control"]).toContain("max-age=60");
+  test("list carries Cache-Control: max-age=43200 for anonymous, absent for admin", async () => {
+    const res = await anon.get("/api/v1/collections");
+    expect(res.headers()["cache-control"]).toContain("max-age=43200");
+
+    const adminRes = await admin.get("/api/v1/collections");
+    expect(adminRes.headers()["cache-control"]).toBeUndefined();
   });
 
   test("malformed JSON body is a clean 400", async () => {

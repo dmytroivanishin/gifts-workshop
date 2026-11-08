@@ -4,6 +4,14 @@ import { ValidationError } from "@/common/errors/validation";
 import type { ICategoryRepository, ITagRepository, IPostRepository } from "@/repositories/interfaces";
 import type { PopulatedCategory } from "@/types";
 
+// unstable_cache/revalidateTag need a real Next.js request context (CP-37); outside one they
+// throw "incrementalCache missing". A passthrough mock keeps the service's own branching under
+// test with no caching behavior involved.
+vi.mock("next/cache", () => ({
+  unstable_cache: (fn: unknown) => fn,
+  revalidateTag: vi.fn(),
+}));
+
 // Repos are constructor-injected, so hand-rolled stubs (only the methods these two methods
 // actually call) exercise the real cycle-detection/guard-clause logic with no DB involved. The
 // cast is needed because the real interfaces are much larger than what's stubbed here.

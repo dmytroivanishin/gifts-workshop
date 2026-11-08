@@ -5,7 +5,7 @@ import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { colorSchema } from "@/common/validation/schemas";
 import { getPaginationParams } from "@/utils/paginationUtils";
-import { getUserId } from "@/utils/auth";
+import { getUserId, isAdminRequest } from "@/utils/auth";
 
 export class ColorController {
   constructor(private colorService: IColorService) {}
@@ -13,7 +13,10 @@ export class ColorController {
   getColors = withErrorHandling(async (request: Request) => {
     const { page, limit } = getPaginationParams(request);
     const result = await this.colorService.getAllColors({ page, limit });
-    return sendSuccess(result.data, result.meta, CACHE_SECONDS.lookup);
+    // An admin's own session must always see its own just-made writes, not a cached response
+    // shared with anonymous callers (CP-37).
+    const cacheSeconds = (await isAdminRequest()) ? undefined : CACHE_SECONDS.lookup;
+    return sendSuccess(result.data, result.meta, cacheSeconds);
   });
 
   getColorById = withErrorHandling(async (request: Request, id: string) => {
@@ -21,7 +24,8 @@ export class ColorController {
     if (!color) {
       throw new NotFoundError("Color not found");
     }
-    return sendSuccess(color, undefined, CACHE_SECONDS.lookup);
+    const cacheSeconds = (await isAdminRequest()) ? undefined : CACHE_SECONDS.lookup;
+    return sendSuccess(color, undefined, cacheSeconds);
   });
 
   saveColor = withErrorHandling(async (request: Request, id?: string) => {

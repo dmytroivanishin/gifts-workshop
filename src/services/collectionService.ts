@@ -1,3 +1,4 @@
+import { unstable_cache, revalidateTag } from "next/cache";
 import { ICollectionRepository } from "@/repositories/interfaces";
 import { ICollectionService } from "./interfaces";
 import { Collection, PaginatedResult, PaginationOptions } from "@/types";
@@ -11,17 +12,26 @@ import { eq, sql } from "drizzle-orm";
 
 import { paginate } from "./pagination";
 
+// Same unstable_cache + revalidateTag pattern as SystemTextService/CategoryService (CP-26/CP-37).
+const COLLECTIONS_CACHE_TAG = "collections";
+
 export class CollectionService implements ICollectionService {
   constructor(
     private collectionRepo: ICollectionRepository
   ) {}
+
+  private getAllCached = unstable_cache(
+    async (options?: PaginationOptions) => this.collectionRepo.getAll(options),
+    ["collections-get-all"],
+    { tags: [COLLECTIONS_CACHE_TAG] }
+  );
 
   async getAllCollections(options?: PaginationOptions): Promise<PaginatedResult<Collection>> {
     if (options?.page || options?.limit) {
       const page = options.page || 1;
       const limit = options.limit || 20;
 
-      const collections = await this.collectionRepo.getAll({
+      const collections = await this.getAllCached({
         page,
         limit: limit + 1,
         offset: (page - 1) * limit,
@@ -30,7 +40,7 @@ export class CollectionService implements ICollectionService {
       return paginate(collections, { page, limit });
     }
 
-    const collections = await this.collectionRepo.getAll();
+    const collections = await this.getAllCached();
     return paginate(collections, { page: 1, limit: collections.length });
   }
 
@@ -61,7 +71,9 @@ export class CollectionService implements ICollectionService {
       slug,
     };
 
-    return this.collectionRepo.save(collection);
+    const saved = await this.collectionRepo.save(collection);
+    revalidateTag(COLLECTIONS_CACHE_TAG, { expire: 0 });
+    return saved;
   }
 
   async deleteCollection(id: string): Promise<boolean> {
@@ -85,7 +97,9 @@ export class CollectionService implements ICollectionService {
       throw new ConflictError("Cannot delete collection because it is linked to categories.", "COLLECTION_HAS_CATEGORIES");
     }
 
-    return this.collectionRepo.delete(id);
+    const success = await this.collectionRepo.delete(id);
+    revalidateTag(COLLECTIONS_CACHE_TAG, { expire: 0 });
+    return success;
   }
 }
 

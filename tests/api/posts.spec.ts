@@ -103,9 +103,9 @@ test.describe("posts", () => {
     expect(body.meta).toHaveProperty("totalItems");
   });
 
-  test("Cache-Control: present (30s) for anonymous, absent for admin", async () => {
+  test("Cache-Control: present (7200s) for anonymous, absent for admin", async () => {
     const anonRes = await anon.get("/api/v1/posts");
-    expect(anonRes.headers()["cache-control"]).toContain("max-age=30");
+    expect(anonRes.headers()["cache-control"]).toContain("max-age=7200");
 
     const adminRes = await admin.get("/api/v1/posts");
     expect(adminRes.headers()["cache-control"]).toBeUndefined();

@@ -1,3 +1,4 @@
+import { unstable_cache, revalidateTag } from "next/cache";
 import { ICategoryRepository, ITagRepository, IPostRepository } from "@/repositories/interfaces";
 import { ICategoryService } from "./interfaces";
 import { Category, PopulatedCategory, PaginatedResult } from "@/types";
@@ -10,6 +11,12 @@ import { isUUID } from "@/utils/uuid";
 import { paginate } from "./pagination";
 import { PaginationOptions } from "@/types";
 
+// Same unstable_cache + revalidateTag pattern already used by SystemTextService (CP-26).
+// A PopulatedCategory embeds a live-joined `color` (see categoryRepository.populate()), so a
+// category's cached entry is also tagged "colors" — a color edit must flush it too, not just
+// colors' own cache.
+const CATEGORIES_CACHE_TAG = "categories";
+
 export class CategoryService implements ICategoryService {
   constructor(
     private categoryRepo: ICategoryRepository,
@@ -17,12 +24,18 @@ export class CategoryService implements ICategoryService {
     private postRepo: IPostRepository
   ) {}
 
+  private getAllCached = unstable_cache(
+    async (options?: PaginationOptions) => this.categoryRepo.getAll(options),
+    ["categories-get-all"],
+    { tags: [CATEGORIES_CACHE_TAG, "colors"] }
+  );
+
   async getAllCategories(options?: PaginationOptions): Promise<PaginatedResult<PopulatedCategory>> {
     if (options?.page || options?.limit) {
       const page = options.page || 1;
       const limit = options.limit || 20;
 
-      const categories = await this.categoryRepo.getAll({
+      const categories = await this.getAllCached({
         page,
         limit: limit + 1,
         offset: (page - 1) * limit,
@@ -31,8 +44,8 @@ export class CategoryService implements ICategoryService {
       return paginate(categories, { page, limit });
     }
 
-    const categories = await this.categoryRepo.getAll();
-    
+    const categories = await this.getAllCached();
+
     return paginate(categories, { page: 1, limit: categories.length });
   }
 
@@ -85,7 +98,9 @@ export class CategoryService implements ICategoryService {
       slug,
     };
 
-    return this.categoryRepo.save(category);
+    const saved = await this.categoryRepo.save(category);
+    revalidateTag(CATEGORIES_CACHE_TAG, { expire: 0 });
+    return saved;
   }
 
   // Guards a category's own parentId: no self-reference, the parent must exist, and it can't be
@@ -134,12 +149,16 @@ export class CategoryService implements ICategoryService {
       throw new ConflictError("Cannot delete category because it is linked to posts.", "CATEGORY_HAS_POSTS");
     }
 
-    return this.categoryRepo.delete(id);
+    const success = await this.categoryRepo.delete(id);
+    revalidateTag(CATEGORIES_CACHE_TAG, { expire: 0 });
+    return success;
   }
 
   async reorderCategories(items: { id: string; order: number }[]): Promise<boolean> {
     if (!items || items.length === 0) return true;
-    
-    return this.categoryRepo.reorderCategories(items);
+
+    const success = await this.categoryRepo.reorderCategories(items);
+    revalidateTag(CATEGORIES_CACHE_TAG, { expire: 0 });
+    return success;
   }
 }

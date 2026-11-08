@@ -1,3 +1,4 @@
+import { unstable_cache, revalidateTag } from "next/cache";
 import { IColorRepository, ICategoryRepository } from "@/repositories/interfaces";
 import { IColorService } from "./interfaces";
 import { Color, PaginatedResult, PaginationOptions } from "@/types";
@@ -5,18 +6,29 @@ import { randomUUID } from "crypto";
 
 import { paginate } from "./pagination";
 
+// Same unstable_cache + revalidateTag pattern as SystemTextService/CategoryService (CP-26/CP-37).
+// Revalidating this tag also flushes CategoryService's cache (tagged "colors" too, since a
+// populated category embeds a live-joined color) in the same call — no separate fan-out needed.
+const COLORS_CACHE_TAG = "colors";
+
 export class ColorService implements IColorService {
   constructor(
     private colorRepo: IColorRepository,
     private categoryRepo: ICategoryRepository
   ) {}
 
+  private getAllCached = unstable_cache(
+    async (options?: PaginationOptions) => this.colorRepo.getAll(options),
+    ["colors-get-all"],
+    { tags: [COLORS_CACHE_TAG] }
+  );
+
   async getAllColors(options?: PaginationOptions): Promise<PaginatedResult<Color>> {
     if (options?.page || options?.limit) {
       const page = options.page || 1;
       const limit = options.limit || 20;
 
-      const colors = await this.colorRepo.getAll({
+      const colors = await this.getAllCached({
         page,
         limit: limit + 1,
         offset: (page - 1) * limit,
@@ -25,7 +37,7 @@ export class ColorService implements IColorService {
       return paginate(colors, { page, limit });
     }
 
-    const colors = await this.colorRepo.getAll();
+    const colors = await this.getAllCached();
     return paginate(colors, { page: 1, limit: colors.length });
   }
 
@@ -46,10 +58,13 @@ export class ColorService implements IColorService {
       await this.categoryRepo.updateColorInCategories(savedColor.id, savedColor.color);
     }
 
+    revalidateTag(COLORS_CACHE_TAG, { expire: 0 });
     return savedColor;
   }
 
   async deleteColor(id: string): Promise<boolean> {
-    return this.colorRepo.delete(id);
+    const success = await this.colorRepo.delete(id);
+    revalidateTag(COLORS_CACHE_TAG, { expire: 0 });
+    return success;
   }
 }
