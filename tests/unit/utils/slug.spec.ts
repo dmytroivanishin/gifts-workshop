@@ -4,7 +4,8 @@ vi.mock("@/modules/logger", () => ({
   logger: { error: vi.fn() },
 }));
 
-import { formatSlug, translateToEnglish, generateSlugFromField, generateUniqueSlug } from "@/utils/slug";
+import { formatSlug, translateToEnglish, generateSlugFromField, generateUniqueSlug, truncateSlug, ensureUniqueSlug } from "@/utils/slug";
+import { MAX_SLUG_LENGTH } from "@/utils/slugLimits";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -143,5 +144,25 @@ describe("generateUniqueSlug", () => {
       .mockResolvedValueOnce({ id: "other-2" })
       .mockResolvedValueOnce(undefined);
     await expect(generateUniqueSlug("Busy Title", "post-1", getBySlug)).resolves.toBe("busy-title-2");
+  });
+});
+
+describe("slug length and hand-typed slugs", () => {
+  it("truncateSlug cuts to the limit and never leaves a trailing hyphen", () => {
+    expect(truncateSlug("a".repeat(500))).toHaveLength(MAX_SLUG_LENGTH);
+    expect(truncateSlug(`${"a".repeat(MAX_SLUG_LENGTH - 1)}-bbbb`)).toBe("a".repeat(MAX_SLUG_LENGTH - 1));
+    expect(truncateSlug("short")).toBe("short");
+  });
+
+  it("generateUniqueSlug truncates a very long title before adding a suffix", async () => {
+    const slug = await generateUniqueSlug({ en: "word ".repeat(500) }, "id-1", async () => undefined);
+    expect(slug.length).toBeLessThanOrEqual(MAX_SLUG_LENGTH);
+  });
+
+  it("ensureUniqueSlug keeps a free slug and the record's own slug, and suffixes a taken one", async () => {
+    const owner = async (slug: string) => (slug === "about" ? { id: "other" } : slug === "about-1" ? undefined : slug === "mine" ? { id: "me" } : undefined);
+    expect(await ensureUniqueSlug("free", "me", owner)).toBe("free");
+    expect(await ensureUniqueSlug("mine", "me", owner)).toBe("mine");
+    expect(await ensureUniqueSlug("about", "me", owner)).toBe("about-1");
   });
 });

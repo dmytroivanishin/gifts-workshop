@@ -2788,5 +2788,50 @@
     },
     "area": "public",
     "code": "clear_tag_filter"
+  },
+  {
+    "id": "f4a9801a-48fd-4acb-9ad2-dc51f09d9488",
+    "content": {
+      "en": "Such a record already exists.",
+      "ru": "Такая запись уже существует."
+    },
+    "area": "admin",
+    "code": "UNIQUE_VIOLATION"
+  },
+  {
+    "id": "b36ca291-8216-4c41-93d9-16a6cba11499",
+    "content": {
+      "en": "This record is still used by another record.",
+      "ru": "Эта запись всё ещё используется другой записью."
+    },
+    "area": "admin",
+    "code": "REFERENCE_IN_USE"
+  },
+  {
+    "id": "05ee794e-c23e-419e-9e5e-d3d7eddbbe3e",
+    "content": {
+      "en": "A linked record no longer exists. Reload the page and try again.",
+      "ru": "Связанная запись больше не существует. Обновите страницу и повторите."
+    },
+    "area": "admin",
+    "code": "REFERENCE_NOT_FOUND"
+  },
+  {
+    "id": "4b01a0e2-77e9-4e94-a0b3-dfeeb364c561",
+    "content": {
+      "en": "A value is too long.",
+      "ru": "Слишком длинное значение."
+    },
+    "area": "admin",
+    "code": "VALUE_TOO_LONG"
+  },
+  {
+    "id": "d4f7e382-f45d-4bde-8668-d57fe320d2bb",
+    "content": {
+      "en": "Your comment has been sent.",
+      "ru": "Ваш комментарий отправлен."
+    },
+    "area": "shared",
+    "code": "comment_sent"
   }
 ]

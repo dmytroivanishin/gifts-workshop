@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import { IPageRepository } from "@/repositories/interfaces";
 import { IPageService } from "./interfaces";
 import { Page, LocalizedText } from "@/types";
-import { generateUniqueSlug } from "@/utils/slug";
+import { ensureUniqueSlug, generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";
 
 // Same unstable_cache + revalidateTag pattern as TagService (CP-26/CP-37): the public header, footer
@@ -51,10 +51,7 @@ export class PageService implements IPageService {
     if (!slug) {
       slug = await generateUniqueSlug(body.title, id, this.pageRepo.getBySlug.bind(this.pageRepo));
     } else if (body.slug) {
-      const taken = await this.pageRepo.getBySlug(body.slug);
-      if (taken && taken.id !== id) {
-        slug = await generateUniqueSlug(body.slug, id, this.pageRepo.getBySlug.bind(this.pageRepo));
-      }
+      slug = await ensureUniqueSlug(body.slug, id, this.pageRepo.getBySlug.bind(this.pageRepo));
     }
 
     const page: Page = {

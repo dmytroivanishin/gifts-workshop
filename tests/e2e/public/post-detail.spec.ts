@@ -125,7 +125,7 @@ test.describe("public post page: fullscreen gallery, comment form, next/image", 
     await page.getByPlaceholder("write_comment").fill("E2E detail comment text");
     await page.getByRole("button", { name: "post_comment" }).click();
 
-    await expect(page.getByText("comment_submitted")).toBeVisible();
+    await expect(page.getByText("comment_sent")).toBeVisible();
     const savedName = await page.evaluate(() => localStorage.getItem("commenter_name"));
     expect(savedName).toBe("E2E Detail Commenter");
 

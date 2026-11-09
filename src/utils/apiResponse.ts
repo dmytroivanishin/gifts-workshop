@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { BaseError } from "@/common/errors/base";
 import { InternalServerError } from "@/common/errors/internalServer";
 import { logger } from "@/modules/logger";
+import { mapDatabaseError } from "@/utils/databaseErrors";
 
 // Durations for the cacheable list/read endpoints (CP-23/CP-37), named once instead of as a bare
 // number at each call site. The decision of *which* one applies (and, for posts, whether the
@@ -39,7 +40,13 @@ export function sendSuccess(data: unknown, meta?: Record<string, unknown>, cache
   return response;
 }
 
-export function sendError(error: unknown) {
+export function sendError(rawError: unknown) {
+  const mapped = mapDatabaseError(rawError);
+  const error = mapped ?? rawError;
+  if (mapped && rawError instanceof Error) {
+    // The response is generic on purpose; the driver's message (SQL, values) is only for the log.
+    logger.warn(rawError.message, { code: mapped.errorCode });
+  }
   if (error instanceof BaseError) {
     logger.error(error.message, { code: error.errorCode, stack: error.stack });
     return NextResponse.json(

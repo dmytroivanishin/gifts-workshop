@@ -3,7 +3,7 @@ import { ICollectionRepository } from "@/repositories/interfaces";
 import { ICollectionService } from "./interfaces";
 import { Collection, PaginatedResult, PaginationOptions } from "@/types";
 import { randomUUID } from "crypto";
-import { generateUniqueSlug } from "@/utils/slug";
+import { ensureUniqueSlug, generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";
 import { ConflictError } from "@/common/errors/conflict";
 import { drizzleDatabase } from "@/repositories/drizzle/database";
@@ -61,6 +61,8 @@ export class CollectionService implements ICollectionService {
     let slug = body.slug;
     if (!slug) {
       slug = await generateUniqueSlug(body.title, id, this.collectionRepo.getBySlug.bind(this.collectionRepo));
+    } else {
+      slug = await ensureUniqueSlug(slug, id, this.collectionRepo.getBySlug.bind(this.collectionRepo));
     }
 
     const collection: Collection = {

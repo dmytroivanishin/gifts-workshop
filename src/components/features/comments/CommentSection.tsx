@@ -59,7 +59,7 @@ export function CommentSection({ postId }: { postId: string }) {
       <h3 className="text-xl font-bold text-foreground mb-6">{t("comments") || "Comments"}</h3>
 
       <form onSubmit={handleSubmit} className="mb-10 space-y-4 bg-secondary/30 p-6 rounded-2xl border border-border/50">
-        <h4 className="font-semibold text-sm text-foreground mb-2">{t("leave_comment") || "Leave a comment"}</h4>
+        <h4 className="sr-only">{t("leave_comment") || "Leave a comment"}</h4>
         
         {!isNameSaved && (
           <div className="space-y-1.5">
@@ -104,7 +104,7 @@ export function CommentSection({ postId }: { postId: string }) {
         {errorMsg && <p className="text-destructive text-sm font-medium">{errorMsg}</p>}
         {submitSuccess && (
           <p className="text-lime-text bg-[#7D8945]/10 px-4 py-2 rounded-lg text-sm font-medium border border-[#7D8945]/20">
-            {t("comment_submitted") || "Your comment has been submitted and is awaiting moderation."}
+            {t("comment_sent") || "Your comment has been sent."}
           </p>
         )}
 

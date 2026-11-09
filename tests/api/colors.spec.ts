@@ -48,16 +48,14 @@ test.describe("colors", () => {
     await color.cleanup();
   });
 
-  // Finding: ColorService.deleteColor has no in-use check of its own (unlike categories/media,
-  // which throw a clean 409 ConflictError) — it relies entirely on the DB's
-  // color_id -> colors (restrict) FK. That violation isn't a BaseError, so sendError() turns it
-  // into a generic 500, not a 409. This test documents the real current behavior.
-  test("deleting a color still referenced by a category is an uncaught 500, not a clean 409", async () => {
+  // ColorService.deleteColor has no in-use check of its own; it relies on the DB's
+  // color_id -> colors (restrict) FK, whose violation sendError() maps to a 409.
+  test("deleting a color still referenced by a category is a clean 409", async () => {
     const color = await createColor(admin);
     const category = await createCategory(admin, { colorId: color.id });
 
     const res = await admin.delete(`/api/v1/colors/${color.id}`);
-    await expectError(res, 500, "INTERNAL_SERVER_ERROR");
+    await expectError(res, 409, "REFERENCE_IN_USE");
 
     await category.cleanup();
     await color.cleanup();
@@ -97,16 +95,20 @@ test.describe("colors", () => {
   // that fix. Uses a before/after delta rather than an absolute count so a concurrent insert from
   // another spec file running in a different worker can't make this flaky.
   test("list with no args returns more than 20 rows once more than 20 exist", async () => {
-    const before = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/colors"));
-    const baseline = before.data.length;
-
-    const created = [];
+    const created: Array<Awaited<ReturnType<typeof createColor>>> = [];
     for (let i = 0; i < 22; i++) created.push(await createColor(admin));
 
-    const after = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/colors"));
-    expect(after.data.length).toBeGreaterThanOrEqual(baseline + 22);
+    // Checks our own 22 rows by id instead of comparing counts: other spec files create and delete
+    // rows in parallel workers, which moves any before/after count. Polled briefly because a read
+    // from another worker can re-cache the list just before our last write is invalidated.
+    await expect(async () => {
+      const after = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/colors"));
+      const ids = new Set(after.data.map((item) => item.id));
+      expect(created.every((item) => ids.has(item.id))).toBe(true);
+      expect(after.data.length).toBeGreaterThan(20);
+    }).toPass({ timeout: 5000 });
 
-    for (const c of created) await c.cleanup();
+    for (const item of created) await item.cleanup();
   });
 
   test("list with no args returns the newest-created color before an older one", async () => {

@@ -1,5 +1,6 @@
 import { logger } from "@/modules/logger";
 import { LocalizedText } from "@/types";
+import { MAX_SLUG_LENGTH } from "@/utils/slugLimits";
 
 function transliterate(text: string): string {
   const ru: { [key: string]: string } = {
@@ -82,12 +83,16 @@ export async function generateSlugFromField(field: string | LocalizedText | unde
   return `slug-${Date.now()}`;
 }
 
+export function truncateSlug(slug: string): string {
+  return slug.slice(0, MAX_SLUG_LENGTH).replace(/-+$/, "");
+}
+
 export async function generateUniqueSlug(
   field: string | LocalizedText | undefined,
   currentId: string,
   getBySlug: (slug: string) => Promise<{ id: string } | null | undefined>
 ): Promise<string> {
-  const baseSlug = await generateSlugFromField(field);
+  const baseSlug = truncateSlug(await generateSlugFromField(field));
   let slug = baseSlug;
   let suffix = 1;
   while (true) {
@@ -99,4 +104,16 @@ export async function generateUniqueSlug(
     suffix++;
   }
   return slug;
+}
+
+// A slug typed by hand is kept as is unless another record already owns it; then it gets the same
+// "-1", "-2" suffix a generated one would.
+export async function ensureUniqueSlug(
+  slug: string,
+  currentId: string,
+  getBySlug: (slug: string) => Promise<{ id: string } | null | undefined>
+): Promise<string> {
+  const taken = await getBySlug(slug);
+  if (!taken || taken.id === currentId) return slug;
+  return generateUniqueSlug(slug, currentId, getBySlug);
 }

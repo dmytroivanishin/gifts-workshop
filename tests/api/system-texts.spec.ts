@@ -84,17 +84,15 @@ test.describe("system-texts", () => {
     await admin.delete(`/api/v1/system-texts/${created.data.id}`);
   });
 
-  // Finding: saveSystemText doesn't pre-check for a duplicate code before insert — same
-  // uncaught-unique-constraint shape as the colors-delete-while-in-use finding. This test
-  // documents whatever the real current status turns out to be.
-  test("a duplicate code on a second POST", async () => {
+  // saveSystemText doesn't pre-check for a duplicate code; the unique violation is mapped to a 409.
+  test("a duplicate code on a second POST is a clean 409", async () => {
     const code = `test_code_${rnd()}`;
     const first = await expectSuccess<{ id: string }>(
       await admin.post("/api/v1/system-texts", { data: { code, content: { ru: "A", en: "A" } } })
     );
 
     const res = await admin.post("/api/v1/system-texts", { data: { code, content: { ru: "B", en: "B" } } });
-    expect(res.ok()).toBe(false);
+    await expectError(res, 409, "UNIQUE_VIOLATION");
 
     await admin.delete(`/api/v1/system-texts/${first.data.id}`);
   });

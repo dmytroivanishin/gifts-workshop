@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { hasLocalizedValue } from "@/utils/localization";
+import { MAX_SLUG_LENGTH } from "@/utils/slugLimits";
 
 export const localizedStringSchema = z.record(
   z.string(),
@@ -33,7 +34,11 @@ export const localizedStringSchema = z.record(
 // endpoint deletes the whole batch in one query.
 export const bulkIdsSchema = z.object({ ids: z.array(z.string().uuid()).min(1).max(500) });
 
-export const slugSchema = z.string().regex(/^[a-z0-9-]+$/, "error_invalid_slug").optional();
+export const slugSchema = z
+  .string()
+  .regex(/^[a-z0-9-]+$/, "error_invalid_slug")
+  .max(MAX_SLUG_LENGTH, "error_invalid_slug")
+  .optional();
 
 const optionalUuidSchema = z.preprocess(
   (value) => (value === "" || value === undefined || value === null ? null : value),
@@ -128,7 +133,8 @@ export const postSchemaBase = z.object({
   ),
   media: z.preprocess(
     (value) => (value === null || value === undefined || value === "" ? [] : value),
-    z.array(postMediaSchema).default([])
+    // The same image twice in one gallery would hit the (post, media) primary key; the first entry wins.
+    z.array(postMediaSchema).default([]).transform((items) => items.filter((item, index) => items.findIndex((other) => other.mediaId === item.mediaId) === index))
   ),
   createdAt: z.union([z.string(), z.date()]).optional(),
 });

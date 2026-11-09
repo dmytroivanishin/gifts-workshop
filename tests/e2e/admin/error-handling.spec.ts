@@ -125,11 +125,9 @@ test.describe("admin: error toasts and conflict handling", () => {
     }
   });
 
-  test("deleting a color still referenced by a category surfaces the known generic error, not a silent failure", async ({ page }) => {
-    // colorService.deleteColor has no in-use guard of its own (already documented, CHANGE-PLAN.md's
-    // phase-1 "Done" notes) — it relies entirely on the colors->categories FK RESTRICT, so this is
-    // a generic 500 (InternalServerError's default message), not a clean 409. Documenting the real,
-    // current behavior rather than silently working around it.
+  test("deleting a color still referenced by a category shows a clear conflict error, not a silent failure", async ({ page }) => {
+    // colorService.deleteColor has no in-use guard of its own; the colors->categories FK RESTRICT
+    // violation is mapped by sendError() to a 409 (REFERENCE_IN_USE) with a readable message.
     const color = await createColor(admin);
     const category = await createCategory(admin, {
       colorId: color.id,
@@ -145,7 +143,7 @@ test.describe("admin: error toasts and conflict handling", () => {
       await row.getByRole("button").last().click();
       await page.getByTestId("confirm-modal-confirm").click();
 
-      await expect(page.getByText("An unexpected error occurred")).toBeVisible();
+      await expect(page.getByText("The record is still used by another record")).toBeVisible();
       // colors/page.tsx's handleConfirmDelete has no `finally` — on a failed delete the modal
       // stays open (isDeleteOpen/deleteTargetId only reset on the success path). Close it by hand
       // so the row-still-present assertion below isn't fighting the modal's own overlay.

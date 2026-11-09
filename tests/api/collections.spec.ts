@@ -91,16 +91,20 @@ test.describe("collections", () => {
   // test for that fix. Before/after delta, not an absolute count, so a concurrent insert from
   // another spec file running in a different worker can't make this flaky.
   test("list with no args returns more than 20 rows once more than 20 exist", async () => {
-    const before = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/collections"));
-    const baseline = before.data.length;
-
-    const created = [];
+    const created: Array<Awaited<ReturnType<typeof createCollection>>> = [];
     for (let i = 0; i < 22; i++) created.push(await createCollection(admin));
 
-    const after = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/collections"));
-    expect(after.data.length).toBeGreaterThanOrEqual(baseline + 22);
+    // Checks our own 22 rows by id instead of comparing counts: other spec files create and delete
+    // rows in parallel workers, which moves any before/after count. Polled briefly because a read
+    // from another worker can re-cache the list just before our last write is invalidated.
+    await expect(async () => {
+      const after = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/collections"));
+      const ids = new Set(after.data.map((item) => item.id));
+      expect(created.every((item) => ids.has(item.id))).toBe(true);
+      expect(after.data.length).toBeGreaterThan(20);
+    }).toPass({ timeout: 5000 });
 
-    for (const c of created) await c.cleanup();
+    for (const item of created) await item.cleanup();
   });
 
   test("list with no args returns the newest-created collection before an older one", async () => {

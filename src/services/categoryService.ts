@@ -3,7 +3,7 @@ import { ICategoryRepository, ITagRepository, IPostRepository } from "@/reposito
 import { ICategoryService } from "./interfaces";
 import { Category, PopulatedCategory, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
-import { generateUniqueSlug } from "@/utils/slug";
+import { ensureUniqueSlug, generateUniqueSlug } from "@/utils/slug";
 import { ValidationError } from "@/common/errors/validation";
 import { ConflictError } from "@/common/errors/conflict";
 import { isUUID } from "@/utils/uuid";
@@ -82,6 +82,8 @@ export class CategoryService implements ICategoryService {
     let slug = body.slug;
     if (!slug || (body.title && body.title !== body._originalTitle)) {
       slug = await generateUniqueSlug(body.title || existingCategory?.title, id, this.categoryRepo.getBySlug.bind(this.categoryRepo));
+    } else {
+      slug = await ensureUniqueSlug(slug, id, this.categoryRepo.getBySlug.bind(this.categoryRepo));
     }
 
     const embeddedColor = body.color ?? existingCategory?.color;

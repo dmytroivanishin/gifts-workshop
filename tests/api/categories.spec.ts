@@ -132,7 +132,7 @@ test.describe("categories", () => {
     await collection.cleanup();
   });
 
-  test("a colorId that doesn't exist hits the DB's FK constraint directly (uncaught -> 500)", async () => {
+  test("a colorId that doesn't exist is a clean 400 (the DB's FK violation is mapped, not a 500)", async () => {
     const collection = await createCollection(admin);
     const res = await admin.post("/api/v1/categories", {
       data: {
@@ -141,9 +141,8 @@ test.describe("categories", () => {
         color: { id: "00000000-0000-0000-0000-000000000000", color: "#ff00ff" },
       },
     });
-    // Documents the real current behavior — see Findings in the plan: no existence check before
-    // insert, so this is a raw Postgres FK violation, not a clean ValidationError.
-    await expectError(res, 500, "INTERNAL_SERVER_ERROR");
+    // There is no existence check before the insert; the FK violation is mapped by sendError().
+    await expectError(res, 400, "VALIDATION_ERROR");
     await collection.cleanup();
   });
 

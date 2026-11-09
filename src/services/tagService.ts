@@ -3,7 +3,7 @@ import { ITagRepository, TagQueryOptions } from "@/repositories/interfaces";
 import { ITagService } from "./interfaces";
 import { Tag, LocalizedText, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
-import { generateUniqueSlug } from "@/utils/slug";
+import { ensureUniqueSlug, generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";
 
 import { paginate } from "./pagination";
@@ -60,6 +60,8 @@ export class TagService implements ITagService {
     let slug = body.slug;
     if (!slug) {
       slug = await generateUniqueSlug(body.name, id, this.tagRepo.getBySlug.bind(this.tagRepo));
+    } else {
+      slug = await ensureUniqueSlug(slug, id, this.tagRepo.getBySlug.bind(this.tagRepo));
     }
 
     const tag: Tag = {
