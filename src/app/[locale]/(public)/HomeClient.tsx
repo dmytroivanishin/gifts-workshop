@@ -54,6 +54,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const categoryNavRef = useRef<HTMLDivElement>(null);
+  const compactNavRef = useRef<HTMLDivElement>(null);
   const navWrapperRef = useRef<HTMLDivElement>(null);
   // The filter bar is one centered row while everything fits, and switches to a compact, grouped
   // layout as soon as that row would have to wrap. `compactState.key` ties the flag to the data it
@@ -68,7 +69,8 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
   // same pattern as the admin Combobox.
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (categoryNavRef.current && !categoryNavRef.current.contains(event.target as Node)) {
+      const nav = categoryNavRef.current ?? compactNavRef.current;
+      if (nav && !nav.contains(event.target as Node)) {
         setOpenDropdownId(null);
       }
     }
@@ -223,7 +225,9 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
         children.some((c) => activeCategory === c.id || activeCategory === c.slug))
     );
   });
-  const selectedParentChildren = selectedParent ? dbCategories.filter((c) => c.parentId === selectedParent.id) : [];
+  // Compact layout: the subcategory tier is open only while its parent's chevron is toggled on.
+  const openParent = topLevelCategories.find((cat) => cat.id === openDropdownId);
+  const openParentChildren = openParent ? dbCategories.filter((c) => c.parentId === openParent.id) : [];
 
   const navDataKey = useMemo(
     () => topLevelCategories.map((cat) => `${cat.id}:${loc(cat.title)}`).join("|") + "#" + dbCategories.length,
@@ -395,36 +399,24 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                           )}
                         >
                           <div className="bg-card/95 backdrop-blur-md border border-border rounded-2xl p-2 min-w-[200px] flex flex-col gap-1">
-                            {/* Option to explicitly select only the parent */}
-                            <Link
-                              href={getCategoryUrl(cat.slug || cat.id)}
-                              onClick={() => setOpenDropdownId(null)}
-                              className={cn(
-                                "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer block",
-                                activeCategory === cat.id || activeCategory === cat.slug
-                                  ? "bg-secondary text-primary"
-                                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                              )}
-                            >
-                              {t("all")} {localizedTitle}
-                            </Link>
-                            <div className="h-[1px] bg-border/60 my-1" />
+                            {/* Only the subcategories: the parent pill itself already selects the parent.
+                                A subcategory takes its own colour, else its parent's, and is lit by the
+                                same rule as the top-level pills. */}
                             {children.map((child) => {
                               const isChildSelected = activeCategory === child.id || activeCategory === child.slug;
+                              const tone = categoryTone(child.color?.color ?? cat.color?.color, isChildSelected);
                               return (
                                 <Link
                                   key={child.id}
                                   href={getCategoryUrl(child.slug || child.id)}
                                   onClick={() => setOpenDropdownId(null)}
                                   className={cn(
-                                    "w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer flex items-center justify-between",
-                                    isChildSelected
-                                      ? "bg-primary/10 text-primary"
-                                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    "w-full text-left border px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer block",
+                                    tone.className
                                   )}
+                                  style={tone.style}
                                 >
-                                  <span>{loc(child.title)}</span>
-                                  {isChildSelected && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                                  {loc(child.title)}
                                 </Link>
                               );
                             })}
@@ -452,7 +444,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                 })}
             </div>
           ) : (
-            <div className="flex w-full flex-col items-center gap-3">
+            <div ref={compactNavRef} className="flex w-full flex-col items-center gap-3">
               {/* Quick filters get their own row, so they never end up split from each other */}
               <div className="flex items-center justify-center gap-2">
                 {favoritesButton}
@@ -477,79 +469,70 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                 {topLevelCategories.map((cat) => {
                   const hasChildren = dbCategories.some((c) => c.parentId === cat.id);
                   const isSelected = selectedParent?.id === cat.id || activeCategory === cat.id || activeCategory === cat.slug;
+                  const tone = categoryTone(cat.color?.color, isSelected);
+                  const isOpen = openDropdownId === cat.id;
                   return (
                     <motion.div key={cat.id} layout="position">
-                      <Link
-                        href={getCategoryUrl(cat.slug || cat.id)}
+                      {/* Same split as the desktop pill: the label selects the category, the chevron
+                          (its own tap target) toggles the subcategory row. */}
+                      <div
                         className={cn(
-                          "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer flex items-center gap-1.5",
-                          categoryTone(cat.color?.color, isSelected).className
+                          "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all flex items-center gap-1.5",
+                          tone.className
                         )}
-                        style={categoryTone(cat.color?.color, isSelected).style}
+                        style={tone.style}
                       >
-                        {loc(cat.title)}
+                        <Link
+                          href={getCategoryUrl(cat.slug || cat.id)}
+                          className="cursor-pointer"
+                          onClick={() => setOpenDropdownId(null)}
+                        >
+                          {loc(cat.title)}
+                        </Link>
                         {hasChildren && (
-                          <span
-                            aria-hidden="true"
-                            className={cn("text-[9px] opacity-60 transition-transform duration-200", isSelected && "rotate-180")}
+                          <button
+                            type="button"
+                            onClick={() => setOpenDropdownId((prev) => (prev === cat.id ? null : cat.id))}
+                            aria-expanded={isOpen}
+                            aria-label={loc(cat.title)}
+                            className={cn("text-[9px] opacity-60 transition-transform duration-200 cursor-pointer", isOpen && "rotate-180")}
                           >
                             ▼
-                          </span>
+                          </button>
                         )}
-                      </Link>
+                      </div>
                     </motion.div>
                   );
                 })}
               </div>
 
-              {/* Subcategories of the chosen parent open as a second tier under the row, instead of a
+              {/* Subcategories of the parent whose chevron is toggled open appear as a second tier under the row, instead of a
                   hover dropdown that can run off a narrow screen and needs a tap target on touch. */}
               <AnimatePresence initial={false}>
-                {selectedParent && (
+                {openParent && (
                   <motion.div
-                    key={selectedParent.id}
+                    key={openParent.id}
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.25, ease: "easeOut" }}
                     className="w-full overflow-hidden"
                   >
-                    <div
-                      className={cn(
-                        "mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-2 rounded-3xl px-3 py-2.5",
-                        !selectedParent.color?.color && "bg-[#EBE7E3]/40"
-                      )}
-                      style={selectedParent.color?.color ? { backgroundColor: `${selectedParent.color.color}10` } : undefined}
-                    >
-                      <Link
-                        href={getCategoryUrl(selectedParent.slug || selectedParent.id)}
-                        className={cn(
-                          "border px-3 py-1.5 rounded-full text-xs font-sans transition-all cursor-pointer block",
-                          categoryTone(
-                            selectedParent.color?.color,
-                            activeCategory === selectedParent.id || activeCategory === selectedParent.slug
-                          ).className
-                        )}
-                        style={
-                          categoryTone(
-                            selectedParent.color?.color,
-                            activeCategory === selectedParent.id || activeCategory === selectedParent.slug
-                          ).style
-                        }
-                      >
-                        {t("all")} {loc(selectedParent.title)}
-                      </Link>
-                      {selectedParentChildren.map((child) => {
+                    {/* The very same panel as the desktop dropdown: card background, border, stacked rows. */}
+                    <div className="mx-auto flex w-fit min-w-[200px] max-w-full flex-col gap-1 rounded-2xl border border-border bg-card/95 p-2 backdrop-blur-md">
+                      {openParentChildren.map((child) => {
                         const isChildSelected = activeCategory === child.id || activeCategory === child.slug;
+                        const tone = categoryTone(child.color?.color ?? openParent.color?.color, isChildSelected);
                         return (
                           <Link
                             key={child.id}
                             href={getCategoryUrl(child.slug || child.id)}
+                            onClick={() => setOpenDropdownId(null)}
                             className={cn(
-                              "border px-3 py-1.5 rounded-full text-xs font-sans transition-all cursor-pointer block",
-                              categoryTone(child.color?.color, isChildSelected).className
+                              "w-full text-left border px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer block",
+                              tone.className
                             )}
-                            style={categoryTone(child.color?.color, isChildSelected).style}
+                            style={tone.style}
                           >
                             {loc(child.title)}
                           </Link>
