@@ -198,7 +198,8 @@ export default function AdminDashboard() {
         ) : posts.length > 0 ? (
           <>
             {/* Desktop Table */}
-            <table className="hidden md:table w-full border-collapse text-left">
+            {/* lg, not md: with the 256px sidebar the table needs ~720px, so between 768 and ~960px it clipped the actions column; the cards below fit any width. */}
+            <table className="hidden lg:table w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="w-14 py-4 pl-4 pr-0">
@@ -227,14 +228,14 @@ export default function AdminDashboard() {
                   
                   const getStatusClasses = (status: string) => {
                     switch (status) {
-                      case "Published": return "bg-[#DADFC6] text-[#5C6535]";
+                      case "Published": return "bg-lime-active text-lime-text";
                       case "Draft": return "bg-[#F9E4D3] text-[#904504]";
-                      case "Archived": return "bg-[#E7E7E5] text-[#504E47]";
+                      case "Archived": return "bg-olive-bg text-olive-text";
                       default: return "bg-secondary text-secondary-foreground";
                     }
                   };
                   const getStockClasses = (inStock: boolean) => {
-                    return inStock ? "bg-[#DADFC6] text-[#5C6535]" : "bg-[#E7E7E5] text-[#504E47]";
+                    return inStock ? "bg-lime-active text-lime-text" : "bg-olive-bg text-olive-text";
                   };
 
                   return (
@@ -289,7 +290,7 @@ export default function AdminDashboard() {
             </table>
 
             {/* Mobile Cards */}
-            <div className="md:hidden divide-y divide-border/45">
+            <div className="lg:hidden divide-y divide-border/45">
               {posts.map((post) => {
                 const categoryObject = post.category && typeof post.category === "object" ? post.category : null;
                 const rawCatTitle = categoryObject ? categoryObject.title : "";
@@ -299,14 +300,14 @@ export default function AdminDashboard() {
 
                 const getStatusClasses = (status: string) => {
                   switch (status) {
-                    case "Published": return "bg-[#DADFC6] text-[#5C6535]";
+                    case "Published": return "bg-lime-active text-lime-text";
                     case "Draft": return "bg-[#F9E4D3] text-[#904504]";
-                    case "Archived": return "bg-[#E7E7E5] text-[#504E47]";
+                    case "Archived": return "bg-olive-bg text-olive-text";
                     default: return "bg-secondary text-secondary-foreground";
                   }
                 };
                 const getStockClasses = (inStock: boolean) => {
-                  return inStock ? "bg-[#DADFC6] text-[#5C6535]" : "bg-[#E7E7E5] text-[#504E47]";
+                  return inStock ? "bg-lime-active text-lime-text" : "bg-olive-bg text-olive-text";
                 };
 
                 return (

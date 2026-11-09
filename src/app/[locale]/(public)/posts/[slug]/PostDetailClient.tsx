@@ -164,7 +164,7 @@ export default function PostDetailClient({ slug, initialPost }: PostDetailClient
                 </span>
               )}
 
-              <div className={`px-4 py-1.5 rounded-full text-sm font-medium border ${post.inStock ? "bg-[#DADFC6] border-[#DADFC6] text-[#5C6535]" : "bg-white border-[#DADFC6] text-[#5C6535]"}`}>
+              <div className={`px-4 py-1.5 rounded-full text-sm font-medium border ${post.inStock ? "bg-lime-active border-lime-active text-lime-text" : "bg-white border-lime-active text-lime-text"}`}>
                 {post.inStock ? t("in_stock") : t("on_request")}
               </div>
             </div>

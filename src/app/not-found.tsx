@@ -41,7 +41,7 @@ export default function NotFound() {
           href="/"
           className={cn(
             "inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer",
-            "bg-[#EBE7E3] text-[#1F1B16] border border-transparent hover:border-[#1F1B16]/20 hover:shadow-sm"
+            "bg-secondary text-[#1F1B16] border border-transparent hover:border-[#1F1B16]/20 hover:shadow-sm"
           )}
         >
           <Home size={18} />

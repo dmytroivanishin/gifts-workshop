@@ -125,17 +125,29 @@ test.describe("admin is Russian-only (no language switcher); public locale switc
     await page.context().clearCookies();
     await page.goto("/ru");
 
-    // PublicHeader.tsx's switcher text is hardcoded JSX ("Русский"/"English"), not a t() call, so
-    // it renders correctly regardless of the test DB's empty system_texts (same reasoning
-    // tests/e2e/helpers/auth.ts documents for the dev-login button).
+    // PublicHeader.tsx shows the short code ("RU"/"EN") and keeps the full language name only as
+    // the accessible name; it is hardcoded, not a t() call, so it renders correctly regardless of
+    // the test DB's empty system_texts (same reasoning tests/e2e/helpers/auth.ts documents for
+    // the dev-login button).
     const switcher = page.getByRole("button", { name: "Русский" });
     await expect(switcher).toBeVisible();
+    await expect(switcher).toHaveText("RU");
     await switcher.click();
     await expect(page).toHaveURL(/\/en(\/|$)/);
-    await expect(page.getByRole("button", { name: "English" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "English" })).toHaveText("EN");
 
     await page.getByRole("button", { name: "English" }).click();
     await expect(page).toHaveURL(/\/ru(\/|$)/);
     await expect(page.getByRole("button", { name: "Русский" })).toBeVisible();
+  });
+
+  test("public pages have no horizontal scroll at 320px with the short language switcher", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    for (const path of ["/ru", "/en"]) {
+      await page.goto(path);
+      await expect(page.getByRole("button", { name: /Русский|English/ })).toBeVisible();
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
+    }
   });
 });

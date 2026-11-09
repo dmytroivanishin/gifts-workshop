@@ -125,7 +125,7 @@ export default function AdminComments() {
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case "Approved": return "bg-[#7D8945]/20 text-[#5C6535] border-[#7D8945]/30"; // Lime
+      case "Approved": return "bg-[#7D8945]/20 text-lime-text border-[#7D8945]/30"; // Lime
       case "Rejected": return "bg-[#B87070]/20 text-[#8F4A4A] border-[#B87070]/30"; // Rose
       case "Review": default: return "bg-[#FA943B]/20 text-[#904504] border-[#FA943B]/30"; // Orange
     }

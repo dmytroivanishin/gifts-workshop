@@ -14,6 +14,10 @@ interface PublicHeaderProps {
   pages?: MenuPage[];
 }
 
+// The button shows the short code to save header width on a phone; the full name stays in the
+// accessible name and tooltip.
+const LANGUAGE_NAMES: Record<string, string> = { ru: "Русский", en: "English" };
+
 const LINK_CLASS = "whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground sm:text-xs sm:tracking-wider";
 
 export function PublicHeader({ pages = [] }: PublicHeaderProps) {
@@ -74,9 +78,11 @@ export function PublicHeader({ pages = [] }: PublicHeaderProps) {
           <Globe size={14} />
           <button
             onClick={handleLanguageSwitch}
+            aria-label={LANGUAGE_NAMES[locale] ?? locale.toUpperCase()}
+            title={LANGUAGE_NAMES[locale] ?? locale.toUpperCase()}
             className="hover:text-foreground font-semibold uppercase tracking-wide transition-colors cursor-pointer sm:tracking-wider"
           >
-            {locale === "ru" ? "Русский" : locale === "en" ? "English" : locale.toUpperCase()}
+            {locale.toUpperCase()}
           </button>
         </div>
 

@@ -98,7 +98,7 @@ test.describe("admin smoke: every list page loads with real data and no console 
   test("dashboard shows drafts too (status=all) with no console errors", async ({ page }) => {
     const errors = collectConsoleErrors(page);
     await loginAsAdmin(page);
-    // The dashboard renders both a desktop <table> and a "md:hidden" mobile card list at once
+    // The dashboard renders both a desktop <table> and a "lg:hidden" mobile card list at once
     // (CSS-hidden, not removed from the DOM) — each post title appears in both, so .first() to
     // avoid a strict-mode violation.
     await expect(page.getByText("E2E Smoke Draft").first()).toBeVisible();

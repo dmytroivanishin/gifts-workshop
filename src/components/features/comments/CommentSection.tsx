@@ -103,7 +103,7 @@ export function CommentSection({ postId }: { postId: string }) {
 
         {errorMsg && <p className="text-destructive text-sm font-medium">{errorMsg}</p>}
         {submitSuccess && (
-          <p className="text-[#5C6535] bg-[#7D8945]/10 px-4 py-2 rounded-lg text-sm font-medium border border-[#7D8945]/20">
+          <p className="text-lime-text bg-[#7D8945]/10 px-4 py-2 rounded-lg text-sm font-medium border border-[#7D8945]/20">
             {t("comment_submitted") || "Your comment has been submitted and is awaiting moderation."}
           </p>
         )}

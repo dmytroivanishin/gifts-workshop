@@ -10,7 +10,7 @@ const ICON_SIZE = 18;
 const TONES = {
   default: "text-subtle-foreground hover:bg-muted hover:text-foreground",
   destructive: "text-subtle-foreground hover:bg-muted hover:text-destructive",
-  success: "text-subtle-foreground hover:bg-[#7D8945]/10 hover:text-[#5C6535]",
+  success: "text-subtle-foreground hover:bg-[#7D8945]/10 hover:text-lime-text",
   danger: "text-subtle-foreground hover:bg-[#B87070]/10 hover:text-[#8F4A4A]",
 } as const;
 

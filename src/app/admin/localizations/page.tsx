@@ -125,7 +125,7 @@ export default function AdminLocalizations() {
         {isSystem && (
           <button
             onClick={() => router.push('/admin/localizations/system/new')}
-            className="w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:bg-primary/90 transition-colors cursor-pointer text-center"
+            className="w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer text-center"
           >
             {t("add_system_text") || "Add System Text"}
           </button>
@@ -151,7 +151,7 @@ export default function AdminLocalizations() {
                 key={type.id}
                 type="button"
                 onClick={() => handleEntityChange(type.id as EntityType)}
-                className={`w-full lg:w-auto px-4 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer border ${
+                className={`w-full lg:w-auto px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${
                   entityType === type.id 
                     ? "bg-primary text-primary-foreground border-primary" 
                     : "bg-secondary border-border text-subtle-foreground hover:text-foreground"
@@ -198,11 +198,11 @@ export default function AdminLocalizations() {
                   
                   <div className="mt-4 flex items-center gap-1.5 text-xs font-medium">
                     {isTranslated ? (
-                      <span className="text-emerald-600 bg-emerald-600/10 px-2 py-1 rounded-md flex items-center gap-1">
+                      <span className="text-emerald-600 bg-emerald-600/10 px-2 py-1 rounded-full flex items-center gap-1">
                         <CheckCircle2 size={12} /> {t("translated_fully")}
                       </span>
                     ) : (
-                      <span className="text-amber-600 bg-amber-600/10 px-2 py-1 rounded-md flex items-center gap-1">
+                      <span className="text-amber-600 bg-amber-600/10 px-2 py-1 rounded-full flex items-center gap-1">
                         <AlertCircle size={12} /> {t("missing_translation")}: {missingLangs.join(', ')}
                       </span>
                     )}

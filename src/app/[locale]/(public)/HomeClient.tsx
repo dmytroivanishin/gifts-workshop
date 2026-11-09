@@ -25,8 +25,8 @@ function categoryTone(hex: string | undefined, selected: boolean): { className: 
   if (!hex) {
     return {
       className: selected
-        ? "bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3]"
-        : "bg-transparent text-[#827C6B] border-[#EBE7E3] hover:bg-[#EBE7E3]/45",
+        ? "bg-secondary text-[#1F1B16] border-border"
+        : "bg-transparent text-muted-foreground border-border hover:bg-secondary/45",
     };
   }
   return {
@@ -286,7 +286,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
       href={getCategoryUrl(undefined)}
       title={t("clear_tag_filter")}
       aria-label={`${t("clear_tag_filter")}: #${activeTagName}`}
-      className="flex items-center gap-1.5 border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3]"
+      className="flex items-center gap-1.5 border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer bg-secondary text-[#1F1B16] border-border"
     >
       #{activeTagName}
       <X size={14} aria-hidden="true" />
@@ -319,10 +319,10 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
     <button
       onClick={() => setInStockOnly(!inStockOnly)}
       className={cn(
-        "border px-4 py-2 rounded-full text-[13px] font-normal transition-all cursor-pointer border-[#DADFC6] text-[#7D8945]",
+        "border px-4 py-2 rounded-full text-[13px] font-normal transition-all cursor-pointer border-lime-active text-[#7D8945]",
         inStockOnly
-          ? "bg-[#DADFC6] text-[#5C6535]"
-          : "bg-transparent hover:bg-[#DADFC6]/45"
+          ? "bg-lime-active text-lime-text"
+          : "bg-transparent hover:bg-lime-active/45"
       )}
     >
       {t("in_stock")}
@@ -333,14 +333,14 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
     <div className="container mx-auto px-6 pb-10 pt-4 max-w-[1280px] font-sans">
 
       {/* Centered Logo */}
-      <div className="text-center mb-14 mt-2 md:mt-6">
+      <div className="mx-auto max-w-[300px] text-center mb-14 mt-2 md:mt-6">
         <Image
           src="/images/logo.png"
           alt="Добрые Подарки"
           width={300}
           height={100}
           priority
-          className="mx-auto h-auto w-auto max-w-[300px]"
+          className="mx-auto h-auto w-auto max-w-full"
         />
       </div>
 
@@ -362,8 +362,8 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                 className={cn(
                   "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer",
                   !activeCategory && !activeTag
-                    ? "bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3]"
-                    : "bg-transparent text-[#827C6B] border-[#EBE7E3] hover:bg-[#EBE7E3]/45"
+                    ? "bg-secondary text-[#1F1B16] border-border"
+                    : "bg-transparent text-muted-foreground border-border hover:bg-secondary/45"
                 )}
               >
                 {t("all")}
@@ -483,8 +483,8 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                     className={cn(
                       "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer block",
                       !activeCategory && !activeTag
-                        ? "bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3]"
-                        : "bg-transparent text-[#827C6B] border-[#EBE7E3] hover:bg-[#EBE7E3]/45"
+                        ? "bg-secondary text-[#1F1B16] border-border"
+                        : "bg-transparent text-muted-foreground border-border hover:bg-secondary/45"
                     )}
                   >
                     {t("all")}

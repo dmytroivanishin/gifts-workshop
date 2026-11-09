@@ -320,7 +320,7 @@ export default function AdminCategories() {
                             const parentCat = categories.find((parentCandidate) => parentCandidate.id === category.parentId);
                             const parentTitle = parentCat ? getLocalizedField(parentCat.title, locale) : "";
                             return parentTitle ? (
-                              <span className="text-[10px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
+                              <span className="text-[10px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-full border border-[#7D8945]/20 flex items-center gap-1 font-sans">
                                 {t("subcategory_of")} <strong className="truncate max-w-[100px] sm:max-w-[150px]">{parentTitle}</strong>
                               </span>
                             ) : null;

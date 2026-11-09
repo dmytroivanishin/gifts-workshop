@@ -83,9 +83,9 @@ test.describe("admin on a mobile viewport (390px): dashboard, categories, media 
     await loginAsAdmin(page);
 
     // dashboard/page.tsx: `<table className="hidden md:table">` vs a sibling
-    // `<div className="md:hidden">` card list — both in the DOM always, CSS toggled by viewport.
+    // `<div className="lg:hidden">` card list — both in the DOM always, CSS toggled by viewport.
     await expect(page.locator("table")).toBeHidden();
-    const mobileList = page.locator("div.md\\:hidden").filter({ hasText: "E2E Mobile Published" });
+    const mobileList = page.locator("div.lg\\:hidden").filter({ hasText: "E2E Mobile Published" });
     await expect(mobileList.first()).toBeVisible();
     expect(await hasNoHorizontalOverflow(page)).toBe(true);
     expect(errors).toEqual([]);

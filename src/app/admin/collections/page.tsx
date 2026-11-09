@@ -146,7 +146,7 @@ export default function AdminCollections() {
                         {loc(collection.title)}
                       </span>
                       {collection.main && (
-                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#DADFC6] text-[#5C6535] uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-lime-active text-lime-text uppercase tracking-wider">
                           <Star size={10} className="fill-current" />
                           {t("main")}
                         </span>
