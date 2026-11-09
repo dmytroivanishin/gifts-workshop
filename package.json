@@ -17,7 +17,9 @@
     "test:e2e": "rm -rf .next/dev/cache/fetch-cache && playwright test --project=e2e --workers=1",
     "test:e2e:ui": "rm -rf .next/dev/cache/fetch-cache && playwright test --project=e2e --ui",
     "test:api": "playwright test --project=api",
-    "test:api:ui": "playwright test --project=api --ui"
+    "test:api:ui": "playwright test --project=api --ui",
+    "migrate": "tsx src/migrations/migrate.ts",
+    "migrate:verify": "tsx src/migrations/verify-schema.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

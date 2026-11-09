@@ -1,0 +1,30 @@
+[
+  {
+    "id": "35d52b45-4778-4792-ae97-ca9fec5be32a",
+    "slug": "about",
+    "title": {
+      "ru": "Обо мне",
+      "en": "About me"
+    },
+    "description": {
+      "ru": "",
+      "en": ""
+    },
+    "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "showInMenu": true
+  },
+  {
+    "id": "c8c077d9-a913-497a-a280-d20b000287f1",
+    "slug": "delivery",
+    "title": {
+      "ru": "Оплата и доставка",
+      "en": "Payment and delivery"
+    },
+    "description": {
+      "ru": "",
+      "en": ""
+    },
+    "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
+    "showInMenu": true
+  }
+]

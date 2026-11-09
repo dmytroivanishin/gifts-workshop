@@ -1109,7 +1109,7 @@
   {
     "id": "2db735fa-cffe-4a62-8070-c0377594ea68",
     "content": {
-      "en": "Add a new handmade work to your portfolio catalog.",
+      "en": "Add a new handmade work to your gift workshop catalog.",
       "ru": "Добавление новой работы ручной работы в каталог портфолио."
     },
     "area": "admin",
@@ -2441,7 +2441,7 @@
   {
     "id": "5303ebb1-1dcf-4521-a07d-0c3abd3d27e8",
     "content": {
-      "en": "Sign in with your Google account to manage the portfolio.",
+      "en": "Sign in with your Google account to manage the gift workshop.",
       "ru": "Авторизуйтесь через Google аккаунт для управления портфолио."
     },
     "area": "admin",

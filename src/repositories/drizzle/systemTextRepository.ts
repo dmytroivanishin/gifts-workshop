@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { ISystemTextRepository } from "../interfaces";
 import { SystemText } from "@/types";
 import { drizzleDatabase } from "./database";
@@ -62,13 +62,13 @@ export class SystemTextRepository implements ISystemTextRepository {
   async saveMany(items: SystemText[]): Promise<SystemText[]> {
     if (!items || items.length === 0) return [];
     const db = drizzleDatabase.getDb();
-    // Simplified bulk save
+    // Each conflicting row takes its own proposed content (`excluded`), not the first item's.
     const result = await db.insert(systemTexts)
       .values(items)
       .onConflictDoUpdate({
         target: systemTexts.id,
         set: {
-          content: items[0].content, // Warning: simplified mapping
+          content: sql`excluded.content`,
         }
       })
       .returning();
