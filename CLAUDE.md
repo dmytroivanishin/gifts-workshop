@@ -134,6 +134,7 @@ app/
   [locale]/(public)/        home (page.tsx), posts/[slug]/{layout,page}.tsx
   admin/                    login, posts (list) + posts/[id], categories, collections, tags,
                             colors, media, comments, localizations/[entityType]/[id]
+  api/health/               GET liveness/readiness probe (DB `select 1`, 200/503), outside /api/v1 so no auth/rate limit
   api/v1/                   auth/*, posts, categories, collections, tags, colors, media, users,
                             system-texts, admin/comments; each folder has route.ts (+ [id])
   layout.tsx sitemap.ts robots.ts error.tsx not-found.tsx globals.css

@@ -141,7 +141,7 @@ The 5 remaining moderate findings, all already known and accepted:
 - [ ] Dockerfile plan: multi-stage build, `output: "standalone"`, `NEXT_PUBLIC_*` as build args, secrets as runtime env, a migration step before start, and a base image that supports `sharp`.
 - [ ] `next.config.ts` has security headers and (since 2026-10-02) an `images` block, but no `output: "standalone"` yet — add it for a smaller image. `images.remotePatterns` (added 2026-10-02 for the public project gallery) allowlists the `S3_PUBLIC_URL` host; a dev-only `images.dangerouslyAllowLocalIP` was also needed, since Next 16 refuses to optimize an image whose host resolves to a private IP (which `localhost` — the local MinIO address — always does), guarded off in production where `S3_PUBLIC_URL` will be a real public domain.
 - [ ] Build needs the full env (`env.ts` throws at import when any of the 32 required variables is missing); decide which variables are build-time vs runtime in Coolify. `NEXT_PUBLIC_*` values are inlined at build.
-- [ ] Add a health endpoint (e.g. `GET /api/health` checking DB) for Coolify.
+- [x] Health endpoint `GET /api/health` (2026-11-09): `select 1` with a 3 s timeout, 200 `{status:"ok"}` or 503 `{status:"unavailable"}`, no auth, `no-store`, never returns error text. Still to do at deploy: point Coolify's healthcheck and the uptime monitor at it.
 
 ### Coolify integration (not set up yet; nothing deployed)
 - [ ] Domain + Let's Encrypt (Coolify handles it); set `NEXT_PUBLIC_APP_URL` to the final HTTPS origin.
