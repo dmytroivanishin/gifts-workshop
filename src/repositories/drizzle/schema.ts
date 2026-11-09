@@ -127,6 +127,20 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
   categoriesToTags: many(categoriesToTags),
 }));
 
+// Free-form info pages ("About", "Payment and delivery", ...). `description` is plain text rendered
+// with white-space: pre-wrap, so the author's spaces and line breaks are kept exactly.
+export const pages = pgTable("pages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  title: jsonb("title").$type<LocalizedText>().notNull(),
+  description: jsonb("description").$type<LocalizedText>().notNull().default({}),
+  showInMenu: boolean("show_in_menu").notNull().default(true),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+}, (t) => ({
+  userIdIdx: index("pages_user_id_idx").on(t.userId),
+}));
+
 export const tags = pgTable("tags", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),

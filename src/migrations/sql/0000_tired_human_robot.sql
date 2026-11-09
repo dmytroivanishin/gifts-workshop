@@ -58,6 +58,17 @@ CREATE TABLE "media" (
 	"content_hash" varchar(64) NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "pages" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"slug" varchar(255) NOT NULL,
+	"title" jsonb NOT NULL,
+	"description" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"show_in_menu" boolean DEFAULT true NOT NULL,
+	"user_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "pages_slug_unique" UNIQUE("slug")
+);
+--> statement-breakpoint
 CREATE TABLE "posts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"slug" varchar(255) NOT NULL,
@@ -140,6 +151,7 @@ ALTER TABLE "posts_to_media" ADD CONSTRAINT "posts_to_media_post_id_posts_id_fk"
 ALTER TABLE "posts_to_media" ADD CONSTRAINT "posts_to_media_media_id_media_id_fk" FOREIGN KEY ("media_id") REFERENCES "public"."media"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "posts_to_tags" ADD CONSTRAINT "posts_to_tags_post_id_posts_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."posts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "posts_to_tags" ADD CONSTRAINT "posts_to_tags_tag_id_tags_id_fk" FOREIGN KEY ("tag_id") REFERENCES "public"."tags"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "pages" ADD CONSTRAINT "pages_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tags" ADD CONSTRAINT "tags_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "token_sessions" ADD CONSTRAINT "token_sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "categories_parent_id_idx" ON "categories" USING btree ("parent_id");--> statement-breakpoint
@@ -157,5 +169,6 @@ CREATE INDEX "posts_user_id_idx" ON "posts" USING btree ("user_id");--> statemen
 CREATE INDEX "posts_status_idx" ON "posts" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "posts_to_media_media_id_idx" ON "posts_to_media" USING btree ("media_id");--> statement-breakpoint
 CREATE INDEX "posts_to_tags_tag_id_idx" ON "posts_to_tags" USING btree ("tag_id");--> statement-breakpoint
+CREATE INDEX "pages_user_id_idx" ON "pages" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "tags_user_id_idx" ON "tags" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "token_sessions_user_id_idx" ON "token_sessions" USING btree ("user_id");

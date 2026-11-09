@@ -3,6 +3,7 @@ import { collectionRepository } from "@/repositories/drizzle/collectionRepositor
 import { colorRepository } from "@/repositories/drizzle/colorRepository";
 import { mediaRepository } from "@/repositories/drizzle/mediaRepository";
 import { postRepository } from "@/repositories/drizzle/postRepository";
+import { pageRepository } from "@/repositories/drizzle/pageRepository";
 import { tagRepository } from "@/repositories/drizzle/tagRepository";
 import { userRepository } from "@/repositories/drizzle/userRepository";
 import { systemTextRepository } from "@/repositories/drizzle/systemTextRepository";
@@ -13,6 +14,7 @@ import { CollectionService } from "@/services/collectionService";
 import { ColorService } from "@/services/colorService";
 import { MediaService } from "@/services/mediaService";
 import { PostService } from "@/services/postService";
+import { PageService } from "@/services/pageService";
 import { TagService } from "@/services/tagService";
 import { UserService } from "@/services/userService";
 import { SystemTextService } from "@/services/systemTextService";
@@ -23,6 +25,8 @@ import { CollectionController } from "@/controllers/collectionController";
 import { ColorController } from "@/controllers/colorController";
 import { MediaController } from "@/controllers/mediaController";
 import { PostController } from "@/controllers/postController";
+import { PageController } from "@/controllers/pageController";
+import { SlugController } from "@/controllers/slugController";
 import { TagController } from "@/controllers/tagController";
 import { UserController } from "@/controllers/userController";
 import { SystemTextController } from "@/controllers/systemTextController";
@@ -36,6 +40,7 @@ export {
   mediaRepository,
   postRepository,
   tagRepository,
+  pageRepository,
   userRepository,
   systemTextRepository,
   commentRepository
@@ -47,6 +52,7 @@ export const categoryService = new CategoryService(categoryRepository, tagReposi
 export const collectionService = new CollectionService(collectionRepository);
 export const mediaService = new MediaService(mediaRepository, postRepository);
 export const tagService = new TagService(tagRepository);
+export const pageService = new PageService(pageRepository);
 export const userService = new UserService(userRepository);
 export const postService = new PostService(postRepository, categoryRepository, tagRepository, collectionRepository);
 export const systemTextService = new SystemTextService(systemTextRepository);
@@ -59,6 +65,8 @@ export const colorController = new ColorController(colorService);
 export const mediaController = new MediaController(mediaService);
 export const postController = new PostController(postService);
 export const tagController = new TagController(tagService);
+export const slugController = new SlugController();
+export const pageController = new PageController(pageService);
 export const userController = new UserController(userService);
 export const systemTextController = new SystemTextController(systemTextService);
 export const commentController = new CommentController(commentService);

@@ -70,6 +70,17 @@ export interface Tag {
   userId?: string;
 }
 
+export interface Page {
+  readonly id: string;
+  slug: string;
+  title: LocalizedText;
+  // Plain text, shown with white-space: pre-wrap so the author's spacing is kept.
+  description: LocalizedText;
+  showInMenu: boolean;
+  userId?: string;
+  createdAt?: Date | string;
+}
+
 export interface PostMedia {
   readonly id: string;
   order: number;

@@ -1,10 +1,22 @@
 "use client";
 
+import { Fragment } from "react";
 import { Globe } from "lucide-react";
+import Link from "next/link";
 import { useTranslation } from "@/i18n";
 import { usePathname, useRouter } from "next/navigation";
+import { getLocalizedField } from "@/utils/localization";
+import { cn } from "@/utils/cn";
+import { MenuPage } from "@/types/menu";
 
-export function PublicHeader() {
+interface PublicHeaderProps {
+  // Optional: the error and 404 screens render outside the public layout and have no page list.
+  pages?: MenuPage[];
+}
+
+const LINK_CLASS = "whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground sm:text-xs sm:tracking-wider";
+
+export function PublicHeader({ pages = [] }: PublicHeaderProps) {
   const { locale, setLocale, activeLanguages } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
@@ -32,53 +44,55 @@ export function PublicHeader() {
     router.push(newPath);
   };
 
-  // The homepage has nothing at its own top edge, so the switcher can overlay it (absolute,
-  // reserving no layout space, per your request). Every other public page (the post page,
-  // for one) has its own content starting right at the top — e.g. "back_to_home" — which an
-  // absolute switcher would sit on top of, so those pages keep the original flow-based block
-  // with its own reserved space, exactly as it was before.
-  //
   // Derived from the URL's own shape (exactly one segment, i.e. just "/ru" or "/en" with
   // nothing after it) rather than comparing against `locale` from the i18n context: `locale`
-  // updates optimistically the instant the switcher is clicked (setLocale's setLocaleState),
-  // before router.push() has actually navigated and pathname has caught up — comparing against
-  // it caused a one-frame isHome=false flicker (pathname still "/ru", locale already "en") that
-  // briefly swapped in the flow-based block, visibly shoving the whole page down and back.
+  // updates optimistically the instant the switcher is clicked (setLocaleState), before
+  // router.push() has actually navigated and pathname has caught up — comparing against it
+  // caused a one-frame isHome=false flicker that briefly shoved the whole page down and back.
   const segments = pathname.split("/").filter(Boolean);
   const isHome = segments.length === 1;
 
-  if (isHome) {
-    return (
-      <div className="absolute top-0 left-0 w-full z-10">
-        <div className="container mx-auto px-6 pt-10 max-w-[1280px] font-sans">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Globe size={14} />
-            <button
-              onClick={handleLanguageSwitch}
-              className="hover:text-foreground font-semibold uppercase tracking-wider transition-colors cursor-pointer"
-            >
-              {locale === "ru" ? "Русский" : locale === "en" ? "English" : locale.toUpperCase()}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // The homepage has nothing at its own top edge, so on a wide screen the header can overlay it
+  // (absolute, reserving no space). On a phone the logo is wide enough to run under the language
+  // switcher and the page links, so there the header sits in the normal flow and pushes the logo
+  // down instead. Every other page starts with its own content at the top and always keeps the
+  // header in the flow.
   return (
-    <div className="w-full">
-      <div className="container mx-auto px-6 pt-10 pb-2 max-w-[1280px] font-sans flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <header
+      className={cn(
+        "relative z-10 w-full",
+        isHome && "md:absolute md:left-0 md:top-0"
+      )}
+    >
+      <div
+        className={cn(
+          "container mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-x-2 gap-y-2 px-6 font-sans sm:gap-x-6",
+          isHome ? "pb-2 pt-5 md:pb-0 md:pt-10" : "pb-2 pt-10"
+        )}
+      >
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground sm:text-xs">
           <Globe size={14} />
           <button
             onClick={handleLanguageSwitch}
-            className="hover:text-foreground font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+            className="hover:text-foreground font-semibold uppercase tracking-wide transition-colors cursor-pointer sm:tracking-wider"
           >
             {locale === "ru" ? "Русский" : locale === "en" ? "English" : locale.toUpperCase()}
           </button>
         </div>
-        <div />
+
+        {pages.length > 0 && (
+          <nav className="ml-auto flex flex-wrap items-center justify-end gap-x-2 gap-y-1 sm:gap-x-3">
+            {pages.map((page, index) => (
+              <Fragment key={page.slug}>
+                {index > 0 && <span aria-hidden="true" className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />}
+                <Link href={`/${locale}/pages/${page.slug}`} className={LINK_CLASS}>
+                  {getLocalizedField(page.title, locale)}
+                </Link>
+              </Fragment>
+            ))}
+          </nav>
+        )}
       </div>
-    </div>
+    </header>
   );
 }

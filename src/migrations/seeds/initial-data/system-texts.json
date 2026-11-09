@@ -2545,5 +2545,212 @@
     },
     "area": "admin",
     "code": "media_clipboard_clear"
+  },
+  {
+    "id": "4f9f5e06-fb3a-4cca-afcc-dc4fc4ea07ea",
+    "content": {
+      "en": "Pages",
+      "ru": "Страницы"
+    },
+    "area": "admin",
+    "code": "pages"
+  },
+  {
+    "id": "1a515897-8fc4-494c-964d-364f1b9dab5c",
+    "content": {
+      "en": "Info pages of the site: about us, payment and delivery and others",
+      "ru": "Информационные страницы сайта: о нас, оплата и доставка и другие"
+    },
+    "area": "admin",
+    "code": "pages_subtitle"
+  },
+  {
+    "id": "5bda3702-819e-4cfe-a0cd-585304ef99e6",
+    "content": {
+      "en": "All pages",
+      "ru": "Все страницы"
+    },
+    "area": "admin",
+    "code": "all_pages"
+  },
+  {
+    "id": "2a766174-8128-4a08-abab-71be8b3b72c8",
+    "content": {
+      "en": "Loading pages...",
+      "ru": "Загрузка страниц..."
+    },
+    "area": "admin",
+    "code": "loading_pages"
+  },
+  {
+    "id": "78c1d1a6-c999-4bd8-b856-fbedeb2bcd7b",
+    "content": {
+      "en": "No pages yet",
+      "ru": "Страниц пока нет"
+    },
+    "area": "admin",
+    "code": "no_pages"
+  },
+  {
+    "id": "3706aa90-c56e-4d25-aec9-cac6b7f9e64c",
+    "content": {
+      "en": "Add page",
+      "ru": "Добавить страницу"
+    },
+    "area": "admin",
+    "code": "add_page"
+  },
+  {
+    "id": "357780d5-ff2e-4e8e-bd61-4c0e4911721d",
+    "content": {
+      "en": "Edit page",
+      "ru": "Редактировать страницу"
+    },
+    "area": "admin",
+    "code": "edit_page"
+  },
+  {
+    "id": "6ff93983-6f95-40be-8d47-7d7f247da890",
+    "content": {
+      "en": "For example: About us",
+      "ru": "Например: О нас"
+    },
+    "area": "admin",
+    "code": "placeholder_page_title"
+  },
+  {
+    "id": "7a5da9ad-bb48-4dd8-8ced-8a4bd76fb4bc",
+    "content": {
+      "en": "Page text...",
+      "ru": "Текст страницы..."
+    },
+    "area": "admin",
+    "code": "placeholder_page_description"
+  },
+  {
+    "id": "7e32cb13-9c17-4528-bbb4-194a536e3a0a",
+    "content": {
+      "en": "Spaces, indents and blank lines are kept exactly as you type them.",
+      "ru": "Пробелы, отступы и пустые строки сохраняются так, как вы их набрали."
+    },
+    "area": "admin",
+    "code": "page_description_hint"
+  },
+  {
+    "id": "53127e88-f3c7-4a09-933c-2d1e22233eda",
+    "content": {
+      "en": "Page address",
+      "ru": "Адрес страницы"
+    },
+    "area": "admin",
+    "code": "page_slug"
+  },
+  {
+    "id": "1cc7f81e-1cae-4f21-837d-551b38bd41e0",
+    "content": {
+      "en": "Created from the title automatically; you can edit it. Latin letters only.",
+      "ru": "Создаётся из названия автоматически, можно изменить. Только латиница."
+    },
+    "area": "admin",
+    "code": "page_slug_hint"
+  },
+  {
+    "id": "c77a3e74-2f8b-4b24-a93c-1faa63505b50",
+    "content": {
+      "en": "Show in header and footer",
+      "ru": "Показывать в шапке и подвале"
+    },
+    "area": "admin",
+    "code": "page_show_in_menu"
+  },
+  {
+    "id": "48c0271f-ace2-42e2-871c-22cebc21f73c",
+    "content": {
+      "en": "not in menu",
+      "ru": "не в меню"
+    },
+    "area": "admin",
+    "code": "page_hidden_from_menu"
+  },
+  {
+    "id": "090594f9-bdea-4c83-ac73-98d4a9f37d61",
+    "content": {
+      "en": "Open on the site",
+      "ru": "Открыть на сайте"
+    },
+    "area": "admin",
+    "code": "view_page"
+  },
+  {
+    "id": "3f39792e-c817-40a3-89da-395f72899492",
+    "content": {
+      "en": "Delete this page? This cannot be undone.",
+      "ru": "Удалить эту страницу? Это действие нельзя отменить."
+    },
+    "area": "admin",
+    "code": "delete_confirm_page"
+  },
+  {
+    "id": "91e1c785-44d1-4fc4-bdbb-e618f605ff83",
+    "content": {
+      "en": "Page created",
+      "ru": "Страница создана"
+    },
+    "area": "admin",
+    "code": "page_created"
+  },
+  {
+    "id": "e98885a5-0444-49a5-a187-b1f072a7633a",
+    "content": {
+      "en": "Page saved",
+      "ru": "Страница сохранена"
+    },
+    "area": "admin",
+    "code": "page_updated"
+  },
+  {
+    "id": "e696930c-4d06-465a-90da-d006f755277d",
+    "content": {
+      "en": "Page deleted",
+      "ru": "Страница удалена"
+    },
+    "area": "admin",
+    "code": "page_deleted"
+  },
+  {
+    "id": "90082fe2-174d-4e17-9ed1-a677aa58079e",
+    "content": {
+      "en": "Site map",
+      "ru": "Карта сайта"
+    },
+    "area": "public",
+    "code": "site_map"
+  },
+  {
+    "id": "c3e6e8b2-0633-4830-a00f-cc5aca0aa3c7",
+    "content": {
+      "en": "Home",
+      "ru": "Главная"
+    },
+    "area": "public",
+    "code": "site_map_home"
+  },
+  {
+    "id": "1e8c823b-ebb9-4967-b6c0-ce8a92686b1c",
+    "content": {
+      "en": "Info pages",
+      "ru": "Информационные страницы"
+    },
+    "area": "public",
+    "code": "site_map_pages"
+  },
+  {
+    "id": "6daa60f8-9598-4022-8a66-02ae3096b0a6",
+    "content": {
+      "en": "Additional links",
+      "ru": "Дополнительные ссылки"
+    },
+    "area": "public",
+    "code": "footer_nav_label"
   }
 ]

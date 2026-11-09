@@ -88,6 +88,16 @@ export const tagSchema = z.object({
   slug: slugSchema,
 });
 
+// description is optional plain text and is stored exactly as typed (no trimming) so the author's
+// spaces and blank lines survive; only the title is required.
+export const pageSchema = z.object({
+  title: localizedStringSchema,
+  description: optionalLocalizedStringSchema,
+  // The form sends "" when the address field is left empty: that means "generate it from the title".
+  slug: z.preprocess((v) => (v === "" ? undefined : v), slugSchema),
+  showInMenu: z.boolean().default(true),
+});
+
 export const postMediaSchema = z.object({
   order: z.number().int().min(0),
   mediaId: z.string().uuid("error_invalid_uuid"),

@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { postService } from "@/modules/core/container";
+import { postService, pageService } from "@/modules/core/container";
 import { env } from "@/modules/core/env";
 import { logger } from "@/modules/logger";
 
@@ -28,6 +28,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   try {
+    // The fixed "site map" page and every info page, in each language.
+    const infoPaths = ["sitemap", ...(await pageService.getAllPages()).map((p) => `pages/${p.slug}`)];
+    for (const path of infoPaths) {
+      for (const locale of locales) {
+        sitemapEntries.push({
+          url: `${appUrl}/${locale}/${path}`,
+          lastModified: new Date(),
+          changeFrequency: "monthly",
+          priority: 0.5,
+          alternates: {
+            languages: locales.reduce((acc, l) => {
+              acc[l] = `${appUrl}/${l}/${path}`;
+              return acc;
+            }, {} as Record<string, string>)
+          }
+        });
+      }
+    }
+
     // Fetch all published posts
     const result = await postService.getFilteredPosts({ status: "Published" });
     const posts = result.data || result; // Handle both paginated and raw array responses

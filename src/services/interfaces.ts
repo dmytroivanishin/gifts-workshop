@@ -1,4 +1,4 @@
-import { Collection, Color, LocalizedText, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment, PopulatedCategory, PopulatedPost } from "@/types";
+import { Page, Collection, Color, LocalizedText, Media, Post, Tag, User, PaginatedResult, PaginationOptions, Language, SystemText, Comment, PopulatedCategory, PopulatedPost } from "@/types";
 
 import { QueryOptions, TagQueryOptions, MediaQueryOptions } from "@/repositories/interfaces";
 
@@ -38,6 +38,14 @@ export interface IMediaService {
   uploadMedia(file: File, userId: string): Promise<Media>;
   deleteMedia(id: string): Promise<boolean>;
   bulkDeleteMedia(ids: string[]): Promise<{ deleted: string[]; blocked: { id: string; reason: string }[] }>;
+}
+
+export interface IPageService {
+  getAllPages(): Promise<Page[]>;
+  getPageById(id: string): Promise<Page | undefined>;
+  getPageBySlug(slug: string): Promise<Page | undefined>;
+  savePage(body: { title: LocalizedText; description?: LocalizedText; showInMenu?: boolean; slug?: string; id?: string; userId?: string }): Promise<Page>;
+  deletePage(id: string): Promise<boolean>;
 }
 
 export interface ITagService {

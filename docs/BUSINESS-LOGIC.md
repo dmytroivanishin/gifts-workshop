@@ -53,6 +53,15 @@ retype it next time. A new comment doesn't appear publicly right away — it's h
 moderation and only shows up once an admin approves it. If the admin replies to a
 comment, that reply is shown directly under it, visibly marked as coming from the admin.
 
+### Info pages and site map
+
+The header (top right, next to the language switcher) and a thin footer link to every page
+the owner has marked for the menu; the footer also links to the "Site map" page. The header
+is needed because the homepage scrolls endlessly and the footer is rarely reached there. On a
+phone the header takes its own row above the logo instead of floating over it. The site map
+is a fixed page listing the homepage and all info pages (the list follows the database;
+individual items are not listed, search engines get them from `sitemap.xml`).
+
 ### Language
 
 A single control switches the whole site between Russian and English; it updates the
@@ -132,6 +141,17 @@ A collection is a broader grouping that every category belongs to (think of it a
 layer above categories). A collection can be flagged as "main" — today this is purely a
 visual label (a star badge) in the admin list and doesn't change anything about what's
 shown publicly.
+
+### Pages ("About us", "Payment and delivery", ...)
+
+Info pages that the owner writes herself. Each has a title and a text per language, an
+address (slug) and a "show in header and footer" switch. The text is plain: spaces, indents
+and blank lines are kept exactly as typed. While a new page's title is being typed, the
+address is suggested from it (after a short pause, via the translation service) and can be
+edited by hand; an edited address is never overwritten, and an existing page keeps its
+address when its title changes. The other language is filled in under Translations. Pages
+shown in the menu appear as small links in the public header and in a thin footer, next to
+a fixed "Site map" link; a page switched off there is still reachable by its address.
 
 ### Tags
 

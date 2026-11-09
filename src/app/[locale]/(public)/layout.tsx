@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import { PublicHeader } from "@/components/shared/PublicHeader";
+import { PublicFooter } from "@/components/shared/PublicFooter";
+import { getMenuPages } from "@/utils/menuPages";
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -64,12 +66,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function PublicLayout({ children }: PublicLayoutProps) {
+  const menuPages = await getMenuPages();
+
   return (
     <div className="relative min-h-screen flex flex-col">
-      <PublicHeader />
+      <PublicHeader pages={menuPages} />
       <main className="flex-1">
         {children}
       </main>
+      <PublicFooter pages={menuPages} />
     </div>
   );
 }

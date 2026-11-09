@@ -8,12 +8,13 @@ import {
   useGetCategoriesQuery,
   useGetTagsQuery,
   useGetCollectionsQuery,
+  useGetPagesQuery,
   useGetSystemTextsQuery,
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
 import { LocalizedText } from "@/types";
 
-type EntityType = "post" | "category" | "tag" | "collection" | "system";
+type EntityType = "post" | "category" | "tag" | "collection" | "page" | "system";
 
 // Loose union covering whichever entity is currently selected (post/category/tag/collection/system);
 // each branch only reads the couple of fields relevant to it, the same duck-typed access this had under `any`.
@@ -40,18 +41,21 @@ export default function AdminLocalizations() {
   const isCategory = entityType === "category";
   const isTag = entityType === "tag";
   const isCollection = entityType === "collection";
+  const isPage = entityType === "page";
   const isSystem = entityType === "system";
 
   const { data: postsRes, isFetching: fetchingPosts } = useGetPostsQuery({ page, limit }, { skip: !isPost });
   const { data: categoriesRes, isFetching: fetchingCats } = useGetCategoriesQuery({ page, limit }, { skip: !isCategory });
   const { data: tagsRes, isFetching: fetchingTags } = useGetTagsQuery({ page, limit }, { skip: !isTag });
   const { data: collectionsRes, isFetching: fetchingCols } = useGetCollectionsQuery({ page, limit }, { skip: !isCollection });
+  // Pages come back as one unpaginated array (no meta), so "load more" never appears for them.
+  const { data: pagesRes, isFetching: fetchingPages } = useGetPagesQuery(undefined, { skip: !isPage });
   const { data: systemRes, isFetching: fetchingSystem } = useGetSystemTextsQuery({ page, limit }, { skip: !isSystem });
 
-  const isFetching = fetchingPosts || fetchingCats || fetchingTags || fetchingCols || fetchingSystem;
+  const isFetching = fetchingPosts || fetchingCats || fetchingTags || fetchingCols || fetchingPages || fetchingSystem;
   
-  const currentData = isPost ? postsRes : isCategory ? categoriesRes : isTag ? tagsRes : isCollection ? collectionsRes : systemRes;
-  const hasMore = currentData?.meta ? currentData.meta.nextPage !== null : false;
+  const currentData = isPost ? postsRes : isCategory ? categoriesRes : isTag ? tagsRes : isCollection ? collectionsRes : isPage ? pagesRes : systemRes;
+  const hasMore = currentData && "meta" in currentData && currentData.meta ? currentData.meta.nextPage !== null : false;
 
   // Reset list when entity type changes
   useEffect(() => {
@@ -140,6 +144,7 @@ export default function AdminLocalizations() {
               { id: "category", label: t("categories") || "Categories" },
               { id: "tag", label: t("tags") || "Tags" },
               { id: "collection", label: t("collections") || "Коллекции" },
+              { id: "page", label: t("pages") },
               { id: "system", label: t("system_texts") !== "system_texts" ? t("system_texts") : "Системные тексты" },
             ].map((type) => (
               <button

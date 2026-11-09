@@ -1,4 +1,4 @@
-import { Category, PopulatedCategory, Collection, Color, Media, Post, PopulatedPost, Tag, User, PaginationOptions, Language, SystemText, Comment, PopulatedComment } from "@/types";
+import { Page, Category, PopulatedCategory, Collection, Color, Media, Post, PopulatedPost, Tag, User, PaginationOptions, Language, SystemText, Comment, PopulatedComment } from "@/types";
 
 export interface QueryOptions extends PaginationOptions {
   search?: string;
@@ -60,6 +60,10 @@ export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, Qu
   // Batched version of countByPoster/countGalleryUsage for the bulk-delete path: one query each
   // across every requested id, instead of two queries per id in a loop.
   findUsedMediaIds(mediaIds: string[]): Promise<Set<string>>;
+}
+
+export interface IPageRepository extends IBaseRepository<Page, Page, PaginationOptions> {
+  getBySlug(slug: string): Promise<Page | undefined>;
 }
 
 export interface TagQueryOptions extends PaginationOptions {

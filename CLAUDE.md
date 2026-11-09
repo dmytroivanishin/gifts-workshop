@@ -131,12 +131,12 @@ Nothing runs migrations at app startup or deploy time. The MinIO bucket is prepa
 
 ```
 app/
-  [locale]/(public)/        home (page.tsx), posts/[slug]/{layout,page}.tsx
+  [locale]/(public)/        home (page.tsx), posts/[slug]/{layout,page}.tsx, pages/[slug]/page.tsx (info page), sitemap/page.tsx (fixed site map)
   admin/                    login, posts (list) + posts/[id], categories, collections, tags,
                             colors, media, comments, localizations/[entityType]/[id]
   api/health/               GET liveness/readiness probe (DB `select 1`, 200/503), outside /api/v1 so no auth/rate limit
   api/v1/                   auth/*, posts, categories, collections, tags, colors, media, users,
-                            system-texts, admin/comments; each folder has route.ts (+ [id])
+                            system-texts, pages, slugs (POST, admin-only slug suggestion), admin/comments; each folder has route.ts (+ [id])
   layout.tsx sitemap.ts robots.ts error.tsx not-found.tsx globals.css
 common/errors, common/validation   BaseError family; Zod schemas
 components/{ui,shared,features}
@@ -155,7 +155,7 @@ proxy.ts                    auth guard + locale routing
 
 ## 5. Database (Drizzle + PostgreSQL)
 
-Schema: `src/repositories/drizzle/schema.ts`. One migration: `src/migrations/sql/0000_tired_human_robot.sql` (13 tables, 17 btree indexes). Localized fields are JSONB `Record<locale,string>`.
+Schema: `src/repositories/drizzle/schema.ts`. One migration: `src/migrations/sql/0000_tired_human_robot.sql` (14 tables, 18 btree indexes). Localized fields are JSONB `Record<locale,string>`.
 
 | Table | Key columns / notes |
 |-------|--------------------|
@@ -167,6 +167,7 @@ Schema: `src/repositories/drizzle/schema.ts`. One migration: `src/migrations/sql
 | `collections` | `slug` (unique), `title`, `description`, `main`, `created_at` (`getAll` now `orderBy(desc(created_at))`) |
 | `categories` | `slug`, `title`, `description`, `order`, `parent_id` (no FK constraint), `color_id`→colors (restrict), `collection_id` — no `created_at`: the hand-curated `order` column stays the sole ordering, since the drag-reorder tree needs the complete list in memory anyway |
 | `tags` | `slug`, `name`, `created_at` (`getAll` now `orderBy(desc(created_at))` — fixes a real bug: tags previously had no deterministic order at all, so page-by-page pagination over them could skip or repeat rows) |
+| `pages` | info pages (added 2026-11-09 into the same init migration by hand): `slug` (unique, the public URL `/<locale>/pages/<slug>`), `title`/`description` JSONB (description is plain text shown with `white-space: pre-wrap`), `show_in_menu`, `user_id`, `created_at` (`getAll` is oldest first = menu order) |
 | `categories_to_tags` | PK (`category_id`,`tag_id`), cascade |
 | `posts` | `slug`, `title`, `description`, `poster_id`→media (restrict), `in_stock`, `status` (`Draft`/`Published`/`Archived`), `collection_id`, `category_id`, `created_at` (used for manual ordering) |
 | `posts_to_media` | PK (`post_id`,`media_id`), `order`, `position` JSONB `{x,y,zoom}` |
@@ -197,7 +198,7 @@ The 6 `created_at` columns above (2026-11-04) were added by hand-editing the exi
 ## 7. API
 
 - Base path `/api/v1`. Full route list and target contracts: `docs/project-plan/backend.md` and `diagram.jpg` (the code implements the same resources at `/api/v1/<resource>`, uses `PUT` for updates, and has no `/admin/` segment except `/admin/comments/*`; see `DEVIATIONS.md`).
-- Public site reads: `GET /posts?search&category&tag&collection&inStock&status&page&limit` (`category` is comma-separated slugs/UUIDs; anonymous callers always get `Published`, `status` matters only with the admin cookie; `limit` is at most 100 and defaults to 20 per page), `GET /posts/:slugOrId` (404 for unpublished unless admin), `/categories`, `/collections`, `/tags`, `/colors`, `/system-texts`, `GET/POST /posts/:id/comments` (GET returns only `Approved`).
+- Public site reads: `GET /posts?search&category&tag&collection&inStock&status&page&limit` (`category` is comma-separated slugs/UUIDs; anonymous callers always get `Published`, `status` matters only with the admin cookie; `limit` is at most 100 and defaults to 20 per page), `GET /posts/:slugOrId` (404 for unpublished unless admin), `/categories`, `/collections`, `/tags`, `/colors`, `/system-texts`, `/pages` (list and by id/slug), `GET/POST /posts/:id/comments` (GET returns only `Approved`). `POST /slugs {text}` (admin only) suggests a slug from a title for the admin forms.
 - Writes require the admin cookie (see §6); so does every method on `/admin/**` and `/media/**` (anonymous `GET /media` answers 401 since 2026-09-28), plus the remaining `GET` methods on `/users/**` — its write methods (`POST/PUT/DELETE`) were removed 2026-10-01 as unused dead code, so only `GET /users` and `GET /users/:id` exist now. Media upload is `POST /media` as `multipart/form-data` with a single `file` field (not `files` — `uploadMultiple` was removed, CP-16b).
 - Client code calls the API through RTK Query endpoints in `src/store/api.ts`; add an endpoint there when adding a route.
 

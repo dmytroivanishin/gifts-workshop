@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
-import { Tag, Collection, Media, PopulatedPost, PopulatedCategory, Language, SystemText, Comment, PopulatedComment } from "@/types";
+import { Page, Tag, Collection, Media, PopulatedPost, PopulatedCategory, Language, SystemText, Comment, PopulatedComment } from "@/types";
 
 type PaginationMeta = { page: number; nextPage: number | null; prevPage: number | null; totalItems: number };
 
@@ -69,7 +69,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Post", "Category", "Tag", "Collection", "Media", "Color", "Language", "SystemText", "Comment"],
+  tagTypes: ["Post", "Category", "Tag", "Collection", "Media", "Color", "Language", "SystemText", "Comment", "Page"],
   endpoints: (builder) => ({
     getPosts: builder.query<{ data: PopulatedPost[]; meta: PaginationMeta }, { search?: string; category?: string; inStock?: boolean; status?: string; page?: number; limit?: number } | void>({
       query: (params) => {
@@ -196,6 +196,30 @@ export const api = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["Tag", "Post"],
+    }),
+    getPages: builder.query<{ data: Page[] }, void>({
+      query: () => "/pages",
+      providesTags: ["Page"],
+    }),
+    getPageById: builder.query<{ data: Page }, string>({
+      query: (id) => `/pages/${id}`,
+      providesTags: (result, error, id) => [{ type: "Page", id }, "Page"],
+    }),
+    createPage: builder.mutation<{ data: Page }, Partial<Page>>({
+      query: (body) => ({ url: "/pages", method: "POST", body }),
+      invalidatesTags: ["Page"],
+    }),
+    updatePage: builder.mutation<{ data: Page }, { id: string } & Partial<Page>>({
+      query: ({ id, ...body }) => ({ url: `/pages/${id}`, method: "PUT", body }),
+      invalidatesTags: ["Page"],
+    }),
+    deletePage: builder.mutation<{ success: boolean }, string>({
+      query: (id) => ({ url: `/pages/${id}`, method: "DELETE" }),
+      invalidatesTags: ["Page"],
+    }),
+    // Suggests a URL slug for a title (admin only); a mutation because it is a POST that must not be cached.
+    generateSlug: builder.mutation<{ data: { slug: string } }, { text: string }>({
+      query: (body) => ({ url: "/slugs", method: "POST", body }),
     }),
     updateCategory: builder.mutation<{ data: PopulatedCategory }, { id: string } & any>({
       query: ({ id, ...body }) => ({
@@ -468,6 +492,12 @@ export const api = createApi({
    useUpdateCategoryMutation,
    useDeleteCategoryMutation,
    useReorderCategoriesMutation,
+   useGenerateSlugMutation,
+   useGetPagesQuery,
+   useGetPageByIdQuery,
+   useCreatePageMutation,
+   useUpdatePageMutation,
+   useDeletePageMutation,
    useGetTagsQuery,
    useGetTagByIdQuery,
    useCreateTagMutation,

@@ -7,6 +7,8 @@ import {
   useGetPostByIdQuery,
   useGetCategoryByIdQuery,
   useGetTagByIdQuery,
+  useGetPageByIdQuery,
+  useUpdatePageMutation,
   useGetCollectionByIdQuery,
   useGetSystemTextByIdQuery,
   useUpdatePostMutation,
@@ -20,7 +22,7 @@ import { useTranslation } from "@/i18n";
 import Combobox from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ApiMutationError, SystemText, PopulatedPost, PopulatedCategory, Tag, Collection, LocalizedText } from "@/types";
+import { ApiMutationError, Page, SystemText, PopulatedPost, PopulatedCategory, Tag, Collection, LocalizedText } from "@/types";
 
 interface PageProps {
   params: Promise<{ entityType: string; id: string }>;
@@ -36,23 +38,26 @@ export default function LocalizationDetailPage({ params }: PageProps) {
   const isCategory = entityType === "category";
   const isTag = entityType === "tag";
   const isCollection = entityType === "collection";
+  const isPage = entityType === "page";
   const isSystem = entityType === "system";
 
   const { data: postData, isLoading: isLoadingPost } = useGetPostByIdQuery(id, { skip: !isPost });
   const { data: categoryData, isLoading: isLoadingCategory } = useGetCategoryByIdQuery(id, { skip: !isCategory });
   const { data: tagData, isLoading: isLoadingTag } = useGetTagByIdQuery(id, { skip: !isTag });
   const { data: collectionData, isLoading: isLoadingCollection } = useGetCollectionByIdQuery(id, { skip: !isCollection });
+  const { data: pageData, isLoading: isLoadingPage } = useGetPageByIdQuery(id, { skip: !isPage });
   const { data: systemData, isLoading: isLoadingSystem } = useGetSystemTextByIdQuery(id, { skip: !isSystem || id === "new" });
 
   const [updatePost, { isLoading: isUpdatingPost }] = useUpdatePostMutation();
   const [updateCategory, { isLoading: isUpdatingCategory }] = useUpdateCategoryMutation();
   const [updateTag, { isLoading: isUpdatingTag }] = useUpdateTagMutation();
   const [updateCollection, { isLoading: isUpdatingCollection }] = useUpdateCollectionMutation();
+  const [updatePage, { isLoading: isUpdatingPage }] = useUpdatePageMutation();
   const [updateSystem, { isLoading: isUpdatingSystem }] = useUpdateSystemTextMutation();
   const [createSystemText, { isLoading: isCreatingSystem }] = useCreateSystemTextMutation();
 
-  const isSaving = isUpdatingPost || isUpdatingCategory || isUpdatingTag || isUpdatingCollection || isUpdatingSystem || isCreatingSystem;
-  const isLoadingEntity = (isLoadingPost || isLoadingCategory || isLoadingTag || isLoadingCollection || isLoadingSystem) && id !== "new";
+  const isSaving = isUpdatingPost || isUpdatingCategory || isUpdatingTag || isUpdatingCollection || isUpdatingPage || isUpdatingSystem || isCreatingSystem;
+  const isLoadingEntity = (isLoadingPost || isLoadingCategory || isLoadingTag || isLoadingCollection || isLoadingPage || isLoadingSystem) && id !== "new";
 
   const [saveStatus, setSaveStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -65,7 +70,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
   const getFieldError = (field: string) => serverErrors[field] || serverErrors[`${field}.ru`] || serverErrors[`${field}.en`];
 
-  const entity = isPost ? postData?.data : isCategory ? categoryData?.data : isTag ? tagData?.data : isCollection ? collectionData?.data : systemData?.data;
+  const entity = isPost ? postData?.data : isCategory ? categoryData?.data : isTag ? tagData?.data : isCollection ? collectionData?.data : isPage ? pageData?.data : systemData?.data;
 
   // Sync loaded entity values directly to form state
   useEffect(() => {
@@ -159,6 +164,15 @@ export default function LocalizationDetailPage({ params }: PageProps) {
           name: titles,
           slug: tag.slug,
         }).unwrap();
+      } else if (isPage) {
+        const pg = entity as Page;
+        await updatePage({
+          id,
+          title: titles,
+          description: descriptions,
+          slug: pg.slug,
+          showInMenu: pg.showInMenu,
+        }).unwrap();
       } else if (isCollection) {
         const coll = entity as Collection;
         await updateCollection({
@@ -221,6 +235,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
     category: t("categories"),
     tag: t("tags"),
     collection: t("collections"),
+    page: t("pages"),
     system: t("system_texts"),
   };
   const entityTypeLabel = entityTypeLabels[entityType] ?? entityType;
@@ -322,7 +337,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                     value={descriptions[lang] || ""}
                     onChange={(e) => updateField(lang, "desc", e.target.value)}
                     placeholder="..."
-                    rows={6}
+                    rows={isPage ? 14 : 6}
                     invalid={Boolean(getFieldError(`description.${lang}`) || getFieldError("description"))}
                   />
                   {(getFieldError(`description.${lang}`) || getFieldError("description")) && <p className="text-[0.8rem] font-medium text-destructive mt-1.5">{getFieldError(`description.${lang}`) || getFieldError("description")}</p>}

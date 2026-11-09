@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LogOut, LayoutDashboard, FolderTree, Layers, Hash, Palette, Globe, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { LogOut, LayoutDashboard, FolderTree, Layers, Hash, Palette, Globe, Image as ImageIcon, MessageSquare, FileText } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { GlobalToaster } from "@/components/shared/GlobalToaster";
 
@@ -46,6 +46,7 @@ export default function AdminLayout({
     { href: "/admin/collections", icon: Layers, label: t("collections") },
     { href: "/admin/tags", icon: Hash, label: t("tags_manager") },
     { href: "/admin/colors", icon: Palette, label: t("colors_manager") },
+    { href: "/admin/pages", icon: FileText, label: t("pages") },
     { href: "/admin/localizations", icon: Globe, label: t("translations") },
     { href: "/admin/media", icon: ImageIcon, label: t("media_library") },
     { href: "/admin/comments", icon: MessageSquare, label: t("comments") || "Comments" },
