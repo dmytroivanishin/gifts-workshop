@@ -1,7 +1,7 @@
-# Portfolio 
+# Gift Workshop 
 
 ## Main Idea
-The website is a portfolio showcasing work in sewing, quilting, toy making, dolls, textiles, and kitchen textiles.
+The website is a gift workshop showcasing work in sewing, quilting, toy making, dolls, textiles, and kitchen textiles.
 The primary audience includes adults and children looking to purchase toys or textiles, as well as individuals interested in learning how to sew.
 
 The site is divided into two sections: the Public Site and the Admin Panel.

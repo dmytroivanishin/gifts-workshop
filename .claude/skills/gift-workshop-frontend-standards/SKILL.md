@@ -1,13 +1,13 @@
 ---
-name: portfolio-frontend-standards
-description: Frontend rules of the Portfolio app (Next.js 16 App Router, RTK Query in src/store/api.ts, shadcn, components/{ui,shared,features}, i18n via t()/loc(), public vs admin areas, performance). Use when writing or reviewing anything under src/app pages, components, store or i18n, or when asked how the frontend should be done.
+name: gift-workshop-frontend-standards
+description: Frontend rules of the Gift Workshop app (Next.js 16 App Router, RTK Query in src/store/api.ts, shadcn, components/{ui,shared,features}, i18n via t()/loc(), public vs admin areas, performance). Use when writing or reviewing anything under src/app pages, components, store or i18n, or when asked how the frontend should be done.
 argument-hint: "[--target <path>] [--area public|admin]"
 allowed-tools: Read Grep Glob
 ---
 
-# Portfolio Frontend Standards
+# Gift Workshop Frontend Standards
 
-Rules for UI code. Source: `docs/guidelines/frontend.md` and `docs/guidelines/design.md` (moved from `.agents/rules/` 2026-10-06), corrected where the code differs (see "Where the code differs from `frontend.md`"). Visual rules are checked by `portfolio-design-check`. The Next.js in this repo is **16**: read the relevant guide in `node_modules/next/dist/docs/` before writing Next-specific code (`middleware.ts` is now `proxy.ts`, `params` is a `Promise`).
+Rules for UI code. Source: `docs/guidelines/frontend.md` and `docs/guidelines/design.md` (moved from `.agents/rules/` 2026-10-06), corrected where the code differs (see "Where the code differs from `frontend.md`"). Visual rules are checked by `gift-workshop-design-check`. The Next.js in this repo is **16**: read the relevant guide in `node_modules/next/dist/docs/` before writing Next-specific code (`middleware.ts` is now `proxy.ts`, `params` is a `Promise`).
 
 ## Trigger words
 
@@ -27,7 +27,7 @@ Arguments received: `$ARGUMENTS`
 3. **Areas.** Public: highly customized UI, shadcn only for core inputs (search, buttons, badges, popover, icons). Admin: heavy shadcn, standard forms/tables for efficiency. One shared color scheme for both.
 4. **Server state = RTK Query.** Every endpoint lives in `src/store/api.ts` (add the route's endpoint there, with `providesTags` / `invalidatesTags` and the matching entry in `tagTypes`). Do not `fetch` API routes directly from components. Local slices in `src/store/slices` only for UI state (for example notifications). Silent refresh on 401 is handled by `baseQueryWithReauth`; do not reimplement it.
 5. **Forms.** react-hook-form + zod 4; validation schema next to the form or shared with `common/validation/schemas.ts`; errors shown with the shared components; toasts through the notification slice/`sonner` (`GlobalToaster`).
-6. **i18n.** No hardcoded UI strings. UI text: `const { t } = useTranslation()` from `@/i18n`, key stored in the `system_texts` table (area `public` / `admin` / `shared`); new keys go through `portfolio-i18n-sync`. Entity fields are JSONB `{locale: text}`: read them with `loc(field)` or `getLocalizedField` from `utils/localization.ts`. Public locale comes from the URL (`/ru`, `/en`), admin locale from the `admin_locale` cookie.
+6. **i18n.** No hardcoded UI strings. UI text: `const { t } = useTranslation()` from `@/i18n`, key stored in the `system_texts` table (area `public` / `admin` / `shared`); new keys go through `gift-workshop-i18n-sync`. Entity fields are JSONB `{locale: text}`: read them with `loc(field)` or `getLocalizedField` from `utils/localization.ts`. Public locale comes from the URL (`/ru`, `/en`), admin locale from the `admin_locale` cookie.
 7. **Performance.** `next/image` for images (raw `<img>` exists in 6 places — admin lists, drag-and-drop/crop widgets; the public project gallery switched to `next/image` 2026-10-02, second round — do not add more raw `<img>`; set width/height to prevent layout shift; a remote image host needs an entry in `next.config.ts`'s `images.remotePatterns`); `next/font` for fonts (Inter/Playfair Display load via `next/font/google` since 2026-10-05, `src/app/layout.tsx`; do not go back to a CSS `@import`); import icons by name from `lucide-react`, never `import * as` (the one remaining offender, the public project gallery, was fixed 2026-10-05); `useMemo` / `useCallback` for heavy trees or store transforms only; avoid setting state synchronously inside `useEffect` (19 lint errors already, see `react-hooks/set-state-in-effect`).
 8. **No dark mode.** Do not add `dark:` variants or `next-themes` outside shadcn primitives.
 9. **SEO.** Metadata and hreflang for public pages via `generateMetadata`; sitemap/robots are route files under `src/app`. Public pages are client-rendered today; server-fetching the first page is the recommended direction, not a requirement for every change.
@@ -46,7 +46,7 @@ Writing mode: the component/code plus notes on the decisions (client vs server, 
 ## Example usage
 
 ```
-/portfolio-frontend-standards
-/portfolio-frontend-standards --target src/app/admin/tags --area admin
-/portfolio-frontend-standards --target src/components/features/ProjectCard.tsx
+/gift-workshop-frontend-standards
+/gift-workshop-frontend-standards --target src/app/admin/tags --area admin
+/gift-workshop-frontend-standards --target src/components/features/ProjectCard.tsx
 ```

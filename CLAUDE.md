@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 1. Project Summary
 
-**Purpose:** a handmade-goods portfolio (soft toys, dolls, textiles, kitchen textiles; brand "Добрые подарки / Kind Gifts") with a public catalog and a single-admin CMS. Content is localized (ru/en, configurable).
+**Purpose:** a handmade-goods gift workshop (soft toys, dolls, textiles, kitchen textiles; brand "Добрые подарки / Kind Gifts") with a public catalog and a single-admin CMS. Content is localized (ru/en, configurable).
 
 **Stack**
 - Next.js 16.2 (App Router, TypeScript strict), React 19.2. Frontend and backend live in one Next app (route handlers under `src/app/api/v1`).
@@ -99,7 +99,6 @@ bash scripts/run.sh media:reconcile   # bucket vs `media` table: report orphan o
 set -a; source config/local.env; set +a
 npx drizzle-kit generate      # create SQL migration from src/repositories/drizzle/schema.ts → src/migrations/sql
 npx drizzle-kit push          # or apply schema directly (dev/test)
-npx tsx src/migrations/seeds/runSystemTextsSeed.ts   # seed system_texts (loads config/local.env itself)
 
 # Tests: API suite (tests/api/**, CP-31 phase 1), unit suite (tests/unit/**, phase 2) and e2e
 # suite (tests/e2e/**, phase 3, real Chromium via playwright.config.ts's "e2e" project) all exist
@@ -143,7 +142,7 @@ common/errors, common/validation   BaseError family; Zod schemas
 components/{ui,shared,features}
 controllers/                one class per entity
 i18n/index.tsx              I18nProvider, useTranslation
-migrations/sql, migrations/seeds   Drizzle SQL + seed JSON (only system-texts has a runner)
+migrations/sql (Drizzle schema), migrations/1794246164091_initial (initial data JSON + index.ts)
 modules/core/{container,env}.ts, modules/logger, modules/storage (StorageService, minioClient)
 repositories/{interfaces.ts, drizzle/}   schema.ts, database.ts (singleton), one repo per entity
 services/                   one service per entity + interfaces.ts + pagination.ts
@@ -175,7 +174,7 @@ Schema: `src/repositories/drizzle/schema.ts`. One migration: `src/migrations/sql
 | `posts_to_tags` | PK (`post_id`,`tag_id`), cascade |
 | `comments` | `post_id`→posts (cascade), `name`, `text`, `status` (`Review`/`Approved`/`Rejected`), `reply_id` (no FK constraint) |
 
-Ownership FKs (`user_id`) are `ON DELETE SET NULL`. Repositories re-expose `tagsIds` and `media` arrays to services. The seed JSONs in `migrations/seeds/initial-data` (categories, tags, colors, collections, users, system-texts) have loaders only for system texts.
+Ownership FKs (`user_id`) are `ON DELETE SET NULL`. Repositories re-expose `tagsIds` and `media` arrays to services. The initial seed JSONs live in `migrations/1794246164091_initial/data` and are loaded by that migration (see its `index.ts`).
 
 The 6 `created_at` columns above (2026-11-04) were added by hand-editing the existing `0000_tired_human_robot.sql` migration and its snapshot JSON, not by generating a new migration — nothing is deployed yet, so there's no running-migration-history to preserve, and the owner wants one clean initial migration once the project does launch (`CHANGE-PLAN.md`, "Done"). `GET /api/v1/tags` also gained an optional `search` param (same escape-then-`ILIKE` convention as `posts`' `search`), and `collectionService.getAllCollections`/`colorService.getAllColors` no longer silently cap an argument-less call at 20 rows (they now match `tagService`/`categoryService`'s existing "no args = everything" convention) — both services previously applied a default `limit: 20` unconditionally, so the admin collections/colors pages were quietly never showing more than their first 20 rows.
 
@@ -219,7 +218,7 @@ The 6 `created_at` columns above (2026-11-04) were added by hand-editing the exi
 
 ## 9. Docker & Infrastructure
 
-`docker-compose.local.yml` (local dev only; renamed from `docker-compose.yml` 2026-11-02 so its name pairs clearly with `docker-compose.test.yml` — `docker-compose` no longer auto-discovers it without `-f`, hence `npm run local:infra:start`/`local:infra:stop` in §3): `postgres` (16-alpine, db `portfolio`, :5432, data in `./.docker/db-data`), `minio` (pinned release, :9000 API / :9001 console, data in `./.docker/minio-data`), `pgweb` (:8081). Fixed subnet `10.10.10.0/24`, `restart: always`, no healthchecks, dev credentials hardcoded — this data is meant to persist across restarts (your working dev content), unlike the test stack below. `docker-compose.test.yml`: Postgres 15 on :5433 + an isolated MinIO on :9002 for API tests (`tests/api/**`, CP-31) — both services are deliberately volume-less so every `npm run test:infra:start`/`test:infra:stop` (via `scripts/run-test.sh`) starts from a truly blank state; a named volume here once accumulated an incompatible schema across runs and had to be cleared by hand, so it was dropped entirely 2026-11-02. **No app service, no Dockerfile, no CI.**
+`docker-compose.local.yml` (local dev only; renamed from `docker-compose.yml` 2026-11-02 so its name pairs clearly with `docker-compose.test.yml` — `docker-compose` no longer auto-discovers it without `-f`, hence `npm run local:infra:start`/`local:infra:stop` in §3): `postgres` (16-alpine, db `gift workshop`, :5432, data in `./.docker/db-data`), `minio` (pinned release, :9000 API / :9001 console, data in `./.docker/minio-data`), `pgweb` (:8081). Fixed subnet `10.10.10.0/24`, `restart: always`, no healthchecks, dev credentials hardcoded — this data is meant to persist across restarts (your working dev content), unlike the test stack below. `docker-compose.test.yml`: Postgres 15 on :5433 + an isolated MinIO on :9002 for API tests (`tests/api/**`, CP-31) — both services are deliberately volume-less so every `npm run test:infra:start`/`test:infra:stop` (via `scripts/run-test.sh`) starts from a truly blank state; a named volume here once accumulated an incompatible schema across runs and had to be cleared by hand, so it was dropped entirely 2026-11-02. **No app service, no Dockerfile, no CI.**
 
 **Environment variable names** (values live in `config/local.env`, git-ignored; `config/test.env` holds mock values; all 32 listed are required by `env.ts`, including `JWT_SECRET` since 2026-09-19 and `S3_PUBLIC_URL` since 2026-09-23; `S3_FORCE_PATH_STYLE` and `GOOGLE_CALLBACK_URL` were required-but-unused and dropped from the list 2026-09-28 (the config files may still carry the lines, which is harmless); `config/test.env` has `S3_PUBLIC_URL` but still lacks `JWT_SECRET`, CP-4):
 
@@ -311,10 +310,10 @@ Checklist and open questions: `PRODUCTION-READINESS.md`. Headlines: close the §
 ## 13. Quick Links
 
 - Guidelines: `docs/guidelines/frontend.md`, `design.md` (visual language: no dark mode, 12px cards, pill controls, Inter + Playfair Display) — moved from `.agents/rules/` 2026-10-06 (CP-34); layering/TS/style rules (the old `architect.md`) and the stale Express-era `backend.md`/`workspace.md`/`system_rules.md`/`quota-rules.md` were retired, not moved, since they were already superseded by this file or by a different AI tool's process docs
-- Review workflow: ported into `/portfolio-code-review` (the old `.agents/workflows/review.md` is retired)
+- Review workflow: ported into `/gift-workshop-code-review` (the old `.agents/workflows/review.md` is retired)
 - Plans and references: `docs/project-plan/{general,backend,frontend,colors,theme_design}.md`, `design.jpg`, `diagram.jpg` (REST + DB schema), `example-ui/`
 - Generated docs: `DEVIATIONS.md`, `PRODUCTION-READINESS.md`, `SKILL-CANDIDATES.md`, `AUDIT-SUMMARY.md`
-- Project skills (`.claude/skills/portfolio-*/SKILL.md`, invoked as `/portfolio-<name>`): `code-review`, `architecture-check`, `security-audit`, `backend-standards`, `frontend-standards`, `deployment-validator`, `api-exposure-check`, `db-performance`, `requirements-check`, `new-entity`, `i18n-sync`, `db-migration`, `design-check`, `dependency-audit`, `docs-sync`. Details: `SKILL-CANDIDATES.md`.
+- Project skills (`.claude/skills/gift-workshop-*/SKILL.md`, invoked as `/gift-workshop-<name>`): `code-review`, `architecture-check`, `security-audit`, `backend-standards`, `frontend-standards`, `deployment-validator`, `api-exposure-check`, `db-performance`, `requirements-check`, `new-entity`, `i18n-sync`, `db-migration`, `design-check`, `dependency-audit`, `docs-sync`. Details: `SKILL-CANDIDATES.md`.
 - Open steps and reminders: `CHANGE-PLAN.md`
 
 ---

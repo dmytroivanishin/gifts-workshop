@@ -1,11 +1,11 @@
 ---
-name: portfolio-architecture-check
-description: Checks that code respects the Portfolio layering (route → controller → service → repository), the composition root, the Zod-at-the-edge rule and the TypeScript standards. Use when adding or changing backend or shared code, or when asked to check architecture, layers, boundaries, dependencies between modules.
+name: gift-workshop-architecture-check
+description: Checks that code respects the Gift Workshop layering (route → controller → service → repository), the composition root, the Zod-at-the-edge rule and the TypeScript standards. Use when adding or changing backend or shared code, or when asked to check architecture, layers, boundaries, dependencies between modules.
 argument-hint: "[--target <path>]"
 allowed-tools: Read Grep Glob
 ---
 
-# Portfolio Architecture Check
+# Gift Workshop Architecture Check
 
 Verifies module boundaries and the global coding standards. Sources: `CLAUDE.md`'s Working Agreements (TS/functional-style rules, formerly `.agents/rules/architect.md` — folded in and that file retired 2026-10-06) and the layer rules in `CLAUDE.md` §2. Read-only.
 
@@ -31,7 +31,7 @@ Run each check with `Grep` over the target, then open the hits and confirm.
 4. **Repositories** (`src/repositories/drizzle/*`): the only place that imports `drizzle-orm` and `schema.ts`; extend `DrizzleBaseRepository`, `implements` an interface from `repositories/interfaces.ts`, implement `populate()`, keep list queries light (`PostRepository` does it with a private `getListRelations()` that loads partial relations; list endpoints must not load full relation trees).
 5. **Composition root** (`src/modules/core/container.ts`): every new repository, service and controller is instantiated there, in that order, and exported. Routes never `new` a controller.
 6. **Utilities and types:** `src/utils/*` must not grow business logic (`utils/auth.ts` already depends on `userRepository`; do not add more). Domain types live in `src/types`; no Drizzle table types leak to the frontend (`grep` client components, marked `"use client"`, for imports of `@/repositories`, `@/services`, `@/controllers`, `@/modules/core/container`, `drizzle-orm`).
-7. **Frontend layering:** server-only modules (`env.ts`, container, storage) are never imported by `"use client"` files; server state goes through RTK Query in `src/store/api.ts`; components live in `components/{ui,shared,features}` (details: `portfolio-frontend-standards`).
+7. **Frontend layering:** server-only modules (`env.ts`, container, storage) are never imported by `"use client"` files; server state goes through RTK Query in `src/store/api.ts`; components live in `components/{ui,shared,features}` (details: `gift-workshop-frontend-standards`).
 8. **Strict interfaces:** every module boundary has an interface or DTO; a new public method is added to the interface first.
 9. **TypeScript excellence** (`CLAUDE.md`'s Working Agreements): no `any` (use `unknown`), explicit return types, `interface` vs `type`, `as const` over `enum`, Zod before casting external data, `Pick`/`Omit`/`Partial`/`Readonly`.
 10. **Functional style:** `.map/.filter/.reduce`, immutability, one function = one action, comments explain "why".
@@ -47,7 +47,7 @@ A table `layer | file:line | rule | severity`, then a summary per layer (OK / vi
 ## Example usage
 
 ```
-/portfolio-architecture-check
-/portfolio-architecture-check --target src/services/postService.ts
-/portfolio-architecture-check --target src/app/api/v1/tags
+/gift-workshop-architecture-check
+/gift-workshop-architecture-check --target src/services/postService.ts
+/gift-workshop-architecture-check --target src/app/api/v1/tags
 ```

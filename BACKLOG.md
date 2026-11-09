@@ -18,7 +18,7 @@ drift — ask me to regenerate it rather than trusting it blindly after a long g
 
 ## 🟢 Ready to pick right now — pure code, no migration/config/dependency
 
-- **CP-32** — design visual-language audit (`/portfolio-design-check`, read-only, then report what's off). Postponed by you 2026-10-12 — technically ready, just not scheduled.
+- **CP-32** — design visual-language audit (`/gift-workshop-design-check`, read-only, then report what's off). Postponed by you 2026-10-12 — technically ready, just not scheduled.
 - **CP-17 (remainder)** — JSON-LD structured data (Product schema per post, ItemList for the homepage). The rest of CP-17 (SSR for the public pages, canonical/hreflang, tags locale bug, default-locale split) is done, see "Done" below — this is the one piece left, paused at your request to read up on it first, not declined.
 
 ## 🟡 Needs your explicit "да" first (migration / config / new dependency)

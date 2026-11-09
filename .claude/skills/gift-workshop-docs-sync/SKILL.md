@@ -1,11 +1,11 @@
 ---
-name: portfolio-docs-sync
+name: gift-workshop-docs-sync
 description: Re-verifies statements in CLAUDE.md, DEVIATIONS.md, PRODUCTION-READINESS.md and AUDIT-SUMMARY.md against the current code after changes, and updates the docs that drifted. Use after code, schema, route, env or dependency changes, before a release, or when asked to sync or refresh the documentation.
 argument-hint: "[--since <git ref>]"
 allowed-tools: Read Grep Glob Edit Bash(git log *) Bash(git diff *) Bash(git status *) Bash(git show *)
 ---
 
-# Portfolio Docs Sync
+# Gift Workshop Docs Sync
 
 Keeps the generated documentation true. **The code is the source of truth**; the docs follow it. Scope of edits: `CLAUDE.md`, `DEVIATIONS.md`, `PRODUCTION-READINESS.md`, `AUDIT-SUMMARY.md`, `SKILL-CANDIDATES.md`, `CHANGE-PLAN.md`. This skill never edits `src/`, migrations, configs or `docs/project-plan/` (read-only plan history, not spec — see `docs/guidelines/` for the two rule files that moved out of `.agents/` 2026-10-06 and are still occasionally corrected).
 
@@ -41,7 +41,7 @@ Arguments received: `$ARGUMENTS`
 4. **Update the docs** with minimal edits: fix wrong statements, remove items that are fixed (move them to the "Fixed" row/table), add new findings with file references, keep the `[intentional]/[quality]/[gap]/[added]` vocabulary, update dates. Keep `CLAUDE.md` concise: names and rules, no secret values, no long histories.
 5. **Cross-file consistency.** The same fact must read the same in `CLAUDE.md` §1/§11/§12, `PRODUCTION-READINESS.md`, `AUDIT-SUMMARY.md` and `DEVIATIONS.md` (blocker status, counts, decisions such as "Dockerfile is the chosen route").
 6. **Change plan.** Reconcile `CHANGE-PLAN.md`: move answered/completed items to Done with the date, add new open items with the next `CP-n` ID, and remind the user of what still waits on them.
-7. **Skills.** If routes, layers, entities or commands changed, check that the skills in `.claude/skills/portfolio-*` still describe reality (file names, counts, known-debt lists) and report the ones that need an edit; edit them only when the user asks.
+7. **Skills.** If routes, layers, entities or commands changed, check that the skills in `.claude/skills/gift-workshop-*` still describe reality (file names, counts, known-debt lists) and report the ones that need an edit; edit them only when the user asks.
 
 ## Output
 
@@ -52,7 +52,7 @@ Arguments received: `$ARGUMENTS`
 ## Example usage
 
 ```
-/portfolio-docs-sync
-/portfolio-docs-sync --since HEAD~5
-/portfolio-docs-sync --since 2026-09-19
+/gift-workshop-docs-sync
+/gift-workshop-docs-sync --since HEAD~5
+/gift-workshop-docs-sync --since 2026-09-19
 ```

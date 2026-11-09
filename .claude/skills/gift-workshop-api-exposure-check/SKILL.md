@@ -1,11 +1,11 @@
 ---
-name: portfolio-api-exposure-check
+name: gift-workshop-api-exposure-check
 description: Builds the route × method × access table for /api/v1 and finds public endpoints that return admin-only data, unpublished content or internals. Use after adding or changing any route, controller or proxy rule, before a release, or when asked what is publicly readable.
 argument-hint: "[--method GET|all]"
 allowed-tools: Read Grep Glob
 ---
 
-# Portfolio API Exposure Check
+# Gift Workshop API Exposure Check
 
 The proxy in this repo (`src/proxy.ts`) decides access **mostly by HTTP method**: `POST/PUT/PATCH/DELETE` need a valid `accessToken` cookie, `/api/v1/auth/*` needs no token, and every other `GET` is public. Since 2026-09-19 one path rule is added on top, extended 2026-09-28: every method on `/api/v1/users/**`, `/api/v1/admin/**` and `/api/v1/media/**` also needs a token (`isAdminOnlyResource`). The method-only design had produced four release blockers, B1–B3 fixed 2026-09-19 (still awaiting manual verification) and B12 fixed 2026-09-28 (B1 `GET /users` returning the `password` column, B2 public `GET /admin/comments`, B3 drafts/archived posts readable anonymously, B12 public `GET /media` listing every file including images of unpublished posts). What an anonymous `GET` returns is therefore decided in **two places**: the proxy, and filters in code (posts go through `utils/postVisibility.ts`, the public comments route forces `Approved`). Since 2026-09-23 the proxy also rate limits three route groups per client address (`/api/v1/auth/*`, the public comment `POST`, `POST /media`; `utils/rateLimit.ts`) and answers 429. This skill re-derives the exposure from the code so such cases are caught the moment a route is added. Read-only.
 
@@ -49,6 +49,6 @@ No files are modified. Changes to `src/proxy.ts` or controllers are made only wh
 ## Example usage
 
 ```
-/portfolio-api-exposure-check
-/portfolio-api-exposure-check --method all
+/gift-workshop-api-exposure-check
+/gift-workshop-api-exposure-check --method all
 ```

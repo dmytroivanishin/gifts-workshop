@@ -3,10 +3,10 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: portfolio-postgres
+    container_name: gift-workshop-postgres
     restart: always
     environment:
-      POSTGRES_DB: portfolio
+      POSTGRES_DB: gift_workshop
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres_local_password
     ports:
@@ -14,11 +14,11 @@ services:
     volumes:
       - ./.docker/db-data:/var/lib/postgresql/data
     networks:
-      - portfolio-network
+      - gift-workshop-network
 
   minio:
     image: minio/minio:RELEASE.2025-01-20T14-49-07Z
-    container_name: portfolio-minio
+    container_name: gift-workshop-minio
 
     restart: always
     command: server /data --console-address ":9001"
@@ -31,23 +31,23 @@ services:
     volumes:
       - ./.docker/minio-data:/data
     networks:
-      - portfolio-network
+      - gift-workshop-network
 
   pgweb:
     image: sosedoff/pgweb:latest
-    container_name: portfolio-pgweb
+    container_name: gift-workshop-pgweb
     restart: always
     environment:
-      - DATABASE_URL=postgres://postgres:postgres_local_password@postgres:5432/portfolio?sslmode=disable
+      - DATABASE_URL=postgres://postgres:postgres_local_password@postgres:5432/gift_workshop?sslmode=disable
     ports:
       - "8081:8081"
     depends_on:
       - postgres
     networks:
-      - portfolio-network
+      - gift-workshop-network
 
 networks:
-  portfolio-network:
+  gift-workshop-network:
     ipam:
       driver: default
       config:

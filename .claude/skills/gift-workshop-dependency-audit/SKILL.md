@@ -1,11 +1,11 @@
 ---
-name: portfolio-dependency-audit
-description: Triages npm audit output for the Portfolio app into runtime vs build-only, checks whether each advisory applies to how the project uses the package, and produces a safe one-step-at-a-time upgrade plan (never npm audit fix --force). Use when the user pastes npm audit output, asks about vulnerabilities/outdated packages, or before a release.
+name: gift-workshop-dependency-audit
+description: Triages npm audit output for the Gift Workshop app into runtime vs build-only, checks whether each advisory applies to how the project uses the package, and produces a safe one-step-at-a-time upgrade plan (never npm audit fix --force). Use when the user pastes npm audit output, asks about vulnerabilities/outdated packages, or before a release.
 argument-hint: "[--input <audit file>] [--runtime-only]"
 allowed-tools: Read Grep Glob Bash(git log *) Bash(npm ls *)
 ---
 
-# Portfolio Dependency Audit
+# Gift Workshop Dependency Audit
 
 **Claude does not run `npm audit`, `npm install`, `npm outdated` or any network/dependency command in this repo.** The user runs them and pastes the output (previous results are in `.claude/command-output/`, for example `.claude/command-output/npm_audit.md`). This skill turns that output into decisions. `npm ls <pkg>` is local and read-only, so it may be used to see why a package is installed.
 
@@ -51,6 +51,6 @@ No dependency, lockfile or code change is made by this skill.
 ## Example usage
 
 ```
-/portfolio-dependency-audit
-/portfolio-dependency-audit --input .claude/command-output/npm_audit.md --runtime-only
+/gift-workshop-dependency-audit
+/gift-workshop-dependency-audit --input .claude/command-output/npm_audit.md --runtime-only
 ```

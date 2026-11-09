@@ -1,11 +1,11 @@
 ---
-name: portfolio-requirements-check
+name: gift-workshop-requirements-check
 description: Compares the project plans in docs/project-plan with the current code and classifies every difference (intentional, quality, gap, added); optionally refreshes DEVIATIONS.md. Use when the plans or code changed, when asked what is implemented vs planned, or before writing new plan-driven work.
 argument-hint: "[--plan general|backend|frontend] [--update]"
 allowed-tools: Read Grep Glob Bash(git log *) Bash(git diff *)
 ---
 
-# Portfolio Requirements Check
+# Gift Workshop Requirements Check
 
 Repeats the plan-vs-code diff that produced `DEVIATIONS.md`. **The code wins**: plans are intent and may be stale. Read-only unless `--update` is passed.
 
@@ -17,7 +17,7 @@ requirements check, plan vs code, what is missing from the plan, deviations, is 
 
 Arguments received: `$ARGUMENTS`
 
-- `--plan general|backend|frontend` (default: all three): which file in `docs/project-plan/` to check (`general.md`, `backend.md`, `frontend.md`; `colors.md` and `theme_design.md` belong to `portfolio-design-check`; `diagram.jpg` = REST + DB schema, `design.jpg` = UI reference).
+- `--plan general|backend|frontend` (default: all three): which file in `docs/project-plan/` to check (`general.md`, `backend.md`, `frontend.md`; `colors.md` and `theme_design.md` belong to `gift-workshop-design-check`; `diagram.jpg` = REST + DB schema, `design.jpg` = UI reference).
 - `--update`: after the check, rewrite the affected entries in `DEVIATIONS.md` (only that file).
 
 ## Process
@@ -44,7 +44,7 @@ Arguments received: `$ARGUMENTS`
 ## Example usage
 
 ```
-/portfolio-requirements-check
-/portfolio-requirements-check --plan frontend
-/portfolio-requirements-check --plan backend --update
+/gift-workshop-requirements-check
+/gift-workshop-requirements-check --plan frontend
+/gift-workshop-requirements-check --plan backend --update
 ```

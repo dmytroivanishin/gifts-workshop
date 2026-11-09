@@ -1,11 +1,11 @@
 ---
-name: portfolio-i18n-sync
+name: gift-workshop-i18n-sync
 description: Keeps UI translation keys in sync: finds t('key') usages in the code, compares them with the system_texts seed, and adds missing keys (ru/en) with the right area. Use after adding or changing UI text, when a screen shows a raw key, or when asked to check or sync translations/localization.
 argument-hint: "[--area admin|public|shared] [--fix-seed]"
 disable-model-invocation: true
 ---
 
-# Portfolio i18n Sync
+# Gift Workshop i18n Sync
 
 UI strings are stored in the `system_texts` table (columns `code` unique, `content` JSONB `{ru, en, …}`, `area` = `admin` / `public` / `shared`) and read with `t(key)` from `useTranslation()` (`src/i18n/index.tsx`). The seed file `src/migrations/seeds/initial-data/system-texts.json` (243 rows at last count) is what a fresh database is loaded from. Entity content is localized separately, as JSONB fields, and is not covered by the seed. There is currently no single agreed flow, so this skill defines one and warns about the two stale helper scripts.
 
@@ -41,7 +41,7 @@ Arguments received: `$ARGUMENTS`
 ## Example usage
 
 ```
-/portfolio-i18n-sync
-/portfolio-i18n-sync --area admin
-/portfolio-i18n-sync --fix-seed
+/gift-workshop-i18n-sync
+/gift-workshop-i18n-sync --area admin
+/gift-workshop-i18n-sync --fix-seed
 ```

@@ -1,11 +1,11 @@
 ---
-name: portfolio-security-audit
-description: Security audit of the Portfolio app: Google OAuth and JWT sessions, the proxy.ts auth gate, API exposure, uploads, headers, secrets. Use before a release, after touching auth/proxy/upload code, or when asked for a security check, audit or pentest-style review of the code.
+name: gift-workshop-security-audit
+description: Security audit of the Gift Workshop app: Google OAuth and JWT sessions, the proxy.ts auth gate, API exposure, uploads, headers, secrets. Use before a release, after touching auth/proxy/upload code, or when asked for a security check, audit or pentest-style review of the code.
 argument-hint: "[--focus auth|api-exposure|uploads|headers|all]"
 allowed-tools: Read Grep Glob Bash(git log *) Bash(git grep *)
 ---
 
-# Portfolio Security Audit
+# Gift Workshop Security Audit
 
 Read-only audit of the code as it is today. The checklist comes from `PRODUCTION-READINESS.md` (Security) plus the actual code in `src/proxy.ts`, `src/app/api/v1/auth/**`, `src/utils/{auth,jwt,apiResponse,googleOAuth,rateLimit}.ts` and `src/modules/storage`.
 
@@ -17,9 +17,9 @@ security audit, security review, is this safe, auth review, OAuth, JWT, cookies,
 
 Arguments received: `$ARGUMENTS`
 
-- `--focus auth|api-exposure|uploads|headers|all` (default: `all`). `api-exposure` delegates to `.claude/skills/portfolio-api-exposure-check/SKILL.md`.
+- `--focus auth|api-exposure|uploads|headers|all` (default: `all`). `api-exposure` delegates to `.claude/skills/gift-workshop-api-exposure-check/SKILL.md`.
 
-Rules of engagement: do not run network commands or dependency commands (`npm audit`, `npm install`); dependency findings come from `portfolio-dependency-audit` with output supplied by the user. Never print secret values: when reading `config/*.env`, list variable names only (`sed 's/=.*//'`).
+Rules of engagement: do not run network commands or dependency commands (`npm audit`, `npm install`); dependency findings come from `gift-workshop-dependency-audit` with output supplied by the user. Never print secret values: when reading `config/*.env`, list variable names only (`sed 's/=.*//'`).
 
 ## Process
 
@@ -31,14 +31,14 @@ Rules of engagement: do not run network commands or dependency commands (`npm au
    - Cookies: `accessToken` (path `/`) and `refreshToken` (path `/api/v1/auth`), HttpOnly, SameSite=Strict, `Secure` in production; `dev-login` must not be able to set `secure:false` in production. The login-only `oauthState` cookie is HttpOnly, SameSite=Lax (the browser returns from Google by a cross-site redirect), path `/api/v1/auth`, 10 minutes, deleted on every exchange attempt.
    - `dev-login` and `NEXT_PUBLIC_DEV_MODE`: build-time flag; the route must also be refused when `NODE_ENV === "production"`.
    - CSRF: SameSite=Strict + JSON only; look for any new form-encoded or `GET`-with-side-effects route.
-3. **api-exposure.** Apply the `portfolio-api-exposure-check` process. The recurring root cause: `src/proxy.ts` decides mostly by HTTP method. It gates `POST/PUT/PATCH/DELETE` (plus `/admin/*` pages) and, since 2026-09-19 (extended 2026-09-28), every method on `/api/v1/users/**`, `/api/v1/admin/**` and `/api/v1/media/**` (the `isAdminOnlyResource` pattern; `GET /media` used to be public and leak images of unpublished posts until it joined the pattern, B12), so every other `GET` is public and must be safe by construction (unpublished posts are filtered in code through `utils/postVisibility.ts`, repositories return field allowlists). The routes under `/api/v1/auth/` are open at the proxy and must check for themselves. Also check that a mutation reaching a controller without the proxy (direct call, matcher gap) would still be refused: since 2026-10-06 (CP-5) every write `route.ts` also wraps its handler in `withAdminAuth()` (`utils/withAdminAuth.ts`), a second, independent token check, so the proxy is no longer the only guard — flag a new write route that skips this wrapper.
+3. **api-exposure.** Apply the `gift-workshop-api-exposure-check` process. The recurring root cause: `src/proxy.ts` decides mostly by HTTP method. It gates `POST/PUT/PATCH/DELETE` (plus `/admin/*` pages) and, since 2026-09-19 (extended 2026-09-28), every method on `/api/v1/users/**`, `/api/v1/admin/**` and `/api/v1/media/**` (the `isAdminOnlyResource` pattern; `GET /media` used to be public and leak images of unpublished posts until it joined the pattern, B12), so every other `GET` is public and must be safe by construction (unpublished posts are filtered in code through `utils/postVisibility.ts`, repositories return field allowlists). The routes under `/api/v1/auth/` are open at the proxy and must check for themselves. Also check that a mutation reaching a controller without the proxy (direct call, matcher gap) would still be refused: since 2026-10-06 (CP-5) every write `route.ts` also wraps its handler in `withAdminAuth()` (`utils/withAdminAuth.ts`), a second, independent token check, so the proxy is no longer the only guard — flag a new write route that skips this wrapper.
 4. **uploads** (`POST /media`, `MediaService.uploadMultiple`, `StorageService`): type validated by magic bytes and not by the client-declared MIME; extension derived from the detected format, not the filename; per-file and total size limit before the body is buffered; file-count cap; `sharp` errors mapped to 4xx; object names contain no user-controlled path parts; bucket is public-read for the objects only; no presigned URL exposure; bucket credentials only from env.
 5. **input validation and errors.** Every controller validates bodies with Zod; query/path params (`status`, `limit`, `page`, `search`, non-UUID ids) are validated too; malformed JSON returns 400; `limit` is capped; `sendError` in `src/utils/apiResponse.ts` returns a generic message for non-`BaseError` failures instead of raw `error.message`; no stack traces in responses.
 6. **SQL and XSS.** Drizzle only; any `sql` template must use bound parameters and `sql.identifier` (grep `sql\`` and `sql.raw`); `%`/`_` escaping in `ILIKE`. No `dangerouslySetInnerHTML`, no `innerHTML`, no `eval`, no unsanitized URLs in `href`/`src`. Outbound `fetch` from server code (for example `translate.googleapis.com` in `src/utils/slug.ts`) must never receive secrets or unvalidated hosts.
 7. **headers.** `next.config.ts`'s `headers()` (added 2026-09-28) sets `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` and a `Content-Security-Policy`; check they still match the code, not this text. The CSP keeps `script-src`/`style-src` `'unsafe-inline'` (App Router RSC streaming and framer-motion inline styles need it) and is **not nonce-based**, so flag it as a baseline, not a strict CSP. Google Fonts now load via `next/font/google` (since 2026-10-05, self-hosted at build time — no more CSS `@import`, no runtime request to Google), so `style-src`/`font-src`'s Google Fonts allowance is now unused and could be dropped from the CSP if you're re-tightening it. `img-src` includes the `S3_PUBLIC_URL` origin read at config-load time. No HSTS (no local HTTPS). No CORS headers configured is the intended same-origin setup.
 8. **rate limiting.** In place since 2026-09-23 (`proxy.ts` + `utils/rateLimit.ts`, `rate-limiter-flexible`, in memory): `/api/v1/auth/*` 20 per minute, public `POST /posts/:id/comments` 5 per 10 minutes, `POST /media` 30 per minute, `limit` capped at 100, and since 2026-10-02 every other authenticated write 300 per minute (`RATE_LIMITS.adminWrite`, deliberately loose — meant to catch a leaked token or a runaway script, not throttle normal admin work). Check that these still hold and that any new public or expensive route has a rule in `resolveRateLimitRule`. Known limits to report, not to re-discover: ordinary GETs are not limited, counters are per process (several instances need Redis or Traefik), and the client address is the last `X-Forwarded-For` entry, which assumes Traefik is the only proxy in front (behind Cloudflare every visitor would share one key).
 9. **secrets.** `git ls-files` shows no `.env*` except the mock `config/test.env`; `git log -S` for key-like patterns (`GOCSPX`, `-----BEGIN`); compose credentials are dev-only; nothing sensitive in `NEXT_PUBLIC_*` (`seeds/initial-data/users.json`, which used to carry an admin email and a password value, was deleted 2026-10-02 as unused).
-10. **dependencies.** Do not run anything. Point to `portfolio-dependency-audit` and to CP-1 / CP-2 in `CHANGE-PLAN.md` (the Next proxy-bypass advisory GHSA-6gpp-xcg3-4w24 is unconfirmed while CP-1 is open).
+10. **dependencies.** Do not run anything. Point to `gift-workshop-dependency-audit` and to CP-1 / CP-2 in `CHANGE-PLAN.md` (the Next proxy-bypass advisory GHSA-6gpp-xcg3-4w24 is unconfirmed while CP-1 is open).
 
 ## Output
 
@@ -51,7 +51,7 @@ Rules of engagement: do not run network commands or dependency commands (`npm au
 ## Example usage
 
 ```
-/portfolio-security-audit
-/portfolio-security-audit --focus auth
-/portfolio-security-audit --focus uploads
+/gift-workshop-security-audit
+/gift-workshop-security-audit --focus auth
+/gift-workshop-security-audit --focus uploads
 ```
