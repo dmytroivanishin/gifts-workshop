@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, boolean, integer, jsonb, timestamp, primaryKey, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, boolean, integer, jsonb, timestamp, primaryKey, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { LocalizedText, Position } from "@/types";
 
@@ -70,12 +70,13 @@ export const media = pgTable("media", {
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   // sha256 of the raw uploaded bytes, computed before resizing (CP-50 point 4) — lets a second
-  // upload of the same file's content be caught and blocked even under a different filename. No
-  // DB-level uniqueness/index: the app-level check in MediaService is the sole gate, same call as
-  // CP-22 (self-referencing FKs) made for an equivalent app-vs-DB tradeoff.
+  // upload of the same file's content be caught and blocked even under a different filename.
+  // MediaService checks first for a friendly 409; the unique index is the backstop for two
+  // simultaneous uploads of the same file, and it serves that lookup.
   contentHash: varchar("content_hash", { length: 64 }).notNull(),
 }, (t) => ({
   userIdIdx: index("media_user_id_idx").on(t.userId),
+  contentHashIdx: uniqueIndex("media_content_hash_idx").on(t.contentHash),
 }));
 
 export const mediaRelations = relations(media, ({ one, many }) => ({
@@ -187,6 +188,8 @@ export const posts = pgTable("posts", {
   categoryIdIdx: index("posts_category_id_idx").on(t.categoryId),
   userIdIdx: index("posts_user_id_idx").on(t.userId),
   statusIdx: index("posts_status_idx").on(t.status),
+  // Deleting a media row asks "is it any post's poster?" (and the FK check does the same).
+  posterIdIdx: index("posts_poster_id_idx").on(t.posterId),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({

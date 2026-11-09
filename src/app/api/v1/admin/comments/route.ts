@@ -1,5 +1,4 @@
 import { commentController } from "@/modules/core/container";
+import { withAdminAuth } from "@/utils/withAdminAuth";
 
-export async function GET(request: Request) {
-  return commentController.getComments(request);
-}
+export const GET = withAdminAuth((request: Request) => commentController.getComments(request));

@@ -1,5 +1,4 @@
 import { userController } from "@/modules/core/container";
+import { withAdminAuth } from "@/utils/withAdminAuth";
 
-export async function GET() {
-  return userController.getUsers();
-}
+export const GET = withAdminAuth(() => userController.getUsers());

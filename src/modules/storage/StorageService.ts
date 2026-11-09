@@ -16,6 +16,10 @@ const PUBLIC_BASE_URL = `${new URL(env.S3_PUBLIC_URL).href.replace(/\/+$/, "")}/
 const THUMBNAIL_MAX_PX = Number(process.env.MEDIA_THUMBNAIL_MAX_PX) || 320;
 const PREVIEW_MAX_PX = Number(process.env.MEDIA_PREVIEW_MAX_PX) || 1000;
 
+// A small file can decode into a huge bitmap (a "decompression bomb"): the 10 MB size cap does not bound
+// memory, the pixel count does. 40 MP covers any phone camera.
+const MAX_INPUT_PIXELS = 40_000_000;
+
 export interface ProcessedImageResult {
   originalUrl: string;
   thumbnailUrl: string;
@@ -37,8 +41,11 @@ export class StorageService {
     // of which of the two was uploaded (below) — one content type, one extension, simpler pipeline.
     // Sharp flattens a PNG's alpha channel onto white automatically when encoding to JPEG.
     let format: string | undefined;
+    let inputPixels = 0;
     try {
-      format = (await sharp(buffer).metadata()).format;
+      const inputMetadata = await sharp(buffer, { limitInputPixels: MAX_INPUT_PIXELS }).metadata();
+      format = inputMetadata.format;
+      inputPixels = (inputMetadata.width ?? 0) * (inputMetadata.height ?? 0);
     } catch {
       // sharp throws when it cannot even parse a header (not an image at all), rather than
       // returning metadata with no format
@@ -46,6 +53,11 @@ export class StorageService {
     if (format !== 'jpeg' && format !== 'png') {
       throw new ValidationError("Unsupported image format. Only JPEG and PNG are allowed.", [
         { field: "file", message: `Detected format: ${format ?? "unknown"}` },
+      ]);
+    }
+    if (inputPixels > MAX_INPUT_PIXELS) {
+      throw new ValidationError("Image is too large in pixels.", [
+        { field: "file", message: `At most ${MAX_INPUT_PIXELS / 1_000_000} megapixels are allowed.` },
       ]);
     }
     const ext = '.jpg';
@@ -65,7 +77,7 @@ export class StorageService {
     const uniqueThumbnailName = `${folderName}/thumb${ext}`;
 
     // Process Preview (Max PREVIEW_MAX_PX x PREVIEW_MAX_PX)
-    const originalPipeline = sharp(buffer)
+    const originalPipeline = sharp(buffer, { limitInputPixels: MAX_INPUT_PIXELS })
       .resize({
         width: PREVIEW_MAX_PX,
         height: PREVIEW_MAX_PX,
@@ -75,7 +87,7 @@ export class StorageService {
       .jpeg({ quality: 80, progressive: true });
 
     // Process Thumbnail (Max THUMBNAIL_MAX_PX x THUMBNAIL_MAX_PX)
-    const thumbnailPipeline = sharp(buffer)
+    const thumbnailPipeline = sharp(buffer, { limitInputPixels: MAX_INPUT_PIXELS })
       .resize({
         width: THUMBNAIL_MAX_PX,
         height: THUMBNAIL_MAX_PX,
@@ -99,9 +111,15 @@ export class StorageService {
       'Content-Type': contentType
     });
 
-    await minioClient.putObject(BUCKET_NAME, uniqueThumbnailName, thumbnailBuffer, thumbnailBuffer.length, {
-      'Content-Type': contentType
-    });
+    try {
+      await minioClient.putObject(BUCKET_NAME, uniqueThumbnailName, thumbnailBuffer, thumbnailBuffer.length, {
+        'Content-Type': contentType
+      });
+    } catch (error) {
+      // Without this the preview stays in the bucket with no row pointing at it.
+      await this.removeKeys([uniqueOriginalName]);
+      throw error;
+    }
 
     return {
       originalUrl: `${PUBLIC_BASE_URL}/${uniqueOriginalName}`,
@@ -111,6 +129,17 @@ export class StorageService {
       height: finalHeight,
       orientation
     };
+  }
+
+  // Best-effort removal of keys we just wrote; a failure is logged, not thrown, so the caller's original error wins.
+  private async removeKeys(keys: string[]): Promise<void> {
+    await Promise.all(
+      keys.map((key) =>
+        minioClient.removeObject(BUCKET_NAME, key).catch((error) => {
+          logger.error("Failed to remove media object from MinIO", { code: "MINIO_DELETE_FAILED", key, error });
+        })
+      )
+    );
   }
 
   /**
@@ -125,13 +154,7 @@ export class StorageService {
       .filter((url): url is string => !!url && url.startsWith(prefix))
       .map((url) => url.slice(prefix.length));
 
-    await Promise.all(
-      [...new Set(keys)].map((key) =>
-        minioClient.removeObject(BUCKET_NAME, key).catch((error) => {
-          logger.error("Failed to remove media object from MinIO", { code: "MINIO_DELETE_FAILED", key, error });
-        })
-      )
-    );
+    await this.removeKeys([...new Set(keys)]);
   }
 
   /**

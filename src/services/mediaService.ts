@@ -7,6 +7,29 @@ import { ConflictError } from "@/common/errors/conflict";
 import { storageService } from "@/modules/storage/StorageService";
 import { generateMediaName } from "@/utils/mediaName";
 
+const UNIQUE_VIOLATION = "23505";
+const CONTENT_HASH_INDEX = "media_content_hash_idx";
+
+// Drizzle wraps the driver error, so the Postgres code can sit on `cause`.
+function isContentHashConflict(error: unknown): boolean {
+  const candidates = [error, (error as { cause?: unknown } | null)?.cause];
+  return candidates.some((candidate) => {
+    const pgError = candidate as { code?: string; constraint_name?: string } | null;
+    return pgError?.code === UNIQUE_VIOLATION && pgError.constraint_name === CONTENT_HASH_INDEX;
+  });
+}
+
+function duplicateMediaError(existing: Media): ConflictError {
+  return new ConflictError(
+    `This file's content is identical to an existing image, "${existing.displayName}".`,
+    "DUPLICATE_MEDIA",
+    [
+      { field: "existingMediaId", message: existing.id },
+      { field: "existingMediaName", message: existing.displayName },
+    ]
+  );
+}
+
 export class MediaService implements IMediaService {
   constructor(
     private mediaRepo: IMediaRepository,
@@ -54,7 +77,19 @@ export class MediaService implements IMediaService {
       contentHash: contentHash ?? createHash("sha256").update(buffer).digest("hex"),
     };
 
-    return this.mediaRepo.save(media);
+    try {
+      return await this.mediaRepo.save(media);
+    } catch (error) {
+      // The two objects are already in the bucket; without a row nothing would ever point at them again.
+      await storageService.deleteImage(processed.originalUrl, processed.thumbnailUrl);
+      // Two simultaneous uploads of one file both pass the check in uploadMedia; the unique index
+      // lets only one row in, and the loser gets the same answer as a sequential duplicate.
+      if (isContentHashConflict(error)) {
+        const existing = await this.mediaRepo.findByContentHash(media.contentHash);
+        if (existing) throw duplicateMediaError(existing);
+      }
+      throw error;
+    }
   }
 
   async uploadMedia(file: File, userId: string): Promise<Media> {
@@ -79,14 +114,7 @@ export class MediaService implements IMediaService {
     const contentHash = createHash("sha256").update(buffer).digest("hex");
     const existing = await this.mediaRepo.findByContentHash(contentHash);
     if (existing) {
-      throw new ConflictError(
-        `This file's content is identical to an existing image, "${existing.displayName}".`,
-        "DUPLICATE_MEDIA",
-        [
-          { field: "existingMediaId", message: existing.id },
-          { field: "existingMediaName", message: existing.displayName },
-        ]
-      );
+      throw duplicateMediaError(existing);
     }
 
     return this.uploadAndSaveMedia(buffer, file.type, userId, contentHash);

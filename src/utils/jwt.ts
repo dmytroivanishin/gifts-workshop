@@ -29,7 +29,7 @@ export const signAccessToken = (userId: string, email: string): Promise<string> 
 
 export const verifyToken = async (token: string): Promise<JWTPayload | null> => {
   try {
-    const { payload } = await jwtVerify(token, getJwtSecret());
+    const { payload } = await jwtVerify(token, getJwtSecret(), { algorithms: ["HS256"] });
     return payload;
   } catch {
     return null;

@@ -593,6 +593,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "media_content_hash_idx": {
+          "name": "media_content_hash_idx",
+          "columns": [
+            {
+              "expression": "content_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -839,6 +854,21 @@
           "columns": [
             {
               "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "posts_poster_id_idx": {
+          "name": "posts_poster_id_idx",
+          "columns": [
+            {
+              "expression": "poster_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

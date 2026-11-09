@@ -5,7 +5,7 @@ import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { tagSchema } from "@/common/validation/schemas";
-import { getPaginationParams } from "@/utils/paginationUtils";
+import { getPaginationParams, getSearchParam } from "@/utils/paginationUtils";
 import { getUserId, isAdminRequest } from "@/utils/auth";
 
 export class TagController {
@@ -13,7 +13,7 @@ export class TagController {
 
   getTags = withErrorHandling(async (request: Request) => {
     const { page, limit } = getPaginationParams(request);
-    const search = new URL(request.url).searchParams.get("search") ?? undefined;
+    const search = getSearchParam(request);
 
     const result = await this.tagService.getAllTags({ page, limit, search });
     // An admin's own session must always see its own just-made writes, not a cached response

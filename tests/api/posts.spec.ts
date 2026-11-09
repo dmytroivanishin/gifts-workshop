@@ -90,9 +90,12 @@ test.describe("posts", () => {
     await collection.cleanup();
   });
 
-  test("category/collection filters with a garbage (nonexistent) slug are an uncaught 500, not 400 or an empty list", async () => {
-    await expectError(await admin.get("/api/v1/posts?category=totally-garbage-no-such-slug"), 500, "INTERNAL_SERVER_ERROR");
-    await expectError(await admin.get("/api/v1/posts?collection=totally-garbage-no-such-slug"), 500, "INTERNAL_SERVER_ERROR");
+  // Used to be an uncaught 500 (the slug reached Postgres as a uuid); an unknown slug now matches nothing.
+  test("category/collection filters with a garbage (nonexistent) slug are an empty list", async () => {
+    for (const filter of ["category", "collection"]) {
+      const res = await expectSuccess<unknown[]>(await admin.get(`/api/v1/posts?${filter}=totally-garbage-no-such-slug`));
+      expect(res.data).toEqual([]);
+    }
   });
 
   test("pagination meta shape; limit is capped at 100", async () => {
@@ -195,6 +198,48 @@ test.describe("posts", () => {
       await tagged.cleanup();
       await untagged.cleanup();
       await tag.cleanup();
+    }
+  });
+
+  test("?category= takes at most 10 values (400 above that), and a category or collection that does not exist gives an empty list", async () => {
+    const category = await createCategory(admin);
+    const post = await createPost(admin, { status: "Published", categoryId: category.id });
+
+    try {
+      const tooMany = Array.from({ length: 11 }, (_, index) => `no-such-category-${index}`).join(",");
+      await expectError(await anon.get(`/api/v1/posts?category=${tooMany}`), 400, "VALIDATION_ERROR");
+
+      const atLimit = Array.from({ length: 9 }, (_, index) => `no-such-category-${index}`).concat(category.slug).join(",");
+      const found = await expectSuccess<Array<{ id: string }>>(await anon.get(`/api/v1/posts?category=${atLimit}&limit=100`));
+      expect(found.data.map((item) => item.id)).toContain(post.id);
+
+      const unknownCategory = await expectSuccess<unknown[]>(await anon.get("/api/v1/posts?category=no-such-category"));
+      expect(unknownCategory.data).toEqual([]);
+      const unknownCollection = await expectSuccess<unknown[]>(await anon.get("/api/v1/posts?collection=no-such-collection"));
+      expect(unknownCollection.data).toEqual([]);
+    } finally {
+      await post.cleanup();
+      await category.cleanup();
+    }
+  });
+
+  test("search sees a post created after an earlier identical search; a very long term is cut, not rejected", async () => {
+    const marker = `findme${Date.now()}`;
+    const first = await createPost(admin, { status: "Published", title: { ru: `${marker} one`, en: `${marker} one` } });
+    let second: Awaited<ReturnType<typeof createPost>> | undefined;
+
+    try {
+      const before = await expectSuccess<Array<{ id: string }>>(await anon.get(`/api/v1/posts?search=${marker}&limit=100`));
+      expect(before.data.map((item) => item.id)).toEqual([first.id]);
+
+      second = await createPost(admin, { status: "Published", title: { ru: `${marker} two`, en: `${marker} two` } });
+      const after = await expectSuccess<Array<{ id: string }>>(await anon.get(`/api/v1/posts?search=${marker}&limit=100`));
+      expect(after.data.map((item) => item.id).sort()).toEqual([first.id, second.id].sort());
+
+      expect((await anon.get(`/api/v1/posts?search=${"a".repeat(5000)}`)).status()).toBe(200);
+    } finally {
+      await first.cleanup();
+      await second?.cleanup();
     }
   });
 });

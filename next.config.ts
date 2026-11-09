@@ -31,8 +31,8 @@ const s3RemotePattern = s3Url
 const cspDirectives = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
-  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-  `font-src 'self' https://fonts.gstatic.com`,
+  `style-src 'self' 'unsafe-inline'`,
+  `font-src 'self'`,
   `img-src 'self' data:${s3Origin ? ` ${s3Origin}` : ""}`,
   `connect-src 'self'${isProd ? "" : " ws://localhost:* http://localhost:*"}`,
   `object-src 'none'`,

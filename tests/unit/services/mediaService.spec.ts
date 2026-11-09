@@ -225,3 +225,47 @@ describe("MediaService.uploadMedia — duplicate detection", () => {
     expect(calls[0][0]).not.toBe(calls[1][0]);
   });
 });
+
+describe("MediaService.uploadAndSaveMedia: orphan cleanup", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("removes the uploaded objects when saving the row fails, and rethrows the original error", async () => {
+    const repo = makeMediaRepo();
+    const failure = new Error("db down");
+    (repo.save as ReturnType<typeof vi.fn>).mockRejectedValue(failure);
+    const service = new MediaService(repo, makePostRepo());
+
+    await expect(service.uploadAndSaveMedia(Buffer.from("x"), "image/png", "user-1")).rejects.toBe(failure);
+
+    expect(storageService.deleteImage).toHaveBeenCalledWith(
+      "http://example.com/original.jpg",
+      "http://example.com/thumb.jpg"
+    );
+  });
+
+  it("turns a unique-index violation on content_hash into DUPLICATE_MEDIA naming the winner", async () => {
+    const winner = media("winner");
+    const repo = makeMediaRepo();
+    (repo.save as ReturnType<typeof vi.fn>).mockRejectedValue(
+      Object.assign(new Error("duplicate key"), {
+        cause: { code: "23505", constraint_name: "media_content_hash_idx" },
+      })
+    );
+    (repo.findByContentHash as ReturnType<typeof vi.fn>).mockResolvedValue(winner);
+    const service = new MediaService(repo, makePostRepo());
+
+    await expect(service.uploadAndSaveMedia(Buffer.from("x"), "image/png", "user-1")).rejects.toMatchObject({
+      statusCode: 409,
+      errorCode: "DUPLICATE_MEDIA",
+    });
+    expect(storageService.deleteImage).toHaveBeenCalled();
+  });
+
+  it("does not touch the bucket cleanup when the row is saved", async () => {
+    const service = new MediaService(makeMediaRepo(), makePostRepo());
+
+    await service.uploadAndSaveMedia(Buffer.from("x"), "image/png", "user-1");
+
+    expect(storageService.deleteImage).not.toHaveBeenCalled();
+  });
+});

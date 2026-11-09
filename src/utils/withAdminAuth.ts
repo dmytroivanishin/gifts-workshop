@@ -16,7 +16,9 @@ export function withAdminAuth<Args extends unknown[]>(
     }
     const response = await handler(request, ...args);
     // A successful admin write changes what public pages may show: new version = browsers refetch.
-    if (response.ok) bumpContentVersion();
+    // A read (the admin-only GET routes use this wrapper too) changes nothing.
+    const isRead = request.method === "GET" || request.method === "HEAD";
+    if (response.ok && !isRead) bumpContentVersion();
     return response;
   };
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { resolveId, resolveMultipleIds } from "@/utils/idResolver";
+import { MAX_MULTI_IDS, resolveId, resolveMultipleIds } from "@/utils/idResolver";
 
 const UUID = "123e4567-e89b-12d3-a456-426614174000";
 
@@ -63,5 +63,16 @@ describe("resolveMultipleIds", () => {
     expect(result).toEqual([UUID, "some-slug"]);
     expect(getBySlug).toHaveBeenCalledTimes(1);
     expect(getBySlug).toHaveBeenCalledWith("some-slug");
+  });
+
+  it("accepts exactly MAX_MULTI_IDS values and rejects one more without running any lookup", async () => {
+    const getBySlug = vi.fn().mockResolvedValue(undefined);
+    const atLimit = Array.from({ length: MAX_MULTI_IDS }, (_, index) => `s${index}`).join(",");
+    await expect(resolveMultipleIds(atLimit, getBySlug)).resolves.toHaveLength(MAX_MULTI_IDS);
+
+    getBySlug.mockClear();
+    const overLimit = Array.from({ length: MAX_MULTI_IDS + 1 }, (_, index) => `s${index}`).join(",");
+    await expect(resolveMultipleIds(overLimit, getBySlug)).rejects.toMatchObject({ statusCode: 400 });
+    expect(getBySlug).not.toHaveBeenCalled();
   });
 });

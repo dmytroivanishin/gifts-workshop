@@ -20,12 +20,17 @@ export class TagService implements ITagService {
     { tags: [TAGS_CACHE_TAG] }
   );
 
+  // Free-text search terms are never cached (every distinct term would add an entry); the plain lists are.
+  private fetchTags(options: TagQueryOptions): Promise<Tag[]> {
+    return options.search ? this.tagRepo.getAll(options) : this.getAllCached(options);
+  }
+
   async getAllTags(options?: TagQueryOptions): Promise<PaginatedResult<Tag>> {
     if (options?.page || options?.limit) {
       const page = options.page || 1;
       const limit = options.limit || 20;
 
-      const tags = await this.getAllCached({
+      const tags = await this.fetchTags({
         page,
         limit: limit + 1,
         offset: (page - 1) * limit,
@@ -35,7 +40,7 @@ export class TagService implements ITagService {
       return paginate(tags, { page, limit });
     }
 
-    const tags = await this.getAllCached({ search: options?.search });
+    const tags = await this.fetchTags({ search: options?.search });
     return paginate(tags, { page: 1, limit: tags.length });
   }
 

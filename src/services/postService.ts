@@ -63,6 +63,10 @@ export class PostService implements IPostService {
     }
   }
 
+  private emptyPage(page: number): PaginatedResult<PopulatedPost> {
+    return { data: [], meta: { page, nextPage: null, prevPage: null, totalItems: 0 } };
+  }
+
   async getFilteredPosts(filters?: QueryOptions): Promise<PaginatedResult<PopulatedPost>> {
     // 1. Build clean database query options
     const dbOptions: QueryOptions = {
@@ -76,21 +80,29 @@ export class PostService implements IPostService {
       const resolved = await resolveMultipleIds(filters.category, (slug) =>
         this.categoryRepo.getBySlug(slug)
       );
-      dbOptions.categoryId = resolved.length === 1 ? resolved[0] : resolved;
+      // A slug that matches no category matches no post (same as an unknown tag): drop it, and if none
+      // is left, answer with an empty page without touching the database or the cache.
+      const known = resolved.filter(isUUID);
+      if (known.length === 0) return this.emptyPage(filters.page || 1);
+      dbOptions.categoryId = known.length === 1 ? known[0] : known;
     }
 
     // 3. Resolve Collection Slug/ID
     if (filters?.collection) {
-      dbOptions.collectionId = await resolveId(filters.collection, (slug) =>
+      const collectionId = await resolveId(filters.collection, (slug) =>
         this.collectionRepo.getBySlug(slug)
       );
+      if (!isUUID(collectionId)) return this.emptyPage(filters.page || 1);
+      dbOptions.collectionId = collectionId;
     }
 
     // 4. Resolve Tag Slug/ID
     if (filters?.tag) {
-      dbOptions.tagsIds = await resolveId(filters.tag, (slug) =>
+      const tagId = await resolveId(filters.tag, (slug) =>
         this.tagRepo.getBySlug(slug)
       );
+      if (!isUUID(tagId)) return this.emptyPage(filters.page || 1);
+      dbOptions.tagsIds = tagId;
     }
 
     // 5. Resolve Post Slug/ID
@@ -103,11 +115,16 @@ export class PostService implements IPostService {
       }
     }
 
+    // A search term is free text chosen by the caller: every distinct one would add a cache entry, so
+    // searches always go to the database (they are rate limited and rare next to plain browsing).
+    const fetchPosts = (options: QueryOptions) =>
+      dbOptions.search ? this.postRepo.getAll(options) : this.getAllCached(options);
+
     if (filters?.page || filters?.limit) {
       const page = filters.page || 1;
       const limit = filters.limit || 20;
 
-      const posts = await this.getAllCached({
+      const posts = await fetchPosts({
         ...dbOptions,
         page,
         limit: limit + 1,
@@ -117,7 +134,7 @@ export class PostService implements IPostService {
       return paginate(posts, { page, limit });
     }
 
-    const posts = await this.getAllCached(dbOptions);
+    const posts = await fetchPosts(dbOptions);
     return {
       data: posts,
       meta: {

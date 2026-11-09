@@ -92,3 +92,14 @@ describe("verifyAdminToken", () => {
     });
   });
 });
+
+describe("verifyToken: algorithm pinning", () => {
+  it("rejects a token signed with the right secret but another HMAC algorithm", async () => {
+    const token = await new SignJWT({ userId: "u", role: "admin", email: "admin@example.com" })
+      .setProtectedHeader({ alg: "HS512" })
+      .setExpirationTime("15m")
+      .sign(new TextEncoder().encode("unit-test-secret"));
+
+    expect(await verifyToken(token)).toBeNull();
+  });
+});

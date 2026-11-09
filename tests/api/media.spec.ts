@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import sharp from "sharp";
 import { test, expect, APIRequestContext } from "@playwright/test";
 import { adminContext, anonContext } from "./helpers/auth";
 import { expectSuccess, expectError } from "./helpers/client";
@@ -81,6 +82,21 @@ test.describe("media", () => {
     await expectError(res, 400, "VALIDATION_ERROR");
   });
 
+  // A flat 7000x7000 PNG is only a few KB on the wire (far under the file-size cap) but 49 megapixels
+  // once decoded; the pixel cap must refuse it with a 400 instead of decoding it into memory.
+  test("an image over the pixel limit is a 400, not a decode attempt", async () => {
+    const hugeFlat = await sharp({
+      create: { width: 7000, height: 7000, channels: 3, background: { r: 10, g: 20, b: 30 } },
+    })
+      .png({ compressionLevel: 9 })
+      .toBuffer();
+
+    const res = await admin.post("/api/v1/media", {
+      multipart: { file: { name: "huge.png", mimeType: "image/png", buffer: hugeFlat } },
+    });
+    await expectError(res, 400, "VALIDATION_ERROR");
+  });
+
   // CP-50 point 4: binary-content hash dedup, hard block. The second upload of byte-identical
   // content is rejected with a 409 naming the existing match, even under a totally different
   // filename — and the original row is completely unaffected.
@@ -105,6 +121,26 @@ test.describe("media", () => {
     await expectSuccess(await admin.get(`/api/v1/media/${original.id}`));
 
     await original.cleanup();
+  });
+
+  // Both requests pass the "is there a row with this hash" check before either saves; only the unique
+  // index on content_hash keeps a second row out, and the loser must still answer 409, not 500.
+  test("two simultaneous uploads of the same bytes: one wins, the other is DUPLICATE_MEDIA", async () => {
+    const buffer = await tinyPng();
+    const send = (name: string) =>
+      admin.post("/api/v1/media", { multipart: { file: { name, mimeType: "image/png", buffer } } });
+
+    const [first, second] = await Promise.all([send("race-a.png"), send("race-b.png")]);
+    const statuses = [first.status(), second.status()].sort();
+    expect(statuses).toEqual([200, 409]);
+
+    const winner = first.status() === 200 ? first : second;
+    const loser = first.status() === 200 ? second : first;
+    const body = await expectError(loser, 409, "DUPLICATE_MEDIA");
+    const created = (await winner.json()).data as { id: string };
+    expect(body.error.details).toEqual(expect.arrayContaining([{ field: "existingMediaId", message: created.id }]));
+
+    await expectSuccess(await admin.delete(`/api/v1/media/${created.id}`));
   });
 
   test("two uploads with different content both succeed and coexist", async () => {

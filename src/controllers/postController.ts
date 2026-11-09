@@ -5,7 +5,7 @@ import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { postSchema, bulkIdsSchema } from "@/common/validation/schemas";
 import { resolveId } from "@/utils/idResolver";
 import { getUserId, isAdminRequest } from "@/utils/auth";
-import { getPaginationParams } from "@/utils/paginationUtils";
+import { getPaginationParams, getSearchParam } from "@/utils/paginationUtils";
 import { isUUID } from "@/utils/uuid";
 import { resolveStatusFilter, visibleToViewer } from "@/utils/postVisibility";
 export class PostController {
@@ -13,7 +13,7 @@ export class PostController {
 
   getPosts = withErrorHandling(async (request: Request) => {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search") || undefined;
+    const search = getSearchParam(request);
     const category = searchParams.get("category") || undefined;
     const tag = searchParams.get("tag") || undefined;
     const collection = searchParams.get("collection") || undefined;

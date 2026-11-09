@@ -7,14 +7,14 @@ import { mediaSchema, bulkIdsSchema } from "@/common/validation/schemas";
 import { getUserId } from "@/utils/auth";
 import { ValidationError } from "@/common/errors/validation";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
-import { getPaginationParams } from "@/utils/paginationUtils";
+import { getPaginationParams, getSearchParam } from "@/utils/paginationUtils";
 
 export class MediaController {
   constructor(private mediaService: IMediaService) {}
 
   getMedia = withErrorHandling(async (request: Request) => {
     const { page, limit } = getPaginationParams(request);
-    const search = new URL(request.url).searchParams.get("search") ?? undefined;
+    const search = getSearchParam(request);
     const result = await this.mediaService.getAllMedia({ page, limit, search });
     return sendSuccess(result.data, result.meta);
   });

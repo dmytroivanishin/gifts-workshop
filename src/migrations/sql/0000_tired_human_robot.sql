@@ -162,11 +162,13 @@ CREATE INDEX "collections_user_id_idx" ON "collections" USING btree ("user_id");
 CREATE INDEX "colors_user_id_idx" ON "colors" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "comments_post_id_idx" ON "comments" USING btree ("post_id");--> statement-breakpoint
 CREATE INDEX "comments_reply_id_idx" ON "comments" USING btree ("reply_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "media_content_hash_idx" ON "media" USING btree ("content_hash");--> statement-breakpoint
 CREATE INDEX "media_user_id_idx" ON "media" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "posts_collection_id_idx" ON "posts" USING btree ("collection_id");--> statement-breakpoint
 CREATE INDEX "posts_category_id_idx" ON "posts" USING btree ("category_id");--> statement-breakpoint
 CREATE INDEX "posts_user_id_idx" ON "posts" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "posts_status_idx" ON "posts" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "posts_poster_id_idx" ON "posts" USING btree ("poster_id");--> statement-breakpoint
 CREATE INDEX "posts_to_media_media_id_idx" ON "posts_to_media" USING btree ("media_id");--> statement-breakpoint
 CREATE INDEX "posts_to_tags_tag_id_idx" ON "posts_to_tags" USING btree ("tag_id");--> statement-breakpoint
 CREATE INDEX "pages_user_id_idx" ON "pages" USING btree ("user_id");--> statement-breakpoint

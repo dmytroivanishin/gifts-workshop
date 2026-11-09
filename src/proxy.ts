@@ -3,23 +3,9 @@ import type { NextRequest } from "next/server";
 import { verifyAdminToken } from "@/utils/jwt";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
 import { TooManyRequestsError } from "@/common/errors/tooManyRequests";
-import { RATE_LIMITS, checkRateLimit, getClientKey, type RateLimitRule } from "@/utils/rateLimit";
+import { PUBLIC_COMMENT_POST, checkRateLimit, getClientKey, resolveRateLimitRule } from "@/utils/rateLimit";
 
-const PUBLIC_COMMENT_POST = /^\/api\/v1\/posts\/[a-zA-Z0-9_-]+\/comments$/;
-const MEDIA_UPLOAD = /^\/api\/v1\/media\/?$/;
-
-// Only the routes that are public or expensive: login, the anonymous comment form and uploads
 const MUTATING_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
-
-function resolveRateLimitRule(method: string, pathname: string): RateLimitRule | undefined {
-  if (pathname.startsWith("/api/v1/auth/")) return RATE_LIMITS.auth;
-  if (method === "POST" && PUBLIC_COMMENT_POST.test(pathname)) return RATE_LIMITS.comment;
-  if (method === "POST" && MEDIA_UPLOAD.test(pathname)) return RATE_LIMITS.upload;
-  // Every other authenticated write (categories, posts, tags, media edits/deletes, …): see
-  // RATE_LIMITS.adminWrite for why the limit is this loose.
-  if (MUTATING_METHODS.includes(method) && pathname.startsWith("/api/v1/")) return RATE_LIMITS.adminWrite;
-  return undefined;
-}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -35,7 +21,10 @@ export async function proxy(request: NextRequest) {
 
   // 2. Protect Backend API Mutation Routes
   if (pathname.startsWith("/api/v1/")) {
-    const rateLimitRule = resolveRateLimitRule(request.method, pathname);
+    // Admin reads skip the public-read limit; the token is checked again below where it matters.
+    const accessToken = request.cookies.get("accessToken")?.value;
+    const isAdmin = accessToken ? (await verifyAdminToken(accessToken)) !== null : false;
+    const rateLimitRule = resolveRateLimitRule(request.method, pathname, isAdmin);
     if (rateLimitRule) {
       const result = await checkRateLimit(rateLimitRule, getClientKey(request.headers));
       if (!result.allowed) {
