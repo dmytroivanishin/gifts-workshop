@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Heart, ChevronRight, ChevronLeft } from "lucide-react";
+import { InStockRibbon } from "@/components/features/InStockRibbon";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { MEDIA_PLACEHOLDER_DATA_URL, handleImageLoadError } from "@/utils/mediaPlaceholder";
@@ -90,10 +91,12 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
       whileHover={{ y: -6 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
       className={cn(
-        "group relative flex flex-col overflow-hidden cursor-pointer h-full bg-transparent",
+        "group relative flex flex-col cursor-pointer h-full bg-transparent",
         className
       )}
     >
+      {/* Sits on the card root, outside the clipped image box, because the flap and the top of the body stick out above the photo */}
+      {post.inStock && <InStockRibbon />}
       <Link href={`/posts/${post.slug || post.id}`} className="flex flex-col h-full">
         {/* Image Gallery */}
         <div className="relative aspect-square w-full overflow-hidden bg-muted rounded-2xl shrink-0">
