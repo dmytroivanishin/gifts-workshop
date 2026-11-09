@@ -1,12 +1,14 @@
 [
   {
     "id": "ca000001-beef-4000-8000-000000000001",
-    "slug": "works",
+    "slug": "designer-collection",
     "title": {
-      "ru": "Авторская коллекция"
+      "ru": "Авторская коллекция",
+      "en": "Designer collection"
     },
     "description": {
-      "ru": "Уникальные изделия ручной работы: от уютных игрушек до стильного текстиля, созданные с любовью и вниманием к каждой детали."
+      "ru": "Уникальные изделия ручной работы: от уютных игрушек до стильного текстиля, созданные с любовью и вниманием к каждой детали.",
+      "en": "Unique handmade items, from cozy toys to stylish textiles, made with love and attention to every detail."
     },
     "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
     "main": true

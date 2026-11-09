@@ -4,10 +4,12 @@
     "order": 1,
     "slug": "plush-stories",
     "title": {
-      "ru": "Плюшевые истории"
+      "ru": "Плюшевые истории",
+      "en": "Plush stories"
     },
     "description": {
-      "ru": "Авторские мягкие игрушки, созданные с любовью и теплом, чтобы стать верными друзьями для детей и взрослых."
+      "ru": "Авторские мягкие игрушки, созданные с любовью и теплом, чтобы стать верными друзьями для детей и взрослых.",
+      "en": "Author soft toys made with love and warmth, to become loyal friends for children and adults."
     },
     "collectionId": "ca000001-beef-4000-8000-000000000001",
     "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
@@ -19,10 +21,12 @@
     "order": 2,
     "slug": "dolls",
     "title": {
-      "ru": "Куколки"
+      "ru": "Куколки",
+      "en": "Dolls"
     },
     "description": {
-      "ru": "Изысканные интерьерные куклы ручной работы, которые добавят неповторимый шарм и уют в атмосферу вашего дома."
+      "ru": "Изысканные интерьерные куклы ручной работы, которые добавят неповторимый шарм и уют в атмосферу вашего дома.",
+      "en": "Exquisite handmade interior dolls that add unique charm and coziness to your home."
     },
     "collectionId": "ca000001-beef-4000-8000-000000000001",
     "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
@@ -34,10 +38,12 @@
     "order": 3,
     "slug": "kitchen-coziness",
     "title": {
-      "ru": "Уют на кухне"
+      "ru": "Уют на кухне",
+      "en": "Kitchen coziness"
     },
     "description": {
-      "ru": "Стильный и практичный кухонный текстиль, превращающий ежедневные хлопоты в удовольствие и создающий гармонию пространства."
+      "ru": "Стильный и практичный кухонный текстиль, превращающий ежедневные хлопоты в удовольствие и создающий гармонию пространства.",
+      "en": "Stylish and practical kitchen textiles that turn everyday chores into pleasure and create harmony in your space."
     },
     "collectionId": "ca000001-beef-4000-8000-000000000001",
     "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
@@ -49,10 +55,12 @@
     "order": 4,
     "slug": "family-traditions",
     "title": {
-      "ru": "Семейные традиции"
+      "ru": "Семейные традиции",
+      "en": "Family traditions"
     },
     "description": {
-      "ru": "Уникальные изделия в технике пэчворк, хранящие тепло ручной работы и создающие атмосферу настоящих семейных традиций."
+      "ru": "Уникальные изделия в технике пэчворк, хранящие тепло ручной работы и создающие атмосферу настоящих семейных традиций.",
+      "en": "Unique patchwork pieces that keep the warmth of handmade work and create the atmosphere of true family traditions."
     },
     "collectionId": "ca000001-beef-4000-8000-000000000001",
     "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
@@ -64,10 +72,12 @@
     "order": 5,
     "slug": "for-beloved-home",
     "title": {
-      "ru": "Для любимого дома"
+      "ru": "Для любимого дома",
+      "en": "For a beloved home"
     },
     "description": {
-      "ru": "Оригинальные предметы интерьера, бережно созданные для того, чтобы наполнить ваш дом особым уютом и душевностью."
+      "ru": "Оригинальные предметы интерьера, бережно созданные для того, чтобы наполнить ваш дом особым уютом и душевностью.",
+      "en": "Original interior items, carefully made to fill your home with special coziness and warmth."
     },
     "collectionId": "ca000001-beef-4000-8000-000000000001",
     "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
@@ -79,10 +89,12 @@
     "order": 6,
     "slug": "joy-in-details",
     "title": {
-      "ru": "Радость в деталях"
+      "ru": "Радость в деталях",
+      "en": "Joy in details"
     },
     "description": {
-      "ru": "Милые декоративные аксессуары и душевные подарки, которые помогут выразить ваши чувства и подарят радость близким."
+      "ru": "Милые декоративные аксессуары и душевные подарки, которые помогут выразить ваши чувства и подарят радость близким.",
+      "en": "Charming decorative accessories and heartfelt gifts that help you express your feelings and bring joy to loved ones."
     },
     "collectionId": "ca000001-beef-4000-8000-000000000001",
     "userId": "c0a80101-1111-4444-9999-abcdefabcdef",
