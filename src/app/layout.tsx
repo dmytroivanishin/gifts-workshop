@@ -16,6 +16,8 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
 });
 import { ReduxProvider } from "@/store/Provider";
+import { ContentVersion } from "@/store/ContentVersion";
+import { getContentVersion } from "@/utils/contentVersion";
 import { I18nProvider } from "@/i18n";
 import { systemTextService } from "@/modules/core/container";
 import { env } from "@/modules/core/env";
@@ -67,6 +69,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ReduxProvider>
+          <ContentVersion value={String(getContentVersion())} />
           <I18nProvider 
             systemTexts={systemTextsRes.data || []} 
             initialLocale={locale}

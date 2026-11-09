@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/utils/auth";
 import { sendError } from "@/utils/apiResponse";
+import { bumpContentVersion } from "@/utils/contentVersion";
 
 // Route-level auth gate: a second, independent check on top of proxy.ts, so a bypass of the
 // proxy does not leave writes open. Lives at the route.ts layer (not in controllers) so
@@ -13,6 +14,9 @@ export function withAdminAuth<Args extends unknown[]>(
     } catch (error) {
       return sendError(error);
     }
-    return handler(request, ...args);
+    const response = await handler(request, ...args);
+    // A successful admin write changes what public pages may show: new version = browsers refetch.
+    if (response.ok) bumpContentVersion();
+    return response;
   };
 }

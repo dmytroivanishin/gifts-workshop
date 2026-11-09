@@ -8,11 +8,32 @@ const baseQuery = fetchBaseQuery({
   credentials: "include"
 });
 
+// Set from the server-rendered root layout (see ContentVersion). The public site adds it to GET
+// URLs so the browser's long-lived cache is bypassed the moment content changes.
+let contentVersion: string | null = null;
+export function setContentVersion(value: string): void {
+  contentVersion = value;
+}
+
+// Admin works in real time: no browser cache at all. Public keeps the browser cache, keyed by version.
+const cachingBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = (args, api, extraOptions) => {
+  const request: FetchArgs = typeof args === "string" ? { url: args } : { ...args };
+  const isGet = !request.method || request.method.toUpperCase() === "GET";
+  if (isGet && typeof window !== "undefined") {
+    if (window.location.pathname.startsWith("/admin")) {
+      request.cache = "no-store";
+    } else if (contentVersion) {
+      request.url += (request.url.includes("?") ? "&" : "?") + `v=${contentVersion}`;
+    }
+  }
+  return baseQuery(request, api, extraOptions);
+};
+
 let isRefreshing = false;
 let refreshPromise: ReturnType<typeof baseQuery> | null = null;
 
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
-  const result = await baseQuery(args, api, extraOptions);
+  const result = await cachingBaseQuery(args, api, extraOptions);
   
   if (!result.error || result.error.status !== 401) {
     return result;
@@ -20,7 +41,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 
   if (isRefreshing) {
     await refreshPromise;
-    return baseQuery(args, api, extraOptions);
+    return cachingBaseQuery(args, api, extraOptions);
   }
 
   isRefreshing = true;
@@ -35,7 +56,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   refreshPromise = null;
 
   if (refreshResult.data) {
-    return baseQuery(args, api, extraOptions);
+    return cachingBaseQuery(args, api, extraOptions);
   } 
   
   if (typeof window !== 'undefined') {
