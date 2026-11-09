@@ -50,9 +50,9 @@ export function decodeOAuthCookie(value: string | undefined): { state: string; v
 }
 
 export function statesMatch(expected: string, received: string): boolean {
-  const a = Buffer.from(expected);
-  const b = Buffer.from(received);
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+  const expectedBuffer = Buffer.from(expected);
+  const receivedBuffer = Buffer.from(received);
+  return expectedBuffer.length === receivedBuffer.length && crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
 }
 
 // Checks signature, issuer, audience (our client id) and expiry against Google's published keys, then requires a verified email

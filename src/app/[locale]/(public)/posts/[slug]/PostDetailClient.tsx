@@ -62,8 +62,8 @@ export default function PostDetailClient({ slug, initialPost }: PostDetailClient
   // upload pipeline and MediaService.saveMedia's external-URL path back-fill one from the other), so
   // a missing thumbnailUrl means there's no real originalUrl to fall back to either — straight to
   // the themed placeholder instead of chaining both fields.
-  const galleryMedia = post.media.map((m) => m.media);
-  const images = galleryMedia.map((m) => m?.originalUrl || MEDIA_PLACEHOLDER_DATA_URL);
+  const galleryMedia = post.media.map((postMedia) => postMedia.media);
+  const images = galleryMedia.map((media) => media?.originalUrl || MEDIA_PLACEHOLDER_DATA_URL);
 
   // A Draft/Archived post can legitimately have no category (postSchema only requires one for
   // Published); an admin previewing such a post by its public URL must not crash on it.
@@ -203,12 +203,12 @@ export default function PostDetailClient({ slug, initialPost }: PostDetailClient
               </h2>
 
               <div className="flex flex-wrap gap-3">
-                {socialLinks.map((social, idx) => {
+                {socialLinks.map((social, index) => {
                   const iconKey = social.icon.toLowerCase();
                   const IconComponent = ICON_MAP[iconKey] || LinkIcon;
                   return (
                     <a
-                      key={idx}
+                      key={index}
                       href={social.link}
                       target="_blank"
                       rel="noopener noreferrer"

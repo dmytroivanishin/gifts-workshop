@@ -7,7 +7,7 @@ import { logger } from "@/modules/logger";
 export async function getMenuPages(): Promise<MenuPage[]> {
   try {
     const pages = await pageService.getAllPages();
-    return pages.filter((p) => p.showInMenu).map((p) => ({ slug: p.slug, title: p.title }));
+    return pages.filter((page) => page.showInMenu).map((page) => ({ slug: page.slug, title: page.title }));
   } catch (error: unknown) {
     logger.error("Failed to load menu pages", { error: error instanceof Error ? error.message : String(error) });
     return [];

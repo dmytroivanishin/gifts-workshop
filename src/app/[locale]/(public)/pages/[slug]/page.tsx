@@ -1,12 +1,11 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { pageService } from "@/modules/core/container";
-import { env } from "@/modules/core/env";
 import { BackToHomeLink } from "@/components/shared/BackToHomeLink";
 import { getLocalizedField } from "@/utils/localization";
+import { APP_URL, languageAlternates } from "@/utils/seo";
 import { Page } from "@/types";
 
-const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 interface InfoPageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -16,7 +15,7 @@ interface InfoPageProps {
 // query per request, so a busy info page does not hit Postgres each time.
 async function findPage(slug: string): Promise<Page | undefined> {
   const pages = await pageService.getAllPages();
-  return pages.find((p) => p.slug === slug);
+  return pages.find((page) => page.slug === slug);
 }
 
 // First 160 characters of the text with line breaks and runs of spaces collapsed: only for the
@@ -33,7 +32,7 @@ export async function generateMetadata({ params }: InfoPageProps): Promise<Metad
 
   const title = getLocalizedField(page.title, locale);
   const description = toMetaDescription(getLocalizedField(page.description, locale));
-  const url = `${appUrl}/${locale}/pages/${page.slug}`;
+  const url = `${APP_URL}/${locale}/pages/${page.slug}`;
 
   return {
     title,
@@ -41,13 +40,7 @@ export async function generateMetadata({ params }: InfoPageProps): Promise<Metad
     openGraph: { title, description: description || undefined, url, type: "website", locale: locale === "en" ? "en_US" : "ru_RU" },
     alternates: {
       canonical: url,
-      languages: {
-        ...env.SUPPORTED_LOCALES.reduce((acc, l) => {
-          acc[l] = `${appUrl}/${l}/pages/${page.slug}`;
-          return acc;
-        }, {} as Record<string, string>),
-        "x-default": `${appUrl}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC || "en"}/pages/${page.slug}`,
-      },
+      languages: languageAlternates(`/pages/${page.slug}`, { withDefault: true }),
     },
   };
 }

@@ -23,17 +23,17 @@ interface Syllable {
 // another empty-onset "i" reads as the "iji"-style noise this was rewritten to avoid).
 function randomOnset(prev: Syllable | null): string {
   const prevEndedInVowel = prev !== null && prev.coda === "";
-  const r = Math.random();
+  const roll = Math.random();
   let onset: string;
-  if (r < 0.55) onset = pick(CONSONANTS);
-  else if (r < 0.85) onset = pick(CONSONANT_CLUSTERS);
+  if (roll < 0.55) onset = pick(CONSONANTS);
+  else if (roll < 0.85) onset = pick(CONSONANT_CLUSTERS);
   else onset = prevEndedInVowel ? pick(CONSONANTS) : "";
 
   // Avoid the new syllable's onset echoing the exact consonant sound that just closed the
   // previous one (its own onset or coda) — a stutter like "...ar" + "ra..." = "...arra...".
   if (prev && onset !== "" && (onset === prev.onset || onset === prev.coda)) {
     const alternatives = [...CONSONANTS, ...CONSONANT_CLUSTERS].filter(
-      (c) => c !== prev.onset && c !== prev.coda
+      (consonant) => consonant !== prev.onset && consonant !== prev.coda
     );
     onset = pick(alternatives);
   }
@@ -52,8 +52,8 @@ function randomSyllable(prev: Syllable | null): Syllable {
   return { onset: randomOnset(prev), nucleus: randomNucleus(), coda: randomCoda() };
 }
 
-function syllableText(s: Syllable): string {
-  return s.onset + s.nucleus + s.coda;
+function syllableText(syllable: Syllable): string {
+  return syllable.onset + syllable.nucleus + syllable.coda;
 }
 
 // A plain "spelling" gate on the fully assembled word: no run of 3+ vowel-alphabet letters and no
@@ -99,7 +99,7 @@ export function generateMediaName(): string {
 // Never shown anywhere; the displayed name is only the bare generateMediaName() word.
 export function generateStorageSuffix(): string {
   let suffix = "";
-  for (let i = 0; i < 6; i++) {
+  for (let index = 0; index < 6; index++) {
     suffix += SUFFIX_CHARS[Math.floor(Math.random() * SUFFIX_CHARS.length)];
   }
   return suffix;

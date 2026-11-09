@@ -45,8 +45,8 @@ export function useTagsList(search: string): UseTagsListResult {
       setTags(data.data);
     } else {
       setTags((prev) => {
-        const existingIds = new Set(prev.map((t) => t.id));
-        const newTags = data.data.filter((t) => !existingIds.has(t.id));
+        const existingIds = new Set(prev.map((tag) => tag.id));
+        const newTags = data.data.filter((tag) => !existingIds.has(tag.id));
         return [...prev, ...newTags];
       });
     }
@@ -54,7 +54,7 @@ export function useTagsList(search: string): UseTagsListResult {
 
   const loadMore = () => {
     if (hasMore && !isFetching) {
-      setPage((p) => p + 1);
+      setPage((previousPage) => previousPage + 1);
     }
   };
 

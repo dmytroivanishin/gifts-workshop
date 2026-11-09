@@ -102,15 +102,15 @@ export function SortableCategoryGroup<T extends SortableCategoryItem>({
 
   const children = useMemo(() => {
     return items
-      .filter((c) => c.parentId === parentId)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
+      .filter((child) => child.parentId === parentId)
+      .sort((first, second) => (first.order || 0) - (second.order || 0));
   }, [items, parentId]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = children.findIndex((i) => i.id === active.id);
-      const newIndex = children.findIndex((i) => i.id === over.id);
+      const oldIndex = children.findIndex((item) => item.id === active.id);
+      const newIndex = children.findIndex((item) => item.id === over.id);
       onReorder(arrayMove(children, oldIndex, newIndex));
     }
   };
@@ -125,7 +125,7 @@ export function SortableCategoryGroup<T extends SortableCategoryItem>({
     >
       <div className="flex flex-col gap-0 divide-y divide-border/45 border-y border-border/45 first:border-t-0">
         <SortableContext
-          items={children.map((i) => i.id)}
+          items={children.map((item) => item.id)}
           strategy={verticalListSortingStrategy}
         >
           {children.map((item) => (
@@ -135,7 +135,7 @@ export function SortableCategoryGroup<T extends SortableCategoryItem>({
               </SortableItemWrapper>
               
               {/* Recursive child rendering */}
-              {items.some((c) => c.parentId === item.id) && (
+              {items.some((child) => child.parentId === item.id) && (
                 <div className="pl-6 border-l-2 border-primary/20 ml-6 bg-muted/5">
                   <SortableCategoryGroup
                     parentId={item.id}

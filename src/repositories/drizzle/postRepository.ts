@@ -5,6 +5,7 @@ import { drizzleDatabase } from "./database";
 import { eq, and, or, sql, inArray, desc } from "drizzle-orm";
 import { IPostRepository, QueryOptions } from "../interfaces";
 import { isUUID } from "@/utils/uuid";
+import { diffIds } from "./upsert";
 
 type PostRecord = typeof posts.$inferSelect & {
   postsToTags?: { tag: typeof tags.$inferSelect }[];
@@ -20,7 +21,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
 
   private mapToPopulated(record: PostRecord): PopulatedPost {
     if (!record) return record as unknown as PopulatedPost;
-    const tagsList = record.postsToTags?.map((pt) => pt.tag) || [];
+    const tagsList = record.postsToTags?.map((postTag) => postTag.tag) || [];
 
     const mediaList: PopulatedPostMedia[] = record.postsToMedia?.map((pm) => ({
       id: pm.media.id,
@@ -30,7 +31,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
       media: pm.media as unknown as PopulatedPostMedia["media"]
     })) || [];
 
-    mediaList.sort((a, b) => a.order - b.order);
+    mediaList.sort((first, second) => first.order - second.order);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deliberately excluding these relations from restRecord, not using them.
     const { postsToTags, postsToMedia, ...restRecord } = record;
 
@@ -38,7 +39,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
       ...restRecord,
       media: mediaList,
       tags: tagsList,
-      tagsIds: tagsList.map((t) => t.id),
+      tagsIds: tagsList.map((tag) => tag.id),
     } as unknown as PopulatedPost;
   }
 
@@ -84,7 +85,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
   }
 
   override async getAll(options?: QueryOptions): Promise<PopulatedPost[]> {
-    if (options && Object.keys(options).some(k => !['page', 'limit', 'offset'].includes(k))) {
+    if (options && Object.keys(options).some(key => !['page', 'limit', 'offset'].includes(key))) {
       return this.getByQuery(options, options);
     }
 
@@ -261,10 +262,9 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
 
       if (tagsIds) {
         const existingTags = await tx.select({ tagId: postsToTags.tagId }).from(postsToTags).where(eq(postsToTags.postId, savedId));
-        const existingTagIds = existingTags.map(t => t.tagId);
+        const existingTagIds = existingTags.map(link => link.tagId);
 
-        const toAdd = tagsIds.filter((id: string) => !existingTagIds.includes(id));
-        const toRemove = existingTagIds.filter(id => !tagsIds.includes(id));
+        const { toAdd, toRemove } = diffIds(existingTagIds, tagsIds);
 
         if (toRemove.length > 0) {
           await tx.delete(postsToTags).where(and(eq(postsToTags.postId, savedId), inArray(postsToTags.tagId, toRemove)));
@@ -284,11 +284,11 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
          await tx.delete(postsToMedia).where(eq(postsToMedia.postId, savedId));
          if (postMediaItems.length > 0) {
            await tx.insert(postsToMedia).values(
-             postMediaItems.map((m) => ({
+             postMediaItems.map((postMedia) => ({
                postId: savedId,
-               mediaId: m.mediaId,
-               order: m.order,
-               position: m.position
+               mediaId: postMedia.mediaId,
+               order: postMedia.order,
+               position: postMedia.position
              }))
            );
          }

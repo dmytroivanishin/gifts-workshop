@@ -29,21 +29,21 @@ function LoginContent() {
   const handleCodeExchange = useCallback(async (code: string, state: string) => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/auth/google/exchange", {
+      const response = await fetch("/api/v1/auth/google/exchange", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, state }),
       });
 
-      const data = await res.json();
-      if (!res.ok || data.error) {
+      const data = await response.json();
+      if (!response.ok || data.error) {
         throw new Error(errorText(data, "GOOGLE_LOGIN_FAILED"));
       }
 
       router.push("/admin/posts");
-    } catch (err: unknown) {
-      console.error(err);
-      toast.error(err instanceof Error ? err.message : t("GOOGLE_LOGIN_FAILED"));
+    } catch (error: unknown) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : t("GOOGLE_LOGIN_FAILED"));
       // Drops the used code and state from the address bar
       router.replace("/admin/login");
       setIsLoading(false);
@@ -68,17 +68,17 @@ function LoginContent() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/auth/google/start", { method: "POST" });
-      const data = await res.json();
+      const response = await fetch("/api/v1/auth/google/start", { method: "POST" });
+      const data = await response.json();
       const googleAuthUrl: unknown = data.data?.url;
 
-      if (!res.ok || typeof googleAuthUrl !== "string") {
+      if (!response.ok || typeof googleAuthUrl !== "string") {
         throw new Error(errorText(data, "GOOGLE_LOGIN_FAILED"));
       }
 
       window.location.href = googleAuthUrl;
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t("GOOGLE_LOGIN_FAILED"));
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : t("GOOGLE_LOGIN_FAILED"));
       setIsLoading(false);
     }
   };
@@ -87,18 +87,18 @@ function LoginContent() {
   const handleDevBypass = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/auth/dev-login", {
+      const response = await fetch("/api/v1/auth/dev-login", {
         method: "POST",
       });
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok || data.error) {
+      if (!response.ok || data.error) {
         throw new Error(errorText(data, "UNKNOWN_ERROR"));
       }
 
       router.push("/admin/posts");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t("UNKNOWN_ERROR"));
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : t("UNKNOWN_ERROR"));
       setIsLoading(false);
     }
   };

@@ -114,7 +114,7 @@ export class CategoryService implements ICategoryService {
       ]);
     }
 
-    if (!categoriesList.some((c) => c.id === parentId)) {
+    if (!categoriesList.some((category) => category.id === parentId)) {
       throw new ValidationError("Parent category does not exist", [
         { field: "parentId", message: "Parent category not found" }
       ]);
@@ -133,7 +133,7 @@ export class CategoryService implements ICategoryService {
         ]);
       }
 
-      const parentCategory = categoriesList.find((c) => c.id === currentParentId);
+      const parentCategory = categoriesList.find((category) => category.id === currentParentId);
       currentParentId = parentCategory?.parentId;
     }
   }

@@ -73,7 +73,7 @@ export async function generateSlugFromField(field: string | LocalizedText | unde
     }
     
     // Otherwise, pick the first available string and translate it
-    const availableVal = Object.values(field).find(v => typeof v === "string" && v.trim().length > 0);
+    const availableVal = Object.values(field).find(value => typeof value === "string" && value.trim().length > 0);
     if (availableVal) {
       return generateSlug(availableVal as string);
     }

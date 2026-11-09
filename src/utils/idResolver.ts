@@ -30,7 +30,7 @@ export async function resolveMultipleIds<T extends { id: string }>(
   value: string,
   getBySlug: (slug: string) => Promise<T | undefined>
 ): Promise<string[]> {
-  const parts = value.split(",").map(p => p.trim()).filter(Boolean);
+  const parts = value.split(",").map(part => part.trim()).filter(Boolean);
   if (parts.length > MAX_MULTI_IDS) {
     throw new ValidationError(`Too many values: at most ${MAX_MULTI_IDS} are allowed.`);
   }

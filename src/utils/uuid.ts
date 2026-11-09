@@ -1,4 +1,4 @@
-export function isUUID(val: string): boolean {
+export function isUUID(value: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(val);
+  return uuidRegex.test(value);
 }

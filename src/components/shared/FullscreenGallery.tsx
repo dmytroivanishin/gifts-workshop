@@ -47,10 +47,10 @@ export function FullscreenGallery({
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") goToNext();
-      if (e.key === "ArrowLeft") goToPrev();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      if (event.key === "ArrowRight") goToNext();
+      if (event.key === "ArrowLeft") goToPrev();
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -76,8 +76,8 @@ export function FullscreenGallery({
         <>
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={(event) => {
+              event.stopPropagation();
               goToPrev();
             }}
             className="absolute left-4 lg:left-8 z-[110] p-2 lg:p-3 max-md:hidden pointer-coarse:hidden rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
@@ -88,8 +88,8 @@ export function FullscreenGallery({
 
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={(event) => {
+              event.stopPropagation();
               goToNext();
             }}
             className="absolute right-4 lg:right-8 z-[110] p-2 lg:p-3 max-md:hidden pointer-coarse:hidden rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
@@ -115,12 +115,12 @@ export function FullscreenGallery({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="max-w-full max-h-full object-contain select-none shadow-2xl cursor-default rounded-2xl"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
             onError={handleImageLoadError}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
-            onDragEnd={(e, { offset }) => {
+            onDragEnd={(event, { offset }) => {
               const swipe = offset.x;
               if (swipe < -50) goToNext();
               else if (swipe > 50) goToPrev();

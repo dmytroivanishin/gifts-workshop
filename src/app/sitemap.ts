@@ -2,8 +2,8 @@ import { MetadataRoute } from "next";
 import { postService, pageService } from "@/modules/core/container";
 import { env } from "@/modules/core/env";
 import { logger } from "@/modules/logger";
+import { APP_URL, languageAlternates } from "@/utils/seo";
 
-const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 // Cached by default, so it would be built once with the DB state (or an unreachable DB) of `next build`
 export const dynamic = "force-dynamic";
@@ -14,34 +14,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const locale of locales) {
     sitemapEntries.push({
-      url: `${appUrl}/${locale}`,
+      url: `${APP_URL}/${locale}`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1,
       alternates: {
-        languages: locales.reduce((acc, l) => {
-          acc[l] = `${appUrl}/${l}`;
-          return acc;
-        }, {} as Record<string, string>)
+        languages: languageAlternates()
       }
     });
   }
 
   try {
     // The fixed "site map" page and every info page, in each language.
-    const infoPaths = ["sitemap", ...(await pageService.getAllPages()).map((p) => `pages/${p.slug}`)];
+    const infoPaths = ["sitemap", ...(await pageService.getAllPages()).map((page) => `pages/${page.slug}`)];
     for (const path of infoPaths) {
       for (const locale of locales) {
         sitemapEntries.push({
-          url: `${appUrl}/${locale}/${path}`,
+          url: `${APP_URL}/${locale}/${path}`,
           lastModified: new Date(),
           changeFrequency: "monthly",
           priority: 0.5,
           alternates: {
-            languages: locales.reduce((acc, l) => {
-              acc[l] = `${appUrl}/${l}/${path}`;
-              return acc;
-            }, {} as Record<string, string>)
+            languages: languageAlternates(`/${path}`)
           }
         });
       }
@@ -56,15 +50,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         for (const locale of locales) {
           const postSlug = post.slug || post.id;
           sitemapEntries.push({
-            url: `${appUrl}/${locale}/posts/${postSlug}`,
+            url: `${APP_URL}/${locale}/posts/${postSlug}`,
             lastModified: post.createdAt ? new Date(post.createdAt) : new Date(),
             changeFrequency: "weekly",
             priority: 0.8,
             alternates: {
-              languages: locales.reduce((acc, l) => {
-                acc[l] = `${appUrl}/${l}/posts/${postSlug}`;
-                return acc;
-              }, {} as Record<string, string>)
+              languages: languageAlternates(`/posts/${postSlug}`)
             }
           });
         }

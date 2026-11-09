@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getLocalizedField } from "@/utils/localization";
+import { getLocalizedField, hasLocalizedValue } from "@/utils/localization";
 
 describe("getLocalizedField", () => {
   it("returns an empty string for null/undefined/falsy field", () => {
@@ -39,5 +39,21 @@ describe("getLocalizedField", () => {
     } finally {
       process.env.NEXT_PUBLIC_DEFAULT_LOCALE = original;
     }
+  });
+});
+
+describe("hasLocalizedValue", () => {
+  it("is false for a missing or empty field", () => {
+    expect(hasLocalizedValue(undefined)).toBe(false);
+    expect(hasLocalizedValue(null)).toBe(false);
+    expect(hasLocalizedValue({})).toBe(false);
+  });
+
+  it("is false when every language is blank", () => {
+    expect(hasLocalizedValue({ ru: "", en: "   ", de: null })).toBe(false);
+  });
+
+  it("is true when any language has text", () => {
+    expect(hasLocalizedValue({ ru: "", en: "Teddy" })).toBe(true);
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, ReactNode, useMemo, useState } from "react";
+import { getLocalizedField } from "@/utils/localization";
 import { SystemText, LocalizedText } from "@/types";
 
 type Locale = string;
@@ -62,19 +63,8 @@ export function I18nProvider({ children, systemTexts, initialLocale, activeLangu
     return item[locale] || key;
   };
 
-  const loc = (field: LocalizedText | string | null | undefined): string => {
-    if (!field) return "";
-    if (typeof field === "string") return field;
-    if (typeof field === "object") {
-
-      if (field[locale]) return field[locale];
-      if (field[defaultLocale]) return field[defaultLocale];
-      const availableKeys = Object.keys(field).filter(k => field[k]);
-      if (availableKeys.length > 0) return field[availableKeys[0]];
-      return "";
-    }
-    return String(field);
-  };
+  const loc = (field: LocalizedText | string | null | undefined): string =>
+    getLocalizedField(field, locale, defaultLocale);
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, activeLanguages, t, loc, isLoading: false }}>

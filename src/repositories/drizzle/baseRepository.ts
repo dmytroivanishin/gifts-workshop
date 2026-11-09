@@ -1,9 +1,10 @@
 import { drizzleDatabase } from "./database";
-import { eq, inArray, sql, SQL } from "drizzle-orm";
+import { eq, inArray, SQL } from "drizzle-orm";
 import { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { IBaseRepository } from "../interfaces";
 import { PaginationOptions } from "@/types";
 import { isUUID } from "@/utils/uuid";
+import { buildUpsertSet } from "./upsert";
 
 export abstract class DrizzleBaseRepository<
   T extends { id: string },
@@ -52,7 +53,7 @@ export abstract class DrizzleBaseRepository<
     }
 
     const records = await query;
-    return Promise.all(records.map(r => this.populate(r)));
+    return Promise.all(records.map(record => this.populate(record)));
   }
 
   async getById(id: string): Promise<TPopulated | undefined> {
@@ -68,7 +69,7 @@ export abstract class DrizzleBaseRepository<
     const validIds = ids.filter(isUUID);
     if (!validIds.length) return [];
     const records = await drizzleDatabase.getDb().select().from(this.table).where(inArray(this.table.id, validIds));
-    return Promise.all(records.map(r => this.populate(r)));
+    return Promise.all(records.map(record => this.populate(record)));
   }
 
   async save(item: T): Promise<TPopulated> {
@@ -89,13 +90,7 @@ export abstract class DrizzleBaseRepository<
   async saveMany(items: T[]): Promise<TPopulated[]> {
     if (!items.length) return [];
 
-    // Dynamically construct update block for bulk upsert (ON CONFLICT DO UPDATE)
-    const keys = Object.keys(items[0]).filter(k => k !== "id");
-    const updateSet = keys.reduce((acc, key) => {
-      const dbColumnName = (this.table as unknown as Record<string, AnyPgColumn>)[key]?.name || key;
-      acc[key] = sql`excluded.${sql.identifier(dbColumnName)}`;
-      return acc;
-    }, {} as Record<string, ReturnType<typeof sql>>);
+    const updateSet = buildUpsertSet(this.table, items[0]);
 
     const records = await drizzleDatabase.getDb()
       .insert(this.table)
@@ -106,7 +101,7 @@ export abstract class DrizzleBaseRepository<
       })
       .returning();
 
-    return Promise.all(records.map(r => this.populate(r)));
+    return Promise.all(records.map(record => this.populate(record)));
   }
 
   async delete(id: string): Promise<boolean> {
@@ -122,6 +117,6 @@ export abstract class DrizzleBaseRepository<
     const validIds = ids.filter(isUUID);
     if (!validIds.length) return [];
     const result = await drizzleDatabase.getDb().delete(this.table).where(inArray(this.table.id, validIds)).returning({ id: this.table.id });
-    return result.map((r) => r.id as string);
+    return result.map((record) => record.id as string);
   }
 }

@@ -31,7 +31,7 @@ const notificationSlice = createSlice({
       });
     },
     removeNotification: (state, action: PayloadAction<string>) => {
-      state.queue = state.queue.filter((n) => n.id !== action.payload);
+      state.queue = state.queue.filter((notification) => notification.id !== action.payload);
     },
     clearNotifications: (state) => {
       state.queue = [];

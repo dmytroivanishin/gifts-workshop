@@ -69,13 +69,13 @@ export default function AdminPages() {
         return;
       }
       try {
-        const res = await generateSlug({ text }).unwrap();
+        const response = await generateSlug({ text }).unwrap();
         // A newer title (or a manual edit) may have superseded this answer while it was in flight.
         if (requestId === slugRequestId.current) {
-          form.setValue("slug", res.data.slug, { shouldValidate: true });
+          form.setValue("slug", response.data.slug, { shouldValidate: true });
         }
-      } catch (err: unknown) {
-        console.error("Failed to generate slug", err);
+      } catch (error: unknown) {
+        console.error("Failed to generate slug", error);
       }
     }, 600);
     return () => clearTimeout(timer);
@@ -91,7 +91,7 @@ export default function AdminPages() {
     onSuccess: () => {
       if (isEditing === deleteTargetId) resetForm();
     },
-    onError: (err) => console.error("Failed to delete page", err),
+    onError: (error) => console.error("Failed to delete page", error),
     closeOnError: false,
   });
 
@@ -125,12 +125,12 @@ export default function AdminPages() {
         await createPage({ ...values, slug }).unwrap();
       }
       resetForm();
-    } catch (err: unknown) {
-      const apiError = err as ApiMutationError;
+    } catch (error: unknown) {
+      const apiError = error as ApiMutationError;
       apiError?.data?.error?.details?.forEach((detail) => {
         form.setError(detail.field as any, { type: "server", message: detail.message });
       });
-      console.error("Failed to save page", err);
+      console.error("Failed to save page", error);
     }
   };
 
@@ -245,12 +245,12 @@ export default function AdminPages() {
                           value={field.value || ""}
                           type="text"
                           placeholder="about"
-                          onChange={(e) => {
+                          onChange={(event) => {
                             // Invalidate any suggestion still in flight, and hand control back to the
                             // title when the field is emptied.
                             slugRequestId.current++;
-                            setSlugTouched(e.target.value !== "");
-                            field.onChange(e);
+                            setSlugTouched(event.target.value !== "");
+                            field.onChange(event);
                           }}
                         />
                       </FormControl>

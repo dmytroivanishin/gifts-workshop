@@ -175,7 +175,7 @@ export class StorageService {
 
     try {
       const results = await minioClient.removeObjects(BUCKET_NAME, [...keys]);
-      const failures = results.filter((r) => r?.Error);
+      const failures = results.filter((result) => result?.Error);
       if (failures.length > 0) {
         logger.error("Some media objects failed to remove from MinIO", { code: "MINIO_DELETE_FAILED", failures });
       }

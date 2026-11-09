@@ -1,24 +1,24 @@
 import { z } from "zod";
+import { hasLocalizedValue } from "@/utils/localization";
 
 export const localizedStringSchema = z.record(
   z.string(),
   z.union([z.string(), z.null(), z.undefined()])
     .optional()
-    .transform(val => val ?? "")
-).superRefine((data, ctx) => {
-  const hasValue = Object.values(data).some(val => typeof val === "string" && val.trim() !== "");
-  if (!hasValue) {
+    .transform(value => value ?? "")
+).superRefine((data, context) => {
+  if (!hasLocalizedValue(data)) {
     const keys = Object.keys(data);
     if (keys.length > 0) {
       for (const key of keys) {
-        ctx.addIssue({
+        context.addIssue({
           code: z.ZodIssueCode.custom,
           message: "error_required_field",
           path: [key],
         });
       }
     } else {
-      ctx.addIssue({
+      context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "error_required_field",
       });
@@ -36,7 +36,7 @@ export const bulkIdsSchema = z.object({ ids: z.array(z.string().uuid()).min(1).m
 export const slugSchema = z.string().regex(/^[a-z0-9-]+$/, "error_invalid_slug").optional();
 
 const optionalUuidSchema = z.preprocess(
-  (v) => (v === "" || v === undefined || v === null ? null : v),
+  (value) => (value === "" || value === undefined || value === null ? null : value),
   z.string({ message: "error_invalid_format" })
     .uuid("error_invalid_uuid")
     .nullable()
@@ -46,7 +46,7 @@ export const optionalLocalizedStringSchema = z.record(
   z.string(),
   z.union([z.string(), z.null(), z.undefined()])
     .optional()
-    .transform(val => val ?? "")
+    .transform(value => value ?? "")
 ).default({});
 
 export const positionSchema = z.object({
@@ -98,7 +98,7 @@ export const pageSchema = z.object({
   title: localizedStringSchema,
   description: optionalLocalizedStringSchema,
   // The form sends "" when the address field is left empty: that means "generate it from the title".
-  slug: z.preprocess((v) => (v === "" ? undefined : v), slugSchema),
+  slug: z.preprocess((value) => (value === "" ? undefined : value), slugSchema),
   showInMenu: z.boolean().default(true),
 });
 
@@ -114,7 +114,7 @@ export const postSchemaBase = z.object({
   title: optionalLocalizedStringSchema,
   description: optionalLocalizedStringSchema,
   slug: z.preprocess(
-    (v) => (v === "" || v === undefined || v === null ? null : v),
+    (value) => (value === "" || value === undefined || value === null ? null : value),
     z.string({ message: "error_invalid_format" }).regex(/^[a-z0-9-]+$/, "error_invalid_slug").nullable()
   ),
   inStock: z.boolean({ message: "error_invalid_format" }).default(true),
@@ -123,42 +123,41 @@ export const postSchemaBase = z.object({
   collectionId: optionalUuidSchema,
   categoryId: optionalUuidSchema,
   tagsIds: z.preprocess(
-    (v) => (v === null || v === undefined || v === "" ? [] : v),
+    (value) => (value === null || value === undefined || value === "" ? [] : value),
     z.array(z.string({ message: "error_invalid_format" }).uuid("error_invalid_uuid")).default([])
   ),
   media: z.preprocess(
-    (v) => (v === null || v === undefined || v === "" ? [] : v),
+    (value) => (value === null || value === undefined || value === "" ? [] : value),
     z.array(postMediaSchema).default([])
   ),
   createdAt: z.union([z.string(), z.date()]).optional(),
 });
 
-export const postSchema = postSchemaBase.superRefine((data, ctx) => {
+export const postSchema = postSchemaBase.superRefine((data, context) => {
   if (data.status === "Published") {
-    const hasAnyTitle = data.title && Object.values(data.title).some(val => typeof val === "string" && val.trim() !== "");
-    if (!hasAnyTitle) {
-      ctx.addIssue({
+    if (!hasLocalizedValue(data.title)) {
+      context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "error_missing_title",
         path: ["title"],
       });
     }
     if (!data.posterId) {
-      ctx.addIssue({
+      context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "error_missing_poster",
         path: ["posterId"],
       });
     }
     if (!data.collectionId) {
-      ctx.addIssue({
+      context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "error_missing_collection",
         path: ["collectionId"],
       });
     }
     if (!data.categoryId) {
-      ctx.addIssue({
+      context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "error_missing_category",
         path: ["categoryId"],

@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { PublicHeader } from "@/components/shared/PublicHeader";
 import { PublicFooter } from "@/components/shared/PublicFooter";
 import { getMenuPages } from "@/utils/menuPages";
+import { APP_URL, languageAlternates } from "@/utils/seo";
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -16,7 +17,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const description = isEn ? process.env.SITE_DESCRIPTION_EN : process.env.SITE_DESCRIPTION_RU;
   const keywords = isEn ? process.env.SITE_KEYWORDS_EN : process.env.SITE_KEYWORDS_RU;
   const siteName = isEn ? process.env.SITE_NAME_EN : process.env.SITE_NAME_RU;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   return {
     title: {
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: {
       title: title || "Добрые Подарки",
       description,
-      url: `${appUrl}/${locale}`,
+      url: `${APP_URL}/${locale}`,
       siteName,
       images: [
         {
@@ -47,14 +47,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       type: "website",
     },
     alternates: {
-      canonical: `${appUrl}/${locale}`,
-      languages: {
-        'ru': `${appUrl}/ru`,
-        'en': `${appUrl}/en`,
-        // Matches proxy.ts's own fallback for a visitor with no saved locale and no matching
-        // Accept-Language (NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC, "en" by default).
-        'x-default': `${appUrl}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC || "en"}`,
-      },
+      canonical: `${APP_URL}/${locale}`,
+      languages: languageAlternates("", { withDefault: true }),
     },
     twitter: {
       card: "summary_large_image",

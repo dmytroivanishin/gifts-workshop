@@ -86,8 +86,8 @@ function SortableMediaItem({
       {/* Remove Button */}
       <button
         type="button"
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={(event) => {
+          event.stopPropagation();
           onRemove(item.mediaId);
         }}
         className="absolute top-2 right-2 z-20 p-1.5 bg-background/80 hover:bg-destructive text-muted-foreground hover:text-destructive-foreground rounded-full shadow-sm backdrop-blur-sm transition-colors cursor-pointer"
@@ -132,8 +132,8 @@ function SortableMediaItem({
       {/* Set Cover Button (Bottom Left) */}
       <button
         type="button"
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={(event) => {
+          event.stopPropagation();
           if (!isCover) {
             onSetCover(item.mediaId, item.position);
           }
@@ -151,8 +151,8 @@ function SortableMediaItem({
       {/* Position/Crop Button (Bottom Right) */}
       <button
         type="button"
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={(event) => {
+          event.stopPropagation();
           onCrop(item.mediaId);
         }}
         data-test-id="media-crop-button"
@@ -202,8 +202,8 @@ export function SortableMediaGrid({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = items.findIndex((i) => i.mediaId === active.id);
-      const newIndex = items.findIndex((i) => i.mediaId === over.id);
+      const oldIndex = items.findIndex((item) => item.mediaId === active.id);
+      const newIndex = items.findIndex((item) => item.mediaId === over.id);
       onReorder(arrayMove(items, oldIndex, newIndex));
     }
   };
@@ -216,15 +216,15 @@ export function SortableMediaGrid({
     >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <SortableContext
-          items={items.map((i) => i.mediaId)}
+          items={items.map((item) => item.mediaId)}
           strategy={rectSortingStrategy}
         >
-          {items.map((img) => (
+          {items.map((image) => (
             <SortableMediaItem
-              key={img.mediaId}
-              item={img}
-              isCover={coverImage === img.mediaId}
-              mediaItemDetails={mediaList.find((m) => m.id === img.mediaId)}
+              key={image.mediaId}
+              item={image}
+              isCover={coverImage === image.mediaId}
+              mediaItemDetails={mediaList.find((media) => media.id === image.mediaId)}
               onSetCover={onSetCover}
               onCrop={onCrop}
               onRemove={onRemove}

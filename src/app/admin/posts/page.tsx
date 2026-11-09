@@ -49,8 +49,8 @@ export default function AdminDashboard() {
         setPosts(response.data);
       } else {
         setPosts((prev) => {
-          const existingIds = new Set(prev.map((p) => p.id));
-          const newPosts = response.data.filter((p) => !existingIds.has(p.id));
+          const existingIds = new Set(prev.map((post) => post.id));
+          const newPosts = response.data.filter((post) => !existingIds.has(post.id));
           return [...prev, ...newPosts];
         });
       }
@@ -133,8 +133,8 @@ export default function AdminDashboard() {
       setIsDeleteOpen(false);
       setDeleteTargetId("");
       setPage(1); // Reset to page 1 to reload
-    } catch (err) {
-      console.error("Failed to delete post", err);
+    } catch (error) {
+      console.error("Failed to delete post", error);
     }
   };
 

@@ -15,10 +15,15 @@ export function getLocalizedField(field: LocalizedText | string | undefined | nu
   }
 
   // 3. Fallback to any available locale that has a value
-  const availableKeys = Object.keys(field).filter(k => field[k] && field[k].trim() !== "");
+  const availableKeys = Object.keys(field).filter(key => field[key] && field[key].trim() !== "");
   if (availableKeys.length > 0) {
     return field[availableKeys[0]];
   }
 
   return "";
+}
+
+// True when at least one language has non-blank text.
+export function hasLocalizedValue(field: Record<string, unknown> | null | undefined): boolean {
+  return !!field && Object.values(field).some((value) => typeof value === "string" && value.trim() !== "");
 }

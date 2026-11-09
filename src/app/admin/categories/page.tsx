@@ -1,5 +1,6 @@
 "use client";
 
+import { addMissingTags, mergeTagsById } from "@/utils/tags";
 import { useState, useEffect } from "react";
 import { Plus, Edit, Save, X, Loader2, Trash2 } from "lucide-react";
 import {
@@ -59,7 +60,7 @@ export default function AdminCategories() {
     label: loc(tag.name)
   }));
   const resolveTagLabel = (id: string) => {
-    const tag = extraTags.find((t) => t.id === id);
+    const tag = extraTags.find((extraTag) => extraTag.id === id);
     return tag ? loc(tag.name) : undefined;
   };
 
@@ -112,17 +113,7 @@ export default function AdminCategories() {
   const cacheSelectedTags = (searched: Tag[], selectedIds: string[]) => {
     const toCache = searched.filter((tag) => selectedIds.includes(tag.id));
     if (!toCache.length) return;
-    setExtraTags((prev) => {
-      const merged = new Map(prev.map((t) => [t.id, t]));
-      let changed = false;
-      for (const tag of toCache) {
-        if (!merged.has(tag.id)) {
-          merged.set(tag.id, tag);
-          changed = true;
-        }
-      }
-      return changed ? Array.from(merged.values()) : prev;
-    });
+    setExtraTags((previous) => addMissingTags(previous, toCache));
   };
   useEffect(() => {
     cacheSelectedTags(newSearchedTags, newSelectedTagIds);
@@ -131,7 +122,7 @@ export default function AdminCategories() {
   // Auto-create / select color for creation form
   useEffect(() => {
     if (!color) return;
-    const existing = colorsList.find((c) => c.color.toLowerCase() === color.toLowerCase());
+    const existing = colorsList.find((paletteColor) => paletteColor.color.toLowerCase() === color.toLowerCase());
     if (existing) {
       setSelectedColorId(existing.id);
       setIsCreatingColorPending(false);
@@ -145,12 +136,12 @@ export default function AdminCategories() {
           await updateColor({ id: sessionColorId, color }).unwrap();
           setSelectedColorId(sessionColorId);
         } else {
-          const res = await createColor({ color }).unwrap();
-          setSelectedColorId(res.data.id);
-          setSessionColorId(res.data.id);
+          const response = await createColor({ color }).unwrap();
+          setSelectedColorId(response.data.id);
+          setSessionColorId(response.data.id);
         }
-      } catch (err) {
-        console.error("Failed to create color dynamically", err);
+      } catch (error) {
+        console.error("Failed to create color dynamically", error);
       } finally {
         setIsCreatingColorPending(false);
       }
@@ -176,13 +167,13 @@ export default function AdminCategories() {
 
   const handleCreateTag = async (name: string) => {
     try {
-      const res = await createTag({
+      const response = await createTag({
         name: { [locale]: name },
       }).unwrap();
-      setExtraTags((prev) => [...prev, res.data]);
-      return res.data.id;
-    } catch (err) {
-      console.error("Failed to create tag dynamically", err);
+      setExtraTags((prev) => [...prev, response.data]);
+      return response.data.id;
+    } catch (error) {
+      console.error("Failed to create tag dynamically", error);
       return "";
     }
   };
@@ -204,26 +195,22 @@ export default function AdminCategories() {
     setSessionColorId("");
   };
 
-  const handleEdit = (cat: PopulatedCategory) => {
-    setIsEditing(cat.id);
-    setActiveCategoryObj(cat);
+  const handleEdit = (category: PopulatedCategory) => {
+    setIsEditing(category.id);
+    setActiveCategoryObj(category);
     setSessionColorId("");
     form.reset({
-      title: typeof cat.title === "string" ? { [locale]: cat.title } : cat.title || {},
-      description: typeof cat.description === "string" ? { [locale]: cat.description } : cat.description || {},
-      collectionId: cat.collectionId || "",
-      parentId: cat.parentId || null,
-      tagsIds: cat.tagsIds || cat.tags?.map((t) => t.id) || [],
-      color: { id: cat.color?.id || "", color: cat.color?.color || "" },
+      title: typeof category.title === "string" ? { [locale]: category.title } : category.title || {},
+      description: typeof category.description === "string" ? { [locale]: category.description } : category.description || {},
+      collectionId: category.collectionId || "",
+      parentId: category.parentId || null,
+      tagsIds: category.tagsIds || category.tags?.map((tag) => tag.id) || [],
+      color: { id: category.color?.id || "", color: category.color?.color || "" },
     });
-    setColor(cat.color?.color || "");
-    setSelectedColorId(cat.color?.id || "");
-    if (cat.tags?.length) {
-      setExtraTags((prev) => {
-        const merged = new Map(prev.map((tag) => [tag.id, tag]));
-        for (const tag of cat.tags!) merged.set(tag.id, tag);
-        return Array.from(merged.values());
-      });
+    setColor(category.color?.color || "");
+    setSelectedColorId(category.color?.id || "");
+    if (category.tags?.length) {
+      setExtraTags((previous) => mergeTagsById(previous, category.tags!));
     }
   };
 
@@ -253,14 +240,14 @@ export default function AdminCategories() {
       }
 
       resetForm();
-    } catch (err: unknown) {
-      const apiError = err as ApiMutationError;
+    } catch (error: unknown) {
+      const apiError = error as ApiMutationError;
       if (apiError?.data?.error?.details) {
         apiError.data.error.details.forEach((detail) => {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }
-      console.error("Failed to save category", err);
+      console.error("Failed to save category", error);
     }
   };
 
@@ -295,24 +282,24 @@ export default function AdminCategories() {
                 items={categories}
                 onReorder={async (newItems) => {
                   const updates = [];
-                  for (let i = 0; i < newItems.length; i++) {
-                    const cat = newItems[i];
-                    if (cat.order !== i) {
-                      updates.push({ id: cat.id, order: i });
+                  for (let index = 0; index < newItems.length; index++) {
+                    const category = newItems[index];
+                    if (category.order !== index) {
+                      updates.push({ id: category.id, order: index });
                     }
                   }
                   if (updates.length > 0) {
                     try {
                       await reorderCategories(updates).unwrap();
-                    } catch (err) {
-                      console.error("Failed to reorder categories", err);
+                    } catch (error) {
+                      console.error("Failed to reorder categories", error);
                     }
                   }
                 }}
-                renderItem={(cat) => {
-                  const catTitleLoc = getLocalizedField(cat.title, locale);
-                  const catDescLoc = getLocalizedField(cat.description, locale);
-                  const catColor = cat.color?.color || "transparent";
+                renderItem={(category) => {
+                  const catTitleLoc = getLocalizedField(category.title, locale);
+                  const catDescLoc = getLocalizedField(category.description, locale);
+                  const catColor = category.color?.color || "transparent";
 
                   return (
                     <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/10 transition-colors w-full">
@@ -329,8 +316,8 @@ export default function AdminCategories() {
                           >
                             HEX: {catColor}
                           </span>
-                          {cat.parentId && (() => {
-                            const parentCat = categories.find((c) => c.id === cat.parentId);
+                          {category.parentId && (() => {
+                            const parentCat = categories.find((parentCandidate) => parentCandidate.id === category.parentId);
                             const parentTitle = parentCat ? getLocalizedField(parentCat.title, locale) : "";
                             return parentTitle ? (
                               <span className="text-[10px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-md border border-[#7D8945]/20 flex items-center gap-1 font-sans">
@@ -343,8 +330,8 @@ export default function AdminCategories() {
                       </div>
   
                       <RowActions>
-                        <RowAction icon={Edit} title={t("edit_category")} active={isEditing === cat.id} onClick={() => handleEdit(cat)} />
-                        <RowAction icon={Trash2} tone="destructive" title={t("delete")} onClick={() => handleDeleteClick(cat.id)} />
+                        <RowAction icon={Edit} title={t("edit_category")} active={isEditing === category.id} onClick={() => handleEdit(category)} />
+                        <RowAction icon={Trash2} tone="destructive" title={t("delete")} onClick={() => handleDeleteClick(category.id)} />
                       </RowActions>
                     </div>
                   );
@@ -424,9 +411,9 @@ export default function AdminCategories() {
                     <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("collections")}</FormLabel>
                     <FormControl>
                       <Combobox
-                        options={collections.map((col) => ({ value: col.id, label: getLocalizedField(col.title, locale) }))}
+                        options={collections.map((collection) => ({ value: collection.id, label: getLocalizedField(collection.title, locale) }))}
                         value={field.value || ""}
-                        onChange={(val) => field.onChange(val)}
+                        onChange={(value) => field.onChange(value)}
                         placeholder={t("placeholder_select_collection")}
                         searchPlaceholder={t("placeholder_search_collections")}
                         clearable={false}
@@ -446,10 +433,10 @@ export default function AdminCategories() {
                     <FormControl>
                       <Combobox
                         options={categories
-                          .filter((c) => c.id !== isEditing)
-                          .map((c) => ({ value: c.id, label: getLocalizedField(c.title, locale) }))}
+                          .filter((candidate) => candidate.id !== isEditing)
+                          .map((candidate) => ({ value: candidate.id, label: getLocalizedField(candidate.title, locale) }))}
                         value={field.value || ""}
-                        onChange={(val) => field.onChange(val)}
+                        onChange={(value) => field.onChange(value)}
                         placeholder={t("none_main_category")}
                         searchPlaceholder={t("placeholder_search_categories")}
                       />
@@ -469,7 +456,7 @@ export default function AdminCategories() {
                       <Combobox
                         options={newTagOptions}
                         value={field.value || []}
-                        onChange={(val) => field.onChange(val)}
+                        onChange={(value) => field.onChange(value)}
                         placeholder={t("placeholder_select_tags")}
                         searchPlaceholder={t("placeholder_search_tags")}
                         allowCreate
@@ -493,28 +480,28 @@ export default function AdminCategories() {
                 {/* Presets Grid */}
                 {colorsList.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 p-2 rounded-lg bg-muted/30 border border-border/40">
-                    {colorsList.map((c) => (
+                    {colorsList.map((paletteColor) => (
                       <button
-                        key={c.id}
+                        key={paletteColor.id}
                         type="button"
                         onClick={() => {
-                          setColor(c.color);
-                          setSelectedColorId(c.id);
+                          setColor(paletteColor.color);
+                          setSelectedColorId(paletteColor.id);
                         }}
                         className={`w-6 h-6 rounded-[6px] border transition-all hover:scale-110 cursor-pointer ${
-                          color.toLowerCase() === c.color.toLowerCase()
+                          color.toLowerCase() === paletteColor.color.toLowerCase()
                             ? "border-primary ring-2 ring-primary/20 scale-105"
                             : "border-border"
                         }`}
-                        style={{ backgroundColor: c.color }}
-                        title={c.color}
+                        style={{ backgroundColor: paletteColor.color }}
+                        title={paletteColor.color}
                       />
                     ))}
                   </div>
                 )}
 
                 <div className="flex items-center gap-3">
-                  <ColorPicker value={color} onChange={(e) => setColor(e.target.value)} />
+                  <ColorPicker value={color} onChange={(event) => setColor(event.target.value)} />
                   <span className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">{color}</span>
                   {isCreatingColorPending && (
                     <span className="text-xs text-muted-foreground animate-pulse flex items-center gap-1">

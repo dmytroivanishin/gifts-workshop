@@ -29,7 +29,7 @@ export default function SearchInput({ value, onChange, placeholder, className = 
       <Input
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         onKeyDown={onKeyDown}
         className={`pl-9 pr-9 ${inputClassName}`}

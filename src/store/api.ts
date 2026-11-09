@@ -98,8 +98,8 @@ export const api = createApi({
         }
         
         // Prevent duplicates when merging
-        const existingIds = new Set(currentCache.data.map((p) => p.id));
-        const uniqueNewItems = newItems.data.filter((p) => !existingIds.has(p.id));
+        const existingIds = new Set(currentCache.data.map((post) => post.id));
+        const uniqueNewItems = newItems.data.filter((post) => !existingIds.has(post.id));
         
         currentCache.data.push(...uniqueNewItems);
         currentCache.meta = newItems.meta;

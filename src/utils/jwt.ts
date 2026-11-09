@@ -41,7 +41,7 @@ export function isAllowedAdminEmail(email: unknown): email is string {
   if (typeof email !== "string") return false;
   const allowed = (process.env.ADMIN_EMAILS ?? "")
     .split(",")
-    .map((e) => e.trim().toLowerCase())
+    .map((entry) => entry.trim().toLowerCase())
     .filter(Boolean);
   return allowed.includes(email.toLowerCase());
 }

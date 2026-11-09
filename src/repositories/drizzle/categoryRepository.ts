@@ -5,7 +5,7 @@ import { drizzleDatabase } from "./database";
 import { eq, inArray, sql, and, asc } from "drizzle-orm";
 import { ICategoryRepository } from "../interfaces";
 import { isUUID } from "@/utils/uuid";
-import { AnyPgColumn } from "drizzle-orm/pg-core";
+import { buildUpsertSet, diffIds } from "./upsert";
 
 type CategoryRecord = typeof categories.$inferSelect & {
   categoriesToTags?: { tag: typeof tags.$inferSelect }[];
@@ -26,7 +26,7 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
     return {
       ...restRecord,
       tags: tagsList,
-      tagsIds: tagsList.map((t) => t.id),
+      tagsIds: tagsList.map((tag) => tag.id),
     } as unknown as PopulatedCategory;
   }
 
@@ -126,10 +126,9 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
 
       if (tagsIds) {
         const existingTags = await tx.select({ tagId: categoriesToTags.tagId }).from(categoriesToTags).where(eq(categoriesToTags.categoryId, savedId));
-        const existingTagIds = existingTags.map(t => t.tagId);
+        const existingTagIds = existingTags.map(link => link.tagId);
 
-        const toAdd = tagsIds.filter((id: string) => !existingTagIds.includes(id));
-        const toRemove = existingTagIds.filter(id => !tagsIds.includes(id));
+        const { toAdd, toRemove } = diffIds(existingTagIds, tagsIds);
 
         if (toRemove.length > 0) {
           await tx.delete(categoriesToTags).where(and(eq(categoriesToTags.categoryId, savedId), inArray(categoriesToTags.tagId, toRemove)));
@@ -160,12 +159,7 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
       return rest;
     });
 
-    const keys = Object.keys(recordsToInsert[0]).filter(k => k !== "id");
-    const updateSet = keys.reduce((acc, key) => {
-      const dbColumnName = (categories as unknown as Record<string, AnyPgColumn>)[key]?.name || key;
-      acc[key] = sql`excluded.${sql.identifier(dbColumnName)}`;
-      return acc;
-    }, {} as Record<string, ReturnType<typeof sql>>);
+    const updateSet = buildUpsertSet(categories, recordsToInsert[0]);
 
     const db = drizzleDatabase.getDb();
     const records = await db
@@ -188,9 +182,9 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
       }
     });
 
-    if (dbTagsData.length > 0 || items.some(i => i.tagsIds)) {
+    if (dbTagsData.length > 0 || items.some(category => category.tagsIds)) {
        await db.transaction(async (tx) => {
-          const catIds = items.map(i => i.id);
+          const catIds = items.map(category => category.id);
           await tx.delete(categoriesToTags).where(inArray(categoriesToTags.categoryId, catIds));
           if (dbTagsData.length > 0) {
             await tx.insert(categoriesToTags).values(dbTagsData);
@@ -198,7 +192,7 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
        });
     }
 
-    const ids = records.map(r => r.id);
+    const ids = records.map(record => record.id);
     return this.getByIds(ids);
   }
 
@@ -222,7 +216,7 @@ export class CategoryRepository extends DrizzleBaseRepository<Category, Populate
 
     await db.update(categories)
       .set({ order: finalSql })
-      .where(inArray(categories.id, items.map(i => i.id)));
+      .where(inArray(categories.id, items.map(item => item.id)));
       
     return true;
   }

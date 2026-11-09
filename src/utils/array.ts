@@ -1,5 +1,5 @@
-export function isNonEmptyString(val: unknown): val is string {
-  return typeof val === "string" && val.length > 0;
+export function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
 }
 
 export function collectUniqueIds<T>(
@@ -9,8 +9,8 @@ export function collectUniqueIds<T>(
   const extractorList = Array.isArray(extractors) ? extractors : [extractors];
   const ids = items.flatMap(item =>
     extractorList.flatMap(ext => {
-      const val = ext(item);
-      return Array.isArray(val) ? val : [val];
+      const value = ext(item);
+      return Array.isArray(value) ? value : [value];
     })
   );
   return Array.from(new Set(ids.filter(isNonEmptyString)));

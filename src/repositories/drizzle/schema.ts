@@ -28,8 +28,8 @@ export const tokenSessions = pgTable("token_sessions", {
   isUsed: boolean("is_used").default(false).notNull(),
   expiresAt: timestamp("expires_at", { mode: "date" }).notNull(), // PostgreSQL timestamp
   tokenFamily: varchar("token_family", { length: 255 }).notNull(),
-}, (t) => ({
-  userIdIdx: index("token_sessions_user_id_idx").on(t.userId),
+}, (table) => ({
+  userIdIdx: index("token_sessions_user_id_idx").on(table.userId),
 }));
 
 export const tokenSessionsRelations = relations(tokenSessions, ({ one }) => ({
@@ -50,8 +50,8 @@ export const colors = pgTable("colors", {
   color: varchar("color", { length: 50 }).notNull(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-}, (t) => ({
-  userIdIdx: index("colors_user_id_idx").on(t.userId),
+}, (table) => ({
+  userIdIdx: index("colors_user_id_idx").on(table.userId),
 }));
 
 export const colorsRelations = relations(colors, ({ one, many }) => ({
@@ -74,9 +74,9 @@ export const media = pgTable("media", {
   // MediaService checks first for a friendly 409; the unique index is the backstop for two
   // simultaneous uploads of the same file, and it serves that lookup.
   contentHash: varchar("content_hash", { length: 64 }).notNull(),
-}, (t) => ({
-  userIdIdx: index("media_user_id_idx").on(t.userId),
-  contentHashIdx: uniqueIndex("media_content_hash_idx").on(t.contentHash),
+}, (table) => ({
+  userIdIdx: index("media_user_id_idx").on(table.userId),
+  contentHashIdx: uniqueIndex("media_content_hash_idx").on(table.contentHash),
 }));
 
 export const mediaRelations = relations(media, ({ one, many }) => ({
@@ -92,8 +92,8 @@ export const collections = pgTable("collections", {
   main: boolean("main").default(false).notNull(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-}, (t) => ({
-  userIdIdx: index("collections_user_id_idx").on(t.userId),
+}, (table) => ({
+  userIdIdx: index("collections_user_id_idx").on(table.userId),
 }));
 
 export const collectionsRelations = relations(collections, ({ one, many }) => ({
@@ -112,10 +112,10 @@ export const categories = pgTable("categories", {
   colorId: uuid("color_id").references(() => colors.id, { onDelete: "restrict" }),
   collectionId: uuid("collection_id").references(() => collections.id, { onDelete: "set null" }),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
-}, (t) => ({
-  parentIdIdx: index("categories_parent_id_idx").on(t.parentId),
-  collectionIdIdx: index("categories_collection_id_idx").on(t.collectionId),
-  userIdIdx: index("categories_user_id_idx").on(t.userId),
+}, (table) => ({
+  parentIdIdx: index("categories_parent_id_idx").on(table.parentId),
+  collectionIdIdx: index("categories_collection_id_idx").on(table.collectionId),
+  userIdIdx: index("categories_user_id_idx").on(table.userId),
 }));
 
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
@@ -138,8 +138,8 @@ export const pages = pgTable("pages", {
   showInMenu: boolean("show_in_menu").notNull().default(true),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-}, (t) => ({
-  userIdIdx: index("pages_user_id_idx").on(t.userId),
+}, (table) => ({
+  userIdIdx: index("pages_user_id_idx").on(table.userId),
 }));
 
 export const tags = pgTable("tags", {
@@ -148,8 +148,8 @@ export const tags = pgTable("tags", {
   name: jsonb("name").$type<LocalizedText>().notNull(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-}, (t) => ({
-  userIdIdx: index("tags_user_id_idx").on(t.userId),
+}, (table) => ({
+  userIdIdx: index("tags_user_id_idx").on(table.userId),
 }));
 
 export const tagsRelations = relations(tags, ({ one, many }) => ({
@@ -161,9 +161,9 @@ export const tagsRelations = relations(tags, ({ one, many }) => ({
 export const categoriesToTags = pgTable("categories_to_tags", {
   categoryId: uuid("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
   tagId: uuid("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.categoryId, t.tagId] }),
-  tagIdIdx: index("categories_to_tags_tag_id_idx").on(t.tagId),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.categoryId, table.tagId] }),
+  tagIdIdx: index("categories_to_tags_tag_id_idx").on(table.tagId),
 }));
 
 export const categoriesToTagsRelations = relations(categoriesToTags, ({ one }) => ({
@@ -183,13 +183,13 @@ export const posts = pgTable("posts", {
   categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-}, (t) => ({
-  collectionIdIdx: index("posts_collection_id_idx").on(t.collectionId),
-  categoryIdIdx: index("posts_category_id_idx").on(t.categoryId),
-  userIdIdx: index("posts_user_id_idx").on(t.userId),
-  statusIdx: index("posts_status_idx").on(t.status),
+}, (table) => ({
+  collectionIdIdx: index("posts_collection_id_idx").on(table.collectionId),
+  categoryIdIdx: index("posts_category_id_idx").on(table.categoryId),
+  userIdIdx: index("posts_user_id_idx").on(table.userId),
+  statusIdx: index("posts_status_idx").on(table.status),
   // Deleting a media row asks "is it any post's poster?" (and the FK check does the same).
-  posterIdIdx: index("posts_poster_id_idx").on(t.posterId),
+  posterIdIdx: index("posts_poster_id_idx").on(table.posterId),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -210,9 +210,9 @@ export const comments = pgTable("comments", {
   status: varchar("status", { length: 50 }).default("Review").notNull(),
   replyId: uuid("reply_id"), // Self-referential FK to comments.id
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-}, (t) => ({
-  postIdIdx: index("comments_post_id_idx").on(t.postId),
-  replyIdIdx: index("comments_reply_id_idx").on(t.replyId),
+}, (table) => ({
+  postIdIdx: index("comments_post_id_idx").on(table.postId),
+  replyIdIdx: index("comments_reply_id_idx").on(table.replyId),
 }));
 
 export const commentsRelations = relations(comments, ({ one, many }) => ({
@@ -226,9 +226,9 @@ export const postsToMedia = pgTable("posts_to_media", {
   mediaId: uuid("media_id").notNull().references(() => media.id, { onDelete: "cascade" }),
   order: integer("order").default(0).notNull(),
   position: jsonb("position").$type<Position>(),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.postId, t.mediaId] }),
-  mediaIdIdx: index("posts_to_media_media_id_idx").on(t.mediaId),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.postId, table.mediaId] }),
+  mediaIdIdx: index("posts_to_media_media_id_idx").on(table.mediaId),
 }));
 
 export const postsToMediaRelations = relations(postsToMedia, ({ one }) => ({
@@ -239,9 +239,9 @@ export const postsToMediaRelations = relations(postsToMedia, ({ one }) => ({
 export const postsToTags = pgTable("posts_to_tags", {
   postId: uuid("post_id").notNull().references(() => posts.id, { onDelete: "cascade" }),
   tagId: uuid("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.postId, t.tagId] }),
-  tagIdIdx: index("posts_to_tags_tag_id_idx").on(t.tagId),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.postId, table.tagId] }),
+  tagIdIdx: index("posts_to_tags_tag_id_idx").on(table.tagId),
 }));
 
 export const postsToTagsRelations = relations(postsToTags, ({ one }) => ({

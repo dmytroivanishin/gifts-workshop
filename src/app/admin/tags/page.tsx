@@ -61,7 +61,7 @@ export default function AdminTags() {
       }
       reload();
     },
-    onError: (err) => console.error("Failed to delete tag", err),
+    onError: (error) => console.error("Failed to delete tag", error),
     closeOnError: false,
   });
 
@@ -86,14 +86,14 @@ export default function AdminTags() {
       }
       resetForm();
       reload(); // Reset to page 1 to fetch the latest
-    } catch (err: unknown) {
-      const apiError = err as ApiMutationError;
+    } catch (error: unknown) {
+      const apiError = error as ApiMutationError;
       if (apiError?.data?.error?.details) {
         apiError.data.error.details.forEach((detail) => {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }
-      console.error("Failed to add tag", err);
+      console.error("Failed to add tag", error);
     }
   };
 

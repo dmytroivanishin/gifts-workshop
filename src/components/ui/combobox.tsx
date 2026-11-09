@@ -102,27 +102,27 @@ export default function Combobox({
     if (serverSearch) return options;
     if (!search) return options;
     const query = search.toLowerCase();
-    return options.filter((opt) => opt.label.toLowerCase().includes(query));
+    return options.filter((option) => option.label.toLowerCase().includes(query));
   }, [options, search, serverSearch]);
 
-  const handleSelect = (val: string) => {
+  const handleSelect = (optionValue: string) => {
     if (multiple) {
-      if (selectedValues.includes(val)) {
-        onChange(selectedValues.filter((v) => v !== val));
+      if (selectedValues.includes(optionValue)) {
+        onChange(selectedValues.filter((selectedValue) => selectedValue !== optionValue));
       } else {
-        onChange([...selectedValues, val]);
+        onChange([...selectedValues, optionValue]);
       }
     } else {
-      onChange(val);
+      onChange(optionValue);
       setIsOpen(false);
     }
     setSearch("");
   };
 
-  const handleRemove = (val: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleRemove = (optionValue: string, event: React.MouseEvent) => {
+    event.stopPropagation();
     if (multiple) {
-      onChange(selectedValues.filter((v) => v !== val));
+      onChange(selectedValues.filter((selectedValue) => selectedValue !== optionValue));
     } else {
       onChange("");
     }
@@ -134,7 +134,7 @@ export default function Combobox({
     if (!trimmed) return;
 
     // Check if it already exists in options
-    const exists = options.find((opt) => opt.label.toLowerCase() === trimmed.toLowerCase());
+    const exists = options.find((option) => option.label.toLowerCase() === trimmed.toLowerCase());
     if (exists) {
       handleSelect(exists.value);
     } else if (onCreate) {
@@ -143,8 +143,8 @@ export default function Combobox({
         if (newId) {
           handleSelect(newId);
         }
-      } catch (err) {
-        console.error("Failed to create option inside Combobox", err);
+      } catch (error) {
+        console.error("Failed to create option inside Combobox", error);
       }
     } else {
       handleSelect(trimmed);
@@ -153,11 +153,11 @@ export default function Combobox({
   };
 
   const selectedOptions = useMemo(() => {
-    return selectedValues.map((val) => {
-      const opt = options.find((o) => o.value === val);
-      if (opt) return opt;
-      const resolved = resolveLabel?.(val);
-      return { value: val, label: resolved ?? val };
+    return selectedValues.map((optionValue) => {
+      const option = options.find((candidate) => candidate.value === optionValue);
+      if (option) return option;
+      const resolved = resolveLabel?.(optionValue);
+      return { value: optionValue, label: resolved ?? optionValue };
     });
   }, [selectedValues, options, resolveLabel]);
 
@@ -180,15 +180,15 @@ export default function Combobox({
             <span className="text-sm text-foreground">{selectedOptions[0].label}</span>
           ) : (
           <div className="flex flex-wrap gap-1">
-            {selectedOptions.map((opt) => (
+            {selectedOptions.map((option) => (
               <span
-                key={opt.value}
+                key={option.value}
                 className="inline-flex items-center gap-1 bg-secondary text-secondary-foreground text-xs font-semibold px-2 py-1 rounded-md border border-border transition-colors hover:bg-secondary/80"
               >
-                {opt.label}
+                {option.label}
                 <button
                   type="button"
-                  onClick={(e) => handleRemove(opt.value, e)}
+                  onClick={(event) => handleRemove(option.value, event)}
                   className="rounded-full hover:bg-muted p-0.5 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <X size={10} />
@@ -202,8 +202,8 @@ export default function Combobox({
           {clearable && selectedValues.length > 0 && (
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={(event) => {
+                event.stopPropagation();
                 onChange(multiple ? [] : "");
                 setSearch("");
               }}
@@ -223,8 +223,8 @@ export default function Combobox({
           sideOffset={6}
           collisionPadding={12}
           // A click on the trigger itself is handled by the trigger's own toggle.
-          onInteractOutside={(e) => {
-            if (containerRef.current?.contains(e.target as Node)) e.preventDefault();
+          onInteractOutside={(event) => {
+            if (containerRef.current?.contains(event.target as Node)) event.preventDefault();
           }}
           className="admin-area w-(--radix-popover-trigger-width) gap-0 overflow-hidden rounded-xl border border-border bg-popover p-0 font-sans shadow-lg ring-0"
         >
@@ -234,9 +234,9 @@ export default function Combobox({
                 value={search}
                 onChange={handleSearchInput}
                 placeholder={searchPlaceholder}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && allowCreate && search) {
-                    e.preventDefault();
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && allowCreate && search) {
+                    event.preventDefault();
                     handleCreate();
                   }
                 }}
@@ -266,16 +266,16 @@ export default function Combobox({
                 estimateSize={40}
                 className="max-h-56"
                 onEndReached={onEndReached}
-                renderItem={(opt) => {
-                  const isChecked = selectedValues.includes(opt.value);
+                renderItem={(option) => {
+                  const isChecked = selectedValues.includes(option.value);
                   return (
                     <button
                       type="button"
-                      onClick={() => handleSelect(opt.value)}
+                      onClick={() => handleSelect(option.value)}
                       className="w-full h-full flex items-center justify-between px-3 py-2 text-sm text-left hover:bg-muted rounded-lg transition-colors cursor-pointer"
                     >
                       <span className={isChecked ? "font-semibold text-foreground" : "text-muted-foreground"}>
-                        {opt.label}
+                        {option.label}
                       </span>
                       {isChecked && <Check size={14} className="text-primary" />}
                     </button>

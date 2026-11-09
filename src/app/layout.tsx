@@ -21,19 +21,19 @@ import { getContentVersion } from "@/utils/contentVersion";
 import { I18nProvider } from "@/i18n";
 import { systemTextService } from "@/modules/core/container";
 import { env } from "@/modules/core/env";
+import { APP_URL } from "@/utils/seo";
 
 // This metadata is static (no generateMetadata/locale param available at this level), so it can
 // only ever use one fixed locale — the root layout wraps /admin/* too, where RU is the fixed
 // authoring/default locale. Public pages never see this: [locale]/(public)/layout.tsx's own
 // generateMetadata always overrides it with the real per-request locale.
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const siteTitle = process.env.SITE_TITLE_RU || "Мастерская подарков | Каталог душевной ручной работы";
 const siteTemplate = process.env.SITE_TEMPLATE_RU || "%s | Мастерская подарков";
 const siteDescription = process.env.SITE_DESCRIPTION_RU || "Мастерская подарков — каталог душевной ручной работы.";
 const siteName = process.env.SITE_NAME_RU || "Мастерская подарков";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(appUrl),
+  metadataBase: new URL(APP_URL),
   title: {
     default: siteTitle,
     template: siteTemplate,

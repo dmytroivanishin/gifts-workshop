@@ -6,8 +6,8 @@ import { redirect } from "next/navigation";
 import { isUUID } from "@/utils/uuid";
 import { getVisiblePostBySlugOrId } from "@/utils/postLookup";
 import { logger } from "@/modules/logger";
+import { APP_URL, languageAlternates } from "@/utils/seo";
 
-const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 interface PostLayoutProps {
   children: React.ReactNode;
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     if (post.media && post.media.length > 0) {
       const firstMediaUrl = post.media[0]?.media?.originalUrl;
       if (firstMediaUrl) {
-        imageUrl = firstMediaUrl.startsWith("http") ? firstMediaUrl : `${appUrl}${firstMediaUrl}`;
+        imageUrl = firstMediaUrl.startsWith("http") ? firstMediaUrl : `${APP_URL}${firstMediaUrl}`;
       }
     }
 
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       openGraph: {
         title: title,
         description: description,
-        url: `${appUrl}/${locale}/posts/${postSlug}`,
+        url: `${APP_URL}/${locale}/posts/${postSlug}`,
         siteName: siteName,
         images: [
           {
@@ -69,16 +69,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         type: "article",
       },
       alternates: {
-        canonical: `${appUrl}/${locale}/posts/${postSlug}`,
-        languages: {
-          ...env.SUPPORTED_LOCALES.reduce((acc, l) => {
-            acc[l] = `${appUrl}/${l}/posts/${postSlug}`;
-            return acc;
-          }, {} as Record<string, string>),
-          // Matches proxy.ts's own fallback for a visitor with no saved locale and no matching
-          // Accept-Language (NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC, "en" by default).
-          'x-default': `${appUrl}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC || "en"}/posts/${postSlug}`,
-        },
+        canonical: `${APP_URL}/${locale}/posts/${postSlug}`,
+        languages: languageAlternates(`/posts/${postSlug}`, { withDefault: true }),
       },
       twitter: {
         card: "summary_large_image",

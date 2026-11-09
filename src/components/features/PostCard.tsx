@@ -33,10 +33,10 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
     }
   }, [post.id]);
 
-  const mediaItems = [...(post.media || [])].sort((a, b) => {
-    if (a.mediaId === post.posterId) return -1;
-    if (b.mediaId === post.posterId) return 1;
-    return a.order - b.order;
+  const mediaItems = [...(post.media || [])].sort((first, second) => {
+    if (first.mediaId === post.posterId) return -1;
+    if (second.mediaId === post.posterId) return 1;
+    return first.order - second.order;
   });
   const totalImages = mediaItems.length;
   
@@ -49,21 +49,21 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
   const goToNext = () => setCurrentImageIndex((prev) => (prev + 1) % totalImages);
   const goToPrev = () => setCurrentImageIndex((prev) => (prev - 1 + totalImages) % totalImages);
 
-  const nextImage = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const nextImage = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     goToNext();
   };
 
-  const prevImage = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const prevImage = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     goToPrev();
   };
 
-  const toggleLike = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const toggleLike = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     
     const liked = localStorage.getItem("liked_posts");
     let ids: string[] = [];
@@ -104,11 +104,11 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
             {totalImages > 0 ? (
               (() => {
                 const currentMedia = mediaItems[currentImageIndex];
-                const med = currentMedia?.media;
-                const pos = currentMedia?.position;
+                const mediaFile = currentMedia?.media;
+                const position = currentMedia?.position;
                 
-                const isPortrait = med?.orientation === "Portrait" || (med?.height && med?.width && med.height > med.width);
-                const isLandscape = med?.orientation === "Landscape" || (med?.height && med?.width && med.width > med.height);
+                const isPortrait = mediaFile?.orientation === "Portrait" || (mediaFile?.height && mediaFile?.width && mediaFile.height > mediaFile.width);
+                const isLandscape = mediaFile?.orientation === "Landscape" || (mediaFile?.height && mediaFile?.width && mediaFile.width > mediaFile.height);
 
                 return (
                   <motion.img
@@ -117,7 +117,7 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
                     // MediaService.saveMedia's external-URL path both back-fill one from the other),
                     // so a missing thumbnailUrl means there's no real originalUrl to fall back to
                     // either — straight to the themed placeholder.
-                    src={med?.thumbnailUrl || MEDIA_PLACEHOLDER_DATA_URL}
+                    src={mediaFile?.thumbnailUrl || MEDIA_PLACEHOLDER_DATA_URL}
                     onError={handleImageLoadError}
                     alt={loc(post.title)}
                     // No `drag` here on purpose: this image already has its own manually-computed
@@ -133,17 +133,17 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
                         else goToPrev();
                       }
                     }}
-                    onClick={(e) => {
+                    onClick={(event) => {
                       if (wasDraggedRef.current) {
-                        e.preventDefault();
-                        e.stopPropagation();
+                        event.preventDefault();
+                        event.stopPropagation();
                         wasDraggedRef.current = false;
                       }
                     }}
                     className="absolute transition-transform duration-700 ease-out group-hover:scale-103"
                     style={{
-                      left: pos ? `calc(50% + ${pos.x / 3}%)` : "50%",
-                      top: pos ? `calc(50% + ${pos.y / 3}%)` : "50%",
+                      left: position ? `calc(50% + ${position.x / 3}%)` : "50%",
+                      top: position ? `calc(50% + ${position.y / 3}%)` : "50%",
                       width: isPortrait ? "100%" : (isLandscape ? "auto" : "100%"),
                       height: isLandscape ? "100%" : (isPortrait ? "auto" : "100%"),
                       minWidth: isPortrait ? "100%" : "auto",
@@ -152,8 +152,8 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
                       maxHeight: "none",
                       touchAction: "pan-y",
                       transformOrigin: "center center",
-                      transform: pos
-                        ? `translate(-50%, -50%) scale(${pos.zoom})`
+                      transform: position
+                        ? `translate(-50%, -50%) scale(${position.zoom})`
                         : 'translate(-50%, -50%) scale(1)'
                     }}
                     initial={{ opacity: 0 }}
@@ -188,12 +188,12 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
               
               {/* Dots */}
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-1 z-10">
-                {mediaItems.map((_, idx) => (
+                {mediaItems.map((_, index) => (
                   <div
-                    key={idx}
+                    key={index}
                     className={cn(
                       "w-1.5 h-1.5 rounded-full transition-all duration-300",
-                      idx === currentImageIndex ? "bg-white/95 scale-110" : "bg-white/45"
+                      index === currentImageIndex ? "bg-white/95 scale-110" : "bg-white/45"
                     )}
                   />
                 ))}
@@ -214,9 +214,9 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
                   border: `1px solid ${categoryColor}30`,
                 }}
                 className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
                   if (onCategorySelect) {
                     onCategorySelect(post.category!.id);
                   }

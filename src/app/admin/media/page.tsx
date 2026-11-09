@@ -75,7 +75,7 @@ export default function AdminMedia() {
     // No dispatch(addNotification(...)) here: notificationMiddleware.ts already toasts every
     // rejected RTK Query mutation app-wide, including this one (e.g. 409 MEDIA_IN_USE) — same
     // reasoning as handleFiles' catch block below.
-    onError: (err: unknown) => console.error("Failed to delete media", err),
+    onError: (error: unknown) => console.error("Failed to delete media", error),
     closeOnError: true,
   });
 
@@ -126,27 +126,27 @@ export default function AdminMedia() {
       } else {
         dispatch(addNotification({ type: 'success', messageKey: 'media_bulk_deleted' }));
       }
-    } catch (err: unknown) {
+    } catch (error: unknown) {
       // No dispatch(addNotification(...)) here either: same reasoning as the single-delete
       // onError above — the middleware already toasts the rejection.
       setIsBulkDeleteOpen(false);
-      console.error("Failed to bulk-delete media", err);
+      console.error("Failed to bulk-delete media", error);
     }
   };
 
-  const media: MediaItem[] = (mediaData?.data || []).map((m) => ({
-    id: m.id,
-    url: m.thumbnailUrl || m.originalUrl,
-    originalUrl: m.originalUrl || m.thumbnailUrl,
-    name: m.displayName,
-    size: `${m.width}x${m.height}`
+  const media: MediaItem[] = (mediaData?.data || []).map((mediaRow) => ({
+    id: mediaRow.id,
+    url: mediaRow.thumbnailUrl || mediaRow.originalUrl,
+    originalUrl: mediaRow.originalUrl || mediaRow.thumbnailUrl,
+    name: mediaRow.displayName,
+    size: `${mediaRow.width}x${mediaRow.height}`
   }));
 
   // The selection only ever covers what is on screen: ids of cards that are gone (deleted, or
   // filtered out) are ignored, so a bulk action can never touch a card the user cannot see.
   // A new search also drops the raw selection (handleSearchChange), so hidden picks do not
   // come back when the search is cleared.
-  const visibleIds = new Set(media.map((m) => m.id));
+  const visibleIds = new Set(media.map((mediaItem) => mediaItem.id));
   const selectedIds = new Set(Array.from(rawSelectedIds).filter((id) => visibleIds.has(id)));
 
   const handleFiles = async (files: FileList | File[]) => {
@@ -169,29 +169,29 @@ export default function AdminMedia() {
       let anySucceeded = false;
 
       // Upload sequentially to show accurate progress bar
-      for (let i = 0; i < files.length; i++) {
-        setUploadStats({ total: files.length, current: i + 1 });
+      for (let index = 0; index < files.length; index++) {
+        setUploadStats({ total: files.length, current: index + 1 });
         const formData = new FormData();
-        formData.append("file", files[i]);
+        formData.append("file", files[index]);
 
         try {
           await uploadMedia(formData).unwrap();
           anySucceeded = true;
-        } catch (err: unknown) {
+        } catch (error: unknown) {
           // No dispatch(addNotification(...)) here: notificationMiddleware.ts already toasts
           // every rejected RTK Query mutation app-wide (isRejectedWithValue), including this one
           // — a toast dispatched here too was a duplicate of that one, not a second real error.
           // This block only needs to feed the inline uploadIssues panel.
-          const errorData = (err as ApiMutationError)?.data;
+          const errorData = (error as ApiMutationError)?.data;
           const errorCode = errorData?.error?.code;
 
           if (errorCode === 'DUPLICATE_MEDIA') {
             const existingMediaName = errorData?.error?.details?.find(
-              (d) => d.field === 'existingMediaName'
+              (detail) => detail.field === 'existingMediaName'
             )?.message;
-            setUploadIssues(prev => [...prev, { fileName: files[i].name, kind: 'duplicate', existingMediaName }]);
+            setUploadIssues(prev => [...prev, { fileName: files[index].name, kind: 'duplicate', existingMediaName }]);
           } else {
-            setUploadIssues(prev => [...prev, { fileName: files[i].name, kind: 'failed' }]);
+            setUploadIssues(prev => [...prev, { fileName: files[index].name, kind: 'failed' }]);
           }
         }
       }
@@ -208,22 +208,22 @@ export default function AdminMedia() {
     }
   };
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+  const handleDrag = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.type === "dragenter" || event.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === "dragleave") {
+    } else if (event.type === "dragleave") {
       setDragActive(false);
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files) {
-      handleFiles(e.dataTransfer.files);
+    if (event.dataTransfer.files) {
+      handleFiles(event.dataTransfer.files);
     }
   };
 
@@ -270,9 +270,9 @@ export default function AdminMedia() {
         ) : (
           <label className="px-4 py-2 bg-secondary border border-border rounded-lg text-sm font-semibold text-subtle-foreground hover:text-foreground hover:bg-secondary/70 transition-colors cursor-pointer mt-2">
             {t("select_files")}
-            <input type="file" multiple className="hidden" accept="image/jpeg,image/png,image/jpg" onChange={(e) => {
-              if (e.target.files) {
-                handleFiles(e.target.files);
+            <input type="file" multiple className="hidden" accept="image/jpeg,image/png,image/jpg" onChange={(event) => {
+              if (event.target.files) {
+                handleFiles(event.target.files);
               }
             }} />
           </label>
@@ -301,8 +301,8 @@ export default function AdminMedia() {
                 {t("upload_issues")}
               </p>
               <ul className="space-y-1 text-xs">
-                {uploadIssues.map((issue, i) => (
-                  <li key={i}>
+                {uploadIssues.map((issue, index) => (
+                  <li key={index}>
                     {issue.kind === "duplicate" ? (
                       <button
                         type="button"
@@ -439,9 +439,9 @@ export default function AdminMedia() {
                   title={t("view")}
                   aria-label={t("view")}
                   onClick={() => setViewerIndex(index)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
                       setViewerIndex(index);
                     }
                   }}
@@ -486,7 +486,7 @@ export default function AdminMedia() {
       )}
 
       <FullscreenGallery
-        images={media.map((m) => m.originalUrl)}
+        images={media.map((mediaItem) => mediaItem.originalUrl)}
         initialIndex={viewerIndex ?? 0}
         isOpen={viewerIndex !== null}
         onClose={() => setViewerIndex(null)}

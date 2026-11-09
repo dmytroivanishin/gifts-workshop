@@ -24,7 +24,7 @@ export const MEDIA_PLACEHOLDER_DATA_URL = `data:image/svg+xml;base64,${btoa(PLAC
 // hiccup). A data: URI never itself triggers another load error, but onerror is still cleared
 // defensively so a pathological repeat can't loop.
 export function handleImageLoadError(event: SyntheticEvent<HTMLImageElement>): void {
-  const img = event.currentTarget;
-  img.onerror = null;
-  img.src = MEDIA_PLACEHOLDER_DATA_URL;
+  const image = event.currentTarget;
+  image.onerror = null;
+  image.src = MEDIA_PLACEHOLDER_DATA_URL;
 }

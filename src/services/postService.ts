@@ -202,11 +202,11 @@ export class PostService implements IPostService {
       categoryId: body.categoryId ?? existing.categoryId,
       tagsIds: body.tagsIds || existing.tagsIds || [],
       posterId: body.posterId ?? existing.posterId,
-      media: body.media || (existing.media ? existing.media.map(m => ({
-        id: m.id,
-        order: m.order,
-        mediaId: m.mediaId,
-        position: m.position,
+      media: body.media || (existing.media ? existing.media.map(postMedia => ({
+        id: postMedia.id,
+        order: postMedia.order,
+        mediaId: postMedia.mediaId,
+        position: postMedia.position,
       })) : []),
       slug,
       userId: body.userId ?? existing.userId,

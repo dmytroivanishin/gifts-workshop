@@ -10,6 +10,7 @@ import { PostCard } from "@/components/features/PostCard";
 import { useTranslation } from "@/i18n";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { getChildCategories, isCategoryActive } from "@/utils/categoryTree";
 import { PopulatedCategory, PopulatedPost, PaginatedResult } from "@/types";
 
 interface HomeClientProps {
@@ -148,13 +149,13 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
   let categoryQueryParam = "";
   if (activeCategory && dbCategories.length > 0) {
     const targetCategoryObj = dbCategories.find(
-      (c) => c.id === activeCategory || c.slug === activeCategory
+      (category) => category.id === activeCategory || category.slug === activeCategory
     );
     if (targetCategoryObj) {
       if (!targetCategoryObj.parentId) {
         // It is a parent category! Aggregate its ID and all children's IDs
-        const children = dbCategories.filter((c) => c.parentId === targetCategoryObj.id);
-        const resolvedIds = [targetCategoryObj.id, ...children.map((c) => c.id)];
+        const children = getChildCategories(dbCategories, targetCategoryObj.id);
+        const resolvedIds = [targetCategoryObj.id, ...children.map((child) => child.id)];
         categoryQueryParam = resolvedIds.join(",");
       } else {
         // It is a single child category! Just use its ID
@@ -226,22 +227,21 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
     };
   }, [hasMore, isFetching, isLoading]);
 
-  const topLevelCategories = dbCategories.filter((cat) => !cat.parentId);
-  const selectedParent = topLevelCategories.find((cat) => {
-    const children = dbCategories.filter((c) => c.parentId === cat.id);
+  const topLevelCategories = dbCategories.filter((category) => !category.parentId);
+  const selectedParent = topLevelCategories.find((category) => {
+    const children = getChildCategories(dbCategories, category.id);
     return (
       children.length > 0 &&
-      (activeCategory === cat.id ||
-        activeCategory === cat.slug ||
-        children.some((c) => activeCategory === c.id || activeCategory === c.slug))
+      (isCategoryActive(category, activeCategory) ||
+        children.some((child) => isCategoryActive(child, activeCategory)))
     );
   });
   // Compact layout: the subcategory tier is open only while its parent's chevron is toggled on.
-  const openParent = topLevelCategories.find((cat) => cat.id === openDropdownId);
-  const openParentChildren = openParent ? dbCategories.filter((c) => c.parentId === openParent.id) : [];
+  const openParent = topLevelCategories.find((category) => category.id === openDropdownId);
+  const openParentChildren = openParent ? getChildCategories(dbCategories, openParent.id) : [];
 
   const navDataKey = useMemo(
-    () => topLevelCategories.map((cat) => `${cat.id}:${loc(cat.title)}`).join("|") + "#" + dbCategories.length,
+    () => topLevelCategories.map((category) => `${category.id}:${loc(category.title)}`).join("|") + "#" + dbCategories.length,
     // eslint-disable-next-line react-hooks/exhaustive-deps -- topLevelCategories/loc are derived from these
     [dbCategories, loc]
   );
@@ -372,37 +372,36 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
 
               {/* Dynamic Categories */}
               {dbCategories
-                .filter((cat) => !cat.parentId)
-                .map((cat) => {
-                  const localizedTitle = loc(cat.title);
-                  const children = dbCategories.filter((c) => c.parentId === cat.id);
+                .filter((category) => !category.parentId)
+                .map((category) => {
+                  const localizedTitle = loc(category.title);
+                  const children = getChildCategories(dbCategories, category.id);
                   const hasChildren = children.length > 0;
 
                   const isSelected =
-                    activeCategory === cat.id ||
-                    activeCategory === cat.slug ||
-                    children.some((c) => activeCategory === c.id || activeCategory === c.slug);
+                    isCategoryActive(category, activeCategory) ||
+                    children.some((child) => isCategoryActive(child, activeCategory));
 
                   if (hasChildren) {
-                    const isOpen = openDropdownId === cat.id;
+                    const isOpen = openDropdownId === category.id;
                     return (
-                      <div key={cat.id} className="relative group">
+                      <div key={category.id} className="relative group">
                         {/* Parent Category Button: the label navigates (tap/click), the chevron is
                             its own tap target toggling the dropdown — hover alone can't open it on
                             a touch device, which has no hover state at all. */}
                         <div
                           className={cn(
                             "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all flex items-center gap-1.5",
-                            categoryTone(cat.color?.color, isSelected).className
+                            categoryTone(category.color?.color, isSelected).className
                           )}
-                          style={categoryTone(cat.color?.color, isSelected).style}
+                          style={categoryTone(category.color?.color, isSelected).style}
                         >
-                          <Link href={getCategoryUrl(cat.slug || cat.id)} className="cursor-pointer" onClick={() => setOpenDropdownId(null)}>
+                          <Link href={getCategoryUrl(category.slug || category.id)} className="cursor-pointer" onClick={() => setOpenDropdownId(null)}>
                             {localizedTitle}
                           </Link>
                           <button
                             type="button"
-                            onClick={() => setOpenDropdownId((prev) => (prev === cat.id ? null : cat.id))}
+                            onClick={() => setOpenDropdownId((prev) => (prev === category.id ? null : category.id))}
                             aria-expanded={isOpen}
                             aria-label={localizedTitle}
                             className={cn(
@@ -428,8 +427,8 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                                 A subcategory takes its own colour, else its parent's, and is lit by the
                                 same rule as the top-level pills. */}
                             {children.map((child) => {
-                              const isChildSelected = activeCategory === child.id || activeCategory === child.slug;
-                              const tone = categoryTone(child.color?.color ?? cat.color?.color, isChildSelected);
+                              const isChildSelected = isCategoryActive(child, activeCategory);
+                              const tone = categoryTone(child.color?.color ?? category.color?.color, isChildSelected);
                               return (
                                 <Link
                                   key={child.id}
@@ -452,16 +451,16 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                   }
 
                   // Normal Button
-                  const isDirectlySelected = activeCategory === cat.id || activeCategory === cat.slug;
+                  const isDirectlySelected = isCategoryActive(category, activeCategory);
                   return (
                     <Link
-                      key={cat.id}
-                      href={getCategoryUrl(cat.slug || cat.id)}
+                      key={category.id}
+                      href={getCategoryUrl(category.slug || category.id)}
                       className={cn(
                         "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer block",
-                        categoryTone(cat.color?.color, isDirectlySelected).className
+                        categoryTone(category.color?.color, isDirectlySelected).className
                       )}
-                      style={categoryTone(cat.color?.color, isDirectlySelected).style}
+                      style={categoryTone(category.color?.color, isDirectlySelected).style}
                     >
                       {localizedTitle}
                     </Link>
@@ -492,13 +491,13 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                   </Link>
                 </motion.div>
                 {tagFilterChip && <motion.div layout="position">{tagFilterChip}</motion.div>}
-                {topLevelCategories.map((cat) => {
-                  const hasChildren = dbCategories.some((c) => c.parentId === cat.id);
-                  const isSelected = selectedParent?.id === cat.id || activeCategory === cat.id || activeCategory === cat.slug;
-                  const tone = categoryTone(cat.color?.color, isSelected);
-                  const isOpen = openDropdownId === cat.id;
+                {topLevelCategories.map((category) => {
+                  const hasChildren = getChildCategories(dbCategories, category.id).length > 0;
+                  const isSelected = selectedParent?.id === category.id || isCategoryActive(category, activeCategory);
+                  const tone = categoryTone(category.color?.color, isSelected);
+                  const isOpen = openDropdownId === category.id;
                   return (
-                    <motion.div key={cat.id} layout="position">
+                    <motion.div key={category.id} layout="position">
                       {/* Same split as the desktop pill: the label selects the category, the chevron
                           (its own tap target) toggles the subcategory row. */}
                       <div
@@ -509,18 +508,18 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                         style={tone.style}
                       >
                         <Link
-                          href={getCategoryUrl(cat.slug || cat.id)}
+                          href={getCategoryUrl(category.slug || category.id)}
                           className="cursor-pointer"
                           onClick={() => setOpenDropdownId(null)}
                         >
-                          {loc(cat.title)}
+                          {loc(category.title)}
                         </Link>
                         {hasChildren && (
                           <button
                             type="button"
-                            onClick={() => setOpenDropdownId((prev) => (prev === cat.id ? null : cat.id))}
+                            onClick={() => setOpenDropdownId((prev) => (prev === category.id ? null : category.id))}
                             aria-expanded={isOpen}
-                            aria-label={loc(cat.title)}
+                            aria-label={loc(category.title)}
                             className={cn("text-[9px] opacity-60 transition-transform duration-200 cursor-pointer", isOpen && "rotate-180")}
                           >
                             ▼
@@ -547,7 +546,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                     {/* The very same panel as the desktop dropdown: card background, border, stacked rows. */}
                     <div className="mx-auto flex w-fit min-w-[200px] max-w-full flex-col gap-1 rounded-2xl border border-border bg-card/95 p-2 backdrop-blur-md">
                       {openParentChildren.map((child) => {
-                        const isChildSelected = activeCategory === child.id || activeCategory === child.slug;
+                        const isChildSelected = isCategoryActive(child, activeCategory);
                         const tone = categoryTone(child.color?.color ?? openParent.color?.color, isChildSelected);
                         return (
                           <Link

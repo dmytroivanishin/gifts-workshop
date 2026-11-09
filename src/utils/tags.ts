@@ -16,3 +16,18 @@ export const extractLocalizedTags = (tags: Tag[] | undefined, locale: string): s
     )
   ).join(", ");
 };
+
+// Tag cache for chips whose tag is not on the currently loaded page of the tag list.
+// `addMissingTags` keeps the same array when nothing is new, so a state setter using it does not re-render.
+export const addMissingTags = (previous: Tag[], incoming: Tag[]): Tag[] => {
+  const known = new Set(previous.map((tag) => tag.id));
+  const missing = incoming.filter((tag) => !known.has(tag.id));
+  return missing.length > 0 ? [...previous, ...missing] : previous;
+};
+
+// Same, but a tag already cached is replaced by the incoming (fresher) copy.
+export const mergeTagsById = (previous: Tag[], incoming: Tag[]): Tag[] => {
+  const merged = new Map(previous.map((tag) => [tag.id, tag]));
+  for (const tag of incoming) merged.set(tag.id, tag);
+  return Array.from(merged.values());
+};

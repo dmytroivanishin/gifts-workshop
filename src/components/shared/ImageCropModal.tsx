@@ -48,15 +48,15 @@ export default function ImageCropModal({
     };
   };
 
-  const handleMouseDown = (e: MouseEvent) => {
+  const handleMouseDown = (event: MouseEvent) => {
     setIsDragging(true);
-    dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+    dragStart.current = { x: event.clientX - position.x, y: event.clientY - position.y };
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = (event: MouseEvent) => {
     if (!isDragging) return;
-    const rawX = e.clientX - dragStart.current.x;
-    const rawY = e.clientY - dragStart.current.y;
+    const rawX = event.clientX - dragStart.current.x;
+    const rawY = event.clientY - dragStart.current.y;
     setPosition(constrainPosition(rawX, rawY, zoom));
   };
 
@@ -65,15 +65,15 @@ export default function ImageCropModal({
   };
 
   // Touch Support
-  const handleTouchStart = (e: TouchEvent) => {
+  const handleTouchStart = (event: TouchEvent) => {
     setIsDragging(true);
-    const touch = e.touches[0];
+    const touch = event.touches[0];
     dragStart.current = { x: touch.clientX - position.x, y: touch.clientY - position.y };
   };
 
-  const handleTouchMove = (e: TouchEvent) => {
+  const handleTouchMove = (event: TouchEvent) => {
     if (!isDragging) return;
-    const touch = e.touches[0];
+    const touch = event.touches[0];
     const rawX = touch.clientX - dragStart.current.x;
     const rawY = touch.clientY - dragStart.current.y;
     setPosition(constrainPosition(rawX, rawY, zoom));
@@ -154,8 +154,8 @@ export default function ImageCropModal({
               max="3"
               step="0.05"
               value={zoom}
-              onChange={(e) => {
-                const newZoom = parseFloat(e.target.value);
+              onChange={(event) => {
+                const newZoom = parseFloat(event.target.value);
                 setZoom(newZoom);
                 setPosition((prev) => constrainPosition(prev.x, prev.y, newZoom));
               }}

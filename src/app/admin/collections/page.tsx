@@ -66,17 +66,17 @@ export default function AdminCollections() {
         resetForm();
       }
     },
-    onError: (err) => console.error("Failed to delete collection", err),
+    onError: (error) => console.error("Failed to delete collection", error),
     closeOnError: false,
   });
 
-  const handleEdit = (col: Collection) => {
-    setIsEditing(col.id);
-    setActiveCollectionObj(col);
+  const handleEdit = (collection: Collection) => {
+    setIsEditing(collection.id);
+    setActiveCollectionObj(collection);
     form.reset({
-      title: typeof col.title === "string" ? { [locale]: col.title } : col.title || {},
-      description: typeof col.description === "string" ? { [locale]: col.description } : col.description || {},
-      main: col.main || false,
+      title: typeof collection.title === "string" ? { [locale]: collection.title } : collection.title || {},
+      description: typeof collection.description === "string" ? { [locale]: collection.description } : collection.description || {},
+      main: collection.main || false,
     });
   };
 
@@ -96,14 +96,14 @@ export default function AdminCollections() {
         await createCollection(values).unwrap();
       }
       resetForm();
-    } catch (err: unknown) {
-      const apiError = err as ApiMutationError;
+    } catch (error: unknown) {
+      const apiError = error as ApiMutationError;
       if (apiError?.data?.error?.details) {
         apiError.data.error.details.forEach((detail) => {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }
-      console.error("Failed to save collection", err);
+      console.error("Failed to save collection", error);
     }
   };
 
@@ -136,16 +136,16 @@ export default function AdminCollections() {
                 items={collections}
                 estimateSize={100}
                 className="max-h-[70vh] divide-y divide-border/45"
-                renderItem={(col) => (
+                renderItem={(collection) => (
                 <div
                   className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"
                 >
                   <div className="flex-1 min-w-0 pr-0 sm:pr-4">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm text-foreground truncate">
-                        {loc(col.title)}
+                        {loc(collection.title)}
                       </span>
-                      {col.main && (
+                      {collection.main && (
                         <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#DADFC6] text-[#5C6535] uppercase tracking-wider">
                           <Star size={10} className="fill-current" />
                           {t("main")}
@@ -153,16 +153,16 @@ export default function AdminCollections() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
-                      {loc(col.description) || t("no_description")}
+                      {loc(collection.description) || t("no_description")}
                     </p>
                     <p className="text-xs text-muted-foreground/60 font-mono mt-0.5">
-                      slug: {col.slug}
+                      slug: {collection.slug}
                     </p>
                   </div>
 
                   <RowActions>
-                    <RowAction icon={Edit} title={t("edit_collection")} active={isEditing === col.id} onClick={() => handleEdit(col)} />
-                    <RowAction icon={Trash2} tone="destructive" title={t("delete_collection")} disabled={isDeleting} onClick={() => handleDeleteClick(col.id)} />
+                    <RowAction icon={Edit} title={t("edit_collection")} active={isEditing === collection.id} onClick={() => handleEdit(collection)} />
+                    <RowAction icon={Trash2} tone="destructive" title={t("delete_collection")} disabled={isDeleting} onClick={() => handleDeleteClick(collection.id)} />
                   </RowActions>
                 </div>
                 )}

@@ -70,8 +70,8 @@ export default function AdminLocalizations() {
         if (page === 1) return currentData.data;
         
         // Prevent duplicates just in case
-        const existingIds = new Set(prev.map(i => i.id));
-        const newItems = currentData.data.filter((i) => !existingIds.has(i.id));
+        const existingIds = new Set(prev.map(item => item.id));
+        const newItems = currentData.data.filter((item) => !existingIds.has(item.id));
         return [...prev, ...newItems];
       });
     }
@@ -84,7 +84,7 @@ export default function AdminLocalizations() {
 
   const handleLoadMore = () => {
     if (!isFetching && hasMore) {
-      setPage(p => p + 1);
+      setPage(previousPage => previousPage + 1);
     }
   };
 

@@ -1,5 +1,8 @@
 "use client";
 
+import { addMissingTags, mergeTagsById } from "@/utils/tags";
+import { hasLocalizedValue } from "@/utils/localization";
+import { SelectedMedia, postToFormValues, postToSelectedImages, buildTagOptions } from "./postEditorMapping";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Save, Loader2, Image as ImageIcon, Archive as ArchiveIcon, Send, Calendar as CalendarIcon, ClipboardPaste, X } from "lucide-react";
@@ -35,20 +38,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { ru, enUS, Locale } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ApiMutationError, Tag, PopulatedPostMedia, Media } from "@/types";
-
-// The API can return a gallery/poster reference as a bare id string instead of the
-// fully populated object, depending on which populate() path produced it — handled
-// defensively below the same way this code already did under `any`.
-type LoosePostMedia = Omit<PopulatedPostMedia, "media"> & { media: Media | string };
+import { ApiMutationError, Tag } from "@/types";
 
 const dateLocales: Record<string, Locale> = { ru, en: enUS };
-
-interface SelectedMedia {
-  mediaId: string;
-  url: string;
-  position?: { x: number; y: number; zoom: number };
-}
 
 interface PostFormPageProps {
   params: Promise<{ id: string }>;
@@ -116,13 +108,13 @@ export default function PostFormPage({ params }: PostFormPageProps) {
 
   const handleCreateTag = async (name: string) => {
     try {
-      const res = await createTag({
+      const response = await createTag({
         name: { [locale]: name },
       }).unwrap();
-      setExtraTags((prev) => [...prev, res.data]);
-      return res.data.id;
-    } catch (err) {
-      console.error("Failed to create tag dynamically", err);
+      setExtraTags((prev) => [...prev, response.data]);
+      return response.data.id;
+    } catch (error) {
+      console.error("Failed to create tag dynamically", error);
       return "";
     }
   };
@@ -135,17 +127,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
   useEffect(() => {
     const toCache = searchedTags.filter((tag) => selectedTagIds.includes(tag.id));
     if (!toCache.length) return;
-    setExtraTags((prev) => {
-      const merged = new Map(prev.map((t) => [t.id, t]));
-      let changed = false;
-      for (const tag of toCache) {
-        if (!merged.has(tag.id)) {
-          merged.set(tag.id, tag);
-          changed = true;
-        }
-      }
-      return changed ? Array.from(merged.values()) : prev;
-    });
+    setExtraTags((previous) => addMissingTags(previous, toCache));
   }, [searchedTags, selectedTagIds]);
 
   // Sync complex states to RHF
@@ -156,10 +138,10 @@ export default function PostFormPage({ params }: PostFormPageProps) {
   useEffect(() => {
     form.setValue(
       "media",
-      selectedImages.map((img, i) => ({
-        order: i + 1,
-        mediaId: img.mediaId,
-        position: img.position || undefined,
+      selectedImages.map((image, index) => ({
+        order: index + 1,
+        mediaId: image.mediaId,
+        position: image.position || undefined,
       })),
       { shouldValidate: true }
     );
@@ -170,41 +152,14 @@ export default function PostFormPage({ params }: PostFormPageProps) {
     if (isEditMode && postResponse?.data) {
       const post = postResponse.data;
 
-      const cat = typeof post.category !== "string" ? post.category?.id || "" : post.category;
-      const col = typeof post.collection !== "string" ? post.collection?.id || "" : post.collection;
-
-      form.reset({
-        title: typeof post.title === "string" ? { [locale]: post.title } : post.title || {},
-        description: typeof post.description === "string" ? { [locale]: post.description } : post.description || {},
-        categoryId: cat,
-        collectionId: col || post.collectionId || "",
-        inStock: post.inStock,
-        status: post.status,
-        tagsIds: post.tags ? post.tags.map((t: Tag | string) => typeof t === "string" ? t : t.id) : [],
-        posterId: post.poster ? (typeof post.poster === "string" ? post.poster : post.poster.id) : undefined as any,
-        createdAt: post.createdAt ? new Date(post.createdAt).toISOString().slice(0, 16) : undefined,
-        media: post.media ? (post.media as LoosePostMedia[]).map((m, i: number) => ({
-          order: i + 1,
-          mediaId: typeof m.media === "string" ? m.media : m.media.id,
-          position: m.position || undefined,
-        })) : []
-      });
+      form.reset(postToFormValues(post, locale));
 
       if (post.tags) {
-        const fullTags = post.tags.filter((t: Tag | string): t is Tag => typeof t !== "string");
-        setExtraTags((prev) => {
-          const merged = new Map(prev.map((tag) => [tag.id, tag]));
-          for (const tag of fullTags) merged.set(tag.id, tag);
-          return Array.from(merged.values());
-        });
+        const fullTags = post.tags.filter((tagOrId: Tag | string): tagOrId is Tag => typeof tagOrId !== "string");
+        setExtraTags((previous) => mergeTagsById(previous, fullTags));
       }
 
-      const images: SelectedMedia[] = (post.media as LoosePostMedia[]).map((m) => ({
-        mediaId: typeof m.media === "string" ? m.media : m.media.id,
-        url: typeof m.media === "string" ? "" : m.media.originalUrl,
-        position: m.position,
-      }));
-      setSelectedImages(images);
+      setSelectedImages(postToSelectedImages(post));
 
       if (post.poster) {
         setCoverImage(typeof post.poster === "string" ? post.poster : post.poster.id);
@@ -235,9 +190,9 @@ export default function PostFormPage({ params }: PostFormPageProps) {
   }, [isEditMode, collections, categories, form]);
 
   const handleMediaSelect = (mediaArray: { mediaId: string; url: string }[]) => {
-    const newSelected = mediaArray.map(m => {
-      const existing = selectedImages.find(s => s.mediaId === m.mediaId);
-      return existing ? existing : { ...m };
+    const newSelected = mediaArray.map(entry => {
+      const existing = selectedImages.find(selected => selected.mediaId === entry.mediaId);
+      return existing ? existing : { ...entry };
     });
     setSelectedImages(newSelected);
     setIsMediaPickerOpen(false);
@@ -255,11 +210,11 @@ export default function PostFormPage({ params }: PostFormPageProps) {
   // nothing stays copied by accident. Media deleted since copying is skipped and reported.
   const handlePasteMedia = () => {
     if (!mediaResponse) return;
-    const byId = new Map(mediaList.map((m) => [m.id, m]));
+    const byId = new Map(mediaList.map((media) => [media.id, media]));
     const { toAdd, missing } = resolvePaste(
       clipboard.ids,
       new Set(byId.keys()),
-      new Set(selectedImages.map((img) => img.mediaId))
+      new Set(selectedImages.map((image) => image.mediaId))
     );
 
     if (toAdd.length > 0) {
@@ -279,18 +234,18 @@ export default function PostFormPage({ params }: PostFormPageProps) {
     }
   };
 
-  const handleSaveCrop = (pos: { x: number; y: number; zoom: number }) => {
+  const handleSaveCrop = (position: { x: number; y: number; zoom: number }) => {
     if (activeCropMediaId === "cover") {
-      setCoverPosition(pos);
-      setSelectedImages(prev => prev.map(m =>
-        m.mediaId === coverImage ? { ...m, position: pos } : m
+      setCoverPosition(position);
+      setSelectedImages(prev => prev.map(image =>
+        image.mediaId === coverImage ? { ...image, position: position } : image
       ));
     } else if (activeCropMediaId) {
-      setSelectedImages(prev => prev.map(m =>
-        m.mediaId === activeCropMediaId ? { ...m, position: pos } : m
+      setSelectedImages(prev => prev.map(image =>
+        image.mediaId === activeCropMediaId ? { ...image, position: position } : image
       ));
       if (activeCropMediaId === coverImage) {
-        setCoverPosition(pos);
+        setCoverPosition(position);
       }
     }
     setActiveCropMediaId(null);
@@ -314,14 +269,14 @@ export default function PostFormPage({ params }: PostFormPageProps) {
 
       // A draft and a publish both return to the list.
       router.push("/admin/posts");
-    } catch (err: unknown) {
-      const apiError = err as ApiMutationError;
+    } catch (error: unknown) {
+      const apiError = error as ApiMutationError;
       if (apiError?.data?.error?.details) {
         apiError.data.error.details.forEach((detail) => {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }
-      console.error("Failed to save post", err);
+      console.error("Failed to save post", error);
     }
   };
 
@@ -336,39 +291,23 @@ export default function PostFormPage({ params }: PostFormPageProps) {
   const isSaving = isCreating || isUpdating;
 
   // Options converters for Combobox
-  const collectionOptions = collections.map((col) => ({
-    value: col.id,
-    label: loc(col.title),
+  const collectionOptions = collections.map((collection) => ({
+    value: collection.id,
+    label: loc(collection.title),
   }));
 
-  const categoryOptions = categories.map((cat) => ({
-    value: cat.id,
-    label: loc(cat.title),
+  const categoryOptions = categories.map((category) => ({
+    value: category.id,
+    label: loc(category.title),
   }));
 
   const currentCategoryId = form.watch("categoryId");
-  const activeCategory = categories.find((cat) => cat.id === currentCategoryId);
+  const activeCategory = categories.find((category) => category.id === currentCategoryId);
 
-  const tagOptions = [...allTags]
-    .sort((a, b) => {
-      const aMatches = activeCategory?.tagsIds?.includes(a.id) ? 1 : 0;
-      const bMatches = activeCategory?.tagsIds?.includes(b.id) ? 1 : 0;
-      if (aMatches !== bMatches) return bMatches - aMatches;
-      const aTitle = loc(a.name);
-      const bTitle = loc(b.name);
-      return aTitle.localeCompare(bTitle);
-    })
-    .map((tag) => {
-      const isStarred = activeCategory?.tagsIds?.includes(tag.id);
-      const tagTitle = loc(tag.name);
-      return {
-        value: tag.id,
-        label: isStarred ? `${tagTitle} (★)` : tagTitle,
-      };
-    });
+  const tagOptions = buildTagOptions(allTags, activeCategory, loc);
 
   const currentTitle = form.watch("title");
-  const hasAnyTitle = currentTitle && Object.values(currentTitle).some((val) => typeof val === "string" && val.trim() !== "");
+  const hasAnyTitle = hasLocalizedValue(currentTitle);
 
   const canPublish = !!(
     hasAnyTitle &&
@@ -467,13 +406,13 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                     <Combobox
                       options={categoryOptions}
                       value={field.value || ""}
-                      onChange={(val) => {
-                        const oldCat = categories.find((cat) => cat.id === field.value);
+                      onChange={(value) => {
+                        const oldCat = categories.find((category) => category.id === field.value);
                         const oldTags = oldCat?.tagsIds || [];
 
-                        field.onChange(val);
+                        field.onChange(value);
 
-                        const newCat = categories.find((cat) => cat.id === val);
+                        const newCat = categories.find((category) => category.id === value);
                         const newTags = newCat?.tagsIds || [];
 
                         const prevTags = form.getValues("tagsIds") || [];
@@ -484,11 +423,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                         // independent of whatever page/search the tags Combobox currently has loaded —
                         // cache them so a newly auto-added tag's chip always resolves a real label.
                         if (newCat?.tags?.length) {
-                          setExtraTags((prev) => {
-                            const merged = new Map(prev.map((t) => [t.id, t]));
-                            for (const tag of newCat.tags) merged.set(tag.id, tag);
-                            return Array.from(merged.values());
-                          });
+                          setExtraTags((previous) => mergeTagsById(previous, newCat.tags));
                         }
                       }}
                       placeholder={t("placeholder_select_category")}
@@ -546,7 +481,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                       onSearchChange={setTagSearch}
                       onEndReached={hasMoreTags ? loadMoreTags : undefined}
                       resolveLabel={(id) => {
-                        const tag = extraTags.find((t) => t.id === id);
+                        const tag = extraTags.find((extraTag) => extraTag.id === id);
                         return tag ? loc(tag.name) : undefined;
                       }}
                     />
@@ -686,7 +621,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                 }}
                 onCrop={(id) => setActiveCropMediaId(id)}
                 onRemove={(id) => {
-                  const newSelected = selectedImages.filter((img) => img.mediaId !== id);
+                  const newSelected = selectedImages.filter((image) => image.mediaId !== id);
                   setSelectedImages(newSelected);
                   if (coverImage === id) {
                     setCoverImage(newSelected.length > 0 ? newSelected[0].mediaId : "");
@@ -770,17 +705,17 @@ export default function PostFormPage({ params }: PostFormPageProps) {
       {activeCropMediaId && (
         <ImageCropModal
           media={
-            mediaList.find(m => m.id === (activeCropMediaId === "cover" ? coverImage : activeCropMediaId))
+            mediaList.find(media => media.id === (activeCropMediaId === "cover" ? coverImage : activeCropMediaId))
           }
           imageUrl={
             activeCropMediaId === "cover"
-              ? selectedImages.find(m => m.mediaId === coverImage)?.url || ""
-              : selectedImages.find(m => m.mediaId === activeCropMediaId)?.url || ""
+              ? selectedImages.find(image => image.mediaId === coverImage)?.url || ""
+              : selectedImages.find(image => image.mediaId === activeCropMediaId)?.url || ""
           }
           initialPosition={
             activeCropMediaId === "cover"
               ? coverPosition || undefined
-              : selectedImages.find(m => m.mediaId === activeCropMediaId)?.position
+              : selectedImages.find(image => image.mediaId === activeCropMediaId)?.position
           }
           onClose={() => setActiveCropMediaId(null)}
           onSave={handleSaveCrop}
@@ -789,7 +724,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
 
       {isMediaPickerOpen && (
         <MediaPickerModal
-          selectedIds={selectedImages.map(img => img.mediaId)}
+          selectedIds={selectedImages.map(image => image.mediaId)}
           onSelect={handleMediaSelect}
           onClose={() => setIsMediaPickerOpen(false)}
         />

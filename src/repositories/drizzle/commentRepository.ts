@@ -37,7 +37,7 @@ export class CommentRepository extends DrizzleBaseRepository<Comment, PopulatedC
   }
 
   override async getAll(options?: QueryOptions): Promise<PopulatedComment[]> {
-    if (options && Object.keys(options).some(k => !['page', 'limit', 'offset', 'populate'].includes(k))) {
+    if (options && Object.keys(options).some(key => !['page', 'limit', 'offset', 'populate'].includes(key))) {
       return this.getByQuery(options, options);
     }
 

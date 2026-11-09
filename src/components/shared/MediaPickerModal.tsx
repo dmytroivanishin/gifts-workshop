@@ -30,12 +30,12 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
 
   const handleSave = () => {
     const selectedData = currentSelected.map(id => {
-      const m = mediaList.find(media => media.id === id);
+      const media = mediaList.find(candidate => candidate.id === id);
       return {
         mediaId: id,
-        url: m?.originalUrl || "",
+        url: media?.originalUrl || "",
       };
-    }).filter(m => m.url);
+    }).filter(entry => entry.url);
     onSelect(selectedData);
   };
 

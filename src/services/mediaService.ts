@@ -189,10 +189,10 @@ export class MediaService implements IMediaService {
     const deleted = await this.mediaRepo.deleteMany(candidateIds);
     const deletedSet = new Set(deleted);
 
-    const rowsToPurge = mediaRows.filter((m) => deletedSet.has(m.id));
+    const rowsToPurge = mediaRows.filter((media) => deletedSet.has(media.id));
     if (rowsToPurge.length > 0) {
       await storageService.deleteImages(
-        rowsToPurge.map((m) => ({ originalUrl: m.originalUrl, thumbnailUrl: m.thumbnailUrl }))
+        rowsToPurge.map((media) => ({ originalUrl: media.originalUrl, thumbnailUrl: media.thumbnailUrl }))
       );
     }
 

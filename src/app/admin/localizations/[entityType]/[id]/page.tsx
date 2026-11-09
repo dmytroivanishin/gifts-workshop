@@ -113,8 +113,8 @@ export default function LocalizationDetailPage({ params }: PageProps) {
     }
   }, [entity, activeLanguages, isSystem, id]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (event: React.FormEvent) => {
+    event.preventDefault();
     setSaveStatus(null);
     setIsSubmitted(true);
     setServerErrors({});
@@ -125,9 +125,9 @@ export default function LocalizationDetailPage({ params }: PageProps) {
     try {
       if (isSystem) {
         if (id === "new") {
-          const res = await createSystemText({ content: titles, area, code }).unwrap();
+          const response = await createSystemText({ content: titles, area, code }).unwrap();
           setSaveStatus({ type: "success", message: t("translations_success") || "Saved successfully!" });
-          setTimeout(() => router.push(`/admin/localizations/system/${res.data.id}`), 1000);
+          setTimeout(() => router.push(`/admin/localizations/system/${response.data.id}`), 1000);
           return;
         } else {
           await updateSystem({ id, content: titles, area, code }).unwrap();
@@ -147,15 +147,15 @@ export default function LocalizationDetailPage({ params }: PageProps) {
           media: post.media,
         }).unwrap();
       } else if (isCategory) {
-        const cat = entity as PopulatedCategory;
+        const category = entity as PopulatedCategory;
         await updateCategory({
           id,
           title: titles,
           description: descriptions,
-          color: cat.color,
-          parentId: cat.parentId,
-          collectionId: cat.collectionId,
-          tagsIds: cat.tagsIds,
+          color: category.color,
+          parentId: category.parentId,
+          collectionId: category.collectionId,
+          tagsIds: category.tagsIds,
         }).unwrap();
       } else if (isTag) {
         const tag = entity as Tag;
@@ -186,8 +186,8 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
       setSaveStatus({ type: "success", message: t("translations_success") || "Saved successfully!" });
       setTimeout(() => setSaveStatus(null), 3000);
-    } catch (err: unknown) {
-      const apiError = err as ApiMutationError;
+    } catch (error: unknown) {
+      const apiError = error as ApiMutationError;
       if (apiError?.data?.error?.details) {
         const newErrors: Record<string, string> = {};
         apiError.data.error.details.forEach((detail) => {
@@ -195,19 +195,19 @@ export default function LocalizationDetailPage({ params }: PageProps) {
         });
         setServerErrors(newErrors);
       }
-      console.error("Failed to save translations", err);
+      console.error("Failed to save translations", error);
       setSaveStatus({ type: "error", message: t("translations_error") || "Error saving" });
     }
   };
 
-  const updateField = (lang: string, field: "title" | "desc", val: string) => {
+  const updateField = (lang: string, field: "title" | "desc", value: string) => {
     if (field === "title") {
-      setTitles(prev => ({ ...prev, [lang]: val }));
+      setTitles(prev => ({ ...prev, [lang]: value }));
       if (getFieldError(`title.${lang}`) || getFieldError("title")) {
         setServerErrors(prev => ({ ...prev, [`title.${lang}`]: "", title: "" }));
       }
     } else {
-      setDescriptions(prev => ({ ...prev, [lang]: val }));
+      setDescriptions(prev => ({ ...prev, [lang]: value }));
       if (getFieldError(`description.${lang}`) || getFieldError("description")) {
         setServerErrors(prev => ({ ...prev, [`description.${lang}`]: "", description: "" }));
       }
@@ -277,7 +277,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                 <Input
                   type="text"
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  onChange={(event) => setCode(event.target.value)}
                   placeholder="e.g. save_button"
                   required
                 />
@@ -294,7 +294,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                     { value: "shared", label: t("area_shared") || "Shared (Visible in both)" },
                   ]}
                   value={area}
-                  onChange={(val) => setArea(val as string)}
+                  onChange={(value) => setArea(value as string)}
                   clearable={false}
                   searchable={false}
                 />
@@ -320,7 +320,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                   <Input
                     type="text"
                     value={titles[lang] || ""}
-                    onChange={(e) => updateField(lang, "title", e.target.value)}
+                    onChange={(event) => updateField(lang, "title", event.target.value)}
                     placeholder="..."
                     invalid={Boolean(((lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")) && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title"))}
                     required={lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")}
@@ -335,7 +335,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                   </label>
                   <Textarea
                     value={descriptions[lang] || ""}
-                    onChange={(e) => updateField(lang, "desc", e.target.value)}
+                    onChange={(event) => updateField(lang, "desc", event.target.value)}
                     placeholder="..."
                     rows={isPage ? 14 : 6}
                     invalid={Boolean(getFieldError(`description.${lang}`) || getFieldError("description"))}

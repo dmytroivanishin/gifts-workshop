@@ -1,11 +1,10 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { pageService, systemTextService } from "@/modules/core/container";
-import { env } from "@/modules/core/env";
 import { BackToHomeLink } from "@/components/shared/BackToHomeLink";
 import { getLocalizedField } from "@/utils/localization";
+import { APP_URL, languageAlternates } from "@/utils/seo";
 
-const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 interface SiteMapPageProps {
   params: Promise<{ locale: string }>;
@@ -16,7 +15,7 @@ interface SiteMapPageProps {
 async function loadLabels(locale: string): Promise<{ siteMap: string; home: string; pages: string }> {
   const texts = (await systemTextService.getAllSystemTexts({ limit: 2000, area: "public" })).data ?? [];
   const label = (code: string, fallback: string): string => {
-    const text = texts.find((t) => t.code === code);
+    const text = texts.find((systemText) => systemText.code === code);
     return text ? getLocalizedField(text.content, locale) || fallback : fallback;
   };
   return {
@@ -29,15 +28,12 @@ async function loadLabels(locale: string): Promise<{ siteMap: string; home: stri
 export async function generateMetadata({ params }: SiteMapPageProps): Promise<Metadata> {
   const { locale } = await params;
   const labels = await loadLabels(locale);
-  const url = `${appUrl}/${locale}/sitemap`;
+  const url = `${APP_URL}/${locale}/sitemap`;
   return {
     title: labels.siteMap,
     alternates: {
       canonical: url,
-      languages: env.SUPPORTED_LOCALES.reduce((acc, l) => {
-        acc[l] = `${appUrl}/${l}/sitemap`;
-        return acc;
-      }, {} as Record<string, string>),
+      languages: languageAlternates("/sitemap"),
     },
   };
 }

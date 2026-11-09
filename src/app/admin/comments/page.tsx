@@ -45,8 +45,8 @@ export default function AdminComments() {
         setComments(commentsResponse.data);
       } else {
         setComments((prev) => {
-          const existingIds = new Set(prev.map((c) => c.id));
-          const newComments = commentsResponse.data.filter((c) => !existingIds.has(c.id));
+          const existingIds = new Set(prev.map((comment) => comment.id));
+          const newComments = commentsResponse.data.filter((comment) => !existingIds.has(comment.id));
           return [...prev, ...newComments];
         });
       }
@@ -86,7 +86,7 @@ export default function AdminComments() {
     try {
       await updateStatus({ id, status: newStatus }).unwrap();
       // Refetch or update local state
-      setComments(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c));
+      setComments(prev => prev.map(comment => comment.id === id ? { ...comment, status: newStatus } : comment));
     } catch (error) {
       console.error("Failed to update status", error);
     }
@@ -118,8 +118,8 @@ export default function AdminComments() {
       setDeleteTargetId("");
       setPage(1);
       refetch();
-    } catch (err) {
-      console.error("Failed to delete comment", err);
+    } catch (error) {
+      console.error("Failed to delete comment", error);
     }
   };
 
@@ -136,29 +136,29 @@ export default function AdminComments() {
     const orphans: PopulatedComment[] = [];
     
     // Find all parents
-    comments.forEach(c => {
-      if (!c.replyId) {
-        parentMap.set(c.id, { ...c, adminReplies: [] });
+    comments.forEach(comment => {
+      if (!comment.replyId) {
+        parentMap.set(comment.id, { ...comment, adminReplies: [] });
       }
     });
 
     // Assign replies
-    comments.forEach(c => {
-      if (c.replyId) {
-        if (parentMap.has(c.replyId)) {
-          parentMap.get(c.replyId)!.adminReplies.push(c);
+    comments.forEach(comment => {
+      if (comment.replyId) {
+        if (parentMap.has(comment.replyId)) {
+          parentMap.get(comment.replyId)!.adminReplies.push(comment);
         } else {
-          orphans.push(c);
+          orphans.push(comment);
         }
       }
     });
 
     // Sort replies ASC (oldest first under parent)
     parentMap.forEach(parent => {
-      parent.adminReplies.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      parent.adminReplies.sort((first, second) => new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime());
     });
 
-    const parents = Array.from(parentMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const parents = Array.from(parentMap.values()).sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime());
 
     return parents;
   }, [comments]);
@@ -227,7 +227,7 @@ export default function AdminComments() {
               { value: "Rejected", label: t("comment_status_rejected") },
             ]}
             value={statusFilter}
-            onChange={(val) => setStatusFilter(val as string)}
+            onChange={(value) => setStatusFilter(value as string)}
             placeholder={t("all_statuses") || "All Statuses"}
             searchable={false}
           />
@@ -251,7 +251,7 @@ export default function AdminComments() {
                     <div className="mt-4 pl-4 border-l-2 border-border/50 flex flex-col gap-2 relative z-10">
                       <Textarea
                         value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
+                        onChange={(event) => setReplyText(event.target.value)}
                         placeholder={t("placeholder_reply")}
                       />
                       <div className="flex justify-end gap-2">

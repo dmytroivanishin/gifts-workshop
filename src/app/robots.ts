@@ -1,7 +1,6 @@
 import { MetadataRoute } from "next";
-import { env } from "@/modules/core/env";
+import { APP_URL } from "@/utils/seo";
 
-const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -10,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin/", "/api/"],
     },
-    sitemap: `${appUrl}/sitemap.xml`,
+    sitemap: `${APP_URL}/sitemap.xml`,
   };
 }

@@ -87,7 +87,7 @@ export async function proxy(request: NextRequest) {
     // silently changes the other.
     const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'ru';
     const defaultPublicLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC || 'en';
-    const supportedLocales = (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || 'ru,en').split(',').map(l => l.trim());
+    const supportedLocales = (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || 'ru,en').split(',').map(locale => locale.trim());
 
     if (isAdmin) {
       // Admin has no language switcher — it is Russian-only, always. Force defaultLocale
@@ -119,9 +119,9 @@ export async function proxy(request: NextRequest) {
            if (acceptLanguage) {
              const preferredLocales = acceptLanguage
                .split(',')
-               .map(l => l.split(';')[0].trim().substring(0, 2).toLowerCase());
+               .map(languageTag => languageTag.split(';')[0].trim().substring(0, 2).toLowerCase());
              
-             const match = preferredLocales.find(l => supportedLocales.includes(l));
+             const match = preferredLocales.find(candidate => supportedLocales.includes(candidate));
              if (match) {
                locale = match;
              }

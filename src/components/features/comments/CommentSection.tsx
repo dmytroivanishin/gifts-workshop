@@ -24,8 +24,8 @@ export function CommentSection({ postId }: { postId: string }) {
     }
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!name.trim() || !text.trim()) {
       setErrorMsg("Please fill in all fields.");
       return;
@@ -42,8 +42,8 @@ export function CommentSection({ postId }: { postId: string }) {
       
       setTimeout(() => setSubmitSuccess(false), 5000);
       refetch();
-    } catch (err) {
-      console.error("Failed to post comment", err);
+    } catch (error) {
+      console.error("Failed to post comment", error);
       setErrorMsg("Failed to post comment. Please try again.");
     }
   };
@@ -51,8 +51,8 @@ export function CommentSection({ postId }: { postId: string }) {
   const comments = commentsResponse?.data || [];
   
   // Group replies
-  const topLevelComments = comments.filter((c) => !c.replyId);
-  const getReplies = (parentId: string) => comments.filter((c) => c.replyId === parentId);
+  const topLevelComments = comments.filter((comment) => !comment.replyId);
+  const getReplies = (parentId: string) => comments.filter((comment) => comment.replyId === parentId);
 
   return (
     <div className="mt-12 pt-8 border-t border-border/40 font-sans max-w-3xl mx-auto">
@@ -66,7 +66,7 @@ export function CommentSection({ postId }: { postId: string }) {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
               placeholder={t("your_name") || "Your name"}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               disabled={isSubmitting}
@@ -94,7 +94,7 @@ export function CommentSection({ postId }: { postId: string }) {
         <div className="space-y-1.5">
           <textarea
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(event) => setText(event.target.value)}
             placeholder={t("write_comment") || "Write your comment here..."}
             className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all min-h-[100px] resize-y"
             disabled={isSubmitting}

@@ -61,13 +61,13 @@ export default function AdminColors() {
         resetForm();
       }
     },
-    onError: (err) => console.error("Failed to delete color", err),
+    onError: (error) => console.error("Failed to delete color", error),
     closeOnError: false,
   });
 
-  const handleEdit = (c: { id: string; color: string }) => {
-    setIsEditing(c.id);
-    form.reset({ color: c.color });
+  const handleEdit = (color: { id: string; color: string }) => {
+    setIsEditing(color.id);
+    form.reset({ color: color.color });
   };
 
   const onSubmit = async (values: z.infer<typeof colorSchema>) => {
@@ -78,14 +78,14 @@ export default function AdminColors() {
         await createColor(values).unwrap();
       }
       resetForm();
-    } catch (err: unknown) {
-      const apiError = err as ApiMutationError;
+    } catch (error: unknown) {
+      const apiError = error as ApiMutationError;
       if (apiError?.data?.error?.details) {
         apiError.data.error.details.forEach((detail) => {
           form.setError(detail.field as any, { type: "server", message: detail.message });
         });
       }
-      console.error("Failed to add color", err);
+      console.error("Failed to add color", error);
     }
   };
 
@@ -125,7 +125,7 @@ export default function AdminColors() {
                     <div className="flex items-center gap-3">
                       <ColorPicker
                         value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(event) => field.onChange(event.target.value)}
                       />
                       <FormControl>
                         <Input
@@ -174,19 +174,19 @@ export default function AdminColors() {
                 items={colors}
                 estimateSize={88}
                 className="max-h-[70vh] divide-y divide-border/45"
-                renderItem={(c) => (
+                renderItem={(color) => (
                   <div className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
                     <div className="flex items-center gap-3">
                       <div
                         className="size-10 rounded-[9px] border border-border flex-shrink-0"
-                        style={{ backgroundColor: c.color }}
+                        style={{ backgroundColor: color.color }}
                       />
-                      <span className="font-semibold text-sm uppercase text-foreground tracking-wider truncate">{c.color}</span>
+                      <span className="font-semibold text-sm uppercase text-foreground tracking-wider truncate">{color.color}</span>
                     </div>
 
                     <RowActions>
-                      <RowAction icon={Edit} title={t("edit_color")} active={isEditing === c.id} onClick={() => handleEdit(c)} />
-                      <RowAction icon={Trash2} tone="destructive" title={t("delete")} disabled={isDeleting} onClick={() => handleDeleteClick(c.id)} />
+                      <RowAction icon={Edit} title={t("edit_color")} active={isEditing === color.id} onClick={() => handleEdit(color)} />
+                      <RowAction icon={Trash2} tone="destructive" title={t("delete")} disabled={isDeleting} onClick={() => handleDeleteClick(color.id)} />
                     </RowActions>
                   </div>
                 )}
