@@ -3,7 +3,7 @@ import { sendSuccess, withErrorHandling } from "@/utils/apiResponse";
 import { IMediaService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
-import { mediaSchema } from "@/common/validation/schemas";
+import { mediaSchema, bulkIdsSchema } from "@/common/validation/schemas";
 import { getUserId } from "@/utils/auth";
 import { ValidationError } from "@/common/errors/validation";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
@@ -67,12 +67,7 @@ export class MediaController {
 
   bulkDeleteMedia = withErrorHandling(async (request: Request) => {
     const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
-    // A generous sanity ceiling, not a "justify a loop" cap like the old per-request upload
-    // limit — this endpoint is one batched query either way, no matter how many ids are sent.
-    const { ids } = await validateRequest(
-      z.object({ ids: z.array(z.string().uuid()).min(1).max(500) }),
-      rawBody
-    );
+    const { ids } = await validateRequest(bulkIdsSchema, rawBody);
 
     const result = await this.mediaService.bulkDeleteMedia(ids);
     return sendSuccess(result);

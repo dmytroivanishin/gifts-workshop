@@ -2,7 +2,7 @@ import { sendSuccess, CACHE_SECONDS, withErrorHandling } from "@/utils/apiRespon
 import { IPostService } from "@/services/interfaces";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
-import { postSchema } from "@/common/validation/schemas";
+import { postSchema, bulkIdsSchema } from "@/common/validation/schemas";
 import { resolveId } from "@/utils/idResolver";
 import { getUserId, isAdminRequest } from "@/utils/auth";
 import { getPaginationParams } from "@/utils/paginationUtils";
@@ -75,5 +75,11 @@ export class PostController {
       throw new NotFoundError("Post not found");
     }
     return sendSuccess({ success: true });
+  });
+
+  bulkDeletePosts = withErrorHandling(async (request: Request) => {
+    const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
+    const { ids } = await validateRequest(bulkIdsSchema, rawBody);
+    return sendSuccess(await this.postService.bulkDeletePosts(ids));
   });
 }

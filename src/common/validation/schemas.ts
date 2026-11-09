@@ -29,6 +29,10 @@ export const localizedStringSchema = z.record(
 // Shared across collectionSchema/categorySchema/tagSchema, which all accept an optional,
 // already-slugified string (postSchemaBase's own slug has different null-coercion needs, so it
 // stays separate rather than reusing this).
+// Body of the bulk-delete endpoints. The ceiling is a sanity limit, not a loop justification: each
+// endpoint deletes the whole batch in one query.
+export const bulkIdsSchema = z.object({ ids: z.array(z.string().uuid()).min(1).max(500) });
+
 export const slugSchema = z.string().regex(/^[a-z0-9-]+$/, "error_invalid_slug").optional();
 
 const optionalUuidSchema = z.preprocess(

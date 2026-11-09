@@ -3,7 +3,10 @@
 import { RowAction, RowActions } from "@/components/shared/RowAction";
 import { useState, useEffect, useRef } from "react";
 import { Plus, Edit, Trash2, Eye, Loader2 } from "lucide-react";
-import { useGetPostsQuery, useDeletePostMutation } from "@/store/api";
+import { useGetPostsQuery, useDeletePostMutation, useBulkDeletePostsMutation } from "@/store/api";
+import { useDispatch } from "react-redux";
+import { addNotification } from "@/store/slices/notificationSlice";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PopulatedPost } from "@/types";
 import Link from "next/link";
 import { useTranslation } from "@/i18n";
@@ -18,6 +21,9 @@ export default function AdminDashboard() {
   const [posts, setPosts] = useState<PopulatedPost[]>([]);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState("");
+  const [rawSelectedIds, setRawSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const dispatch = useDispatch();
 
   const { data: response, isLoading, isFetching } = useGetPostsQuery({
     search: search || undefined,
@@ -26,6 +32,7 @@ export default function AdminDashboard() {
     limit: 10,
   });
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
+  const [bulkDeletePosts, { isLoading: isBulkDeleting }] = useBulkDeletePostsMutation();
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const hasMore = response?.meta?.nextPage != null;
@@ -75,6 +82,45 @@ export default function AdminDashboard() {
     };
   }, [hasMore, isFetching, isLoading]);
 
+  // The selection only ever covers rows that are on screen: ids of posts that are gone (deleted, or
+  // dropped by a new search) are ignored, so a bulk delete can never touch a row the user cannot see.
+  const visibleIds = new Set(posts.map((post) => post.id));
+  const selectedIds = new Set(Array.from(rawSelectedIds).filter((id) => visibleIds.has(id)));
+  const areAllSelected = posts.length > 0 && selectedIds.size === posts.length;
+
+  const toggleSelected = (id: string) => {
+    setRawSelectedIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllSelected = () => {
+    setRawSelectedIds(areAllSelected ? new Set() : new Set(posts.map((post) => post.id)));
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    // Picks made under the old search must not come back when it is cleared.
+    setRawSelectedIds(new Set());
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    try {
+      await bulkDeletePosts(Array.from(selectedIds)).unwrap();
+      dispatch(addNotification({ type: "success", messageKey: "posts_bulk_deleted" }));
+      setRawSelectedIds(new Set());
+      setPage(1);
+    } catch (error: unknown) {
+      // The notification middleware already toasts a rejected mutation.
+      console.error("Failed to bulk-delete posts", error);
+    } finally {
+      setIsBulkDeleteOpen(false);
+    }
+  };
+
   const handleDeleteClick = (id: string) => {
     setDeleteTargetId(id);
     setIsDeleteOpen(true);
@@ -109,13 +155,40 @@ export default function AdminDashboard() {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/50 p-4 rounded-xl border border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-muted/50 p-4 rounded-xl border border-border">
         <SearchInput
           value={search}
-          onChange={setSearch}
+          onChange={handleSearchChange}
           placeholder={t("search_posts")}
           className="sm:flex-1 sm:max-w-sm"
         />
+
+        {selectedIds.size > 0 && (
+          <div data-test-id="bulk-action-bar" className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+              {selectedIds.size} {t("items_selected")}
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setRawSelectedIds(new Set())}
+                className="px-3 py-1.5 rounded-lg border border-border bg-card text-subtle-foreground hover:text-foreground hover:bg-muted font-medium text-xs transition-colors cursor-pointer"
+              >
+                {t("cancel") || "Cancel"}
+              </button>
+              <button
+                type="button"
+                data-test-id="bulk-delete-button"
+                title={t("delete_selected")}
+                aria-label={t("delete_selected")}
+                onClick={() => setIsBulkDeleteOpen(true)}
+                className="p-2 rounded-lg border border-destructive/20 hover:border-destructive bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all cursor-pointer"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Posts List */}
@@ -128,6 +201,15 @@ export default function AdminDashboard() {
             <table className="hidden md:table w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
+                  <th className="w-14 py-4 pl-4 pr-0">
+                    <Checkbox
+                      data-test-id="posts-select-all"
+                      checked={areAllSelected}
+                      onCheckedChange={toggleAllSelected}
+                      aria-label={t("select_all")}
+                      title={t("select_all")}
+                    />
+                  </th>
                   <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("title")}</th>
                   <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("category")}</th>
                   <th className="p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("status")}</th>
@@ -156,7 +238,16 @@ export default function AdminDashboard() {
                   };
 
                   return (
-                    <tr key={post.id} className="hover:bg-muted/30 transition-colors">
+                    <tr key={post.id} className={`transition-colors ${selectedIds.has(post.id) ? "bg-primary/5" : "hover:bg-muted/30"}`}>
+                      <td className="w-14 py-4 pl-4 pr-0">
+                        <Checkbox
+                          data-test-id={`post-select-${post.id}`}
+                          checked={selectedIds.has(post.id)}
+                          onCheckedChange={() => toggleSelected(post.id)}
+                          aria-label={t("select")}
+                          title={t("select")}
+                        />
+                      </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <img
@@ -219,7 +310,27 @@ export default function AdminDashboard() {
                 };
 
                 return (
-                  <div key={`mobile-${post.id}`} className="p-4 space-y-4 hover:bg-muted/10 transition-colors">
+                  <div
+                    key={`mobile-${post.id}`}
+                    className={`p-4 space-y-4 transition-colors ${selectedIds.has(post.id) ? "bg-primary/5" : "hover:bg-muted/10"}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <Checkbox
+                        data-test-id={`post-select-${post.id}`}
+                        checked={selectedIds.has(post.id)}
+                        onCheckedChange={() => toggleSelected(post.id)}
+                        aria-label={t("select")}
+                        title={t("select")}
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusClasses(post.status)}`}>
+                          {t(post.status.toLowerCase())}
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStockClasses(post.inStock)}`}>
+                          {post.inStock ? t("in_stock") : t("on_request")}
+                        </span>
+                      </div>
+                    </div>
                     <div className="flex items-start gap-3">
                       <img
                         src={post.poster?.thumbnailUrl || MEDIA_PLACEHOLDER_DATA_URL}
@@ -237,15 +348,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusClasses(post.status)}`}>
-                          {t(post.status.toLowerCase())}
-                        </span>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStockClasses(post.inStock)}`}>
-                          {post.inStock ? t("in_stock") : t("on_request")}
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-end">
                       <RowActions>
                         <RowAction icon={Eye} title={t("view")} href={`/posts/${post.slug || post.id}`} external />
                         <RowAction icon={Edit} title={t("edit")} href={`/admin/posts/${post.id}`} />
@@ -281,6 +384,17 @@ export default function AdminDashboard() {
         onConfirm={handleConfirmDelete}
         onClose={() => setIsDeleteOpen(false)}
         isLoading={isDeleting}
+      />
+
+      <ConfirmModal
+        isOpen={isBulkDeleteOpen}
+        title={t("posts")}
+        message={`${selectedIds.size} ${t("items_selected")}. ${t("confirm_bulk_delete_posts")}`}
+        confirmText={t("delete_selected")}
+        cancelText={t("cancel") || "Cancel"}
+        onConfirm={handleConfirmBulkDelete}
+        onClose={() => setIsBulkDeleteOpen(false)}
+        isLoading={isBulkDeleting}
       />
     </div>
   );

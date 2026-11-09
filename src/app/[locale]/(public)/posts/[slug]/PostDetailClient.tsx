@@ -19,7 +19,7 @@ interface PostDetailClientProps {
 }
 
 export default function PostDetailClient({ slug, initialPost }: PostDetailClientProps) {
-  const { t, loc } = useTranslation();
+  const { t, loc, locale } = useTranslation();
 
   const { data: response, isLoading } = useGetPostByIdQuery(slug);
   // Prefer the live RTK Query result once it arrives (same source of truth as before); until then,
@@ -182,17 +182,17 @@ export default function PostDetailClient({ slug, initialPost }: PostDetailClient
             {/* Tags (if any) */}
             {post.tags && post.tags.length > 0 && (
               <ul className="flex flex-wrap gap-2 pt-2" aria-label="Tags">
-                {post.tags.map((tag, index) => {
-                  const name = loc(tag.name);
-                  return (
-                    <li
-                      key={index}
-                      className="px-2.5 py-1 bg-secondary text-muted-foreground rounded-full text-xs font-medium"
+                {post.tags.map((tag) => (
+                  <li key={tag.id}>
+                    {/* Opens the homepage filtered by this tag. */}
+                    <Link
+                      href={`/${locale}?tag=${encodeURIComponent(tag.slug || tag.id)}`}
+                      className="block px-2.5 py-1 bg-secondary text-muted-foreground rounded-full text-xs font-medium transition-colors hover:bg-[#EBE7E3] hover:text-foreground"
                     >
-                      #{name}
-                    </li>
-                  );
-                })}
+                      #{loc(tag.name)}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             )}
 

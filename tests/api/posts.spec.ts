@@ -1,7 +1,7 @@
 import { test, expect, APIRequestContext } from "@playwright/test";
 import { adminContext, anonContext } from "./helpers/auth";
 import { expectSuccess, expectError } from "./helpers/client";
-import { createPost, createCollection, createCategory } from "./helpers/fixtures";
+import { createPost, createCollection, createCategory, createComment, createTag } from "./helpers/fixtures";
 
 const FILE_KEY = "posts";
 
@@ -109,5 +109,92 @@ test.describe("posts", () => {
 
     const adminRes = await admin.get("/api/v1/posts");
     expect(adminRes.headers()["cache-control"]).toBeUndefined();
+  });
+
+  // Bulk delete of posts (admin posts list). One batched POST; unlike media there is no in-use
+  // protection, but comments and tag/gallery links must go with the posts through the cascades.
+  test("bulk delete removes every requested post in one request and reports them as deleted", async () => {
+    const first = await createPost(admin, { status: "Draft" });
+    const second = await createPost(admin, { status: "Draft" });
+    const untouched = await createPost(admin, { status: "Draft" });
+
+    try {
+      const result = await expectSuccess<{ deleted: string[] }>(
+        await admin.post("/api/v1/posts/bulk-delete", { data: { ids: [first.id, second.id] } })
+      );
+      expect(result.data.deleted.sort()).toEqual([first.id, second.id].sort());
+
+      await expectError(await admin.get(`/api/v1/posts/${first.id}`), 404);
+      await expectError(await admin.get(`/api/v1/posts/${second.id}`), 404);
+      await expectSuccess(await admin.get(`/api/v1/posts/${untouched.id}`));
+    } finally {
+      await untouched.cleanup();
+    }
+  });
+
+  test("bulk delete ignores ids that do not exist and repeats of the same id", async () => {
+    const post = await createPost(admin, { status: "Draft" });
+    const missingId = "00000000-0000-0000-0000-000000000000";
+
+    const result = await expectSuccess<{ deleted: string[] }>(
+      await admin.post("/api/v1/posts/bulk-delete", { data: { ids: [post.id, post.id, missingId] } })
+    );
+    expect(result.data.deleted).toEqual([post.id]);
+  });
+
+  test("bulk delete takes the comments of the deleted posts with them", async () => {
+    const post = await createPost(admin, { status: "Published" });
+    const comment = await createComment(admin, post.id);
+
+    try {
+      await expectSuccess(await admin.post("/api/v1/posts/bulk-delete", { data: { ids: [post.id] } }));
+
+      const comments = await expectSuccess<Array<{ id: string }>>(await admin.get("/api/v1/admin/comments"));
+      expect(comments.data.map((item) => item.id)).not.toContain(comment.id);
+    } finally {
+      await post.cleanup();
+    }
+  });
+
+  test("bulk delete validates its body: empty, oversized and non-UUID ids are a clean 400", async () => {
+    await expectError(await admin.post("/api/v1/posts/bulk-delete", { data: { ids: [] } }), 400, "VALIDATION_ERROR");
+    await expectError(await admin.post("/api/v1/posts/bulk-delete", { data: { ids: ["not-a-uuid"] } }), 400, "VALIDATION_ERROR");
+
+    const tooMany = Array.from({ length: 501 }, () => crypto.randomUUID());
+    await expectError(await admin.post("/api/v1/posts/bulk-delete", { data: { ids: tooMany } }), 400, "VALIDATION_ERROR");
+  });
+
+  test("bulk delete requires admin", async () => {
+    const post = await createPost(admin, { status: "Draft" });
+    try {
+      await expectError(await anon.post("/api/v1/posts/bulk-delete", { data: { ids: [post.id] } }), 401);
+      await expectSuccess(await admin.get(`/api/v1/posts/${post.id}`));
+    } finally {
+      await post.cleanup();
+    }
+  });
+
+  test("?tag= keeps only the posts carrying that tag, by slug or by id; an unknown tag is an empty list", async () => {
+    const tag = await createTag(admin);
+    const tagged = await createPost(admin, { status: "Published", tagsIds: [tag.id] });
+    const untagged = await createPost(admin, { status: "Published" });
+
+    try {
+      for (const reference of [tag.slug, tag.id]) {
+        const result = await expectSuccess<Array<{ id: string }>>(
+          await anon.get(`/api/v1/posts?tag=${encodeURIComponent(reference)}&limit=100`)
+        );
+        const ids = result.data.map((post) => post.id);
+        expect(ids).toContain(tagged.id);
+        expect(ids).not.toContain(untagged.id);
+      }
+
+      const unknown = await expectSuccess<unknown[]>(await anon.get("/api/v1/posts?tag=no-such-tag-anywhere"));
+      expect(unknown.data).toEqual([]);
+    } finally {
+      await tagged.cleanup();
+      await untagged.cleanup();
+      await tag.cleanup();
+    }
   });
 });

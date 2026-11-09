@@ -60,6 +60,7 @@ export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, Qu
   // Batched version of countByPoster/countGalleryUsage for the bulk-delete path: one query each
   // across every requested id, instead of two queries per id in a loop.
   findUsedMediaIds(mediaIds: string[]): Promise<Set<string>>;
+  deleteMany(ids: string[]): Promise<string[]>;
 }
 
 export interface IPageRepository extends IBaseRepository<Page, Page, PaginationOptions> {

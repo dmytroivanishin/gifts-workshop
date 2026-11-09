@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef, useMemo, type CSSProperties } from "react";
 import Image from "next/image";
-import { Heart, Loader2 } from "lucide-react";
+import { Heart, Loader2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/cn";
-import { useGetPostsQuery, useGetCategoriesQuery } from "@/store/api";
+import { useGetPostsQuery, useGetCategoriesQuery, useGetTagByIdQuery } from "@/store/api";
 import { PostCard } from "@/components/features/PostCard";
 import { useTranslation } from "@/i18n";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -78,6 +78,12 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // The tag filter lives only in the URL (a post page's tag chip links here with ?tag=<slug>), so it
+  // is read straight from it rather than mirrored into state. It replaces the category filter.
+  const activeTag = searchParams.get("tag") || undefined;
+  const { data: activeTagResponse } = useGetTagByIdQuery(activeTag ?? "", { skip: !activeTag });
+  const activeTagName = activeTagResponse?.data ? loc(activeTagResponse.data.name) : activeTag;
+
   // Sync activeCategory from search parameters
   useEffect(() => {
     const categoryParam = searchParams.get("category");
@@ -101,6 +107,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
   const handleCategorySelect = (categoryId?: string) => {
     setActiveCategory(categoryId);
     const params = new URLSearchParams(window.location.search);
+    params.delete("tag"); // choosing a category replaces a tag filter
     if (!categoryId) {
       params.delete("category");
     } else {
@@ -120,6 +127,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
 
   const getCategoryUrl = (categoryId?: string) => {
     const params = new URLSearchParams(searchParams.toString());
+    params.delete("tag"); // choosing a category (or "All") replaces a tag filter
     if (!categoryId) {
       params.delete("category");
     } else {
@@ -161,6 +169,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
   // Fetch posts using RTK Query
   const { data: response, isLoading, isFetching } = useGetPostsQuery({
     category: categoryQueryParam || undefined,
+    tag: activeTag,
     inStock: inStockOnly ? true : undefined,
     status: "Published",
     page,
@@ -179,8 +188,10 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
     if (response !== undefined) setHasLiveData(true);
   }, [response]);
 
-  const posts = response?.data ?? (!hasLiveData ? initialPosts : []);
-  const meta = response?.meta ?? (!hasLiveData ? initialMeta : undefined);
+  // The server-fetched initial posts are the unfiltered first page, so a tag deep link must not show them.
+  const canUseInitialData = !hasLiveData && !activeTag;
+  const posts = response?.data ?? (canUseInitialData ? initialPosts : []);
+  const meta = response?.meta ?? (canUseInitialData ? initialMeta : undefined);
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const hasMore = meta?.nextPage != null;
@@ -188,7 +199,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [activeCategory, inStockOnly, favoritesOnly]);
+  }, [activeCategory, activeTag, inStockOnly, favoritesOnly]);
 
   // IntersectionObserver bottom anchor logic
   useEffect(() => {
@@ -269,6 +280,19 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
     ? posts.filter((post) => likedIds.includes(post.id))
     : posts;
 
+  // Shown while a tag filter is on: it is the active pill, and following it (or "All") clears the tag.
+  const tagFilterChip = activeTag ? (
+    <Link
+      href={getCategoryUrl(undefined)}
+      title={t("clear_tag_filter")}
+      aria-label={`${t("clear_tag_filter")}: #${activeTagName}`}
+      className="flex items-center gap-1.5 border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3]"
+    >
+      #{activeTagName}
+      <X size={14} aria-hidden="true" />
+    </Link>
+  ) : null;
+
   const favoritesButton = (
     <button
       onClick={() => setFavoritesOnly(!favoritesOnly)}
@@ -337,13 +361,14 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                 href={getCategoryUrl(undefined)}
                 className={cn(
                   "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer",
-                  !activeCategory
+                  !activeCategory && !activeTag
                     ? "bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3]"
                     : "bg-transparent text-[#827C6B] border-[#EBE7E3] hover:bg-[#EBE7E3]/45"
                 )}
               >
                 {t("all")}
               </Link>
+              {tagFilterChip}
 
               {/* Dynamic Categories */}
               {dbCategories
@@ -458,7 +483,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                     href={getCategoryUrl(undefined)}
                     className={cn(
                       "border px-4 py-2 rounded-full text-[0.85rem] font-sans font-normal transition-all cursor-pointer block",
-                      !activeCategory
+                      !activeCategory && !activeTag
                         ? "bg-[#EBE7E3] text-[#1F1B16] border-[#EBE7E3]"
                         : "bg-transparent text-[#827C6B] border-[#EBE7E3] hover:bg-[#EBE7E3]/45"
                     )}
@@ -466,6 +491,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
                     {t("all")}
                   </Link>
                 </motion.div>
+                {tagFilterChip && <motion.div layout="position">{tagFilterChip}</motion.div>}
                 {topLevelCategories.map((cat) => {
                   const hasChildren = dbCategories.some((c) => c.parentId === cat.id);
                   const isSelected = selectedParent?.id === cat.id || activeCategory === cat.id || activeCategory === cat.slug;

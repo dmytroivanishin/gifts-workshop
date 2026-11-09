@@ -72,6 +72,7 @@ export interface IPostService {
   createPost(body: any): Promise<Post>;
   updatePost(id: string, body: any): Promise<Post | undefined>;
   deletePost(id: string): Promise<boolean>;
+  bulkDeletePosts(ids: string[]): Promise<{ deleted: string[] }>;
 }
 
 export interface ILanguageService {

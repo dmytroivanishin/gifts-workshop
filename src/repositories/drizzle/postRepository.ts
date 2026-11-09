@@ -191,6 +191,18 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
       }
     }
     if (query.collectionId) conditions.push(eq(posts.collectionId, query.collectionId));
+    if (query.tagsIds) {
+      // The service resolves a tag slug to its id and hands an unknown slug through unchanged, so a
+      // non-UUID here means "no such tag": nothing matches, rather than a query error.
+      conditions.push(
+        isUUID(query.tagsIds)
+          ? inArray(
+              posts.id,
+              db.select({ postId: postsToTags.postId }).from(postsToTags).where(eq(postsToTags.tagId, query.tagsIds))
+            )
+          : sql`false`
+      );
+    }
     if (query.status) conditions.push(eq(posts.status, query.status));
     if (query.inStock !== undefined) conditions.push(eq(posts.inStock, query.inStock));
     

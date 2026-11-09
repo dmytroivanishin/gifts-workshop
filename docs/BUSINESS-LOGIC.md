@@ -39,7 +39,7 @@ grid, without opening the item.
 ### An individual item's page
 
 Opening an item shows its full photo gallery (as a masonry-style layout), its title,
-description, category badge, stock status, and any tags it has, followed by a panel of
+description, category badge, stock status, and any tags it has (each tag is a link: it opens the home page filtered by that tag, where a "#tag ×" pill is the only active filter; the pill or "All" clears it), followed by a panel of
 contact links (social media, messaging apps, etc. — configured once for the whole site,
 not per item) for reaching out about that item. Clicking any gallery photo opens a
 fullscreen viewer you can navigate with the on-screen arrows, the keyboard arrow keys,
@@ -80,7 +80,7 @@ Categories, Collections, Tags, Colors, Translations, Media Library, and Comments
 This is the main item-management screen: a searchable, infinitely-scrolling table of
 every item regardless of status, each row showing its thumbnail, title, category,
 status and stock state, with quick actions to view it live, edit it, or delete it (with
-a confirmation step). "Add project" opens the editor described below.
+a confirmation step). Rows can be ticked (a checkbox column on a computer, a checkbox at the top of each card on a phone, plus a select-all box in the table header) and deleted together with one confirmation; the comments of the deleted items go with them and the photos stay in the media library. "Add project" opens the editor described below.
 
 **The item editor** is the richest part of the admin panel:
 

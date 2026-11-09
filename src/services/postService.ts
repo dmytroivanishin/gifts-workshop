@@ -207,4 +207,14 @@ export class PostService implements IPostService {
     revalidateTag(POSTS_CACHE_TAG, { expire: 0 });
     return success;
   }
+
+  // One DELETE for the whole batch. Unlike media there is no "in use" protection to apply: comments,
+  // gallery rows and tag links go with their post through the foreign keys' ON DELETE CASCADE, and
+  // the media files themselves stay in the library. An id that no longer exists is simply absent
+  // from `deleted`.
+  async bulkDeletePosts(ids: string[]): Promise<{ deleted: string[] }> {
+    const deleted = await this.postRepo.deleteMany([...new Set(ids)]);
+    revalidateTag(POSTS_CACHE_TAG, { expire: 0 });
+    return { deleted };
+  }
 }

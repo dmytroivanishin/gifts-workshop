@@ -2752,5 +2752,41 @@
     },
     "area": "public",
     "code": "footer_nav_label"
+  },
+  {
+    "id": "69e2fcd3-7475-4f91-9db9-79f399eca0da",
+    "content": {
+      "en": "Are you sure you want to delete the selected projects? Their comments will be deleted too. This can't be undone.",
+      "ru": "Вы уверены, что хотите удалить выбранные работы? Их комментарии тоже будут удалены. Это действие нельзя отменить."
+    },
+    "area": "admin",
+    "code": "confirm_bulk_delete_posts"
+  },
+  {
+    "id": "218c9715-f3d8-428e-9171-257f12137ba2",
+    "content": {
+      "en": "Selected projects deleted.",
+      "ru": "Выбранные работы удалены."
+    },
+    "area": "admin",
+    "code": "posts_bulk_deleted"
+  },
+  {
+    "id": "23c37855-806c-4c57-9eaa-23179fd9257e",
+    "content": {
+      "en": "Select all",
+      "ru": "Выбрать все"
+    },
+    "area": "admin",
+    "code": "select_all"
+  },
+  {
+    "id": "df42ab80-ec2a-4278-a34f-54d32c32c294",
+    "content": {
+      "en": "Clear tag filter",
+      "ru": "Сбросить фильтр по тегу"
+    },
+    "area": "public",
+    "code": "clear_tag_filter"
   }
 ]

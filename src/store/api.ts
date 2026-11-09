@@ -71,11 +71,12 @@ export const api = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ["Post", "Category", "Tag", "Collection", "Media", "Color", "Language", "SystemText", "Comment", "Page"],
   endpoints: (builder) => ({
-    getPosts: builder.query<{ data: PopulatedPost[]; meta: PaginationMeta }, { search?: string; category?: string; inStock?: boolean; status?: string; page?: number; limit?: number } | void>({
+    getPosts: builder.query<{ data: PopulatedPost[]; meta: PaginationMeta }, { search?: string; category?: string; tag?: string; inStock?: boolean; status?: string; page?: number; limit?: number } | void>({
       query: (params) => {
         const urlParams = new URLSearchParams();
         if (params?.search) urlParams.append("search", params.search);
         if (params?.category) urlParams.append("category", params.category);
+        if (params?.tag) urlParams.append("tag", params.tag);
         if (params?.inStock) urlParams.append("inStock", "true");
         if (params?.status) urlParams.append("status", params.status);
         if (params?.page) urlParams.append("page", params.page.toString());
@@ -132,6 +133,14 @@ export const api = createApi({
       query: (id) => ({
         url: `/posts/${id}`,
         method: "DELETE",
+      }),
+      invalidatesTags: ["Post"],
+    }),
+    bulkDeletePosts: builder.mutation<{ data: { deleted: string[] } }, string[]>({
+      query: (ids) => ({
+        url: "/posts/bulk-delete",
+        method: "POST",
+        body: { ids },
       }),
       invalidatesTags: ["Post"],
     }),
@@ -512,6 +521,7 @@ export const api = createApi({
    useUploadMediaMutation,
    useDeleteMediaMutation,
    useBulkDeleteMediaMutation,
+  useBulkDeletePostsMutation,
    useGetColorsQuery,
    useCreateColorMutation,
    useUpdateColorMutation,
