@@ -3,6 +3,7 @@ import { adminContext } from "../../api/helpers/auth";
 import { createCategory, createCollection, createColor, createTag, createMedia } from "../../api/helpers/fixtures";
 import { tinyPng, tinyPortraitPng } from "../../api/helpers/images";
 import { loginAsAdmin } from "../helpers/auth";
+import { comboboxTrigger, pickComboboxOption } from "../helpers/combobox";
 
 const FILE_KEY = "e2e-post-editor";
 
@@ -78,20 +79,17 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
     await expect(publishButton).toBeDisabled();
 
     // --- Collection combobox ---
-    await page.getByText("placeholder_select_collection").click();
-    await page.getByRole("button", { name: "E2E Editor Collection" }).click();
+    await pickComboboxOption(page, "collection", "E2E Editor Collection");
 
     // --- Category combobox: pick CatX, assert its suggested tag (TagX) gets auto-added ---
-    await page.getByText("placeholder_select_category").click();
-    await page.getByRole("button", { name: "E2E Editor CatX", exact: true }).click();
+    await pickComboboxOption(page, "category", "E2E Editor CatX");
 
-    const tagsTrigger = page.locator("div.min-h-11", { hasText: "E2E Editor Tag" }).first();
+    const tagsTrigger = comboboxTrigger(page, "tags");
     await expect(tagsTrigger).toContainText("E2E Editor TagX");
     await expect(tagsTrigger).not.toContainText("E2E Editor TagY");
 
     // --- Switching category to CatY must drop TagX and add TagY ---
-    await page.getByText("E2E Editor CatX", { exact: true }).click();
-    await page.getByRole("button", { name: "E2E Editor CatY", exact: true }).click();
+    await pickComboboxOption(page, "category", "E2E Editor CatY");
     await expect(tagsTrigger).toContainText("E2E Editor TagY");
     await expect(tagsTrigger).not.toContainText("E2E Editor TagX");
 
@@ -120,6 +118,9 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
     expect(tileOrderBefore[0]).toBe(`media-tile-${mediaA.id}`);
     expect(tileOrderBefore[1]).toBe(`media-tile-${mediaB.id}`);
 
+    // The gallery sits below the fold of the 720px viewport: scroll it in first, since the drag below
+    // moves the real mouse by viewport coordinates.
+    await tileA.scrollIntoViewIfNeeded();
     const handleB = tileB.locator('[data-test-id="media-drag-handle"]');
     const sourceBox = await handleB.boundingBox();
     const targetBox = await tileA.boundingBox();
@@ -205,12 +206,10 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
       await page.goto("/admin/posts/new");
 
       await page.getByLabel("title").fill("E2E Adhoc Tag Test Post");
-      await page.getByText("placeholder_select_collection").click();
-      await page.getByRole("button", { name: "E2E Editor Collection" }).click();
-      await page.getByText("placeholder_select_category").click();
-      await page.getByRole("button", { name: "E2E Editor CatX", exact: true }).click();
+      await pickComboboxOption(page, "collection", "E2E Editor Collection");
+      await pickComboboxOption(page, "category", "E2E Editor CatX");
 
-      const tagsTrigger = page.locator("div.min-h-11", { hasText: "E2E Editor Tag" }).first();
+      const tagsTrigger = comboboxTrigger(page, "tags");
       // Chip count, not label text, is the robust assertion for the ad-hoc tags specifically:
       // a just-created tag's chip can briefly render its raw id instead of its name (the same
       // CP-37 cache-staleness gap inline-create.spec.ts's tag test already documents), but it's
@@ -238,21 +237,22 @@ test.describe("admin post editor: gallery reorder, crop modal, tag auto-suggest,
       // not Escape) before touching the category Combobox next.
       await page.getByLabel("title").click();
       await expect.poll(chipCount).toBe(3); // TagX + the 2 ad-hoc tags
+      // Creating a tag invalidates the cached lists, so a refetch is still in flight here; a dropdown
+      // opened in the middle of it is closed again when the lists re-render. Let it settle first.
+      await page.waitForLoadState("networkidle");
 
       // Switch to CatY. The categoryId FormField's onChange (admin/posts/[id]/page.tsx) only
       // removes tags that were in the OLD category's own tagsIds (TagX here) and adds the NEW
       // category's own tagsIds (TagY) — it has no way to tell an ad-hoc tag apart from a
       // manually-picked one, so both ad-hoc tags are untouched by the switch and survive.
-      await page.getByText("E2E Editor CatX", { exact: true }).click();
-      await page.getByRole("button", { name: "E2E Editor CatY", exact: true }).click();
+      await pickComboboxOption(page, "category", "E2E Editor CatY");
       await expect(tagsTrigger).toContainText("E2E Editor TagY");
       await expect(tagsTrigger).not.toContainText("E2E Editor TagX");
       await expect.poll(chipCount).toBe(3); // still 3: the 2 ad-hoc tags + TagY now
 
       // Back to CatX: TagY drops, TagX is re-added fresh from CatX's own tagsIds (not "restored"
       // from any memory of the first selection) — the 2 ad-hoc tags are still untouched.
-      await page.getByText("E2E Editor CatY", { exact: true }).click();
-      await page.getByRole("button", { name: "E2E Editor CatX", exact: true }).click();
+      await pickComboboxOption(page, "category", "E2E Editor CatX");
       await expect(tagsTrigger).toContainText("E2E Editor TagX");
       await expect(tagsTrigger).not.toContainText("E2E Editor TagY");
       await expect.poll(chipCount).toBe(3);

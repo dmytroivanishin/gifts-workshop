@@ -3,6 +3,7 @@ import { adminContext } from "../../api/helpers/auth";
 import { createCategory, createCollection, createColor, createMedia, createPost } from "../../api/helpers/fixtures";
 import { tinyPng } from "../../api/helpers/images";
 import { loginAsAdmin } from "../helpers/auth";
+import { pickComboboxOption } from "../helpers/combobox";
 
 const FILE_KEY = "e2e-error-handling";
 
@@ -18,10 +19,8 @@ const FILE_KEY = "e2e-error-handling";
 // (tests/api/categories.spec.ts, tests/api/media.spec.ts). The point here is the UI's *reaction*:
 // does a toast actually appear, does the row survive.
 //
-// A category's title text (span.font-semibold...) also appears as an <option> in the always-
-// rendered "parent category" <select> (same duplication smoke.spec.ts already documented) —
-// every category-title lookup below is scoped to the span, never a bare getByText, to avoid a
-// strict-mode violation. Every fixture-creating test also wraps its UI steps in try/finally so a
+// Every category-title lookup below is scoped to the list's title span, never a bare getByText.
+// Every fixture-creating test also wraps its UI steps in try/finally so a
 // failed assertion still cleans up — a leaked fixture here would otherwise pollute every other
 // e2e file's absolute-count assertions for the rest of the run (the exact lesson CP-31 phase 3's
 // post-editor.spec.ts leak already taught).
@@ -74,6 +73,8 @@ test.describe("admin: error toasts and conflict handling", () => {
     } finally {
       await child.cleanup();
       await parent.cleanup();
+      await collection.cleanup();
+      await color.cleanup();
     }
   });
 
@@ -112,13 +113,11 @@ test.describe("admin: error toasts and conflict handling", () => {
       // own id instead (data-test-id), which createMedia already gives us directly.
       const card = page.getByTestId(`media-card-${media.id}`);
       await expect(card).toBeVisible();
-      await card.getByRole("button").click();
+      await card.getByRole("button", { name: "delete", exact: true }).click();
       await page.getByTestId("confirm-modal-confirm").click();
 
-      // media/page.tsx's own catch block dispatches a manual notification on top of the global
-      // middleware's automatic one, so the same text legitimately appears twice — .first() avoids
-      // a strict-mode violation.
-      await expect(page.getByText("Cannot delete media because it is used in a post.").first()).toBeVisible();
+      // The global middleware's automatic toast is the only one (the page no longer dispatches its own).
+      await expect(page.getByText("Cannot delete media because it is used in a post.")).toBeVisible();
       await expect(card).toBeVisible();
     } finally {
       await post.cleanup();
@@ -177,8 +176,7 @@ test.describe("admin: error toasts and conflict handling", () => {
       await admin.delete(`/api/v1/categories/${staleParent.id}`);
 
       await page.getByLabel("title").fill("E2E Err Stale Parent Child");
-      const parentSelect = page.locator("select").filter({ has: page.locator("option", { hasText: "none_main_category" }) });
-      await parentSelect.selectOption(staleParent.id);
+      await pickComboboxOption(page, "parent_category", "E2E Err Stale Parent");
 
       const submitButton = page.getByRole("button", { name: "add_category" });
       await expect(submitButton).toBeEnabled();
@@ -207,7 +205,7 @@ test.describe("admin: error toasts and conflict handling", () => {
       // See the poster-conflict test above: locate by id, not by the generated display name.
       const card = page.getByTestId(`media-card-${media.id}`);
       await expect(card).toBeVisible();
-      await card.getByRole("button").click();
+      await card.getByRole("button", { name: "delete", exact: true }).click();
 
       // Delete it via the real API behind the modal's back before confirming.
       await admin.delete(`/api/v1/media/${media.id}`);
@@ -217,9 +215,7 @@ test.describe("admin: error toasts and conflict handling", () => {
 
       // mediaController.deleteMedia throws NotFoundError("Media not found") when the service's
       // delete() returns false — a clean 404, not an uncaught exception or a blank page.
-      // media/page.tsx's own catch dispatches a manual notification on top of the global
-      // middleware's automatic one, so the same text legitimately appears twice.
-      await expect(page.getByText("Media not found").first()).toBeVisible();
+      await expect(page.getByText("Media not found")).toBeVisible();
       // No crash: the page is still interactive.
       await expect(page.locator("body")).toBeVisible();
     } finally {

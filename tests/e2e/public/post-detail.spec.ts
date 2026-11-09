@@ -132,7 +132,7 @@ test.describe("public post page: fullscreen gallery, comment form, next/image", 
     await page.reload();
     await expect(page.getByPlaceholder("your_name")).not.toBeVisible();
     await expect(page.getByText("E2E Detail Commenter")).toBeVisible();
-    await page.getByText("change").click();
+    await page.getByRole("button", { name: "change", exact: true }).click();
     await expect(page.getByPlaceholder("your_name")).toBeVisible();
   });
 });

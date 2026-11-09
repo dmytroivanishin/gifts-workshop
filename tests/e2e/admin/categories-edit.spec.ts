@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { adminContext } from "../../api/helpers/auth";
 import { createCategory, createColor, createTag } from "../../api/helpers/fixtures";
 import { loginAsAdmin } from "../helpers/auth";
+import { comboboxTrigger, pickComboboxOption } from "../helpers/combobox";
 
 const FILE_KEY = "e2e-categories-edit";
 
@@ -45,8 +46,9 @@ test.describe("admin categories: edit through the left form panel", () => {
   const heading = (page: Page, name: string) => page.getByRole("heading", { name, exact: true });
   const titleInput = (page: Page) => page.getByPlaceholder("placeholder_category_title");
   const descInput = (page: Page) => page.getByPlaceholder("placeholder_category_desc");
-  // The left form has two native selects: collection first, parent category second.
-  const parentSelect = (page: Page) => page.locator("form select").nth(1);
+  // Collection and parent category are Combobox fields (labelled by their translation keys).
+  const parentField = (page: Page) => comboboxTrigger(page, "parent_category");
+  const collectionField = (page: Page) => comboboxTrigger(page, "collections");
 
   test("edit loads every field into the panel, saving updates this locale only and keeps the rest", async ({ page }) => {
     const marker = crypto.randomUUID().slice(0, 8);
@@ -70,8 +72,9 @@ test.describe("admin categories: edit through the left form panel", () => {
       await expect(heading(page, "edit_category")).toBeVisible();
       await expect(titleInput(page)).toHaveValue(`CatEdit Orig ${marker}`);
       await expect(descInput(page)).toHaveValue(`Desc Orig ${marker}`);
-      await expect(parentSelect(page)).toHaveValue("");
-      await expect(page.locator("form select").first()).toHaveValue(category.collectionId);
+      // No parent: the field shows its placeholder. The collection shows the category's own collection.
+      await expect(parentField(page)).toContainText("none_main_category");
+      await expect(collectionField(page)).not.toContainText("placeholder_select_collection");
       // The category's tag shows up as a chip with its real name, not a raw id.
       await expect(page.locator("form").getByText(`CatEditTag ${marker}`)).toBeVisible();
 
@@ -144,11 +147,18 @@ test.describe("admin categories: edit through the left form panel", () => {
       await rowFor(page, `CatChild ${marker}`).getByTitle("edit_category").click();
       await expect(heading(page, "edit_category")).toBeVisible();
 
-      const options = await parentSelect(page).locator("option").allTextContents();
-      expect(options).toContain(`CatParent ${marker}`);
-      expect(options).not.toContain(`CatChild ${marker}`);
+      // The parent list offers the other category but never the one being edited.
+      await parentField(page).click();
+      const panel = page.locator("[data-radix-popper-content-wrapper]");
+      await panel.first().waitFor();
+      // A short list has no search box (and is rendered whole); a long one is virtualized, so narrow it.
+      const searchBox = panel.locator("input").first();
+      if (await searchBox.isVisible().catch(() => false)) await searchBox.fill(`Cat`);
+      await expect(panel.getByRole("button", { name: `CatParent ${marker}`, exact: true })).toBeVisible();
+      await expect(panel.getByRole("button", { name: `CatChild ${marker}`, exact: true })).toHaveCount(0);
+      await page.keyboard.press("Escape");
 
-      await parentSelect(page).selectOption({ label: `CatParent ${marker}` });
+      await pickComboboxOption(page, "parent_category", `CatParent ${marker}`);
       const saved = page.waitForResponse(
         (res) => isSave(res)
       );

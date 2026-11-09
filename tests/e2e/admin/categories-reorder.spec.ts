@@ -9,6 +9,10 @@ const FILE_KEY = "e2e-categories-reorder";
 // more moves so its internal rAF-driven collision measurement (closestCenter) catches up — a
 // single mouse.move+up does not reliably trigger a drag in a headless browser.
 async function dragRowOnto(page: Page, sourceHandle: ReturnType<Page["locator"]>, targetRow: ReturnType<Page["locator"]>) {
+  // The mouse moves by viewport coordinates, so both rows must be on screen first (leftover categories
+  // from other specs can push these rows below the fold).
+  await targetRow.scrollIntoViewIfNeeded();
+  await sourceHandle.scrollIntoViewIfNeeded();
   const source = await sourceHandle.boundingBox();
   const target = await targetRow.boundingBox();
   if (!source || !target) throw new Error("drag handle or target row not visible");
@@ -42,8 +46,8 @@ test.describe("admin categories: drag-and-drop reorder (dnd-kit)", () => {
     admin = await adminContext(FILE_KEY);
     collection = await createCollection(admin, { title: { ru: "E2E Reorder Collection", en: "E2E Reorder Collection" } });
     color = await createColor(admin);
-    // Created in order — the server assigns an ascending `order` as each is saved, matching
-    // creation order (confirmed by the categories list already rendering in creation order).
+    // Created through the API, so each gets the schema's default `order` of 0 (a UI-created category
+    // would get count + 1); the list order is made explicit right after the three exist.
     catA = await createCategory(admin, {
       collectionId: collection.id,
       colorId: color.id,
@@ -59,6 +63,26 @@ test.describe("admin categories: drag-and-drop reorder (dnd-kit)", () => {
       colorId: color.id,
       overrides: { title: { ru: "E2E Reorder C", en: "E2E Reorder C" } },
     });
+
+    // Give every top-level category an `order` equal to its position, with A, B, C last. The drag
+    // assigns position numbers to the whole list and only sends rows whose number changed, so the test
+    // needs A's stored order to equal its position — and the three must not tie at 0, since tied rows
+    // have no defined display order. Leftovers of other specs are kept in their existing order.
+    const list = (await (await admin.get("/api/v1/categories")).json()).data as Array<{
+      id: string;
+      order: number;
+      parentId: string | null;
+    }>;
+    const own = [catA.id, catB.id, catC.id];
+    const others = list
+      .filter((category) => !category.parentId && !own.includes(category.id))
+      .sort((first, second) => first.order - second.order)
+      .map((category) => category.id);
+    const sequence = [...others, ...own];
+    const res = await admin.put("/api/v1/categories/reorder", {
+      data: { items: sequence.map((id, order) => ({ id, order })) },
+    });
+    expect(res.ok()).toBe(true);
   });
 
   test.afterAll(async () => {
@@ -81,6 +105,14 @@ test.describe("admin categories: drag-and-drop reorder (dnd-kit)", () => {
     await expect(rowFor("E2E Reorder A")).toBeVisible();
     await expect(rowFor("E2E Reorder B")).toBeVisible();
     await expect(rowFor("E2E Reorder C")).toBeVisible();
+
+    // The fixtures' own `order` values depend on how many categories already exist in the DB (leftovers
+    // of other specs shift them), so the result is checked against the orders read before the drag.
+    const orderOf = async (id: string) => {
+      const res = await admin.get(`/api/v1/categories/${id}`);
+      return ((await res.json()).data as { order: number }).order;
+    };
+    const [orderA, orderB, orderC] = [await orderOf(catA.id), await orderOf(catB.id), await orderOf(catC.id)];
 
     const requestPromise = page.waitForRequest(
       (req) => req.url().includes("/api/v1/categories/reorder") && req.method() === "PUT"
@@ -118,12 +150,8 @@ test.describe("admin categories: drag-and-drop reorder (dnd-kit)", () => {
     // found and fixed after a sibling bug (the same listing-and-search pattern) actually flaked
     // in inline-create.spec.ts's tag test once this session's test DB had accumulated more than
     // 100 rows. A per-id GET sidesteps the cap entirely.
-    const orderOf = async (id: string) => {
-      const res = await admin.get(`/api/v1/categories/${id}`);
-      return ((await res.json()).data as { order: number }).order;
-    };
-    expect(await orderOf(catA.id)).toBe(0);
-    expect(await orderOf(catC.id)).toBe(1);
-    expect(await orderOf(catB.id)).toBe(2);
+    expect(await orderOf(catA.id)).toBe(orderA);
+    expect(await orderOf(catC.id)).toBe(orderB);
+    expect(await orderOf(catB.id)).toBe(orderC);
   });
 });
