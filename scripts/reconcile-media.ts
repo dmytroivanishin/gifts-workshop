@@ -4,9 +4,9 @@
 //   bash scripts/run.sh media:reconcile                          # report only (loads config/local.env)
 //   bash scripts/run.sh media:reconcile -- --delete              # also remove the orphan objects
 //   bash scripts/run.sh media:reconcile -- --min-age-minutes=10  # treat only objects older than 10 min as orphans
-import { BUCKET_NAME, minioClient } from "../src/modules/storage/minioClient";
+import { getBucketName, getMinioClient } from "../src/modules/storage/minioClient";
 import { drizzleDatabase } from "../src/repositories/drizzle/database";
-import { media } from "../src/repositories/drizzle/schema";
+import { mediaRepository } from "../src/repositories/drizzle/mediaRepository";
 import { reconcileMedia, BucketObject } from "../src/modules/storage/reconcile";
 import { env } from "../src/modules/core/env";
 
@@ -19,10 +19,13 @@ function readMinAgeMinutes(args: string[]): number {
   return value;
 }
 
-function listBucketObjects(): Promise<BucketObject[]> {
+async function listBucketObjects(): Promise<BucketObject[]> {
+  // The bucket is created lazily on the first upload, so a fresh MinIO has no bucket yet: nothing to list.
+  if (!(await getMinioClient().bucketExists(getBucketName()))) return [];
+
   return new Promise((resolve, reject) => {
     const objects: BucketObject[] = [];
-    const stream = minioClient.listObjectsV2(BUCKET_NAME, "", true);
+    const stream = getMinioClient().listObjectsV2(getBucketName(), "", true);
     stream.on("data", (item) => {
       if (item.name && item.lastModified) objects.push({ key: item.name, lastModified: item.lastModified });
     });
@@ -37,13 +40,10 @@ async function main(): Promise<void> {
   const minAgeMinutes = readMinAgeMinutes(args);
 
   await drizzleDatabase.connect(env.DB_URI);
-  const rows = await drizzleDatabase
-    .getDb()
-    .select({ originalUrl: media.originalUrl, thumbnailUrl: media.thumbnailUrl })
-    .from(media);
+  const rows = await mediaRepository.getAll();
   const objects = await listBucketObjects();
 
-  const publicBaseUrl = `${new URL(env.S3_PUBLIC_URL).href.replace(/\/+$/, "")}/${BUCKET_NAME}`;
+  const publicBaseUrl = `${new URL(env.S3_PUBLIC_URL).href.replace(/\/+$/, "")}/${getBucketName()}`;
   const report = reconcileMedia(objects, rows, publicBaseUrl, minAgeMinutes * 60_000);
 
   console.log(`Bucket objects: ${objects.length}, media rows: ${rows.length}`);
@@ -53,7 +53,7 @@ async function main(): Promise<void> {
   report.missingKeys.forEach((key) => console.log(`  missing ${key}`));
 
   if (shouldDelete && report.orphanKeys.length > 0) {
-    await minioClient.removeObjects(BUCKET_NAME, report.orphanKeys);
+    await getMinioClient().removeObjects(getBucketName(), report.orphanKeys);
     console.log(`Removed ${report.orphanKeys.length} orphan object(s).`);
   } else if (report.orphanKeys.length > 0) {
     console.log("Nothing removed. Run again with --delete to remove the orphans.");

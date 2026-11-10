@@ -3,11 +3,12 @@ import type { NextRequest } from "next/server";
 import { verifyAdminToken } from "@/utils/jwt";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
 import { TooManyRequestsError } from "@/common/errors/tooManyRequests";
+import { applyContentSecurityPolicy } from "@/utils/securityHeaders";
 import { PUBLIC_COMMENT_POST, checkRateLimit, getClientKey, resolveRateLimitRule } from "@/utils/rateLimit";
 
 const MUTATING_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
 
-export async function proxy(request: NextRequest) {
+async function handleRequest(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
   // 1. Protect Admin UI Routes
@@ -151,6 +152,11 @@ export async function proxy(request: NextRequest) {
   }
 
   return NextResponse.next();
+}
+
+// The CSP is added here, per request, so S3_PUBLIC_URL is read at runtime (see utils/securityHeaders.ts).
+export async function proxy(request: NextRequest): Promise<NextResponse> {
+  return applyContentSecurityPolicy(await handleRequest(request));
 }
 
 export const config = {

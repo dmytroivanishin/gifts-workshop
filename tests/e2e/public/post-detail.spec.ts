@@ -69,7 +69,7 @@ test.describe("public post page: fullscreen gallery, comment form, next/image", 
     await page.reload();
   });
 
-  test("renders with no console errors and next/image serves real srcset images", async ({ page }) => {
+  test("renders with no console errors and the post's stored image actually loads", async ({ page }) => {
     const errors: string[] = [];
     page.on("console", (msg: ConsoleMessage) => {
       if (msg.type() === "error") errors.push(msg.text());
@@ -77,8 +77,11 @@ test.describe("public post page: fullscreen gallery, comment form, next/image", 
     await page.reload();
     await expect(page.getByText("E2E Detail Post")).toBeVisible();
 
-    const srcset = await page.locator("img[srcset]").first().getAttribute("srcset");
-    expect(srcset).toBeTruthy();
+    // Images are served unoptimized (next.config.ts): the browser loads the stored MinIO file as-is,
+    // so the check is that the file really decoded, not that a srcset was generated.
+    const image = page.locator(`img[src*="${process.env.S3_BUCKET_NAME}"]`).first();
+    await expect(image).toBeVisible();
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   });
 

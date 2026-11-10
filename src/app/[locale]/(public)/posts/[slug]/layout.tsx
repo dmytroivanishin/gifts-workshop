@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { extractLocalizedTags } from "@/utils/tags";
 import { getLocalizedField } from "@/utils/localization";
-import { env } from "@/modules/core/env";
+import { systemTextService } from "@/modules/core/container";
 import { redirect } from "next/navigation";
 import { isUUID } from "@/utils/uuid";
 import { getVisiblePostBySlugOrId } from "@/utils/postLookup";
@@ -12,6 +12,15 @@ import { APP_URL, languageAlternates } from "@/utils/seo";
 interface PostLayoutProps {
   children: React.ReactNode;
   params: Promise<{ locale: string, slug: string }>;
+}
+
+// Same text the not-found page shows in the body (system_texts code `post_not_found`), so the tab
+// title and the visible heading can never disagree. Read through the cached service, not the DB.
+async function loadNotFoundTitle(locale: string): Promise<string> {
+  const fallback = locale === "en" ? "Project not found" : "Проект не найден";
+  const texts = (await systemTextService.getAllSystemTexts({ limit: 2000, area: "public" })).data ?? [];
+  const text = texts.find((systemText) => systemText.code === "post_not_found");
+  return text ? getLocalizedField(text.content, locale) || fallback : fallback;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string, slug: string }> }): Promise<Metadata> {
@@ -25,9 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     const post = await getVisiblePostBySlugOrId(slug);
 
     if (!post) {
-      return {
-        title: isEn ? env.SITE_POST_NOT_FOUND_EN || "Project not found" : env.SITE_POST_NOT_FOUND_RU || "Проект не найден",
-      };
+      return { title: await loadNotFoundTitle(locale) };
     }
 
     const titleText = getLocalizedField(post.title, locale) || "Project";

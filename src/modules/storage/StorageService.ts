@@ -3,11 +3,13 @@ import { env } from "@/modules/core/env";
 import { generateMediaName, generateStorageSuffix } from "@/utils/mediaName";
 import { logger } from "@/modules/logger";
 import { ValidationError } from "@/common/errors/validation";
-import { minioClient, BUCKET_NAME, ensureBucket } from './minioClient';
+import { getMinioClient, getBucketName, ensureBucket } from './minioClient';
 
 // S3_ENDPOINT is the address the server connects to (an internal host inside Docker or Coolify), not necessarily one
 // a browser can reach, and the stored URL ends up in the database, so the public address is a separate variable.
-const PUBLIC_BASE_URL = `${new URL(env.S3_PUBLIC_URL).href.replace(/\/+$/, "")}/${BUCKET_NAME}`;
+function publicBaseUrl(): string {
+  return `${new URL(env.S3_PUBLIC_URL).href.replace(/\/+$/, "")}/${getBucketName()}`;
+}
 
 // Optional, server-only sizing knobs (not NEXT_PUBLIC_* — sharp resizes on the server, nothing here
 // reaches the browser bundle). Defaults match the values this pipeline has always used; override to
@@ -107,12 +109,12 @@ export class StorageService {
 
     // Upload to MinIO
     await ensureBucket();
-    await minioClient.putObject(BUCKET_NAME, uniqueOriginalName, originalBuffer, originalBuffer.length, {
+    await getMinioClient().putObject(getBucketName(), uniqueOriginalName, originalBuffer, originalBuffer.length, {
       'Content-Type': contentType
     });
 
     try {
-      await minioClient.putObject(BUCKET_NAME, uniqueThumbnailName, thumbnailBuffer, thumbnailBuffer.length, {
+      await getMinioClient().putObject(getBucketName(), uniqueThumbnailName, thumbnailBuffer, thumbnailBuffer.length, {
         'Content-Type': contentType
       });
     } catch (error) {
@@ -122,8 +124,8 @@ export class StorageService {
     }
 
     return {
-      originalUrl: `${PUBLIC_BASE_URL}/${uniqueOriginalName}`,
-      thumbnailUrl: `${PUBLIC_BASE_URL}/${uniqueThumbnailName}`,
+      originalUrl: `${publicBaseUrl()}/${uniqueOriginalName}`,
+      thumbnailUrl: `${publicBaseUrl()}/${uniqueThumbnailName}`,
       displayName,
       width: finalWidth,
       height: finalHeight,
@@ -135,7 +137,7 @@ export class StorageService {
   private async removeKeys(keys: string[]): Promise<void> {
     await Promise.all(
       keys.map((key) =>
-        minioClient.removeObject(BUCKET_NAME, key).catch((error) => {
+        getMinioClient().removeObject(getBucketName(), key).catch((error) => {
           logger.error("Failed to remove media object from MinIO", { code: "MINIO_DELETE_FAILED", key, error });
         })
       )
@@ -145,11 +147,11 @@ export class StorageService {
   /**
    * Removes the original and thumbnail objects for a deleted media row. Best-effort: a media row
    * can also hold an externally hosted URL (saveMedia accepts those), so anything outside our own
-   * PUBLIC_BASE_URL is left alone, and a MinIO failure is logged rather than thrown (the DB row is
+   * the public base URL is left alone, and a MinIO failure is logged rather than thrown (the DB row is
    * already gone by the time this runs, so there is nothing left to roll back).
    */
   async deleteImage(originalUrl: string, thumbnailUrl: string): Promise<void> {
-    const prefix = `${PUBLIC_BASE_URL}/`;
+    const prefix = `${publicBaseUrl()}/`;
     const keys = [originalUrl, thumbnailUrl]
       .filter((url): url is string => !!url && url.startsWith(prefix))
       .map((url) => url.slice(prefix.length));
@@ -159,12 +161,12 @@ export class StorageService {
 
   /**
    * Bulk-delete counterpart to deleteImage: one native S3 Multi-Object Delete call
-   * (minioClient.removeObjects, already supported by the installed minio client) instead of a
+   * (getMinioClient().removeObjects, already supported by the installed minio client) instead of a
    * per-row removeObject loop. Best-effort, same as deleteImage — the DB rows are already gone by
    * the time this runs, so a MinIO failure is logged, not thrown.
    */
   async deleteImages(items: { originalUrl: string; thumbnailUrl: string }[]): Promise<void> {
-    const prefix = `${PUBLIC_BASE_URL}/`;
+    const prefix = `${publicBaseUrl()}/`;
     const keys = new Set<string>();
     for (const { originalUrl, thumbnailUrl } of items) {
       for (const url of [originalUrl, thumbnailUrl]) {
@@ -174,7 +176,7 @@ export class StorageService {
     if (keys.size === 0) return;
 
     try {
-      const results = await minioClient.removeObjects(BUCKET_NAME, [...keys]);
+      const results = await getMinioClient().removeObjects(getBucketName(), [...keys]);
       const failures = results.filter((result) => result?.Error);
       if (failures.length > 0) {
         logger.error("Some media objects failed to remove from MinIO", { code: "MINIO_DELETE_FAILED", failures });

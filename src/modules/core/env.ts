@@ -25,26 +25,19 @@ const requiredEnvVars = [
   "SITE_KEYWORDS_EN",
   "SITE_NAME_RU",
   "SITE_NAME_EN",
-  "SITE_POST_NOT_FOUND_RU",
-  "SITE_POST_NOT_FOUND_EN",
-  "SITE_POST_DEFAULT_RU",
-  "SITE_POST_DEFAULT_EN",
   "NEXT_PUBLIC_DEV_MODE",
   "NEXT_PUBLIC_SOCIAL_LINKS"
 ];
 
-const missingVars: string[] = [];
-
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    missingVars.push(envVar);
+// Called once when the server starts (src/instrumentation.ts), not on import: `next build` loads
+// this module too, and the real values only exist at runtime, so the build must not check them.
+export function assertRequiredEnv(): void {
+  const missingVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+  if (missingVars.length > 0) {
+    const errorMsg = `CRITICAL: Missing required environment variables: ${missingVars.join(", ")}`;
+    logger.error(errorMsg, { code: "ENV_MISSING" });
+    throw new Error(errorMsg);
   }
-}
-
-if (missingVars.length > 0) {
-  const errorMsg = `CRITICAL: Missing required environment variables: ${missingVars.join(", ")}`;
-  logger.error(errorMsg, { code: "ENV_MISSING" });
-  throw new Error(errorMsg);
 }
 
 export const env = {
@@ -57,9 +50,9 @@ export const env = {
   S3_BUCKET_NAME: process.env.S3_BUCKET_NAME!,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET!,
-  ADMIN_EMAILS: process.env.ADMIN_EMAILS!.split(",").map(entry => entry.trim()),
+  ADMIN_EMAILS: (process.env.ADMIN_EMAILS ?? "").split(",").map(entry => entry.trim()),
   NEXT_PUBLIC_MAX_FILE_SIZE_MB: process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB!,
-  SUPPORTED_LOCALES: process.env.NEXT_PUBLIC_SUPPORTED_LOCALES!.split(",").map(entry => entry.trim()),
+  SUPPORTED_LOCALES: (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES ?? "").split(",").map(entry => entry.trim()),
   DEFAULT_LOCALE: process.env.NEXT_PUBLIC_DEFAULT_LOCALE!,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL!,
   SITE_TITLE_RU: process.env.SITE_TITLE_RU!,
@@ -72,10 +65,6 @@ export const env = {
   SITE_KEYWORDS_EN: process.env.SITE_KEYWORDS_EN!,
   SITE_NAME_RU: process.env.SITE_NAME_RU!,
   SITE_NAME_EN: process.env.SITE_NAME_EN!,
-  SITE_POST_NOT_FOUND_RU: process.env.SITE_POST_NOT_FOUND_RU!,
-  SITE_POST_NOT_FOUND_EN: process.env.SITE_POST_NOT_FOUND_EN!,
-  SITE_POST_DEFAULT_RU: process.env.SITE_POST_DEFAULT_RU!,
-  SITE_POST_DEFAULT_EN: process.env.SITE_POST_DEFAULT_EN!,
   NEXT_PUBLIC_DEV_MODE: process.env.NEXT_PUBLIC_DEV_MODE === "true",
   NEXT_PUBLIC_SOCIAL_LINKS: JSON.parse(process.env.NEXT_PUBLIC_SOCIAL_LINKS || '[]') as Array<{name: string, link: string, icon: string}>
 };

@@ -75,7 +75,7 @@ src/repositories/drizzle/*   Drizzle queries; contracts in repositories/interfac
 - **Errors:** throw subclasses of `BaseError` (`src/common/errors/*`, each with `statusCode`, `errorCode`, `serialize()`); controllers catch and return `sendError`. `sendError` also maps Postgres constraint errors (unique, foreign key, value too long) to 409/400 through `utils/databaseErrors.ts`, so they never reach the client as a 500. Envelope: `{ data, meta? }` on success, `{ data: {}, error: { code, message, details? } }` on failure.
 - **Slug-or-UUID:** most `:id` routes accept either; `utils/idResolver.ts` (`resolveId`, `resolveMultipleIds`) resolves slugs.
 - **Pagination:** `getPaginationParams` reads `?page&limit` and caps `limit` at `MAX_PAGE_SIZE = 100`; `GET /posts` defaults to page 1 with 20 items, the lookup lists (categories, tags, colors, collections, media) stay unpaginated without a `limit`. Services fetch `limit + 1` and `services/pagination.ts` builds `meta` (`totalItems` is the current page size, not a total). Every list controller must use the shared helper, not parse `page`/`limit` itself.
-- **Config/env:** `src/modules/core/env.ts` validates the 32 required env vars at import and throws if any is missing (`JWT_SECRET` since 2026-09-19, `S3_PUBLIC_URL` since 2026-09-23; `S3_FORCE_PATH_STYLE` and `GOOGLE_CALLBACK_URL` dropped 2026-09-28, unused).
+- **Config/env:** `src/modules/core/env.ts` validates the 26 required env vars at import and throws if any is missing (`JWT_SECRET` since 2026-09-19, `S3_PUBLIC_URL` since 2026-09-23; `S3_FORCE_PATH_STYLE` and `GOOGLE_CALLBACK_URL` dropped 2026-09-28, unused).
 - **Auth boundary:** `src/proxy.ts` (see §6). Rate limiting and locale routing are also handled there.
 - **Frontend:** `src/app/[locale]/(public)` public site (client components fetching through RTK Query; server side only for metadata, sitemap, robots); `src/app/admin/*` CMS (client components, shadcn-heavy). Components: `components/ui` (shadcn primitives), `components/shared`, `components/features`.
 - **i18n (custom, `src/i18n/index.tsx`):** UI strings come from the `system_texts` table (loaded in the root layout, `t(key)`); entity fields are JSONB `{locale: text}` resolved with `loc(field)` / `utils/localization.ts`. Public locale is in the URL (`/ru`, `/en`); admin locale is in the `admin_locale` cookie.
@@ -105,7 +105,7 @@ npx drizzle-kit push          # or apply schema directly (dev/test)
 scripts/run-test.sh test:infra:start # docker-compose.test.yml: test Postgres :5433 + test MinIO :9002 + drizzle-kit push (config/test.env)
 scripts/run-test.sh test:unit        # vitest run; needs config/test.env sourced first (always via this script,
                                       # never raw `npm run test:unit`/`npx vitest run` — src/modules/core/env.ts
-                                      # validates all 32 required env vars at import time, and some unit specs
+                                      # validates all 26 required env vars at import time, and some unit specs
                                       # (e.g. googleOAuth.spec.ts) transitively import it); no Docker needed, unlike test:api
 set -a; source config/test.env; set +a
 npx vitest run tests/unit/path/to/file.spec.ts   # single unit test (same env-sourcing requirement)
@@ -220,7 +220,7 @@ The 6 `created_at` columns above (2026-11-04) were added by hand-editing the exi
 
 `docker-compose.local.yml` (local dev only; renamed from `docker-compose.yml` 2026-11-02 so its name pairs clearly with `docker-compose.test.yml` — `docker-compose` no longer auto-discovers it without `-f`, hence `npm run local:infra:start`/`local:infra:stop` in §3): `postgres` (16-alpine, db `gift workshop`, :5432, data in `./.docker/db-data`), `minio` (pinned release, :9000 API / :9001 console, data in `./.docker/minio-data`), `pgweb` (:8081). Fixed subnet `10.10.10.0/24`, `restart: always`, no healthchecks, dev credentials hardcoded — this data is meant to persist across restarts (your working dev content), unlike the test stack below. `docker-compose.test.yml`: Postgres 15 on :5433 + an isolated MinIO on :9002 for API tests (`tests/api/**`, CP-31) — both services are deliberately volume-less so every `npm run test:infra:start`/`test:infra:stop` (via `scripts/run-test.sh`) starts from a truly blank state; a named volume here once accumulated an incompatible schema across runs and had to be cleared by hand, so it was dropped entirely 2026-11-02. **No app service, no Dockerfile, no CI.**
 
-**Environment variable names** (values live in `config/local.env`, git-ignored; `config/test.env` holds mock values; all 32 listed are required by `env.ts`, including `JWT_SECRET` since 2026-09-19 and `S3_PUBLIC_URL` since 2026-09-23; `S3_FORCE_PATH_STYLE` and `GOOGLE_CALLBACK_URL` were required-but-unused and dropped from the list 2026-09-28 (the config files may still carry the lines, which is harmless); `config/test.env` has `S3_PUBLIC_URL` but still lacks `JWT_SECRET`, CP-4):
+**Environment variable names** (values live in `config/local.env`, git-ignored; `config/test.env` holds mock values; all 26 listed are required by `env.ts`, including `JWT_SECRET` since 2026-09-19 and `S3_PUBLIC_URL` since 2026-09-23; `S3_FORCE_PATH_STYLE` and `GOOGLE_CALLBACK_URL` were required-but-unused and dropped from the list 2026-09-28 (the config files may still carry the lines, which is harmless); `config/test.env` has `S3_PUBLIC_URL` but still lacks `JWT_SECRET`, CP-4):
 
 ```
 DB_URI
@@ -229,7 +229,7 @@ GOOGLE_CLIENT_ID  GOOGLE_CLIENT_SECRET  ADMIN_EMAILS
 JWT_SECRET
 NEXT_PUBLIC_APP_URL (also the base of the Google redirect address)  NEXT_PUBLIC_DEFAULT_LOCALE  NEXT_PUBLIC_SUPPORTED_LOCALES
 NEXT_PUBLIC_MAX_FILE_SIZE_MB  NEXT_PUBLIC_DEV_MODE  NEXT_PUBLIC_SOCIAL_LINKS (JSON array)
-SITE_{TITLE,TEMPLATE,DESCRIPTION,KEYWORDS,NAME,POST_NOT_FOUND,POST_DEFAULT}_{RU,EN}
+SITE_{TITLE,TEMPLATE,DESCRIPTION,KEYWORDS,NAME}_{RU,EN}
 ```
 
 `NEXT_PUBLIC_*` values are inlined at build time. `MAX_FILES_PER_UPLOAD` (an optional variable outside this list, added 2026-10-02 to cap files per upload *request*) was removed 2026-10-12 along with the multi-file upload path it capped — `POST /media` now takes exactly one file per request, so there is no longer anything for the server to cap. The same day it came back in a different shape as `NEXT_PUBLIC_MAX_FILES_PER_UPLOAD` (optional, defaults to 30 if unset — not in this required list) — this one caps how many files the admin media page's own sequential loop will start in one *selection*, a client-only concern now that the server only ever sees one file per request; it defaults to matching `RATE_LIMITS.upload` (30/minute, `src/utils/rateLimit.ts`), so a larger selection doesn't just start failing with 429s partway through.

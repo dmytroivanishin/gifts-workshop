@@ -2,34 +2,46 @@ import { Client } from 'minio';
 import { env } from "@/modules/core/env";
 import { logger } from '@/modules/logger';
 
-const endpointUrl = new URL(env.S3_ENDPOINT);
+// Created on first use, not at import: `next build` loads this module to collect page data, when the
+// S3 variables are not set, and a top-level `new URL(env.S3_ENDPOINT)` would fail the build.
+let client: Client | undefined;
 
-export const minioClient = new Client({
-  endPoint: endpointUrl.hostname,
-  port: parseInt(endpointUrl.port) || (endpointUrl.protocol === 'https:' ? 443 : 80),
-  useSSL: endpointUrl.protocol === 'https:',
-  accessKey: env.S3_ACCESS_KEY,
-  secretKey: env.S3_SECRET_KEY
-});
+export function getMinioClient(): Client {
+  if (!client) {
+    const endpointUrl = new URL(env.S3_ENDPOINT);
+    client = new Client({
+      endPoint: endpointUrl.hostname,
+      port: parseInt(endpointUrl.port) || (endpointUrl.protocol === 'https:' ? 443 : 80),
+      useSSL: endpointUrl.protocol === 'https:',
+      accessKey: env.S3_ACCESS_KEY,
+      secretKey: env.S3_SECRET_KEY
+    });
+  }
+  return client;
+}
 
-export const BUCKET_NAME = env.S3_BUCKET_NAME;
+export function getBucketName(): string {
+  return env.S3_BUCKET_NAME;
+}
 
-const publicReadPolicy = JSON.stringify({
-  Version: "2012-10-17",
-  Statement: [
-    {
-      Sid: "PublicRead",
-      Effect: "Allow",
-      Principal: "*",
-      Action: ["s3:GetObject"],
-      Resource: [`arn:aws:s3:::${BUCKET_NAME}/*`]
-    }
-  ]
-});
+function publicReadPolicy(bucketName: string): string {
+  return JSON.stringify({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Sid: "PublicRead",
+        Effect: "Allow",
+        Principal: "*",
+        Action: ["s3:GetObject"],
+        Resource: [`arn:aws:s3:::${bucketName}/*`]
+      }
+    ]
+  });
+}
 
-async function hasBucketPolicy(): Promise<boolean> {
+async function hasBucketPolicy(bucketName: string): Promise<boolean> {
   try {
-    await minioClient.getBucketPolicy(BUCKET_NAME);
+    await getMinioClient().getBucketPolicy(bucketName);
     return true;
   } catch (error: unknown) {
     if (error instanceof Error && "code" in error && error.code === "NoSuchBucketPolicy") return false;
@@ -38,16 +50,19 @@ async function hasBucketPolicy(): Promise<boolean> {
 }
 
 async function prepareBucket(): Promise<void> {
-  if (!(await minioClient.bucketExists(BUCKET_NAME))) {
-    await minioClient.makeBucket(BUCKET_NAME, 'us-east-1');
-    logger.info(`MinIO Bucket '${BUCKET_NAME}' created successfully.`);
+  const bucketName = getBucketName();
+  const minio = getMinioClient();
+
+  if (!(await minio.bucketExists(bucketName))) {
+    await minio.makeBucket(bucketName, 'us-east-1');
+    logger.info(`MinIO Bucket '${bucketName}' created successfully.`);
   }
 
   // Checked separately from creation: a bucket made by hand has no policy and its images would answer 403.
   // An existing policy is left alone so a stricter one set on purpose is not overwritten.
-  if (!(await hasBucketPolicy())) {
-    await minioClient.setBucketPolicy(BUCKET_NAME, publicReadPolicy);
-    logger.info(`MinIO Bucket '${BUCKET_NAME}' policy set to public read.`);
+  if (!(await hasBucketPolicy(bucketName))) {
+    await minio.setBucketPolicy(bucketName, publicReadPolicy(bucketName));
+    logger.info(`MinIO Bucket '${bucketName}' policy set to public read.`);
   }
 }
 
