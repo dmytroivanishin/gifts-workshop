@@ -11,7 +11,7 @@ services:
     environment:
       POSTGRES_USER: test_user
       POSTGRES_PASSWORD: test_password
-      POSTGRES_DB: test_gift_workshop
+      POSTGRES_DB: test_gifts_workshop
     ports:
       - "5433:5432" # Use 5433 to avoid conflict with dev DB if running
     networks:

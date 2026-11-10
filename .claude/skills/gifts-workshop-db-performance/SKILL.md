@@ -1,11 +1,11 @@
 ---
-name: gift-workshop-db-performance
-description: Reviews Drizzle/PostgreSQL performance and schema quality for the Gift Workshop app: FK index coverage, JSONB search, list vs full relations, N+1 in populate(), pagination, connection pool, missing self-referencing FKs. Use when queries feel slow, before adding a query or index, or when asked for a database performance review.
+name: gifts-workshop-db-performance
+description: Reviews Drizzle/PostgreSQL performance and schema quality for the Gifts Workshop app: FK index coverage, JSONB search, list vs full relations, N+1 in populate(), pagination, connection pool, missing self-referencing FKs. Use when queries feel slow, before adding a query or index, or when asked for a database performance review.
 argument-hint: "[--table <name>] [--query <repository method>]"
 allowed-tools: Read Grep Glob
 ---
 
-# Gift Workshop DB Performance
+# Gifts Workshop DB Performance
 
 Read-only review of `src/repositories/drizzle/schema.ts`, the repositories and the SQL in `src/migrations/sql`. It reasons from the code; it does not connect to the database. When a measurement is needed, it hands the user an `EXPLAIN` statement to run against their local Postgres (docker-compose service `postgres`, browsable through pgweb on :8081).
 
@@ -36,7 +36,7 @@ Arguments received: `$ARGUMENTS`
 ## Output
 
 1. **Findings table:** `area | table/method | evidence (file:line or SQL) | impact (now / at growth) | fix | effort`.
-2. **Index proposals** as `CREATE INDEX` statements or Drizzle `index()` snippets (proposals only; applying them goes through `gift-workshop-db-migration`).
+2. **Index proposals** as `CREATE INDEX` statements or Drizzle `index()` snippets (proposals only; applying them goes through `gifts-workshop-db-migration`).
 3. **Measurements requested from the user** (EXPLAIN statements).
 
 No files are modified.
@@ -44,7 +44,7 @@ No files are modified.
 ## Example usage
 
 ```
-/gift-workshop-db-performance
-/gift-workshop-db-performance --table posts
-/gift-workshop-db-performance --query PostRepository.getByQuery
+/gifts-workshop-db-performance
+/gifts-workshop-db-performance --table posts
+/gifts-workshop-db-performance --query PostRepository.getByQuery
 ```

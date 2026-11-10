@@ -1,11 +1,11 @@
 ---
-name: gift-workshop-backend-standards
-description: The backend rules and patterns of the Gift Workshop app as they exist in code (layer templates, response and error contracts, pagination, slug-or-UUID ids, auth, storage, logging). Use when writing or reviewing anything under src/app/api, controllers, services, repositories, utils or modules, or when asked how the backend should be done.
+name: gifts-workshop-backend-standards
+description: The backend rules and patterns of the Gifts Workshop app as they exist in code (layer templates, response and error contracts, pagination, slug-or-UUID ids, auth, storage, logging). Use when writing or reviewing anything under src/app/api, controllers, services, repositories, utils or modules, or when asked how the backend should be done.
 argument-hint: "[--layer controller|service|repository|storage]"
 allowed-tools: Read Grep Glob
 ---
 
-# Gift Workshop Backend Standards
+# Gifts Workshop Backend Standards
 
 The rules to follow when writing or checking backend code. Source: `docs/project-plan/backend.md` (moved from `.agents/project-plan/` 2026-10-06) for intent, but it still describes Express, so the **code** is the authority: the concrete patterns below are read from `src/`. Stack decisions (Next.js route handlers, Drizzle + PostgreSQL, `/api/v1` prefix, `PUT` for updates) are settled and are not up for debate here.
 
@@ -59,7 +59,7 @@ Use this as a rulebook: apply it while writing, or read the target code and list
 ## Example usage
 
 ```
-/gift-workshop-backend-standards
-/gift-workshop-backend-standards --layer service
-/gift-workshop-backend-standards --layer repository   (then ask: "check src/repositories/drizzle/tagRepository.ts")
+/gifts-workshop-backend-standards
+/gifts-workshop-backend-standards --layer service
+/gifts-workshop-backend-standards --layer repository   (then ask: "check src/repositories/drizzle/tagRepository.ts")
 ```

@@ -7,10 +7,10 @@
 #   IMAGE_TAG    the git tag being deployed, e.g. 1.4.2
 #
 # Deploy order, as run by the GitHub Actions job over SSH (see the deploy script):
-#   docker compose -p gift-workshop --env-file config/.env -f docker-compose.yml pull
-#   docker compose -p gift-workshop --env-file config/.env -f docker-compose.yml up -d postgres minio
-#   docker compose -p gift-workshop --env-file config/.env -f docker-compose.yml run --rm migrate
-#   docker compose -p gift-workshop --env-file config/.env -f docker-compose.yml up -d app caddy
+#   docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml pull
+#   docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml up -d postgres minio
+#   docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml run --rm migrate
+#   docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml up -d app caddy
 #
 # config/.env holds runtime values and secrets. Public NEXT_PUBLIC_* values are already baked into
 # the image at build time; keep them identical in config/.env because the server reads them too.

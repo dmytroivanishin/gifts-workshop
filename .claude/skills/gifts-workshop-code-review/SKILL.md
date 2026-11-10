@@ -1,11 +1,11 @@
 ---
-name: gift-workshop-code-review
-description: Deep five-step code review of Gift Workshop changes (architecture, design/UX, TypeScript safety, clean code, security/performance). Use when the user asks to review a diff, a branch, a PR or a path, or says "review", "code review", "проверь код", "ревью".
+name: gifts-workshop-code-review
+description: Deep five-step code review of Gifts Workshop changes (architecture, design/UX, TypeScript safety, clean code, security/performance). Use when the user asks to review a diff, a branch, a PR or a path, or says "review", "code review", "проверь код", "ревью".
 argument-hint: "[--scope <path|diff>] [--area backend|frontend|all]"
 allowed-tools: Read Grep Glob Bash(git diff *) Bash(git log *) Bash(git status *) Bash(git show *)
 ---
 
-# Gift Workshop Code Review
+# Gifts Workshop Code Review
 
 Read-only review of code in this repository against the project's own rules. It reports findings with a suggested fix for each; it does not edit files. Originally ported from the project's `.agents/workflows/review.md` (5 steps; that file and the rest of `.agents/` were retired 2026-10-06, CP-34 — this skill is the living, corrected version), checked against the current code, which is the source of truth (`CLAUDE.md`, `DEVIATIONS.md`).
 
@@ -23,8 +23,8 @@ Arguments received: `$ARGUMENTS`
 ## Process
 
 1. **Scope.** For `diff`, run `git status --short` and `git diff HEAD` (add `--stat` first for size). Read every changed file in full, not only the hunks: most rules need the surrounding code. Tag each file backend / frontend / shared.
-2. **Step 1: Architectural alignment.** Load `.claude/skills/gift-workshop-architecture-check/SKILL.md` and apply its checks to the scope (layer boundaries, container wiring, no server code in client components).
-3. **Step 2: Design and UX** (frontend files only). Apply the checklist from `.claude/skills/gift-workshop-design-check/SKILL.md`. Note: the tokens live in `docs/project-plan/colors.md`, `docs/project-plan/theme_design.md` and `src/app/globals.css`.
+2. **Step 1: Architectural alignment.** Load `.claude/skills/gifts-workshop-architecture-check/SKILL.md` and apply its checks to the scope (layer boundaries, container wiring, no server code in client components).
+3. **Step 2: Design and UX** (frontend files only). Apply the checklist from `.claude/skills/gifts-workshop-design-check/SKILL.md`. Note: the tokens live in `docs/project-plan/colors.md`, `docs/project-plan/theme_design.md` and `src/app/globals.css`.
 4. **Step 3: TypeScript and type safety** (source: `CLAUDE.md`'s Working Agreements).
    - Zero `any`; `unknown` plus type guards for dynamic values. `catch (error: any)` and `body: any` exist in old code: flag them only when the change adds or touches them.
    - Explicit return types on every function and method.
@@ -57,7 +57,7 @@ No files are modified.
 ## Example usage
 
 ```
-/gift-workshop-code-review
-/gift-workshop-code-review --scope src/controllers/postController.ts --area backend
-/gift-workshop-code-review --scope src/app/admin/collections --area frontend
+/gifts-workshop-code-review
+/gifts-workshop-code-review --scope src/controllers/postController.ts --area backend
+/gifts-workshop-code-review --scope src/app/admin/collections --area frontend
 ```

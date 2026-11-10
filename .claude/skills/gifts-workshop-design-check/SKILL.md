@@ -1,13 +1,13 @@
 ---
-name: gift-workshop-design-check
-description: Checks UI code against the Gift Workshop visual language (palette tokens, glassmorphism, soft shadows, hover/motion values, typography, 12px cards and pill controls, empty states, no dark mode). Use when building or changing UI, before merging frontend changes, or when asked whether something matches the design.
+name: gifts-workshop-design-check
+description: Checks UI code against the Gifts Workshop visual language (palette tokens, glassmorphism, soft shadows, hover/motion values, typography, 12px cards and pill controls, empty states, no dark mode). Use when building or changing UI, before merging frontend changes, or when asked whether something matches the design.
 argument-hint: "[--target <path>] [--area public|admin]"
 allowed-tools: Read Grep Glob
 ---
 
-# Gift Workshop Design Check
+# Gifts Workshop Design Check
 
-Read-only visual-language audit. Sources: `docs/guidelines/design.md` (the rules, moved from `.agents/rules/` 2026-10-06), `docs/project-plan/colors.md` (palette: Ivory, Brown, Orange, Tan, … scales 50–950), `docs/project-plan/theme_design.md` (shadcn CSS variables), `src/app/globals.css` (the implemented tokens), `docs/project-plan/design.jpg` and `docs/project-plan/example-ui/` (reference images). Split out from step 2 of `gift-workshop-code-review`.
+Read-only visual-language audit. Sources: `docs/guidelines/design.md` (the rules, moved from `.agents/rules/` 2026-10-06), `docs/project-plan/colors.md` (palette: Ivory, Brown, Orange, Tan, … scales 50–950), `docs/project-plan/theme_design.md` (shadcn CSS variables), `src/app/globals.css` (the implemented tokens), `docs/project-plan/design.jpg` and `docs/project-plan/example-ui/` (reference images). Split out from step 2 of `gifts-workshop-code-review`.
 
 ## Trigger words
 
@@ -53,7 +53,7 @@ No files are modified.
 ## Example usage
 
 ```
-/gift-workshop-design-check
-/gift-workshop-design-check --target src/components/features/ProjectCard.tsx --area public
-/gift-workshop-design-check --area admin
+/gifts-workshop-design-check
+/gifts-workshop-design-check --target src/components/features/ProjectCard.tsx --area public
+/gifts-workshop-design-check --area admin
 ```

@@ -14,7 +14,7 @@ import { drizzleDatabase } from "@/repositories/drizzle/database";
 
 const MIGRATIONS_DIR = __dirname;
 const FOLDER_PATTERN = /^\d{13}_[a-z0-9_]+$/;
-const LOCK_KEY = "gift_workshop_migrations";
+const LOCK_KEY = "gifts_workshop_migrations";
 
 interface MigrationRecord {
   readonly name: string;

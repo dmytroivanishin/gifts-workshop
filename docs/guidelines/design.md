@@ -1,4 +1,4 @@
-> Moved from `.agents/rules/design.md` (2026-10-06, CP-34). This is the project's active visual-language spec — checked by `/gift-workshop-design-check` — not superseded by `CLAUDE.md` the way the other retired `.agents/rules/*` files were.
+> Moved from `.agents/rules/design.md` (2026-10-06, CP-34). This is the project's active visual-language spec — checked by `/gifts-workshop-design-check` — not superseded by `CLAUDE.md` the way the other retired `.agents/rules/*` files were.
 
 ## Visual Language
 - **Color Palette**: Strictly follow colors defined in `docs/project-plan/colors.md` (`theme_design.md` for the shadcn CSS variables). Use these tokens consistently across all components.

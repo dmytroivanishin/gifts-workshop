@@ -183,7 +183,7 @@ jobs:
             put POSTGRES_PASSWORD
             put MINIO_ROOT_USER
             put MINIO_ROOT_PASSWORD
-          } > "$RUNNER_TEMP/gift-workshop.env"
+          } > "$RUNNER_TEMP/gifts-workshop.env"
 
       - name: Copy stack files to the VPS
         shell: bash
@@ -200,11 +200,11 @@ jobs:
           ssh_opts=(-i "$HOME/.ssh/deploy_key" -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o StrictHostKeyChecking=yes)
           remote="${VPS_USER}@${VPS_HOST}"
 
-          ssh "${ssh_opts[@]}" "$remote" "mkdir -p /opt/gift-workshop/config /opt/gift-workshop/caddy && chmod 700 /opt/gift-workshop/config"
-          scp "${ssh_opts[@]}" docker-compose.yml "$remote:/opt/gift-workshop/docker-compose.yml"
-          scp "${ssh_opts[@]}" caddy/Caddyfile "$remote:/opt/gift-workshop/caddy/Caddyfile"
-          scp "${ssh_opts[@]}" "$RUNNER_TEMP/gift-workshop.env" "$remote:/opt/gift-workshop/config/.env"
-          ssh "${ssh_opts[@]}" "$remote" "chmod 600 /opt/gift-workshop/config/.env"
+          ssh "${ssh_opts[@]}" "$remote" "mkdir -p /opt/gifts-workshop/config /opt/gifts-workshop/caddy && chmod 700 /opt/gifts-workshop/config"
+          scp "${ssh_opts[@]}" docker-compose.yml "$remote:/opt/gifts-workshop/docker-compose.yml"
+          scp "${ssh_opts[@]}" caddy/Caddyfile "$remote:/opt/gifts-workshop/caddy/Caddyfile"
+          scp "${ssh_opts[@]}" "$RUNNER_TEMP/gifts-workshop.env" "$remote:/opt/gifts-workshop/config/.env"
+          ssh "${ssh_opts[@]}" "$remote" "chmod 600 /opt/gifts-workshop/config/.env"
 
       - name: Run the deploy on the VPS
         shell: bash
@@ -225,8 +225,8 @@ jobs:
             cat <<'REMOTE'
             set -euo pipefail
 
-            cd /opt/gift-workshop
-            compose=(docker compose -p gift-workshop --env-file config/.env -f docker-compose.yml)
+            cd /opt/gifts-workshop
+            compose=(docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml)
             previous_tag=$(cat .deployed_tag 2>/dev/null || true)
 
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null

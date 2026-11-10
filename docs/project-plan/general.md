@@ -1,4 +1,4 @@
-# Gift Workshop 
+# Gifts Workshop 
 
 ## Main Idea
 The website is a gift workshop showcasing work in sewing, quilting, toy making, dolls, textiles, and kitchen textiles.

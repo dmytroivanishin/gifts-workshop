@@ -1,5 +1,5 @@
 {
-  "name": "next-temp",
+  "name": "gifts-workshop",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,8 +10,8 @@
     "local:infra:start": "docker-compose -f docker-compose.local.yml up -d",
     "media:reconcile": "tsx scripts/reconcile-media.ts",
     "local:infra:stop": "docker-compose -f docker-compose.local.yml down",
-    "test:infra:start": "docker-compose -p gift_workshop_test -f docker-compose.test.yml up -d && sleep 5 && npx drizzle-kit push",
-    "test:infra:stop": "docker-compose -p gift_workshop_test -f docker-compose.test.yml down",
+    "test:infra:start": "docker-compose -p gifts_workshop_test -f docker-compose.test.yml up -d && sleep 5 && npx drizzle-kit push",
+    "test:infra:stop": "docker-compose -p gifts_workshop_test -f docker-compose.test.yml down",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "rm -rf .next/dev/cache/fetch-cache && playwright test --project=e2e --workers=1",

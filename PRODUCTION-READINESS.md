@@ -114,7 +114,7 @@ The 5 remaining moderate findings, all already known and accepted:
 - **`decode-uri-component`/`stream-json` via `minio@8.0.7`** (`query-string` chain): unchanged from before — the audit's own suggested fix is `minio@7.1.3`, a downgrade, which is worse than the risk it fixes. The client only talks to this project's own MinIO instance.
 
 **Build/dev only, now actually out of the runtime tree:**
-- [x] **Fixed 2026-10-05.** The `shadcn` CLI (and its `@modelcontextprotocol/sdk` → `hono`/`express`/… chain, plus `@babel/core`/`browserslist`/`ts-morph` → `brace-expansion`/`cosmiconfig` → `js-yaml`) is now in `devDependencies`. `globals.css` still imports `shadcn/tailwind.css` at build time, confirmed unaffected (`next build` passes, same styling). Package name is still `next-temp`.
+- [x] **Fixed 2026-10-05.** The `shadcn` CLI (and its `@modelcontextprotocol/sdk` → `hono`/`express`/… chain, plus `@babel/core`/`browserslist`/`ts-morph` → `brace-expansion`/`cosmiconfig` → `js-yaml`) is now in `devDependencies`. `globals.css` still imports `shadcn/tailwind.css` at build time, confirmed unaffected (`next build` passes, same styling). Package name is still `gifts-workshop`.
 
 <details>
 <summary>2026-09-19 analysis (superseded 2026-10-05, kept for history)</summary>

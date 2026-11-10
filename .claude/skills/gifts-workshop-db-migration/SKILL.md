@@ -1,11 +1,11 @@
 ---
-name: gift-workshop-db-migration
-description: Reviews and prepares Drizzle schema changes and SQL migrations for the Gift Workshop app (generate, check, dev vs test target), with checks for FK policy, indexes, destructive statements and journal consistency. Use when schema.ts changes, when a migration is needed, or when asked to check migrations.
+name: gifts-workshop-db-migration
+description: Reviews and prepares Drizzle schema changes and SQL migrations for the Gifts Workshop app (generate, check, dev vs test target), with checks for FK policy, indexes, destructive statements and journal consistency. Use when schema.ts changes, when a migration is needed, or when asked to check migrations.
 argument-hint: "[--generate] [--check] [--target dev|test]"
 disable-model-invocation: true
 ---
 
-# Gift Workshop DB Migration
+# Gifts Workshop DB Migration
 
 Schema source: `src/repositories/drizzle/schema.ts`. Migrations: `src/migrations/sql` (one file so far, `0000_tired_human_robot.sql`, 13 tables; journal and snapshot in `src/migrations/sql/meta`). Config: `drizzle.config.ts` (dialect `postgresql`, reads `process.env.DB_URI` and throws when it is missing; it does **not** load dotenv). No `migrate()` call and no `db:migrate` script exist, so nothing applies migrations automatically at deploy: that decision is still open (`PRODUCTION-READINESS.md` → Database). Drizzle has no down migrations: the rollback is a backup.
 
@@ -47,7 +47,7 @@ Arguments received: `$ARGUMENTS`
 ## Example usage
 
 ```
-/gift-workshop-db-migration --check
-/gift-workshop-db-migration --generate --target dev
-/gift-workshop-db-migration --generate --target test
+/gifts-workshop-db-migration --check
+/gifts-workshop-db-migration --generate --target dev
+/gifts-workshop-db-migration --generate --target test
 ```

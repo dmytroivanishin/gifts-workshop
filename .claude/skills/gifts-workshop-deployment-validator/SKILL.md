@@ -1,11 +1,11 @@
 ---
-name: gift-workshop-deployment-validator
-description: Validates deployment readiness of the Gift Workshop app: docker-compose files, env variable whitelist vs config files, build-time vs runtime NEXT_PUBLIC_* values, Dockerfile/Coolify prerequisites, migrations, health endpoint, storage URL. Use before a deploy, when writing the Dockerfile, or when asked whether the app is ready for the VPS/Coolify.
+name: gifts-workshop-deployment-validator
+description: Validates deployment readiness of the Gifts Workshop app: docker-compose files, env variable whitelist vs config files, build-time vs runtime NEXT_PUBLIC_* values, Dockerfile/Coolify prerequisites, migrations, health endpoint, storage URL. Use before a deploy, when writing the Dockerfile, or when asked whether the app is ready for the VPS/Coolify.
 argument-hint: "[--env local|test|prod]"
 allowed-tools: Read Grep Glob Bash(git ls-files *) Bash(sed * config/*.env)
 ---
 
-# Gift Workshop Deployment Validator
+# Gifts Workshop Deployment Validator
 
 Read-only check of everything that decides whether the app will start and behave in a given environment. Sources: `docker-compose.yml`, `docker-compose.test.yml`, `config/*.env` (names only), `src/modules/core/env.ts`, `scripts/run.sh`, `next.config.ts`, `CLAUDE.md` §9/§12 and `PRODUCTION-READINESS.md` (Deployment). It never runs `docker`, `npm`, `next build` or any network command; if a build/run result is needed, give the user the exact command and ask for the output.
 
@@ -54,7 +54,7 @@ No files are modified. Writing the Dockerfile itself is a separate, explicitly r
 ## Example usage
 
 ```
-/gift-workshop-deployment-validator
-/gift-workshop-deployment-validator --env local
-/gift-workshop-deployment-validator --env test
+/gifts-workshop-deployment-validator
+/gifts-workshop-deployment-validator --env local
+/gifts-workshop-deployment-validator --env test
 ```

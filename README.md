@@ -24,9 +24,9 @@ npm run local:infra:start
 ```
 
 Поднимает три контейнера из `docker-compose.local.yml`:
-- `gift-workshop-postgres` — PostgreSQL 16, порт 5432, база `gift_workshop`;
-- `gift-workshop-minio` — MinIO, API на 9000, консоль на 9001;
-- `gift-workshop-pgweb` — браузер БД на `localhost:8081`.
+- `gifts-workshop-postgres` — PostgreSQL 16, порт 5432, база `gifts_workshop`;
+- `gifts-workshop-minio` — MinIO, API на 9000, консоль на 9001;
+- `gifts-workshop-pgweb` — браузер БД на `localhost:8081`.
 
 Данные лежат в `./.docker/db-data` и `./.docker/minio-data` (в git не попадают).
 
@@ -38,8 +38,8 @@ npm run local:infra:start
 
 Для локальной базы и бакета в нём должны стоять:
 ```
-DB_URI="postgresql://postgres:postgres_local_password@127.0.0.1:5432/gift_workshop"
-S3_BUCKET_NAME="gift-workshop-media"
+DB_URI="postgresql://postgres:postgres_local_password@127.0.0.1:5432/gifts_workshop"
+S3_BUCKET_NAME="gifts-workshop-media"
 ```
 
 ### 3. Накатить миграцию
@@ -66,7 +66,7 @@ bash scripts/run.sh dev
 Использовать именно `bash scripts/run.sh`, а не `npm run dev`: скрипт загружает
 `config/local.env`. Сайт: `http://localhost:3000` (ru и en), вход в админку: `/admin/login`.
 
-## Переименование с «portfolio» на «gift-workshop» (если у вас старое окружение)
+## Переименование с «portfolio» на «gifts-workshop» (если у вас старое окружение)
 
 Если на вашей машине ещё работает старая инфраструктура с именами `portfolio-*`, один раз
 выполните:
@@ -78,11 +78,11 @@ bash scripts/run.sh dev
    ```
 2. Переименовать базу, пока Postgres запущен (к базе не должно быть подключений):
    ```bash
-   docker exec -i portfolio-postgres psql -U postgres -c "ALTER DATABASE portfolio RENAME TO gift_workshop;"
+   docker exec -i portfolio-postgres psql -U postgres -c "ALTER DATABASE portfolio RENAME TO gifts_workshop;"
    ```
    Если контейнер уже остановлен, сначала поднимите его под старым именем, либо, если данные
    не нужны, см. п. «Чистый старт» ниже.
-3. Переименовать бакет MinIO `portfolio-media` в `gift-workshop-media` (через консоль
+3. Переименовать бакет MinIO `portfolio-media` в `gifts-workshop-media` (через консоль
    `localhost:9001` или `mc`). Без этого картинки из старых записей `media` не откроются:
    их URL указывают на старый бакет.
 4. Обновить `config/local.env` по образцу из шага 2 выше.

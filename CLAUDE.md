@@ -310,10 +310,10 @@ Checklist and open questions: `PRODUCTION-READINESS.md`. Headlines: close the §
 ## 13. Quick Links
 
 - Guidelines: `docs/guidelines/frontend.md`, `design.md` (visual language: no dark mode, 12px cards, pill controls, Inter + Playfair Display) — moved from `.agents/rules/` 2026-10-06 (CP-34); layering/TS/style rules (the old `architect.md`) and the stale Express-era `backend.md`/`workspace.md`/`system_rules.md`/`quota-rules.md` were retired, not moved, since they were already superseded by this file or by a different AI tool's process docs
-- Review workflow: ported into `/gift-workshop-code-review` (the old `.agents/workflows/review.md` is retired)
+- Review workflow: ported into `/gifts-workshop-code-review` (the old `.agents/workflows/review.md` is retired)
 - Plans and references: `docs/project-plan/{general,backend,frontend,colors,theme_design}.md`, `design.jpg`, `diagram.jpg` (REST + DB schema), `example-ui/`
 - Generated docs: `DEVIATIONS.md`, `PRODUCTION-READINESS.md`, `SKILL-CANDIDATES.md`, `AUDIT-SUMMARY.md`
-- Project skills (`.claude/skills/gift-workshop-*/SKILL.md`, invoked as `/gift-workshop-<name>`): `code-review`, `architecture-check`, `security-audit`, `backend-standards`, `frontend-standards`, `deployment-validator`, `api-exposure-check`, `db-performance`, `requirements-check`, `new-entity`, `i18n-sync`, `db-migration`, `design-check`, `dependency-audit`, `docs-sync`. Details: `SKILL-CANDIDATES.md`.
+- Project skills (`.claude/skills/gifts-workshop-*/SKILL.md`, invoked as `/gifts-workshop-<name>`): `code-review`, `architecture-check`, `security-audit`, `backend-standards`, `frontend-standards`, `deployment-validator`, `api-exposure-check`, `db-performance`, `requirements-check`, `new-entity`, `i18n-sync`, `db-migration`, `design-check`, `dependency-audit`, `docs-sync`. Details: `SKILL-CANDIDATES.md`.
 - Open steps and reminders: `CHANGE-PLAN.md`
 
 ---

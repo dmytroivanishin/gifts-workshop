@@ -1,11 +1,11 @@
 ---
-name: gift-workshop-new-entity
-description: Scaffolds a new CRUD entity end to end in the Gift Workshop layering (schema, types, Zod, repository, service, controller, container, routes, RTK Query, i18n keys, migration) and enforces the access checks the existing entities missed. Use when the user asks to add a new entity, resource, table or CRUD endpoint.
+name: gifts-workshop-new-entity
+description: Scaffolds a new CRUD entity end to end in the Gifts Workshop layering (schema, types, Zod, repository, service, controller, container, routes, RTK Query, i18n keys, migration) and enforces the access checks the existing entities missed. Use when the user asks to add a new entity, resource, table or CRUD endpoint.
 argument-hint: "<name> [--localized-fields a,b] [--public-read]"
 disable-model-invocation: true
 ---
 
-# Gift Workshop New Entity
+# Gifts Workshop New Entity
 
 Nine entities already share one shape, so a new one is a fixed sequence of edits across roughly ten files. This skill performs them in order, copying the **shape** of the closest existing entity and avoiding its known violations. It edits code, so it only runs when the user invokes it, and the plan (step 1) is confirmed before any file is written.
 
@@ -32,10 +32,10 @@ Arguments received: `$ARGUMENTS`
 7. **Controller:** `src/controllers/<x>Controller.ts` following `TagController` / `ColorController` (`validateRequest`, `resolveId`, `getUserId`, `sendSuccess` / `sendError`); type the catch as `unknown` and avoid `as any`.
 8. **Container** (`src/modules/core/container.ts`): register repository export, service and controller.
 9. **Routes:** `src/app/api/v1/<x>/route.ts` (`GET` list, `POST`) and `[id]/route.ts` (`GET`, `PUT`, `DELETE`), thin, with `params: Promise<{ id: string }>`. Every write export (`POST`/`PUT`/`PATCH`/`DELETE`) wraps its handler in `withAdminAuth()` (`src/utils/withAdminAuth.ts`, since 2026-10-06, CP-5) — follow an existing write route, e.g. `src/app/api/v1/tags/route.ts`, not an older unwrapped one.
-10. **Access decision** (the check the current entities missed). `src/proxy.ts` requires a token for `POST/PUT/PATCH/DELETE` on every path and, since 2026-09-19, for every method on `/api/v1/users/**` and `/api/v1/admin/**` (the `isAdminOnlyResource` pattern); every other `GET` is anonymous. With `--public-read`, confirm that nothing sensitive is returned: `populate()` returns an explicit field allowlist (as `UserRepository` does, not a raw row), and if the entity has a draft/status state, anonymous readers get only the published state through a helper modelled on `utils/postVisibility.ts` (`isAdminRequest()` from `utils/auth.ts`), applied on **every** path that returns it: list, by-id/slug (404 for unpublished, so its existence is not revealed), nested routes, server-rendered metadata and `sitemap.ts`. Without `--public-read`, the `GET` routes would be **anonymous** unless the proxy or the controller enforces a token: propose adding the resource path to `isAdminOnlyResource` (or a token check in the controller) and get approval before making it; never leave an admin-only entity readable. If the entity gets an anonymous write or an expensive endpoint, also add a rule to `resolveRateLimitRule` in `src/proxy.ts` (limits live in `src/utils/rateLimit.ts`). List routes take `page`/`limit` only through `getPaginationParams`, which caps `limit` at 100. Run `gift-workshop-api-exposure-check` on the new routes afterwards.
-11. **Frontend data layer** (`src/store/api.ts`): add the tag to `tagTypes`, query/mutation endpoints with `providesTags` / `invalidatesTags`, exported hooks. Admin pages, if requested, follow `gift-workshop-frontend-standards`.
-12. **i18n:** add `t()` keys for every new UI string and register them via `gift-workshop-i18n-sync` (area `admin` for admin screens).
-13. **Migration:** hand over to `gift-workshop-db-migration --generate` and review the SQL. Do not run `drizzle-kit push` against anything but the local or test database, and only with the user's approval.
+10. **Access decision** (the check the current entities missed). `src/proxy.ts` requires a token for `POST/PUT/PATCH/DELETE` on every path and, since 2026-09-19, for every method on `/api/v1/users/**` and `/api/v1/admin/**` (the `isAdminOnlyResource` pattern); every other `GET` is anonymous. With `--public-read`, confirm that nothing sensitive is returned: `populate()` returns an explicit field allowlist (as `UserRepository` does, not a raw row), and if the entity has a draft/status state, anonymous readers get only the published state through a helper modelled on `utils/postVisibility.ts` (`isAdminRequest()` from `utils/auth.ts`), applied on **every** path that returns it: list, by-id/slug (404 for unpublished, so its existence is not revealed), nested routes, server-rendered metadata and `sitemap.ts`. Without `--public-read`, the `GET` routes would be **anonymous** unless the proxy or the controller enforces a token: propose adding the resource path to `isAdminOnlyResource` (or a token check in the controller) and get approval before making it; never leave an admin-only entity readable. If the entity gets an anonymous write or an expensive endpoint, also add a rule to `resolveRateLimitRule` in `src/proxy.ts` (limits live in `src/utils/rateLimit.ts`). List routes take `page`/`limit` only through `getPaginationParams`, which caps `limit` at 100. Run `gifts-workshop-api-exposure-check` on the new routes afterwards.
+11. **Frontend data layer** (`src/store/api.ts`): add the tag to `tagTypes`, query/mutation endpoints with `providesTags` / `invalidatesTags`, exported hooks. Admin pages, if requested, follow `gifts-workshop-frontend-standards`.
+12. **i18n:** add `t()` keys for every new UI string and register them via `gifts-workshop-i18n-sync` (area `admin` for admin screens).
+13. **Migration:** hand over to `gifts-workshop-db-migration --generate` and review the SQL. Do not run `drizzle-kit push` against anything but the local or test database, and only with the user's approval.
 14. **Docs:** add the table to the `CLAUDE.md` §5 table and the routes to `docs/project-plan/backend.md` only if the user asks; record a deviation in `DEVIATIONS.md` if the entity intentionally breaks a pattern.
 15. **Verify:** `npx tsc --noEmit`, `npx eslint <new files>` (not the repo-wide `npm run lint`, which is red), and a manual API call matrix: create, read, update, delete, unauthenticated write → 401, an unpublished/admin-only record as anonymous → absent from lists and 404 by id, unknown id → 404, invalid body → 400, duplicate slug → 409.
 
@@ -46,6 +46,6 @@ The list of files created/changed (path + one line each), the access decision ta
 ## Example usage
 
 ```
-/gift-workshop-new-entity Review --localized-fields title,text --public-read
-/gift-workshop-new-entity Brand
+/gifts-workshop-new-entity Review --localized-fields title,text --public-read
+/gifts-workshop-new-entity Brand
 ```
