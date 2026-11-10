@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import {
@@ -82,11 +82,25 @@ export default function AdminLocalizations() {
     setEntityType(type);
   };
 
-  const handleLoadMore = () => {
-    if (!isFetching && hasMore) {
-      setPage(previousPage => previousPage + 1);
-    }
-  };
+  // Infinite scroll: the next page loads when the sentinel below scrolls into view (same as the posts list).
+  const loaderRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!hasMore || isFetching) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) setPage((previousPage) => previousPage + 1);
+      },
+      { threshold: 0.1 }
+    );
+    const sentinel = loaderRef.current;
+    if (sentinel) observer.observe(sentinel);
+
+    return () => {
+      if (sentinel) observer.unobserve(sentinel);
+      observer.disconnect();
+    };
+  }, [hasMore, isFetching, items.length]);
 
   const getTranslationStatus = (item: LocalizableItem) => {
     const missing: string[] = [];
@@ -213,20 +227,13 @@ export default function AdminLocalizations() {
           </div>
         )}
 
-        {/* Load More & Loading State */}
-        <div className="flex justify-center pt-4">
-          {isFetching ? (
+        {/* Sentinel for infinite scroll, and the loading state while the next page arrives */}
+        <div ref={loaderRef} className="flex justify-center pt-4 min-h-[2.5rem]">
+          {isFetching && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="animate-spin" size={16} /> {t("loading_list")}
             </div>
-          ) : hasMore ? (
-            <button
-              onClick={handleLoadMore}
-              className="px-6 py-2.5 bg-secondary text-subtle-foreground hover:text-foreground text-sm font-semibold rounded-lg border border-border hover:bg-secondary/80 transition-colors cursor-pointer"
-            >
-              {t("load_more") !== "load_more" ? t("load_more") : "Загрузить еще"}
-            </button>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

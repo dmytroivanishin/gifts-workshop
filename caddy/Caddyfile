@@ -1,5 +1,5 @@
 # Public entry point. Caddy obtains and renews the TLS certificate itself (Let's Encrypt).
-# The site address is NEXT_PUBLIC_APP_URL from config/.env, e.g. https://handmae.com.
+# The site address is NEXT_PUBLIC_APP_URL from config/.env, e.g. https://handmade.com.
 # Ports 80 and 443 must be open and DNS must point to the server before the first start.
 
 {$NEXT_PUBLIC_APP_URL} {
