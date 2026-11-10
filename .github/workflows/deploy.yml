@@ -1,0 +1,278 @@
+# Build on a version tag (e.g. 1.4.2), push two images to GHCR, then deploy to the VPS over SSH.
+#
+# Secrets (Settings > Secrets and variables > Actions > Secrets):
+#   VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_KNOWN_HOSTS  (known_hosts line from ssh-keyscan, pinned)
+#   POSTGRES_USER, POSTGRES_PASSWORD        (hex only: they are put into DB_URI unescaped)
+#   MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
+#   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET
+# Variables (Settings > Secrets and variables > Actions > Variables):
+#   POSTGRES_DB, S3_BUCKET_NAME, ADMIN_EMAILS, MEDIA_THUMBNAIL_MAX_PX, MEDIA_PREVIEW_MAX_PX
+#   NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SUPPORTED_LOCALES, NEXT_PUBLIC_DEFAULT_LOCALE,
+#   NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC, NEXT_PUBLIC_MAX_FILE_SIZE_MB, NEXT_PUBLIC_MAX_FILES_PER_UPLOAD,
+#   NEXT_PUBLIC_SOCIAL_LINKS, SITE_* (10 texts)
+# Derived here, not configured: DB_URI, S3_ENDPOINT, S3_ACCESS_KEY/SECRET_KEY (= MinIO root),
+# S3_PUBLIC_URL (= NEXT_PUBLIC_APP_URL + /static/media), NEXT_PUBLIC_DEV_MODE (always false).
+
+name: Release and deploy
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.names.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Image names (GHCR needs lowercase)
+        id: names
+        run: |
+          image=$(echo "ghcr.io/${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push the app image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runner
+          push: true
+          tags: ${{ steps.names.outputs.image }}:${{ github.ref_name }}
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_SUPPORTED_LOCALES=${{ vars.NEXT_PUBLIC_SUPPORTED_LOCALES }}
+            NEXT_PUBLIC_DEFAULT_LOCALE=${{ vars.NEXT_PUBLIC_DEFAULT_LOCALE }}
+            NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC=${{ vars.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC }}
+            NEXT_PUBLIC_MAX_FILE_SIZE_MB=${{ vars.NEXT_PUBLIC_MAX_FILE_SIZE_MB }}
+            NEXT_PUBLIC_MAX_FILES_PER_UPLOAD=${{ vars.NEXT_PUBLIC_MAX_FILES_PER_UPLOAD }}
+            NEXT_PUBLIC_DEV_MODE=false
+            NEXT_PUBLIC_SOCIAL_LINKS=${{ vars.NEXT_PUBLIC_SOCIAL_LINKS }}
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
+
+      - name: Build and push the migrator image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: migrator
+          push: true
+          tags: ${{ steps.names.outputs.image }}-migrator:${{ github.ref_name }}
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_SUPPORTED_LOCALES=${{ vars.NEXT_PUBLIC_SUPPORTED_LOCALES }}
+            NEXT_PUBLIC_DEFAULT_LOCALE=${{ vars.NEXT_PUBLIC_DEFAULT_LOCALE }}
+            NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC=${{ vars.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC }}
+            NEXT_PUBLIC_MAX_FILE_SIZE_MB=${{ vars.NEXT_PUBLIC_MAX_FILE_SIZE_MB }}
+            NEXT_PUBLIC_MAX_FILES_PER_UPLOAD=${{ vars.NEXT_PUBLIC_MAX_FILES_PER_UPLOAD }}
+            NEXT_PUBLIC_DEV_MODE=false
+            NEXT_PUBLIC_SOCIAL_LINKS=${{ vars.NEXT_PUBLIC_SOCIAL_LINKS }}
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write config/.env from secrets and variables
+        shell: bash
+        env:
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MEDIA_THUMBNAIL_MAX_PX: ${{ vars.MEDIA_THUMBNAIL_MAX_PX }}
+          MEDIA_PREVIEW_MAX_PX: ${{ vars.MEDIA_PREVIEW_MAX_PX }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_SUPPORTED_LOCALES: ${{ vars.NEXT_PUBLIC_SUPPORTED_LOCALES }}
+          NEXT_PUBLIC_DEFAULT_LOCALE: ${{ vars.NEXT_PUBLIC_DEFAULT_LOCALE }}
+          NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC: ${{ vars.NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC }}
+          NEXT_PUBLIC_MAX_FILE_SIZE_MB: ${{ vars.NEXT_PUBLIC_MAX_FILE_SIZE_MB }}
+          NEXT_PUBLIC_MAX_FILES_PER_UPLOAD: ${{ vars.NEXT_PUBLIC_MAX_FILES_PER_UPLOAD }}
+          NEXT_PUBLIC_SOCIAL_LINKS: ${{ vars.NEXT_PUBLIC_SOCIAL_LINKS }}
+          SITE_TITLE_RU: ${{ vars.SITE_TITLE_RU }}
+          SITE_TITLE_EN: ${{ vars.SITE_TITLE_EN }}
+          SITE_TEMPLATE_RU: ${{ vars.SITE_TEMPLATE_RU }}
+          SITE_TEMPLATE_EN: ${{ vars.SITE_TEMPLATE_EN }}
+          SITE_DESCRIPTION_RU: ${{ vars.SITE_DESCRIPTION_RU }}
+          SITE_DESCRIPTION_EN: ${{ vars.SITE_DESCRIPTION_EN }}
+          SITE_KEYWORDS_RU: ${{ vars.SITE_KEYWORDS_RU }}
+          SITE_KEYWORDS_EN: ${{ vars.SITE_KEYWORDS_EN }}
+          SITE_NAME_RU: ${{ vars.SITE_NAME_RU }}
+          SITE_NAME_EN: ${{ vars.SITE_NAME_EN }}
+        run: |
+          umask 077
+
+
+          # Derived values: one source each, so nothing can drift from the rest.
+          export DB_URI="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+          export S3_ENDPOINT="http://minio:9000"
+          export S3_ACCESS_KEY="${MINIO_ROOT_USER}"
+          export S3_SECRET_KEY="${MINIO_ROOT_PASSWORD}"
+          export S3_PUBLIC_URL="${NEXT_PUBLIC_APP_URL}/static/media"
+          export NEXT_PUBLIC_DEV_MODE="false"
+
+          # printf, not echo: values may contain spaces, quotes or backslashes.
+          put() { printf '%s=%s\n' "$1" "${!1}"; }
+          {
+            echo "# Written by the deploy workflow. Do not edit on the server."
+            put NEXT_PUBLIC_APP_URL
+            put NEXT_PUBLIC_SUPPORTED_LOCALES
+            put NEXT_PUBLIC_DEFAULT_LOCALE
+            put NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC
+            put NEXT_PUBLIC_MAX_FILE_SIZE_MB
+            put NEXT_PUBLIC_MAX_FILES_PER_UPLOAD
+            put NEXT_PUBLIC_DEV_MODE
+            put NEXT_PUBLIC_SOCIAL_LINKS
+            put MEDIA_THUMBNAIL_MAX_PX
+            put MEDIA_PREVIEW_MAX_PX
+            put DB_URI
+            put S3_ENDPOINT
+            put S3_PUBLIC_URL
+            put S3_BUCKET_NAME
+            put S3_ACCESS_KEY
+            put S3_SECRET_KEY
+            put GOOGLE_CLIENT_ID
+            put GOOGLE_CLIENT_SECRET
+            put ADMIN_EMAILS
+            put JWT_SECRET
+            put SITE_TITLE_RU
+            put SITE_TITLE_EN
+            put SITE_TEMPLATE_RU
+            put SITE_TEMPLATE_EN
+            put SITE_DESCRIPTION_RU
+            put SITE_DESCRIPTION_EN
+            put SITE_KEYWORDS_RU
+            put SITE_KEYWORDS_EN
+            put SITE_NAME_RU
+            put SITE_NAME_EN
+            echo "# Compose-only: Postgres and MinIO containers"
+            put POSTGRES_DB
+            put POSTGRES_USER
+            put POSTGRES_PASSWORD
+            put MINIO_ROOT_USER
+            put MINIO_ROOT_PASSWORD
+          } > "$RUNNER_TEMP/gift-workshop.env"
+
+      - name: Copy stack files to the VPS
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/deploy_key" && chmod 600 "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+
+          ssh_opts=(-i "$HOME/.ssh/deploy_key" -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o StrictHostKeyChecking=yes)
+          remote="${VPS_USER}@${VPS_HOST}"
+
+          ssh "${ssh_opts[@]}" "$remote" "mkdir -p /opt/gift-workshop/config /opt/gift-workshop/caddy && chmod 700 /opt/gift-workshop/config"
+          scp "${ssh_opts[@]}" docker-compose.yml "$remote:/opt/gift-workshop/docker-compose.yml"
+          scp "${ssh_opts[@]}" caddy/Caddyfile "$remote:/opt/gift-workshop/caddy/Caddyfile"
+          scp "${ssh_opts[@]}" "$RUNNER_TEMP/gift-workshop.env" "$remote:/opt/gift-workshop/config/.env"
+          ssh "${ssh_opts[@]}" "$remote" "chmod 600 /opt/gift-workshop/config/.env"
+
+      - name: Run the deploy on the VPS
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          IMAGE_REPO: ${{ needs.build.outputs.image }}
+          IMAGE_TAG: ${{ github.ref_name }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ssh_opts=(-i "$HOME/.ssh/deploy_key" -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o StrictHostKeyChecking=yes)
+          # The script and its variables travel over stdin: the token never appears on the command line or in the logs.
+          {
+            printf 'export IMAGE_REPO=%q\n' "$IMAGE_REPO"
+            printf 'export IMAGE_TAG=%q\n' "$IMAGE_TAG"
+            printf 'export GHCR_USER=%q\n' "$GITHUB_ACTOR"
+            printf 'export GHCR_TOKEN=%q\n' "$GHCR_TOKEN"
+            cat <<'REMOTE'
+            set -euo pipefail
+
+            cd /opt/gift-workshop
+            compose=(docker compose -p gift-workshop --env-file config/.env -f docker-compose.yml)
+            previous_tag=$(cat .deployed_tag 2>/dev/null || true)
+
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+            trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+
+            echo "Pulling ${IMAGE_TAG}"
+            "${compose[@]}" pull app migrate
+
+            echo "Starting Postgres and MinIO"
+            "${compose[@]}" up -d postgres minio
+
+            echo "Running migrations"
+            if ! "${compose[@]}" run --rm migrate; then
+              echo "Migration failed. The previous version keeps running; nothing was switched." >&2
+              exit 1
+            fi
+
+            echo "Starting app and Caddy"
+            "${compose[@]}" up -d app caddy
+
+            # The Caddyfile is a bind mount: editing it does not recreate the container, so reload it.
+            "${compose[@]}" exec -T caddy caddy reload --config /etc/caddy/Caddyfile
+
+            # The image's HEALTHCHECK polls /api/health. Wait for it instead of assuming the start worked.
+            container_id=$("${compose[@]}" ps -q app)
+            healthy=0
+            for _ in $(seq 1 40); do
+              status=$(docker inspect -f '{{.State.Health.Status}}' "$container_id" 2>/dev/null || echo starting)
+              if [ "$status" = "healthy" ]; then
+                healthy=1
+                break
+              fi
+              sleep 3
+            done
+
+            if [ "$healthy" -ne 1 ]; then
+              echo "App is not healthy after the deploy." >&2
+              if [ -n "$previous_tag" ]; then
+                echo "Rolling the app back to ${previous_tag}" >&2
+                IMAGE_TAG="$previous_tag" "${compose[@]}" up -d app
+              fi
+              exit 1
+            fi
+
+            echo "$IMAGE_TAG" > .deployed_tag
+            docker image prune -f >/dev/null
+            echo "Deployed ${IMAGE_TAG}"
+          REMOTE
+          } | ssh "${ssh_opts[@]}" "${VPS_USER}@${VPS_HOST}" bash -s

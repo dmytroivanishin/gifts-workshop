@@ -1,0 +1,19 @@
+# Keep the build context small and keep local secrets and test artefacts out of the image.
+.git
+.github
+node_modules
+.next
+.docker
+.claude
+docs
+tests
+test-results
+playwright-report
+coverage
+config
+.env
+.env.*
+**/*.log
+Dockerfile
+.dockerignore
+docker-compose*.yml

@@ -1,0 +1,18 @@
+# Public entry point. Caddy obtains and renews the TLS certificate itself (Let's Encrypt).
+# The site address is NEXT_PUBLIC_APP_URL from config/.env, e.g. https://handmae.com.
+# Ports 80 and 443 must be open and DNS must point to the server before the first start.
+
+{$NEXT_PUBLIC_APP_URL} {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000"
+
+	# Media: MinIO is served under the site's own host. handle_path strips /static/media, so
+	# MinIO receives /<bucket>/<object>. S3_PUBLIC_URL in config/.env is <site>/static/media.
+	handle_path /static/media/* {
+		reverse_proxy minio:9000
+	}
+
+	handle {
+		reverse_proxy app:3000
+	}
+}
