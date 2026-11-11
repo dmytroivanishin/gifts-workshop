@@ -3,7 +3,7 @@ import { collections } from "./schema";
 import { Collection } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, desc } from "drizzle-orm";
-import { ICollectionRepository } from "../interfaces";
+import { ICollectionRepository } from "@/interfaces/repositories";
 
 export class CollectionRepository extends DrizzleBaseRepository<Collection, Collection> implements ICollectionRepository {
   constructor() {

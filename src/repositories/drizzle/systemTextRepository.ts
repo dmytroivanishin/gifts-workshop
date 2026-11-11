@@ -1,11 +1,11 @@
 import { eq, inArray, sql } from "drizzle-orm";
-import { ISystemTextRepository } from "../interfaces";
+import { ISystemTextRepository } from "@/interfaces/repositories";
 import { SystemText } from "@/types";
 import { drizzleDatabase } from "./database";
 import { systemTexts } from "./schema";
 import { isUUID } from "@/utils/uuid";
 
-import { QueryOptions } from "../interfaces";
+import { QueryOptions } from "@/interfaces/repositories";
 
 export class SystemTextRepository implements ISystemTextRepository {
   async getAll(options?: QueryOptions): Promise<SystemText[]> {

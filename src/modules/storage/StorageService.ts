@@ -1,15 +1,24 @@
 import sharp from 'sharp';
-import { env } from "@/modules/core/env";
 import { generateMediaName, generateStorageSuffix } from "@/utils/mediaName";
 import { logger } from "@/modules/logger";
+import { createConcurrencyLimit } from "@/utils/concurrencyLimit";
 import { ValidationError } from "@/common/errors/validation";
-import { getMinioClient, getBucketName, ensureBucket } from './minioClient';
+import { LocalFolderStorage } from "@/modules/storage/localFolderStorage";
+import type { ProcessedImageResult } from "@/interfaces/storage";
+import { mediaFolderRoot, mediaPublicBaseUrl } from "@/modules/storage/mediaFolder";
 
-// S3_ENDPOINT is the address the server connects to (an internal host inside Docker or Coolify), not necessarily one
-// a browser can reach, and the stored URL ends up in the database, so the public address is a separate variable.
-function publicBaseUrl(): string {
-  return `${new URL(env.S3_PUBLIC_URL).href.replace(/\/+$/, "")}/${getBucketName()}`;
+// Media files live in a folder on disk, served by Caddy under S3_PUBLIC_URL. Stored URLs keep the shape
+// <S3_PUBLIC_URL>/<bucket>/<key>, so rows written before the switch from MinIO still point at the same paths.
+// Created on first use, not at import: the build imports this module without the runtime env vars.
+let storage: LocalFolderStorage | undefined;
+function mediaStorage(): LocalFolderStorage {
+  storage ??= new LocalFolderStorage(mediaFolderRoot());
+  return storage;
 }
+const publicBaseUrl = mediaPublicBaseUrl;
+
+// A write that takes longer than this is abandoned: a stalled disk must not hold an upload (and its memory) forever.
+const WRITE_TIMEOUT_MS = 30_000;
 
 // Optional, server-only sizing knobs (not NEXT_PUBLIC_* — sharp resizes on the server, nothing here
 // reaches the browser bundle). Defaults match the values this pipeline has always used; override to
@@ -22,18 +31,13 @@ const PREVIEW_MAX_PX = Number(process.env.MEDIA_PREVIEW_MAX_PX) || 1000;
 // memory, the pixel count does. 40 MP covers any phone camera.
 const MAX_INPUT_PIXELS = 40_000_000;
 
-export interface ProcessedImageResult {
-  originalUrl: string;
-  thumbnailUrl: string;
-  displayName: string;
-  width: number;
-  height: number;
-  orientation: "Portrait" | "Landscape";
-}
+// At most two images are decoded at once. A 40 MP photo takes roughly 160 MB as a raw bitmap, so the
+// number of parallel decodes sets the peak memory of the process; extra uploads wait their turn.
+const runSharpJob = createConcurrencyLimit(2);
 
 export class StorageService {
   /**
-   * Processes and uploads an image to MinIO (original and thumbnail).
+   * Processes and stores an image in the media folder (original and thumbnail).
    */
   async uploadImage(buffer: Buffer): Promise<ProcessedImageResult> {
     // The client-declared MIME type and the filename extension are both fully spoofable; the only
@@ -63,7 +67,6 @@ export class StorageService {
       ]);
     }
     const ext = '.jpg';
-    const contentType = 'image/jpeg';
 
     // <display-name>-<timestamp>-<suffix>/preview.jpg and .../thumb.jpg — grouped per upload,
     // with standard file names inside. The display name (not the original filename, which could
@@ -98,27 +101,29 @@ export class StorageService {
       })
       .jpeg({ quality: 75, progressive: true });
 
-    const originalBuffer = await originalPipeline.toBuffer();
-    const thumbnailBuffer = await thumbnailPipeline.toBuffer();
-
-    // Retrieve final dimensions after resize
-    const processedMetadata = await sharp(originalBuffer).metadata();
-    const finalWidth = processedMetadata.width || 0;
-    const finalHeight = processedMetadata.height || 0;
+    // Only the decode-and-encode step holds whole bitmaps in memory, so it is the part that takes a slot.
+    // The write to the media folder below is disk I/O and does not wait behind it.
+    const { originalBuffer, thumbnailBuffer, finalWidth, finalHeight } = await runSharpJob(async () => {
+      const resizedOriginal = await originalPipeline.toBuffer();
+      const resizedThumbnail = await thumbnailPipeline.toBuffer();
+      const processedMetadata = await sharp(resizedOriginal).metadata();
+      return {
+        originalBuffer: resizedOriginal,
+        thumbnailBuffer: resizedThumbnail,
+        finalWidth: processedMetadata.width || 0,
+        finalHeight: processedMetadata.height || 0,
+      };
+    });
     const orientation = finalWidth >= finalHeight ? 'Landscape' : 'Portrait';
 
-    // Upload to MinIO
-    await ensureBucket();
-    await getMinioClient().putObject(getBucketName(), uniqueOriginalName, originalBuffer, originalBuffer.length, {
-      'Content-Type': contentType
-    });
+    // Write both files to the media folder. Each write has its own time limit.
+    await mediaStorage().ensureReady();
+    await mediaStorage().put(uniqueOriginalName, originalBuffer, { signal: AbortSignal.timeout(WRITE_TIMEOUT_MS) });
 
     try {
-      await getMinioClient().putObject(getBucketName(), uniqueThumbnailName, thumbnailBuffer, thumbnailBuffer.length, {
-        'Content-Type': contentType
-      });
+      await mediaStorage().put(uniqueThumbnailName, thumbnailBuffer, { signal: AbortSignal.timeout(WRITE_TIMEOUT_MS) });
     } catch (error) {
-      // Without this the preview stays in the bucket with no row pointing at it.
+      // Without this the preview stays on disk with no row pointing at it.
       await this.removeKeys([uniqueOriginalName]);
       throw error;
     }
@@ -133,21 +138,23 @@ export class StorageService {
     };
   }
 
-  // Best-effort removal of keys we just wrote; a failure is logged, not thrown, so the caller's original error wins.
+  // Best-effort removal of keys; a failure is logged, not thrown, so the caller's original error wins.
   private async removeKeys(keys: string[]): Promise<void> {
-    await Promise.all(
-      keys.map((key) =>
-        getMinioClient().removeObject(getBucketName(), key).catch((error) => {
-          logger.error("Failed to remove media object from MinIO", { code: "MINIO_DELETE_FAILED", key, error });
-        })
-      )
-    );
+    if (keys.length === 0) return;
+    try {
+      const result = await mediaStorage().remove(keys);
+      for (const failure of result.failed) {
+        logger.error("Failed to remove media file", { code: "MEDIA_DELETE_FAILED", key: failure.key, reason: failure.reason });
+      }
+    } catch (error) {
+      logger.error("Failed to remove media files", { code: "MEDIA_DELETE_FAILED", keys, error });
+    }
   }
 
   /**
    * Removes the original and thumbnail objects for a deleted media row. Best-effort: a media row
    * can also hold an externally hosted URL (saveMedia accepts those), so anything outside our own
-   * the public base URL is left alone, and a MinIO failure is logged rather than thrown (the DB row is
+   * the public base URL is left alone, and a storage failure is logged rather than thrown (the DB row is
    * already gone by the time this runs, so there is nothing left to roll back).
    */
   async deleteImage(originalUrl: string, thumbnailUrl: string): Promise<void> {
@@ -160,10 +167,9 @@ export class StorageService {
   }
 
   /**
-   * Bulk-delete counterpart to deleteImage: one native S3 Multi-Object Delete call
-   * (getMinioClient().removeObjects, already supported by the installed minio client) instead of a
-   * per-row removeObject loop. Best-effort, same as deleteImage — the DB rows are already gone by
-   * the time this runs, so a MinIO failure is logged, not thrown.
+   * Bulk-delete counterpart to deleteImage: collects every key first and removes them in one call.
+   * Best-effort, same as deleteImage — the DB rows are already gone by the time this runs, so a
+   * failure is logged, not thrown.
    */
   async deleteImages(items: { originalUrl: string; thumbnailUrl: string }[]): Promise<void> {
     const prefix = `${publicBaseUrl()}/`;
@@ -173,17 +179,7 @@ export class StorageService {
         if (url && url.startsWith(prefix)) keys.add(url.slice(prefix.length));
       }
     }
-    if (keys.size === 0) return;
-
-    try {
-      const results = await getMinioClient().removeObjects(getBucketName(), [...keys]);
-      const failures = results.filter((result) => result?.Error);
-      if (failures.length > 0) {
-        logger.error("Some media objects failed to remove from MinIO", { code: "MINIO_DELETE_FAILED", failures });
-      }
-    } catch (error) {
-      logger.error("Failed to batch-remove media objects from MinIO", { code: "MINIO_DELETE_FAILED", error });
-    }
+    await this.removeKeys([...keys]);
   }
 }
 

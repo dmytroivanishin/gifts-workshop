@@ -1,7 +1,7 @@
 import { drizzleDatabase } from "./database";
 import { eq, inArray, SQL } from "drizzle-orm";
 import { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
-import { IBaseRepository } from "../interfaces";
+import { IBaseRepository } from "@/interfaces/repositories";
 import { PaginationOptions } from "@/types";
 import { isUUID } from "@/utils/uuid";
 import { buildUpsertSet } from "./upsert";

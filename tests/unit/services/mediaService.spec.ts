@@ -21,7 +21,7 @@ vi.mock("@/modules/storage/StorageService", () => ({
 
 import { MediaService } from "@/services/mediaService";
 import { storageService } from "@/modules/storage/StorageService";
-import type { IMediaRepository, IPostRepository } from "@/repositories/interfaces";
+import type { IMediaRepository, IPostRepository } from "@/interfaces/repositories";
 import type { Media } from "@/types";
 
 // Hand-rolled repo stubs, same convention as tagService.spec.ts — only the methods each

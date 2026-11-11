@@ -1,5 +1,5 @@
 import { sendSuccess, CACHE_SECONDS, withErrorHandling } from "@/utils/apiResponse";
-import { IPostService } from "@/services/interfaces";
+import { IPostService } from "@/interfaces/services";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { postSchema, bulkIdsSchema } from "@/common/validation/schemas";

@@ -1,5 +1,5 @@
 import { sendSuccess, withErrorHandling } from "@/utils/apiResponse";
-import { IUserService } from "@/services/interfaces";
+import { IUserService } from "@/interfaces/services";
 import { NotFoundError } from "@/common/errors/notFound";
 
 export class UserController {

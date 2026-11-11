@@ -3,7 +3,7 @@ import { comments, posts } from "./schema";
 import { Comment, PopulatedComment, PaginationOptions } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, and, desc } from "drizzle-orm";
-import { ICommentRepository, QueryOptions } from "../interfaces";
+import { ICommentRepository, QueryOptions } from "@/interfaces/repositories";
 import { isUUID } from "@/utils/uuid";
 
 type CommentRecord = typeof comments.$inferSelect & {

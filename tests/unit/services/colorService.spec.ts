@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { ColorService } from "@/services/colorService";
-import type { IColorRepository, ICategoryRepository } from "@/repositories/interfaces";
+import type { IColorRepository, ICategoryRepository } from "@/interfaces/repositories";
 import type { Color } from "@/types";
 
 // unstable_cache/revalidateTag need a real Next.js request context (CP-37); outside one they

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { sendSuccess, CACHE_SECONDS, withErrorHandling } from "@/utils/apiResponse";
-import { IColorService } from "@/services/interfaces";
+import { IColorService } from "@/interfaces/services";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { colorSchema } from "@/common/validation/schemas";

@@ -3,7 +3,7 @@ import { pages } from "./schema";
 import { Page } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, asc } from "drizzle-orm";
-import { IPageRepository } from "../interfaces";
+import { IPageRepository } from "@/interfaces/repositories";
 import { PaginationOptions } from "@/types";
 
 export class PageRepository extends DrizzleBaseRepository<Page, Page, PaginationOptions> implements IPageRepository {

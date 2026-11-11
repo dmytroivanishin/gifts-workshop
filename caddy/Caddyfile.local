@@ -1,0 +1,19 @@
+# Local development and test media server. Serves the media folder that the app writes to
+# (.docker/media/<bucket>/...) under /static/media, the same path production uses.
+# No TLS and no app proxy here: the app runs on the host, only media goes through Caddy.
+{
+	admin off
+}
+
+:80 {
+	handle_path /static/media/* {
+		# Dot-files are temporary writes, never served.
+		@hidden path_regexp hidden (^|/)\.
+		respond @hidden 404
+
+		root * /srv/media
+		file_server
+	}
+
+	respond 404
+}

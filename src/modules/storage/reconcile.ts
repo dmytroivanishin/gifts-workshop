@@ -1,42 +1,67 @@
-export interface BucketObject {
-  key: string;
-  lastModified: Date;
+import type { StoredObject } from "@/interfaces/storage/mediaStorage";
+import type { MediaUrls, OrphanScanOptions } from "@/interfaces/storage";
+
+// Keys are checked against the database in batches of this size, so memory stays flat however many files exist.
+export const RECONCILE_BATCH_SIZE = 500;
+
+// The URL a stored key is served from, the same shape StorageService builds: <base>/<key>.
+export function urlForKey(publicBaseUrl: string, key: string): string {
+  return `${publicBaseUrl}/${key}`;
 }
 
-export interface MediaUrls {
-  originalUrl: string;
-  thumbnailUrl: string;
+// Returns the key behind one of our own URLs, or undefined for an external URL (not ours to check).
+function keyFromUrl(url: string, publicBaseUrl: string): string | undefined {
+  const prefix = `${publicBaseUrl}/`;
+  return url && url.startsWith(prefix) ? url.slice(prefix.length) : undefined;
 }
 
-export interface ReconcileReport {
-  // In the bucket, referenced by no media row (and old enough that no upload can still be in flight).
-  orphanKeys: string[];
-  // Referenced by a media row, absent from the bucket: the image is broken on the site.
-  missingKeys: string[];
+// Walks the stored files and returns those that no media row points at. Only the current batch of names is
+// held in memory. The database answers for each batch: `findReferencedUrls` gets the candidate URLs and
+// returns the ones some row uses (one query per batch, not one per file).
+export async function findOrphanKeys(
+  objects: AsyncIterable<StoredObject>,
+  findReferencedUrls: (urls: string[]) => Promise<string[]>,
+  options: OrphanScanOptions
+): Promise<string[]> {
+  const batchSize = options.batchSize ?? RECONCILE_BATCH_SIZE;
+  const orphans: string[] = [];
+  let batch: string[] = [];
+
+  const checkBatch = async (): Promise<void> => {
+    if (batch.length === 0) return;
+    const urls = batch.map((key) => urlForKey(options.publicBaseUrl, key));
+    const referenced = new Set(await findReferencedUrls(urls));
+    batch.forEach((key, index) => {
+      if (!referenced.has(urls[index])) orphans.push(key);
+    });
+    batch = [];
+  };
+
+  for await (const object of objects) {
+    if (options.now.getTime() - object.lastModified.getTime() < options.minAgeMs) continue;
+    batch.push(object.key);
+    if (batch.length >= batchSize) await checkBatch();
+  }
+  await checkBatch();
+
+  return orphans;
 }
 
-// An upload writes its objects before the row exists, so a fresh object without a row is normal, not an orphan.
-export function reconcileMedia(
-  objects: BucketObject[],
+// The keys of one page of media rows whose files are missing from storage: the image is broken on the site.
+// Called once per page of rows, so only that page's keys are held at a time.
+export async function findMissingKeys(
   rows: MediaUrls[],
   publicBaseUrl: string,
-  minAgeMs: number,
-  now: Date = new Date()
-): ReconcileReport {
-  const prefix = `${publicBaseUrl}/`;
-  const referenced = new Set<string>();
+  existingKeys: (keys: string[]) => Promise<Set<string>>
+): Promise<string[]> {
+  const wanted = new Set<string>();
   for (const { originalUrl, thumbnailUrl } of rows) {
     for (const url of [originalUrl, thumbnailUrl]) {
-      // Rows can hold externally hosted URLs, which are not ours to check.
-      if (url && url.startsWith(prefix)) referenced.add(url.slice(prefix.length));
+      const key = keyFromUrl(url, publicBaseUrl);
+      if (key) wanted.add(key);
     }
   }
-
-  const present = new Set(objects.map((object) => object.key));
-  const orphanKeys = objects
-    .filter((object) => !referenced.has(object.key) && now.getTime() - object.lastModified.getTime() >= minAgeMs)
-    .map((object) => object.key);
-  const missingKeys = [...referenced].filter((key) => !present.has(key));
-
-  return { orphanKeys, missingKeys };
+  const keys = [...wanted];
+  const present = await existingKeys(keys);
+  return keys.filter((key) => !present.has(key));
 }

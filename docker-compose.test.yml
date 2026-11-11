@@ -1,11 +1,10 @@
 version: '3.8'
 services:
-  # No volume on purpose, same as test-minio below: fully ephemeral, gone on every `down` (no -v
-  # needed). A named volume here used to survive `down` and once accumulated an incompatible
-  # schema across runs (a stale-volume bug, had to be cleared by hand with `down -v`) — dropped
-  # it so test:db:start always starts from a truly blank Postgres and `drizzle-kit push` recreates
-  # the schema fresh every time. Self-cleaning within a run is unrelated and unaffected: that's
-  # the tests' own fixtures deleting what they created through the real API.
+  # No volume on purpose: fully ephemeral, gone on every `down` (no -v needed). A named volume here
+  # once accumulated an incompatible schema across runs, so test:infra:start always starts from a
+  # truly blank Postgres and `drizzle-kit push` recreates the schema fresh every time. Self-cleaning
+  # within a run is unrelated and unaffected: that's the tests' own fixtures deleting what they
+  # created through the real API.
   test-postgres:
     image: postgres:15-alpine
     environment:
@@ -17,17 +16,16 @@ services:
     networks:
       - test-network
 
-  # Isolated from the dev MinIO (docker-compose.yml, ports 9000/9001) so API tests never depend
-  # on the dev stack being up and never write test clutter into the real dev bucket.
-  test-minio:
-    image: minio/minio:RELEASE.2025-01-20T14-49-07Z
-    command: server /data --console-address ":9003"
-    environment:
-      MINIO_ROOT_USER: test_minio_admin
-      MINIO_ROOT_PASSWORD: test_minio_password
+  # Serves the test media folder (.docker/media/gifts-workshop-media-test) on 8082. Same Caddyfile as
+  # dev; the bucket is only a folder name, so test files never mix with the dev media.
+  test-caddy:
+    image: caddy:2-alpine
+    command: caddy run --config /etc/caddy/Caddyfile
     ports:
-      - "9002:9000"
-      - "9003:9003"
+      - "8082:80"
+    volumes:
+      - ./caddy/Caddyfile.local:/etc/caddy/Caddyfile:ro
+      - ./.docker/media:/srv/media:ro
     networks:
       - test-network
 

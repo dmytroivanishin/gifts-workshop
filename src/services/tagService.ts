@@ -1,6 +1,6 @@
 import { unstable_cache, revalidateTag } from "next/cache";
-import { ITagRepository, TagQueryOptions } from "@/repositories/interfaces";
-import { ITagService } from "./interfaces";
+import { ITagRepository, TagQueryOptions } from "@/interfaces/repositories";
+import { ITagService } from "@/interfaces/services";
 import { Tag, LocalizedText, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
 import { ensureUniqueSlug, generateUniqueSlug } from "@/utils/slug";

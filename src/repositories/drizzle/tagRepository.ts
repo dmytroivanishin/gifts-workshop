@@ -3,7 +3,7 @@ import { tags } from "./schema";
 import { Tag } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, desc, sql } from "drizzle-orm";
-import { ITagRepository, TagQueryOptions } from "../interfaces";
+import { ITagRepository, TagQueryOptions } from "@/interfaces/repositories";
 
 export class TagRepository extends DrizzleBaseRepository<Tag, Tag, TagQueryOptions> implements ITagRepository {
   constructor() {

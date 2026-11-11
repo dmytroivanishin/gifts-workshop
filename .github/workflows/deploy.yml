@@ -1,17 +1,17 @@
-# Build on a version tag (e.g. 1.4.2), push two images to GHCR, then deploy to the VPS over SSH.
+# Build on a version tag (e.g. 1.0.0), push two images to GHCR, then deploy to the VPS over SSH.
 #
 # Secrets (Settings > Secrets and variables > Actions > Secrets):
 #   VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_KNOWN_HOSTS  (known_hosts line from ssh-keyscan, pinned)
 #   POSTGRES_USER, POSTGRES_PASSWORD        (hex only: they are put into DB_URI unescaped)
-#   MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
 #   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET
 # Variables (Settings > Secrets and variables > Actions > Variables):
 #   POSTGRES_DB, S3_BUCKET_NAME, ADMIN_EMAILS, MEDIA_THUMBNAIL_MAX_PX, MEDIA_PREVIEW_MAX_PX
 #   NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SUPPORTED_LOCALES, NEXT_PUBLIC_DEFAULT_LOCALE,
 #   NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC, NEXT_PUBLIC_MAX_FILE_SIZE_MB, NEXT_PUBLIC_MAX_FILES_PER_UPLOAD,
 #   NEXT_PUBLIC_SOCIAL_LINKS, SITE_* (10 texts)
-# Derived here, not configured: DB_URI, S3_ENDPOINT, S3_ACCESS_KEY/SECRET_KEY (= MinIO root),
-# S3_PUBLIC_URL (= NEXT_PUBLIC_APP_URL + /static/media), NEXT_PUBLIC_DEV_MODE (always false).
+# Derived here, not configured: DB_URI, S3_PUBLIC_URL (= NEXT_PUBLIC_APP_URL + /static/media),
+# NEXT_PUBLIC_DEV_MODE (always false).
+# Media files live in /opt/gifts-workshop/media on the VPS (created by this workflow, owned by uid 1000).
 
 name: Release and deploy
 
@@ -113,8 +113,6 @@ jobs:
           POSTGRES_DB: ${{ vars.POSTGRES_DB }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
-          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
           S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
@@ -142,12 +140,8 @@ jobs:
         run: |
           umask 077
 
-
           # Derived values: one source each, so nothing can drift from the rest.
           export DB_URI="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
-          export S3_ENDPOINT="http://minio:9000"
-          export S3_ACCESS_KEY="${MINIO_ROOT_USER}"
-          export S3_SECRET_KEY="${MINIO_ROOT_PASSWORD}"
           export S3_PUBLIC_URL="${NEXT_PUBLIC_APP_URL}/static/media"
           export NEXT_PUBLIC_DEV_MODE="false"
 
@@ -166,11 +160,8 @@ jobs:
             put MEDIA_THUMBNAIL_MAX_PX
             put MEDIA_PREVIEW_MAX_PX
             put DB_URI
-            put S3_ENDPOINT
             put S3_PUBLIC_URL
             put S3_BUCKET_NAME
-            put S3_ACCESS_KEY
-            put S3_SECRET_KEY
             put GOOGLE_CLIENT_ID
             put GOOGLE_CLIENT_SECRET
             put ADMIN_EMAILS
@@ -185,12 +176,10 @@ jobs:
             put SITE_KEYWORDS_EN
             put SITE_NAME_RU
             put SITE_NAME_EN
-            echo "# Compose-only: Postgres and MinIO containers"
+            echo "# Compose-only: Postgres container"
             put POSTGRES_DB
             put POSTGRES_USER
             put POSTGRES_PASSWORD
-            put MINIO_ROOT_USER
-            put MINIO_ROOT_PASSWORD
           } > "$RUNNER_TEMP/gifts-workshop.env"
 
       - name: Copy stack files to the VPS
@@ -237,14 +226,21 @@ jobs:
             compose=(docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml)
             previous_tag=$(cat .deployed_tag 2>/dev/null || true)
 
+            # Media folder, created here and not by Docker: a bind mount that does not exist yet is
+            # created root-owned, and the app (uid 1000, the image's node user) could not write to it.
+            # uid 1000 is the `node` user in node:*-bookworm-slim, the base of the image.
+            mkdir -p media
+            chown 1000:1000 media
+            chmod 755 media
+
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
             trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
 
             echo "Pulling ${IMAGE_TAG}"
             "${compose[@]}" pull app migrate
 
-            echo "Starting Postgres and MinIO"
-            "${compose[@]}" up -d postgres minio
+            echo "Starting Postgres"
+            "${compose[@]}" up -d postgres
 
             echo "Running migrations"
             if ! "${compose[@]}" run --rm migrate; then
@@ -252,8 +248,9 @@ jobs:
               exit 1
             fi
 
+            # --remove-orphans also clears the MinIO container left by the previous release.
             echo "Starting app and Caddy"
-            "${compose[@]}" up -d app caddy
+            "${compose[@]}" up -d --remove-orphans app caddy
 
             # The Caddyfile is a bind mount: editing it does not recreate the container, so reload it.
             "${compose[@]}" exec -T caddy caddy reload --config /etc/caddy/Caddyfile
@@ -276,6 +273,12 @@ jobs:
                 echo "Rolling the app back to ${previous_tag}" >&2
                 IMAGE_TAG="$previous_tag" "${compose[@]}" up -d app
               fi
+              exit 1
+            fi
+
+            # Uploads must work: write and remove a probe file as the app's user, from inside the container.
+            if ! "${compose[@]}" exec -T app sh -c 'probe=".docker/media/.deploy-probe-$$"; touch "$probe" && rm "$probe"'; then
+              echo "The app cannot write to the media folder. Check the ownership of /opt/gifts-workshop/media." >&2
               exit 1
             fi
 

@@ -1,5 +1,5 @@
-import { ICommentRepository, IPostRepository, QueryOptions } from "@/repositories/interfaces";
-import { ICommentService } from "./interfaces";
+import { ICommentRepository, IPostRepository, QueryOptions } from "@/interfaces/repositories";
+import { ICommentService } from "@/interfaces/services";
 import { Comment, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
 import { paginate } from "./pagination";

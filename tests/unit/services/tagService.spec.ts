@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { TagService } from "@/services/tagService";
-import type { ITagRepository } from "@/repositories/interfaces";
+import type { ITagRepository } from "@/interfaces/repositories";
 import type { Tag } from "@/types";
 
 // unstable_cache/revalidateTag need a real Next.js request context (CP-37); outside one they

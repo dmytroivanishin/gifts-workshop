@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { sendSuccess, withErrorHandling } from "@/utils/apiResponse";
-import { IMediaService } from "@/services/interfaces";
+import { IMediaService } from "@/interfaces/services";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { mediaSchema, bulkIdsSchema } from "@/common/validation/schemas";

@@ -1,6 +1,6 @@
 import { unstable_cache, revalidateTag } from "next/cache";
-import { IColorRepository, ICategoryRepository } from "@/repositories/interfaces";
-import { IColorService } from "./interfaces";
+import { IColorRepository, ICategoryRepository } from "@/interfaces/repositories";
+import { IColorService } from "@/interfaces/services";
 import { Color, PaginatedResult, PaginationOptions } from "@/types";
 import { randomUUID } from "crypto";
 

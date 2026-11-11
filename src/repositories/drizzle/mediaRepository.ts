@@ -1,8 +1,8 @@
 import { DrizzleBaseRepository } from "./baseRepository";
 import { media } from "./schema";
 import { Media } from "@/types";
-import { desc, eq, sql } from "drizzle-orm";
-import { IMediaRepository, MediaQueryOptions } from "../interfaces";
+import { desc, eq, inArray, or, sql } from "drizzle-orm";
+import { IMediaRepository, MediaQueryOptions } from "@/interfaces/repositories";
 import { drizzleDatabase } from "./database";
 
 export class MediaRepository extends DrizzleBaseRepository<Media, Media, MediaQueryOptions> implements IMediaRepository {
@@ -32,6 +32,25 @@ export class MediaRepository extends DrizzleBaseRepository<Media, Media, MediaQu
     const records = await drizzleDatabase.getDb().select().from(media).where(eq(media.contentHash, hash)).limit(1);
     if (!records.length) return undefined;
     return this.populate(records[0]);
+  }
+
+  async findUrlsIn(urls: string[]): Promise<string[]> {
+    if (urls.length === 0) return [];
+    // Only the two URL columns are read. The URL columns have no index, so each batch scans the table once;
+    // at this project's size that is cheap, and a batch of 500 keeps every query small.
+    const records = await drizzleDatabase
+      .getDb()
+      .select({ originalUrl: media.originalUrl, thumbnailUrl: media.thumbnailUrl })
+      .from(media)
+      .where(or(inArray(media.originalUrl, urls), inArray(media.thumbnailUrl, urls)));
+    const wanted = new Set(urls);
+    const found: string[] = [];
+    for (const record of records) {
+      for (const url of [record.originalUrl, record.thumbnailUrl]) {
+        if (wanted.has(url)) found.push(url);
+      }
+    }
+    return found;
   }
 }
 

@@ -3,7 +3,7 @@ import { users } from "./schema";
 import { User } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq } from "drizzle-orm";
-import { IUserRepository } from "../interfaces";
+import { IUserRepository } from "@/interfaces/repositories";
 
 export class UserRepository extends DrizzleBaseRepository<User, User> implements IUserRepository {
   constructor() {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { CategoryService } from "@/services/categoryService";
 import { ValidationError } from "@/common/errors/validation";
-import type { ICategoryRepository, ITagRepository, IPostRepository } from "@/repositories/interfaces";
+import type { ICategoryRepository, ITagRepository, IPostRepository } from "@/interfaces/repositories";
 import type { PopulatedCategory } from "@/types";
 
 // unstable_cache/revalidateTag need a real Next.js request context (CP-37); outside one they

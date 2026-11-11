@@ -1,7 +1,7 @@
 import { unstable_cache, revalidateTag } from "next/cache";
 import { randomUUID } from "crypto";
-import { IPageRepository } from "@/repositories/interfaces";
-import { IPageService } from "./interfaces";
+import { IPageRepository } from "@/interfaces/repositories";
+import { IPageService } from "@/interfaces/services";
 import { Page, LocalizedText } from "@/types";
 import { ensureUniqueSlug, generateUniqueSlug } from "@/utils/slug";
 import { isUUID } from "@/utils/uuid";

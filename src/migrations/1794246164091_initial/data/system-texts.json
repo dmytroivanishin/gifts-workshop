@@ -2833,5 +2833,50 @@
     },
     "area": "shared",
     "code": "comment_sent"
+  },
+  {
+    "id": "c570f4ae-fd15-40a3-b24a-db905cf3e18e",
+    "content": {
+      "en": "The disk is almost full, so the upload was stopped. Free up space or add disk capacity.",
+      "ru": "Место на диске заканчивается, поэтому загрузка остановлена. Освободите место или увеличьте диск."
+    },
+    "area": "shared",
+    "code": "STORAGE_FULL"
+  },
+  {
+    "id": "f775ee55-45d1-4296-9ce6-5a3782616b88",
+    "content": {
+      "en": "File storage is unavailable right now. Please try again later.",
+      "ru": "Хранилище файлов сейчас недоступно. Попробуйте позже."
+    },
+    "area": "shared",
+    "code": "STORAGE_UNAVAILABLE"
+  },
+  {
+    "id": "25b71c08-b10d-42d3-ab17-c52eaa63586d",
+    "content": {
+      "en": "The upload took too long. Please try again.",
+      "ru": "Загрузка заняла слишком много времени. Попробуйте ещё раз."
+    },
+    "area": "shared",
+    "code": "STORAGE_TIMEOUT"
+  },
+  {
+    "id": "3cd3bb5e-7722-4532-9190-a2e6b120db3d",
+    "content": {
+      "en": "Could not save the file. Please try again.",
+      "ru": "Не удалось сохранить файл. Попробуйте ещё раз."
+    },
+    "area": "shared",
+    "code": "STORAGE_ERROR"
+  },
+  {
+    "id": "d6a9d84d-f96b-4021-bb80-150ddf6552e2",
+    "content": {
+      "en": "Invalid file name.",
+      "ru": "Некорректное имя файла."
+    },
+    "area": "shared",
+    "code": "INVALID_STORAGE_KEY"
   }
 ]

@@ -36,7 +36,8 @@ FROM base AS runner
 ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
-RUN mkdir -p /app/.next && chown node:node /app/.next
+# Writable by the app user: .next for the runtime cache, .docker/media as the mount point for uploads.
+RUN mkdir -p /app/.next /app/.docker/media && chown node:node /app/.next /app/.docker/media
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public

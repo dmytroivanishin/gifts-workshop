@@ -1,6 +1,6 @@
 import { unstable_cache, revalidateTag } from "next/cache";
-import { ICollectionRepository } from "@/repositories/interfaces";
-import { ICollectionService } from "./interfaces";
+import { ICollectionRepository } from "@/interfaces/repositories";
+import { ICollectionService } from "@/interfaces/services";
 import { Collection, PaginatedResult, PaginationOptions } from "@/types";
 import { randomUUID } from "crypto";
 import { ensureUniqueSlug, generateUniqueSlug } from "@/utils/slug";

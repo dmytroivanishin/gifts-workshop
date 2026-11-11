@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { sendSuccess, withErrorHandling } from "@/utils/apiResponse";
-import { ICommentService } from "@/services/interfaces";
+import { ICommentService } from "@/interfaces/services";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { commentSchema } from "@/common/validation/schemas";

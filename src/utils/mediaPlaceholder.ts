@@ -20,7 +20,7 @@ const PLACEHOLDER_SVG = `
 export const MEDIA_PLACEHOLDER_DATA_URL = `data:image/svg+xml;base64,${btoa(PLACEHOLDER_SVG)}`;
 
 // Covers the other half of "a URL that doesn't resolve to a real image": the data had a real URL,
-// but the actual file failed to load at runtime (deleted from MinIO behind the DB, a network
+// but the actual file failed to load at runtime (deleted from the media folder behind the DB, a network
 // hiccup). A data: URI never itself triggers another load error, but onerror is still cleared
 // defensively so a pathological repeat can't loop.
 export function handleImageLoadError(event: SyntheticEvent<HTMLImageElement>): void {

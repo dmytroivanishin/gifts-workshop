@@ -3,7 +3,7 @@ import { posts, postsToTags, tags, media, postsToMedia } from "./schema";
 import { Post, PopulatedPost, PaginationOptions, PopulatedPostMedia } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, and, or, sql, inArray, desc } from "drizzle-orm";
-import { IPostRepository, QueryOptions } from "../interfaces";
+import { IPostRepository, QueryOptions } from "@/interfaces/repositories";
 import { isUUID } from "@/utils/uuid";
 import { diffIds } from "./upsert";
 

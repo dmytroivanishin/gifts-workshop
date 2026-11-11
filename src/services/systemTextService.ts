@@ -1,6 +1,6 @@
 import { unstable_cache, revalidateTag } from "next/cache";
-import { ISystemTextRepository, QueryOptions } from "@/repositories/interfaces";
-import { ISystemTextService } from "./interfaces";
+import { ISystemTextRepository, QueryOptions } from "@/interfaces/repositories";
+import { ISystemTextService } from "@/interfaces/services";
 import { SystemText, PaginatedResult } from "@/types";
 import { paginate } from "./pagination";
 

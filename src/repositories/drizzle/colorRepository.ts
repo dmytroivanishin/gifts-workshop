@@ -2,7 +2,7 @@ import { DrizzleBaseRepository } from "./baseRepository";
 import { colors } from "./schema";
 import { Color } from "@/types";
 import { desc } from "drizzle-orm";
-import { IColorRepository } from "../interfaces";
+import { IColorRepository } from "@/interfaces/repositories";
 
 export class ColorRepository extends DrizzleBaseRepository<Color, Color> implements IColorRepository {
   constructor() {

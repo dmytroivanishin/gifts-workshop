@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { CollectionService } from "@/services/collectionService";
-import type { ICollectionRepository } from "@/repositories/interfaces";
+import type { ICollectionRepository } from "@/interfaces/repositories";
 import type { Collection } from "@/types";
 
 // unstable_cache/revalidateTag need a real Next.js request context (CP-37); outside one they

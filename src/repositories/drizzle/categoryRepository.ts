@@ -3,7 +3,7 @@ import { categories, colors, tags, categoriesToTags } from "./schema";
 import { Category, PopulatedCategory, PaginationOptions } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, inArray, sql, and, asc } from "drizzle-orm";
-import { ICategoryRepository } from "../interfaces";
+import { ICategoryRepository } from "@/interfaces/repositories";
 import { isUUID } from "@/utils/uuid";
 import { buildUpsertSet, diffIds } from "./upsert";
 

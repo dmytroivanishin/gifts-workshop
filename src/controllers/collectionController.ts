@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { sendSuccess, CACHE_SECONDS, withErrorHandling } from "@/utils/apiResponse";
-import { ICollectionService } from "@/services/interfaces";
+import { ICollectionService } from "@/interfaces/services";
 import { NotFoundError } from "@/common/errors/notFound";
 import { resolveId } from "@/utils/idResolver";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";

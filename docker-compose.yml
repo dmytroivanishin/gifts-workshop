@@ -4,19 +4,24 @@
 #
 # Required in the environment of the deploy command (not in config/.env):
 #   IMAGE_REPO   e.g. ghcr.io/<owner>/<repo>   (the migrator image is <IMAGE_REPO>-migrator)
-#   IMAGE_TAG    the git tag being deployed, e.g. 1.4.2
+#   IMAGE_TAG    the git tag being deployed, e.g. 1.0.0
 #
 # Deploy order, as run by the GitHub Actions job over SSH (see the deploy script):
 #   docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml pull
-#   docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml up -d postgres minio
+#   docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml up -d postgres
 #   docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml run --rm migrate
-#   docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml up -d app caddy
+#   docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml up -d --remove-orphans app caddy
+#
+# Media: the app writes uploaded files to ./media on the host (bind mount), Caddy serves the same
+# folder read-only under /static/media. The folder must exist and be owned by uid 1000 (the `node`
+# user in the image) before the first start; the deploy script creates it. Do not let Docker create
+# it: that makes it root-owned and every upload fails.
 #
 # config/.env holds runtime values and secrets. Public NEXT_PUBLIC_* values are already baked into
 # the image at build time; keep them identical in config/.env because the server reads them too.
 # Caddy takes the site host from NEXT_PUBLIC_APP_URL in config/.env (https URL, no trailing slash).
-# Only Caddy publishes ports (80 and 443). Postgres, MinIO and the app are reachable only inside
-# the compose network.
+# Only Caddy publishes ports (80 and 443). Postgres and the app are reachable only inside the
+# compose network.
 
 services:
   caddy:
@@ -29,11 +34,11 @@ services:
       - "443:443"
     volumes:
       - ./caddy:/etc/caddy:ro
+      - ./media:/srv/media:ro
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
       - app
-      - minio
 
   postgres:
     image: postgres:16-alpine
@@ -50,16 +55,6 @@ services:
       timeout: 5s
       retries: 10
 
-  minio:
-    image: minio/minio:RELEASE.2025-01-20T14-49-07Z
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    volumes:
-      - minio-data:/data
-
   # One-off job, started by the deploy script before `app` is updated. A failed migration exits
   # non-zero, the script stops, and the old app keeps running.
   migrate:
@@ -74,16 +69,16 @@ services:
     image: ${IMAGE_REPO}:${IMAGE_TAG}
     restart: unless-stopped
     env_file: config/.env
+    volumes:
+      # Mounted where the app looks for media: <cwd>/.docker/media (cwd is /app in the image).
+      - ./media:/app/.docker/media
     expose:
       - "3000"
     depends_on:
       postgres:
         condition: service_healthy
-      minio:
-        condition: service_started
 
 volumes:
   postgres-data:
-  minio-data:
   caddy-data:
   caddy-config:

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { sendSuccess, CACHE_SECONDS, withErrorHandling } from "@/utils/apiResponse";
-import { ISystemTextService } from "@/services/interfaces";
+import { ISystemTextService } from "@/interfaces/services";
 import { NotFoundError } from "@/common/errors/notFound";
 import { validateRequest, parseJsonBody } from "@/utils/validateRequest";
 import { getPaginationParams } from "@/utils/paginationUtils";

@@ -1,6 +1,6 @@
 import { unstable_cache, revalidateTag } from "next/cache";
-import { IPostRepository, ICategoryRepository, ITagRepository, ICollectionRepository, QueryOptions } from "@/repositories/interfaces";
-import { IPostService } from "./interfaces";
+import { IPostRepository, ICategoryRepository, ITagRepository, ICollectionRepository, QueryOptions } from "@/interfaces/repositories";
+import { IPostService } from "@/interfaces/services";
 import { Post, PopulatedPost, Category, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
 import { generateUniqueSlug } from "@/utils/slug";

@@ -1,5 +1,5 @@
-import { IMediaRepository, IPostRepository, MediaQueryOptions } from "@/repositories/interfaces";
-import { IMediaService } from "./interfaces";
+import { IMediaRepository, IPostRepository, MediaQueryOptions } from "@/interfaces/repositories";
+import { IMediaService } from "@/interfaces/services";
 import { Media, PaginatedResult } from "@/types";
 import { randomUUID, createHash } from "crypto";
 import { paginate } from "./pagination";
@@ -107,8 +107,8 @@ export class MediaService implements IMediaService {
     const buffer = Buffer.from(arrayBuffer);
 
     // CP-50 point 4: hash the raw bytes before any resizing, and check for a match before doing
-    // the (much more expensive) resize/MinIO-upload work in uploadAndSaveMedia — a duplicate is
-    // rejected without ever touching sharp or MinIO. A hard block (409), not a soft warning, per
+    // the (much more expensive) resize/storage-write work in uploadAndSaveMedia — a duplicate is
+    // rejected without ever touching sharp or the media folder. A hard block (409), not a soft warning, per
     // the owner's explicit decision: the error names the existing match so the client can offer
     // to find it (the admin media page's search), rather than the admin guessing.
     const contentHash = createHash("sha256").update(buffer).digest("hex");
@@ -184,7 +184,7 @@ export class MediaService implements IMediaService {
       return { deleted: [], blocked };
     }
 
-    // Object URLs are needed to clean up MinIO, so fetch the rows before deleting them.
+    // Object URLs are needed to clean up the stored files, so fetch the rows before deleting them.
     const mediaRows = await this.mediaRepo.getByIds(candidateIds);
     const deleted = await this.mediaRepo.deleteMany(candidateIds);
     const deletedSet = new Set(deleted);

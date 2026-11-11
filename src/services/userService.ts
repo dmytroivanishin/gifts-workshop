@@ -1,5 +1,5 @@
-import { IUserRepository } from "@/repositories/interfaces";
-import { IUserService } from "./interfaces";
+import { IUserRepository } from "@/interfaces/repositories";
+import { IUserService } from "@/interfaces/services";
 import { User, PaginatedResult, PaginationOptions } from "@/types";
 
 import { paginate } from "./pagination";
