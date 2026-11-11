@@ -23,8 +23,9 @@ ARG NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC
 ARG NEXT_PUBLIC_MAX_FILE_SIZE_MB
 ARG NEXT_PUBLIC_MAX_FILES_PER_UPLOAD
 ARG NEXT_PUBLIC_DEV_MODE
-ARG NEXT_PUBLIC_SOCIAL_LINKS
-RUN npm run build
+# Base64, not JSON: build-args mangle quotes and commas (see the workflow). Decoded right here.
+ARG NEXT_PUBLIC_SOCIAL_LINKS_B64
+RUN NEXT_PUBLIC_SOCIAL_LINKS="$(printf '%s' "$NEXT_PUBLIC_SOCIAL_LINKS_B64" | base64 -d)" npm run build
 
 # One-off job run by the deploy script: `docker compose run --rm migrate`.
 # Separate target because the runner has no tsx, src/ or devDependencies, which the migration needs.
