@@ -7,6 +7,8 @@ import { mediaSchema, bulkIdsSchema } from "@/common/validation/schemas";
 import { getUserId } from "@/utils/auth";
 import { ValidationError } from "@/common/errors/validation";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
+import { ConflictError } from "@/common/errors/conflict";
+import { MAX_UPLOAD_BODY_BYTES } from "@/utils/uploadLimits";
 import { getPaginationParams, getSearchParam } from "@/utils/paginationUtils";
 
 export class MediaController {
@@ -31,6 +33,12 @@ export class MediaController {
     // Check if it's FormData (multipart/form-data)
     const contentType = request.headers.get("content-type") || "";
     if (contentType.includes("multipart/form-data")) {
+      // Checked from the header before the body is read: a body over the proxy cap arrives cut, and parsing it
+      // would fail with a generic 500 instead of this answer.
+      const declaredBytes = Number(request.headers.get("content-length") ?? 0);
+      if (declaredBytes > MAX_UPLOAD_BODY_BYTES) {
+        throw new ConflictError("File is too large.", "FILE_TOO_LARGE");
+      }
       const formData = await request.formData();
       const file = formData.get("file") as File | null;
 

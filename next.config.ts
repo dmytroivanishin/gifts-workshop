@@ -1,6 +1,11 @@
+import { MAX_UPLOAD_BODY_BYTES } from "./src/utils/uploadLimits";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Next cuts request bodies above this size before the route runs; the limit is the upload size plus multipart framing.
+  experimental: {
+    proxyClientMaxBodySize: MAX_UPLOAD_BODY_BYTES,
+  },
   // Self-contained server (`.next/standalone/server.js`) for the Docker image: only the traced
   // runtime dependencies are copied, not the whole node_modules.
   output: "standalone",

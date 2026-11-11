@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MAX_UPLOAD_FILE_BYTES } from "@/utils/uploadLimits";
 import { Upload, Trash2, Loader2, AlertTriangle, Copy, X, ZoomIn } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/i18n";
@@ -161,18 +162,26 @@ export default function AdminMedia() {
       return;
     }
 
+    const allFiles = Array.from(files);
+    const oversized = allFiles.filter((file) => file.size > MAX_UPLOAD_FILE_BYTES);
+    const acceptedFiles = allFiles.filter((file) => file.size <= MAX_UPLOAD_FILE_BYTES);
+    setUploadIssues(oversized.map((file) => ({ fileName: file.name, kind: 'failed' as const })));
+    if (oversized.length > 0) {
+      dispatch(addNotification({ type: 'error', messageKey: 'FILE_TOO_LARGE', details: oversized.map((file) => file.name).join(', ') }));
+    }
+    if (acceptedFiles.length === 0) return;
+
     setIsUploading(true);
-    setUploadStats({ total: files.length, current: 0 });
-    setUploadIssues([]);
+    setUploadStats({ total: acceptedFiles.length, current: 0 });
 
     try {
       let anySucceeded = false;
 
       // Upload sequentially to show accurate progress bar
-      for (let index = 0; index < files.length; index++) {
-        setUploadStats({ total: files.length, current: index + 1 });
+      for (let index = 0; index < acceptedFiles.length; index++) {
+        setUploadStats({ total: acceptedFiles.length, current: index + 1 });
         const formData = new FormData();
-        formData.append("file", files[index]);
+        formData.append("file", acceptedFiles[index]);
 
         try {
           await uploadMedia(formData).unwrap();
@@ -189,9 +198,9 @@ export default function AdminMedia() {
             const existingMediaName = errorData?.error?.details?.find(
               (detail) => detail.field === 'existingMediaName'
             )?.message;
-            setUploadIssues(prev => [...prev, { fileName: files[index].name, kind: 'duplicate', existingMediaName }]);
+            setUploadIssues(prev => [...prev, { fileName: acceptedFiles[index].name, kind: 'duplicate', existingMediaName }]);
           } else {
-            setUploadIssues(prev => [...prev, { fileName: files[index].name, kind: 'failed' }]);
+            setUploadIssues(prev => [...prev, { fileName: acceptedFiles[index].name, kind: 'failed' }]);
           }
         }
       }

@@ -20,7 +20,7 @@
   {
     "id": "680fdaf4-bac6-40bf-9b8b-707f44fc5a32",
     "content": {
-      "en": "No projects found. Try changing search parameters.",
+      "en": "No posts found. Try changing search parameters.",
       "ru": "Работы не найдены. Попробуйте изменить параметры поиска."
     },
     "area": "public",
@@ -2878,5 +2878,14 @@
     },
     "area": "shared",
     "code": "INVALID_STORAGE_KEY"
+  },
+  {
+    "id": "64789c43-5102-47dc-b49a-cd31ceb09a84",
+    "content": {
+      "en": "File is too large. It was not uploaded.",
+      "ru": "Файл слишком большой. Он не загружен."
+    },
+    "area": "admin",
+    "code": "FILE_TOO_LARGE"
   }
 ]
