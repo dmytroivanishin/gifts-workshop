@@ -13,6 +13,8 @@ import {
 } from "@/store/api";
 import { useTranslation } from "@/i18n";
 import { LocalizedText } from "@/types";
+import { BLOCK_HEADER_CLASS } from "@/utils/designTokens";
+import { BUTTON_M_SIZE } from "@/utils/designTokens";
 
 type EntityType = "post" | "category" | "tag" | "collection" | "page" | "system";
 
@@ -129,17 +131,17 @@ export default function AdminLocalizations() {
     <div className="space-y-6 font-sans">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">
             {t("translations_title") || "Localizations"}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {t("translations_subtitle") || "Manage content translations"}
           </p>
         </div>
         {isSystem && (
           <button
             onClick={() => router.push('/admin/localizations/system/new')}
-            className="w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer text-center"
+            className="w-full sm:w-auto h-9 sm:h-10 px-4 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer text-center"
           >
             {t("add_system_text") || "Add System Text"}
           </button>
@@ -149,7 +151,7 @@ export default function AdminLocalizations() {
       {/* Select Entity Controls */}
       <div className="bg-card rounded-xl border border-border p-5 space-y-4">
         <div className="space-y-4">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <label className={BLOCK_HEADER_CLASS}>
             {t("entity_type") || "Entity Type"}
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-2">
@@ -165,7 +167,7 @@ export default function AdminLocalizations() {
                 key={type.id}
                 type="button"
                 onClick={() => handleEntityChange(type.id as EntityType)}
-                className={`w-full lg:w-auto px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${
+                className={`${BUTTON_M_SIZE} w-full lg:w-auto font-medium rounded-lg transition-all cursor-pointer border ${
                   entityType === type.id 
                     ? "bg-primary text-primary-foreground border-primary" 
                     : "bg-secondary border-border text-subtle-foreground hover:text-foreground"
@@ -181,7 +183,7 @@ export default function AdminLocalizations() {
       {/* Entities Grid */}
       <div className="space-y-6">
         {items.length === 0 && !isFetching ? (
-          <div className="p-8 text-center text-sm text-muted-foreground bg-card rounded-xl border border-border">
+          <div className="p-8 text-center text-xs text-muted-foreground bg-card rounded-xl border border-border">
             {t("items_not_found") || "No items found"}
           </div>
         ) : (
@@ -206,11 +208,11 @@ export default function AdminLocalizations() {
                   onClick={() => router.push(`/admin/localizations/${entityType}/${item.id}`)}
                   className="bg-card rounded-xl border border-border p-5 hover:border-primary/40 transition-all cursor-pointer flex flex-col justify-between min-h-[120px] group"
                 >
-                  <h3 className="font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                  <h3 className="font-semibold text-[13px] sm:text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">
                     {title}
                   </h3>
                   
-                  <div className="mt-4 flex items-center gap-1.5 text-xs font-medium">
+                  <div className="mt-4 flex items-center gap-1.5 text-[10px] font-medium">
                     {isTranslated ? (
                       <span className="text-emerald-600 bg-emerald-600/10 px-2 py-1 rounded-full flex items-center gap-1">
                         <CheckCircle2 size={12} /> {t("translated_fully")}

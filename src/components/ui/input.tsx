@@ -19,7 +19,7 @@ function Input({ className, invalid, type = "text", ...props }: InputProps) {
       type={type}
       data-slot="input"
       aria-invalid={invalid || props["aria-invalid"]}
-      className={cn(FIELD_BASE, "h-10 px-3.5", className)}
+      className={cn(FIELD_BASE, "h-9 sm:h-10 px-3.5", className)}
       {...props}
     />
   );

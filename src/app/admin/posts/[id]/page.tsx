@@ -5,7 +5,7 @@ import { hasLocalizedValue } from "@/utils/localization";
 import { SelectedMedia, postToFormValues, postToSelectedImages, buildTagOptions } from "./postEditorMapping";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Save, Loader2, Image as ImageIcon, Archive as ArchiveIcon, Send, Calendar as CalendarIcon, ClipboardPaste, X } from "lucide-react";
+import { ChevronLeft, Save, Loader2, Archive as ArchiveIcon, Send, Calendar as CalendarIcon, ClipboardPaste, X } from "lucide-react";
 import Link from "next/link";
 import {
   useCreatePostMutation,
@@ -39,6 +39,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { ru, enUS, Locale } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ApiMutationError, Tag } from "@/types";
+import { BUTTON_M_SIZE } from "@/utils/designTokens";
 
 const dateLocales: Record<string, Locale> = { ru, en: enUS };
 
@@ -333,7 +334,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
             <ChevronLeft size={16} />
           </Link>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">
               {isEditMode ? t("edit_post") : t("create_post")}
             </h1>
             <p className="text-xs text-muted-foreground">
@@ -365,7 +366,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                       placeholder={t("placeholder_post_title")}
                     />
                   </FormControl>
-                  <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  <FormMessage className="text-xs font-medium text-destructive" />
                 </FormItem>
               )}
             />
@@ -388,7 +389,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                       searchPlaceholder={t("placeholder_search_collections")}
                     />
                   </FormControl>
-                  <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  <FormMessage className="text-xs font-medium text-destructive" />
                 </FormItem>
               )}
             />
@@ -430,7 +431,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                       searchPlaceholder={t("placeholder_search_categories")}
                     />
                   </FormControl>
-                  <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  <FormMessage className="text-xs font-medium text-destructive" />
                 </FormItem>
               )}
             />
@@ -452,7 +453,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                       rows={4}
                     />
                   </FormControl>
-                  <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  <FormMessage className="text-xs font-medium text-destructive" />
                 </FormItem>
               )}
             />
@@ -486,7 +487,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                       }}
                     />
                   </FormControl>
-                  <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                  <FormMessage className="text-xs font-medium text-destructive" />
                 </FormItem>
               )}
             />
@@ -509,7 +510,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      <label htmlFor="inStockCheckbox" className="text-sm font-medium text-muted-foreground cursor-pointer select-none">
+                      <label htmlFor="inStockCheckbox" className="text-[13px] font-medium text-muted-foreground cursor-pointer select-none">
                         {t("in_stock")}
                       </label>
                     </div>
@@ -531,7 +532,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                           <button
                             type="button"
                             aria-invalid={!!form.formState.errors.createdAt}
-                            className={cn(FIELD_BASE, "flex h-10 items-center gap-2.5 px-3.5 text-left cursor-pointer")}
+                            className={cn(FIELD_BASE, "flex h-9 sm:h-10 items-center gap-2.5 px-3.5 text-left cursor-pointer")}
                           >
                             <CalendarIcon size={16} className="shrink-0 text-muted-foreground" />
                             <span className={field.value ? "text-foreground" : "text-muted-foreground"}>
@@ -551,7 +552,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                         </PopoverContent>
                       </Popover>
                     </FormControl>
-                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                    <FormMessage className="text-xs font-medium text-destructive" />
                   </FormItem>
                 )}
               />
@@ -560,11 +561,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
 
           {/* Media Selector with crop positioning */}
           <div className="bg-card rounded-xl border border-border p-6 space-y-4">
-            <div className="flex items-center justify-between border-b pb-2">
-              <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
-                <ImageIcon size={16} />
-                <span>{t("gallery_and_media")}</span>
-              </div>
+            <div className="flex items-center justify-end border-b pb-2">
               <div className="flex items-center gap-2">
                 {clipboard.ids.length > 0 && (
                   <div
@@ -598,7 +595,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                 <button
                   type="button"
                   onClick={() => setIsMediaPickerOpen(true)}
-                  className="text-xs font-semibold px-3 py-1.5 bg-secondary text-subtle-foreground hover:text-foreground rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                  className={cn(BUTTON_M_SIZE, "inline-flex items-center font-medium whitespace-nowrap bg-secondary text-subtle-foreground hover:text-foreground rounded-lg hover:opacity-90 transition-opacity cursor-pointer")}
                 >
                   {t("add_media")}
                 </button>
@@ -607,7 +604,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
 
             {selectedImages.length === 0 ? (
               <div className="py-8 text-center border-2 border-dashed border-border rounded-xl">
-                <p className="text-sm text-muted-foreground">{t("no_media_selected")}</p>
+                <p className="text-xs text-muted-foreground">{t("no_media_selected")}</p>
               </div>
             ) : (
               <SortableMediaGrid
@@ -635,7 +632,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
             {/* Error Message for Poster */}
             {form.formState.errors.posterId && (
               <div className="pt-2">
-                <p className="text-[0.8rem] font-medium text-destructive">{t(form.formState.errors.posterId.message as string)}</p>
+                <p className="text-xs font-medium text-destructive">{t(form.formState.errors.posterId.message as string)}</p>
               </div>
             )}
           </div>
@@ -647,7 +644,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                 type="button"
                 onClick={() => handleActionClick("Archived")}
                 disabled={isSaving}
-                className="p-2.5 rounded-lg bg-secondary text-subtle-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+                className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center rounded-lg bg-secondary text-subtle-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
                 title={t("archive")}
               >
                 <ArchiveIcon size={18} />
@@ -660,7 +657,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                   type="button"
                   onClick={() => handleActionClick("Draft")}
                   disabled={isSaving}
-                  className="flex items-center gap-1.5 px-5 py-2.5 bg-[#F9E4D3] text-[#904504] text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-1.5 h-9 px-4 sm:h-10 sm:px-5 bg-[#F9E4D3] text-[#904504] text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   {isSaving && form.getValues("status") === "Draft" ? (
                     <>
@@ -680,7 +677,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                 onClick={() => handleActionClick("Published")}
                 disabled={!canPublish || isSaving}
                 data-test-id="post-publish-button"
-                className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
+                className="flex items-center gap-1.5 h-9 px-4 sm:h-10 sm:px-5 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
               >
                 {isSaving && form.getValues("status") === "Published" ? (
                   <>

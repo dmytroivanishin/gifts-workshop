@@ -170,7 +170,7 @@ export default function Combobox({
         id={id}
         onClick={() => setIsOpen(!isOpen)}
         aria-invalid={invalid || ariaInvalid || undefined}
-        className="min-h-10 w-full flex flex-wrap items-center justify-between gap-1.5 px-3.5 py-1.5 rounded-lg border border-border bg-card cursor-pointer focus-within:border-primary aria-invalid:border-destructive transition-colors"
+        className="min-h-9 sm:min-h-10 w-full flex flex-wrap items-center justify-between gap-1.5 px-3.5 py-1.5 rounded-lg border border-border bg-card cursor-pointer focus-within:border-primary aria-invalid:border-destructive transition-colors"
       >
         {selectedOptions.length === 0 ? (
           <span className="text-sm text-muted-foreground">{placeholder}</span>

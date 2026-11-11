@@ -88,7 +88,7 @@ export default function AdminLayout({
               className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors cursor-pointer"
               title={t("sign_out")}
             >
-              <LogOut size={16} />
+              <LogOut size={16} className="sm:size-5" />
             </button>
           </div>
         </header>
@@ -102,7 +102,7 @@ export default function AdminLayout({
               className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors cursor-pointer"
               title={t("sign_out")}
             >
-              <LogOut size={16} />
+              <LogOut size={16} className="sm:size-5" />
             </button>
           </div>
         </header>

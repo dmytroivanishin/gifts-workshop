@@ -65,10 +65,10 @@ export function FullscreenGallery({
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-6 right-6 z-[110] p-2.5 rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
+        className="absolute top-6 right-6 z-[110] p-2.5 sm:p-1.5 rounded-full border border-background/20 bg-black/50 text-background/80 hover:bg-background/20 hover:text-background transition-colors cursor-pointer"
         aria-label={t("close")}
       >
-        <X size={24} />
+        <X size={24} className="h-6 w-6 sm:h-5 sm:w-5" />
       </button>
 
       {/* Navigation Buttons */}

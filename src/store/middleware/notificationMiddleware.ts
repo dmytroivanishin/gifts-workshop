@@ -50,6 +50,9 @@ export const notificationMiddleware: Middleware =
         createCollection: "collection_created",
         updateCollection: "collection_updated",
         deleteCollection: "collection_deleted",
+        createColor: "color_saved",
+        updateColor: "color_saved",
+        deleteColor: "color_deleted",
       };
 
       if (successMap[endpoint]) {

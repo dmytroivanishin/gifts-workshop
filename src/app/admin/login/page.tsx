@@ -118,10 +118,10 @@ function LoginContent() {
 
       {/* Text */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-semibold text-foreground">
+        <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold text-foreground">
           {t("login_title")}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {t("login_subtitle")}
         </p>
       </div>
@@ -130,7 +130,7 @@ function LoginContent() {
       <button
         onClick={handleGoogleLogin}
         disabled={isLoading}
-        className="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-full border border-border bg-white text-subtle-foreground hover:text-foreground hover:bg-muted/30 transition-all font-medium text-sm cursor-pointer disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-full border border-border bg-white text-subtle-foreground hover:text-foreground hover:bg-muted/30 transition-all font-medium text-[13px] cursor-pointer disabled:opacity-50"
       >
         {isLoading ? (
           <Loader2 className="animate-spin text-muted-foreground" size={18} />
@@ -162,7 +162,7 @@ function LoginContent() {
         <button
           onClick={handleDevBypass}
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-secondary text-subtle-foreground hover:text-foreground hover:bg-secondary/80 transition-all font-medium text-xs cursor-pointer disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 px-5 py-3 sm:h-8 sm:px-3 sm:py-0 rounded-full bg-secondary text-subtle-foreground hover:text-foreground hover:bg-secondary/80 transition-all font-medium text-xs sm:text-[13px] cursor-pointer disabled:opacity-50"
         >
           <KeyRound size={14} />
           <span>{t("login_dev_bypass")}</span>
@@ -170,7 +170,7 @@ function LoginContent() {
       )}
 
       {/* Warning / Guard Info */}
-      <div className="flex gap-2.5 items-start bg-amber-500/10 p-3 rounded-2xl border border-amber-500/25 text-amber-800 text-[11px] leading-relaxed">
+      <div className="flex gap-2.5 items-start bg-amber-500/10 p-3 rounded-2xl border border-amber-500/25 text-amber-800 text-xs leading-relaxed">
         <ShieldAlert size={16} className="flex-shrink-0 mt-0.5" />
         <span>{t("login_admin_only")}</span>
       </div>

@@ -1,10 +1,13 @@
 "use client";
 
+import { cn } from "@/utils/cn";
 import { useState, useRef, MouseEvent, TouchEvent } from "react";
 import { X, ZoomIn, ZoomOut, Check } from "lucide-react";
 import { Media } from "@/types";
 import { useTranslation } from "@/i18n";
 import { handleImageLoadError } from "@/utils/mediaPlaceholder";
+import { MODAL_TITLE_CLASS } from "@/utils/designTokens";
+import { BUTTON_M_SIZE } from "@/utils/designTokens";
 
 interface ImageCropModalProps {
   imageUrl: string;
@@ -85,12 +88,12 @@ export default function ImageCropModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 font-sans animate-fade-in">
-      <div className="bg-white rounded-3xl border border-border/45 w-full max-w-[420px] p-6 space-y-6 shadow-xl">
+      <div className="bg-white rounded-3xl border border-border/45 w-full max-w-[440px] px-5 py-4 space-y-4 shadow-xl">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b pb-3">
+        <div className="flex items-center justify-between border-b pb-2.5">
           <div>
-            <h3 className="text-lg font-semibold text-foreground">{t("position_cover_image")}</h3>
+            <h3 className={MODAL_TITLE_CLASS}>{t("position_cover_image")}</h3>
             <p className="text-xs text-muted-foreground">{t("drag_to_position")}</p>
           </div>
           <button
@@ -175,14 +178,14 @@ export default function ImageCropModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-border rounded-lg text-sm font-semibold hover:bg-muted/30 transition-colors cursor-pointer"
+            className={cn(BUTTON_M_SIZE, "border border-border rounded-lg font-medium hover:bg-muted/30 transition-colors cursor-pointer")}
           >
             {t("cancel")}
           </button>
           <button
             type="button"
             onClick={() => onSave({ x: position.x, y: position.y, zoom })}
-            className="flex items-center gap-1 px-5 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+            className={cn(BUTTON_M_SIZE, "flex items-center gap-1 bg-primary text-primary-foreground font-medium rounded-lg hover:opacity-95 transition-opacity cursor-pointer")}
           >
             <Check size={16} />
             {t("apply_crop")}

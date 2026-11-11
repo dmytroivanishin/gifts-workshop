@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/utils/cn";
 import { RowAction, RowActions } from "@/components/shared/RowAction";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Check, X, Trash2, Loader2, MessageCircleReply, MessageSquare } from "lucide-react";
@@ -17,6 +18,7 @@ import { PopulatedComment } from "@/types";
 
 type CommentNode = PopulatedComment & { adminReplies: PopulatedComment[] };
 import { getLocalizedField } from "@/utils/localization";
+import { BUTTON_M_SIZE } from "@/utils/designTokens";
 
 export default function AdminComments() {
   const { t, locale } = useTranslation();
@@ -171,9 +173,9 @@ export default function AdminComments() {
 
   const renderCommentNode = (comment: PopulatedComment, isReply: boolean = false) => (
     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-      <div className="flex flex-col gap-1.5 flex-1 relative z-10">
+      <div className="flex flex-col gap-1.5 flex-1 min-w-0 relative z-10">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm text-foreground">{comment.name}</span>
+          <span className="font-semibold text-[13px] sm:text-sm text-foreground">{comment.name}</span>
           {isReply && (
             <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider rounded-full border border-primary/20">
               {t("admin")}
@@ -184,7 +186,7 @@ export default function AdminComments() {
             {statusLabel(comment.status)}
           </span>
         </div>
-        <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
+        <p className="text-sm text-foreground whitespace-pre-wrap break-words">{comment.text}</p>
         {!isReply && comment.post && (
           <p className="text-xs text-muted-foreground mt-1">
             {t("on_post")} <span className="font-medium text-primary">{getLocalizedField(comment.post.title, locale) || comment.post.slug}</span>
@@ -213,8 +215,8 @@ export default function AdminComments() {
     <div className="space-y-6 font-sans">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("comments") || "Comments"}</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">{t("comments") || "Comments"}</h1>
+          <p className="text-xs text-muted-foreground">
             {t("comments_subtitle") || "Manage user comments and replies."}
           </p>
         </div>
@@ -237,7 +239,7 @@ export default function AdminComments() {
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="divide-y divide-border/45">
           {isLoading && page === 1 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">
+            <div className="p-8 text-center text-xs text-muted-foreground">
               <Loader2 className="animate-spin inline mr-2" size={16} />
               {t("loading") || "Loading..."}
             </div>
@@ -260,14 +262,14 @@ export default function AdminComments() {
                             setReplyingToId(null);
                             setReplyText("");
                           }}
-                          className="px-3 py-1.5 text-xs font-medium text-subtle-foreground hover:text-foreground bg-secondary hover:bg-muted border border-border rounded-lg transition-colors cursor-pointer"
+                          className={cn(BUTTON_M_SIZE, "font-medium text-subtle-foreground hover:text-foreground bg-secondary hover:bg-muted border border-border rounded-lg transition-colors cursor-pointer")}
                         >
                           {t("cancel")}
                         </button>
                         <button
                           onClick={() => handleReplySubmit(parent.id)}
                           disabled={!replyText.trim() || isReplying}
-                          className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 rounded-lg transition-opacity disabled:opacity-50 cursor-pointer"
+                          className={cn(BUTTON_M_SIZE, "font-medium bg-primary text-primary-foreground hover:opacity-90 rounded-lg transition-opacity disabled:opacity-50 cursor-pointer")}
                         >
                           {isReplying ? t("sending") : t("send_reply")}
                         </button>
@@ -295,13 +297,13 @@ export default function AdminComments() {
               <div className="bg-muted/50 p-4 rounded-full mb-3">
                 <MessageSquare className="w-8 h-8 text-muted-foreground/50" />
               </div>
-              <p className="text-sm font-medium text-muted-foreground">{t("no_comments")}</p>
+              <p className="text-sm font-semibold text-foreground">{t("no_comments")}</p>
               <p className="text-xs text-muted-foreground mt-1">{t("comments_empty_hint")}</p>
             </div>
           )}
           
           {comments.length > 0 && hasMore && (
-            <div ref={loaderRef} className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border bg-muted/5">
+            <div ref={loaderRef} className="p-4 flex items-center justify-center text-xs text-muted-foreground border-t border-border bg-muted/5">
               <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
               {t("loading") || "Loading..."}
             </div>

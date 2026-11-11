@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import { RowAction, RowActions } from "@/components/shared/RowAction";
-import VirtualScrollList from "@/components/shared/VirtualScrollList";
+import PageVirtualList from "@/components/shared/PageVirtualList";
 import { useTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,7 @@ import * as z from "zod";
 import { collectionSchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ApiMutationError, Collection } from "@/types";
+import { BLOCK_HEADER_CLASS } from "@/utils/designTokens";
 
 export default function AdminCollections() {
   const { t, loc, locale } = useTranslation();
@@ -81,6 +82,13 @@ export default function AdminCollections() {
   };
 
   const onSubmit = async (values: z.infer<typeof collectionSchema>) => {
+    // The schema accepts a title when any locale has text. On edit the form also carries the other
+    // locale's text, so an emptied admin-locale name would pass and overwrite the real title.
+    if (!values.title?.[locale]?.trim()) {
+      form.setError(`title.${locale}` as `title.${string}`, { type: "manual", message: "error_required_field" });
+      return;
+    }
+
     try {
       if (isEditing) {
         const existingTitle = activeCollectionObj?.title && typeof activeCollectionObj.title === "object" ? activeCollectionObj.title : {};
@@ -111,8 +119,8 @@ export default function AdminCollections() {
   return (
     <div className="space-y-6 font-sans">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("collections")}</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">{t("collections")}</h1>
+        <p className="text-xs text-muted-foreground">
           {t("manage_collections")}
         </p>
       </div>
@@ -121,28 +129,28 @@ export default function AdminCollections() {
         {/* Collections List */}
         <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/50">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h2 className={BLOCK_HEADER_CLASS}>
               {t("collections")} ({collections.length})
             </h2>
           </div>
           <div>
             {isLoading ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
+              <div className="p-8 text-center text-xs text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
                 {t("loading_collections")}
               </div>
             ) : collections.length > 0 ? (
-              <VirtualScrollList
+              <PageVirtualList
                 items={collections}
                 estimateSize={100}
-                className="max-h-[70vh] divide-y divide-border/45"
+                className="divide-y divide-border/45"
                 renderItem={(collection) => (
                 <div
-                  className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"
+                  className="p-4 h-full flex items-center justify-between gap-4 hover:bg-muted/10 transition-colors"
                 >
                   <div className="flex-1 min-w-0 pr-0 sm:pr-4">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm text-foreground truncate">
+                      <span className="font-semibold text-[13px] sm:text-sm text-foreground truncate">
                         {loc(collection.title)}
                       </span>
                       {collection.main && (
@@ -168,21 +176,21 @@ export default function AdminCollections() {
                 )}
               />
             ) : (
-              <div className="p-8 text-center text-sm text-muted-foreground">{t("no_posts")}</div>
+              <div className="p-8 text-center text-xs text-muted-foreground">{t("no_posts")}</div>
             )}
           </div>
         </div>
 
         {/* Add / Edit Form */}
         <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
-          <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+            <h3 className={BLOCK_HEADER_CLASS}>
               {isEditing ? t("edit_collection") : t("add_collection")}
             </h3>
             {isEditing && (
               <button
                 onClick={resetForm}
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+                className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
               >
                 <X size={12} />
                 {t("cancel_action")}
@@ -200,7 +208,7 @@ export default function AdminCollections() {
                 name={`title.${locale}` as any}
                 render={({ field }) => (
                   <FormItem className="space-y-1.5">
-                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <FormLabel className={BLOCK_HEADER_CLASS}>
                       {t("title")}
                     </FormLabel>
                     <FormControl>
@@ -211,7 +219,7 @@ export default function AdminCollections() {
                         placeholder={t("placeholder_collection_title")}
                       />
                     </FormControl>
-                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                    <FormMessage className="text-xs font-medium text-destructive" />
                   </FormItem>
                 )}
               />
@@ -222,7 +230,7 @@ export default function AdminCollections() {
                 name={`description.${locale}` as any}
                 render={({ field }) => (
                   <FormItem className="space-y-1.5">
-                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <FormLabel className={BLOCK_HEADER_CLASS}>
                       {t("description")}
                     </FormLabel>
                     <FormControl>
@@ -233,7 +241,7 @@ export default function AdminCollections() {
                         rows={4}
                       />
                     </FormControl>
-                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                    <FormMessage className="text-xs font-medium text-destructive" />
                   </FormItem>
                 )}
               />
@@ -263,7 +271,7 @@ export default function AdminCollections() {
               <button
                 type="submit"
                 disabled={!form.formState.isValid || isCreating || isUpdating}
-                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
+                className="w-full flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
               >
                 {isCreating || isUpdating ? (
                   <>
