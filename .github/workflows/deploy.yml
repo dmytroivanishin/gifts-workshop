@@ -1,4 +1,4 @@
-# Build on a version tag (e.g. 1.0.0), push two images to GHCR, then deploy to the VPS over SSH.
+# Manual run only: build two images, push them to GHCR, then deploy to the VPS over SSH.
 #
 # Secrets (Settings > Secrets and variables > Actions > Secrets):
 #   VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_KNOWN_HOSTS  (known_hosts line from ssh-keyscan, pinned)
@@ -16,10 +16,7 @@
 name: Release and deploy
 
 on:
-  push:
-    tags:
-      - "*.*.*"
-  # Manual run: pick a tag as the branch in the Run workflow dialog, then choose wipe.
+  # Manual only: a tag push does not deploy. Run it from Actions, choosing the ref and wipe.
   workflow_dispatch:
     inputs:
       wipe:
