@@ -291,7 +291,8 @@ jobs:
             "${compose[@]}" up -d postgres
 
             echo "Running migrations"
-            if ! "${compose[@]}" run --rm migrate; then
+            # -T and </dev/null: without them `run` reads stdin, which is this script, and silently ends it.
+            if ! "${compose[@]}" run -T --rm migrate </dev/null; then
               echo "Migration failed. The previous version keeps running; nothing was switched." >&2
               exit 1
             fi
@@ -334,4 +335,7 @@ jobs:
             docker image prune -f >/dev/null
             echo "Deployed ${IMAGE_TAG}"
           REMOTE
-          } | ssh "${ssh_opts[@]}" "${VPS_USER}@${VPS_HOST}" bash -s
+          } | ssh "${ssh_opts[@]}" "${VPS_USER}@${VPS_HOST}" bash -s | tee "$RUNNER_TEMP/remote.log"
+
+          # A green step must mean the remote script reached its last line, not just that it stopped quietly.
+          grep -q '^Deployed ' "$RUNNER_TEMP/remote.log" || { echo "The remote deploy did not finish." >&2; exit 1; }
