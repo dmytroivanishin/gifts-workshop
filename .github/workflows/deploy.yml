@@ -19,6 +19,16 @@ on:
   push:
     tags:
       - "*.*.*"
+  # Manual run: pick a tag as the branch in the Run workflow dialog, then choose wipe.
+  workflow_dispatch:
+    inputs:
+      wipe:
+        description: "play = wipe the VPS first (containers, database, media, Caddy certificates), then deploy. skip = deploy only."
+        type: choice
+        options:
+          - skip
+          - play
+        default: skip
 
 concurrency:
   group: production-deploy
@@ -28,7 +38,48 @@ permissions:
   contents: read
 
 jobs:
+  # Only on a manual run with wipe = play. Everything on the VPS is removed; the build and deploy below run after it.
+  wipe:
+    if: github.event_name == 'workflow_dispatch' && inputs.wipe == 'play'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Wipe the VPS
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/deploy_key" && chmod 600 "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          ssh_opts=(-i "$HOME/.ssh/deploy_key" -o UserKnownHostsFile="$HOME/.ssh/known_hosts" -o StrictHostKeyChecking=yes)
+          {
+            cat <<'REMOTE'
+            set -euo pipefail
+            cd /opt/gifts-workshop 2>/dev/null || { echo "Nothing deployed yet, nothing to wipe."; exit 0; }
+
+            # Containers, networks and named volumes: Postgres data, Caddy certificates and config.
+            docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml down -v --remove-orphans
+
+            # Uploads are owned by uid 1000 (the app user), so they are removed from a container, not as the SSH user.
+            if [ -d media ]; then
+              docker run --rm -v "$PWD/media:/media" alpine sh -c 'rm -rf /media/* /media/.[!.]* /media/..?* 2>/dev/null; true'
+            fi
+
+            # Forget the last deployed tag, so a failed deploy after the wipe cannot roll back to a database that no longer exists.
+            rm -f .deployed_tag
+            echo "VPS wiped."
+          REMOTE
+          } | ssh "${ssh_opts[@]}" "${VPS_USER}@${VPS_HOST}" bash -s
+
   build:
+    needs: wipe
+    # Runs after the wipe, and also when the wipe was skipped. Only a failed or cancelled wipe stops the deploy.
+    if: ${{ always() && (needs.wipe.result == 'success' || needs.wipe.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -229,9 +280,9 @@ jobs:
             # Media folder, created here and not by Docker: a bind mount that does not exist yet is
             # created root-owned, and the app (uid 1000, the image's node user) could not write to it.
             # uid 1000 is the `node` user in node:*-bookworm-slim, the base of the image.
+            # chown to another uid needs root, and the SSH user is not root: the change is made from a container.
             mkdir -p media
-            chown 1000:1000 media
-            chmod 755 media
+            docker run --rm -v "$PWD/media:/media" alpine sh -c 'chown 1000:1000 /media && chmod 755 /media'
 
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
             trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
