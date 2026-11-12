@@ -4,6 +4,7 @@
 #   VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_KNOWN_HOSTS  (known_hosts line from ssh-keyscan, pinned)
 #   POSTGRES_USER, POSTGRES_PASSWORD        (hex only: they are put into DB_URI unescaped)
 #   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET
+#   YANDEX_CLIENT_ID, YANDEX_CLIENT_SECRET  (optional: the Yandex sign-in icon shows only when both are set)
 # Variables (Settings > Secrets and variables > Actions > Variables):
 #   POSTGRES_DB, S3_BUCKET_NAME, ADMIN_EMAILS, MEDIA_THUMBNAIL_MAX_PX, MEDIA_PREVIEW_MAX_PX
 #   NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SUPPORTED_LOCALES, NEXT_PUBLIC_DEFAULT_LOCALE,
@@ -164,6 +165,8 @@ jobs:
           S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          YANDEX_CLIENT_ID: ${{ secrets.YANDEX_CLIENT_ID }}
+          YANDEX_CLIENT_SECRET: ${{ secrets.YANDEX_CLIENT_SECRET }}
           ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MEDIA_THUMBNAIL_MAX_PX: ${{ vars.MEDIA_THUMBNAIL_MAX_PX }}
@@ -212,6 +215,8 @@ jobs:
             put S3_BUCKET_NAME
             put GOOGLE_CLIENT_ID
             put GOOGLE_CLIENT_SECRET
+            put YANDEX_CLIENT_ID
+            put YANDEX_CLIENT_SECRET
             put ADMIN_EMAILS
             put JWT_SECRET
             put SITE_TITLE_RU

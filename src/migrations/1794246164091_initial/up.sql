@@ -76,6 +76,7 @@ CREATE TABLE "posts" (
 	"description" jsonb NOT NULL,
 	"poster_id" uuid,
 	"in_stock" boolean DEFAULT true NOT NULL,
+	"price" integer,
 	"status" varchar(50) DEFAULT 'Draft' NOT NULL,
 	"collection_id" uuid,
 	"category_id" uuid,
