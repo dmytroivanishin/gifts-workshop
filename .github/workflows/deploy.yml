@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       wipe:
-        description: "play = wipe the VPS first (containers, database, media, Caddy certificates), then deploy. skip = deploy only."
+        description: "play = wipe the VPS first (containers, database, media), then deploy. Caddy certificates are kept. skip = deploy only."
         type: choice
         options:
           - skip
@@ -61,8 +61,11 @@ jobs:
             set -euo pipefail
             cd /opt/gifts-workshop 2>/dev/null || { echo "Nothing deployed yet, nothing to wipe."; exit 0; }
 
-            # Containers, networks and named volumes: Postgres data, Caddy certificates and config.
-            docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml down -v --remove-orphans
+            # Containers and networks go. Only the Postgres volume is removed explicitly. The Caddy volumes
+            # (certificates and config) stay: deleting them makes Caddy request new certificates from Let's
+            # Encrypt on every wipe, which runs into its rate limits.
+            docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml down --remove-orphans
+            docker volume rm gifts-workshop_postgres-data 2>/dev/null || true
 
             # Uploads are owned by uid 1000 (the app user), so they are removed from a container, not as the SSH user.
             if [ -d media ]; then
