@@ -45,15 +45,15 @@ export default function AdminLayout({
   }
 
   const navLinks = [
-    { href: "/admin/posts", icon: LayoutDashboard, label: t("posts"), menuLabel: t("menu_posts") },
-    { href: "/admin/categories", icon: FolderTree, label: t("categories"), menuLabel: t("menu_categories") },
-    { href: "/admin/collections", icon: Layers, label: t("collections"), menuLabel: t("menu_collections") },
-    { href: "/admin/tags", icon: Hash, label: t("tags_manager"), menuLabel: t("menu_tags") },
-    { href: "/admin/colors", icon: Palette, label: t("colors_manager"), menuLabel: t("menu_colors") },
-    { href: "/admin/pages", icon: FileText, label: t("pages"), menuLabel: t("menu_pages") },
-    { href: "/admin/localizations", icon: Globe, label: t("translations"), menuLabel: t("menu_localizations") },
-    { href: "/admin/media", icon: ImageIcon, label: t("media_library"), menuLabel: t("menu_media") },
-    { href: "/admin/comments", icon: MessageSquare, label: t("comments") || "Comments", menuLabel: t("menu_comments") },
+    { href: "/admin/posts", icon: LayoutDashboard, menuLabel: t("menu_posts") },
+    { href: "/admin/categories", icon: FolderTree, menuLabel: t("menu_categories") },
+    { href: "/admin/collections", icon: Layers, menuLabel: t("menu_collections") },
+    { href: "/admin/tags", icon: Hash, menuLabel: t("menu_tags") },
+    { href: "/admin/colors", icon: Palette, menuLabel: t("menu_colors") },
+    { href: "/admin/pages", icon: FileText, menuLabel: t("menu_pages") },
+    { href: "/admin/localizations", icon: Globe, menuLabel: t("menu_localizations") },
+    { href: "/admin/media", icon: ImageIcon, menuLabel: t("menu_media") },
+    { href: "/admin/comments", icon: MessageSquare, menuLabel: t("menu_comments") },
   ];
 
   return (
@@ -74,7 +74,7 @@ export default function AdminLayout({
                 }`}
               >
                 <link.icon size={18} />
-                {link.label}
+                {link.menuLabel}
               </Link>
             );
           })}
@@ -131,7 +131,7 @@ export default function AdminLayout({
               >
                 <link.icon size={20} className={isActive ? "fill-primary/10" : ""} />
                 <span className="text-[10px] font-medium whitespace-nowrap truncate max-w-[70px]">
-                  {link.menuLabel ?? link.label}
+                  {link.menuLabel}
                 </span>
               </Link>
             );
