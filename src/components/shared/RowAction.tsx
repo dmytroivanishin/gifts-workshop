@@ -36,7 +36,7 @@ export function RowAction({
   disabled = false,
 }: RowActionProps): React.ReactElement {
   const className = cn(
-    "flex items-center justify-center rounded-md p-2 transition-colors cursor-pointer disabled:opacity-50 sm:p-1.5",
+    "flex items-center justify-center rounded-md p-2 transition-colors cursor-pointer disabled:opacity-50",
     TONES[tone],
     active && "bg-muted text-foreground"
   );
@@ -63,5 +63,5 @@ export function RowAction({
 }
 
 export function RowActions({ children }: { children: React.ReactNode }): React.ReactElement {
-  return <div className="flex flex-shrink-0 items-center gap-2 self-end sm:self-auto">{children}</div>;
+  return <div className="flex flex-shrink-0 items-center gap-2">{children}</div>;
 }

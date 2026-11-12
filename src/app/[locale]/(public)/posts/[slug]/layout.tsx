@@ -17,7 +17,7 @@ interface PostLayoutProps {
 // Same text the not-found page shows in the body (system_texts code `post_not_found`), so the tab
 // title and the visible heading can never disagree. Read through the cached service, not the DB.
 async function loadNotFoundTitle(locale: string): Promise<string> {
-  const fallback = locale === "en" ? "Project not found" : "Проект не найден";
+  const fallback = locale === "en" ? "Work not found" : "Работа не найдена";
   const texts = (await systemTextService.getAllSystemTexts({ limit: 2000, area: "public" })).data ?? [];
   const text = texts.find((systemText) => systemText.code === "post_not_found");
   return text ? getLocalizedField(text.content, locale) || fallback : fallback;
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       return { title: await loadNotFoundTitle(locale) };
     }
 
-    const titleText = getLocalizedField(post.title, locale) || "Project";
+    const titleText = getLocalizedField(post.title, locale) || "Work";
     const siteName = isEn ? process.env.SITE_NAME_EN || "Kind Gifts" : process.env.SITE_NAME_RU || "Добрые Подарки";
     const title = `${titleText} | ${siteName}`;
 

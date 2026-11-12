@@ -1,35 +1,41 @@
-// Importing googleOAuth.ts transitively imports @/modules/core/env, which validates all 32
-// required env vars at import time — this file must be run via
+// Importing the OAuth modules transitively imports @/modules/core/env, which validates all required
+// env vars at import time — this file must be run via
 // `bash scripts/run-test.sh test:unit` (sources config/test.env first), not raw `vitest run`.
 import { describe, it, expect, beforeAll } from "vitest";
 import crypto from "crypto";
 import { generateKeyPair, exportJWK, SignJWT, createLocalJWKSet, type JWTVerifyGetKey } from "jose";
-import {
-  createGoogleAuthRequest,
-  encodeOAuthCookie,
-  decodeOAuthCookie,
-  statesMatch,
-  verifyGoogleIdToken,
-} from "@/utils/googleOAuth";
+import { env } from "@/modules/core/env";
+import { createOAuthAttempt, encodeOAuthCookie, decodeOAuthCookie, statesMatch } from "@/utils/oauth/flow";
+import { googleStrategy, verifyGoogleIdToken } from "@/utils/oauth/google";
 
 describe("encodeOAuthCookie / decodeOAuthCookie", () => {
-  it("round-trips state and verifier", () => {
-    const encoded = encodeOAuthCookie("the-state", "the-verifier");
-    expect(decodeOAuthCookie(encoded)).toEqual({ state: "the-state", verifier: "the-verifier" });
+  it("round-trips provider, state and verifier", () => {
+    const attempt = { provider: "google" as const, state: "the-state", verifier: "the-verifier" };
+    expect(decodeOAuthCookie(encodeOAuthCookie(attempt))).toEqual(attempt);
+  });
+
+  it("round-trips the yandex provider too", () => {
+    const attempt = { provider: "yandex" as const, state: "s", verifier: "v" };
+    expect(decodeOAuthCookie(encodeOAuthCookie(attempt))).toEqual(attempt);
   });
 
   it("returns undefined for undefined input", () => {
     expect(decodeOAuthCookie(undefined)).toBeUndefined();
   });
 
-  it("returns undefined for a malformed value (wrong number of parts)", () => {
-    expect(decodeOAuthCookie("only-one-part")).toBeUndefined();
-    expect(decodeOAuthCookie("a.b.c")).toBeUndefined();
+  it("returns undefined for an unknown provider", () => {
+    expect(decodeOAuthCookie("github.state.verifier")).toBeUndefined();
   });
 
-  it("returns undefined when either segment is empty", () => {
-    expect(decodeOAuthCookie(".verifier")).toBeUndefined();
-    expect(decodeOAuthCookie("state.")).toBeUndefined();
+  it("returns undefined for a malformed value (wrong number of parts)", () => {
+    expect(decodeOAuthCookie("only-one-part")).toBeUndefined();
+    expect(decodeOAuthCookie("google.state")).toBeUndefined();
+    expect(decodeOAuthCookie("google.a.b.c")).toBeUndefined();
+  });
+
+  it("returns undefined when a segment is empty", () => {
+    expect(decodeOAuthCookie("google..verifier")).toBeUndefined();
+    expect(decodeOAuthCookie("google.state.")).toBeUndefined();
   });
 });
 
@@ -48,24 +54,28 @@ describe("statesMatch", () => {
   });
 });
 
-describe("createGoogleAuthRequest", () => {
+describe("googleStrategy.buildAuthorizeUrl", () => {
   it("returns a URL with every expected query param and a PKCE S256 challenge matching the verifier", () => {
-    const result = createGoogleAuthRequest("client-123", "https://example.com/admin/login");
-    const url = new URL(result.url);
+    const attempt = createOAuthAttempt("google");
+    const url = new URL(googleStrategy.buildAuthorizeUrl({
+      state: attempt.state,
+      verifier: attempt.verifier,
+      redirectUri: "https://example.com/admin/login",
+    }));
     expect(url.hostname).toBe("accounts.google.com");
-    expect(url.searchParams.get("client_id")).toBe("client-123");
+    expect(url.searchParams.get("client_id")).toBe(env.GOOGLE_CLIENT_ID);
     expect(url.searchParams.get("redirect_uri")).toBe("https://example.com/admin/login");
     expect(url.searchParams.get("response_type")).toBe("code");
     expect(url.searchParams.get("code_challenge_method")).toBe("S256");
-    expect(url.searchParams.get("state")).toBe(result.state);
+    expect(url.searchParams.get("state")).toBe(attempt.state);
 
-    const expectedChallenge = crypto.createHash("sha256").update(result.verifier).digest("base64url");
+    const expectedChallenge = crypto.createHash("sha256").update(attempt.verifier).digest("base64url");
     expect(url.searchParams.get("code_challenge")).toBe(expectedChallenge);
   });
 
-  it("generates a fresh state/verifier on every call", () => {
-    const a = createGoogleAuthRequest("client-123", "https://example.com/admin/login");
-    const b = createGoogleAuthRequest("client-123", "https://example.com/admin/login");
+  it("generates a fresh state/verifier on every attempt", () => {
+    const a = createOAuthAttempt("google");
+    const b = createOAuthAttempt("google");
     expect(a.state).not.toBe(b.state);
     expect(a.verifier).not.toBe(b.verifier);
   });

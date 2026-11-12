@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Plus, Edit, Save, X, Trash2, Loader2 } from "lucide-react";
 import {
   useCreateTagMutation,
@@ -12,14 +12,16 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import { Input } from "@/components/ui/input";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import { RowAction, RowActions } from "@/components/shared/RowAction";
-import VirtualScrollList from "@/components/shared/VirtualScrollList";
+import PageVirtualList from "@/components/shared/PageVirtualList";
 import { useTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { tagSchema } from "@/common/validation/schemas";
+import { scrollToEditForm } from "@/utils/scrollToEditForm";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ApiMutationError, Tag } from "@/types";
+import { BLOCK_HEADER_CLASS } from "@/utils/designTokens";
 
 export default function AdminTags() {
   const { t, loc, locale } = useTranslation();
@@ -65,8 +67,11 @@ export default function AdminTags() {
     closeOnError: false,
   });
 
+  const formBlockRef = useRef<HTMLDivElement>(null);
+
   const handleEdit = (tag: Tag) => {
     setIsEditing(tag.id);
+    scrollToEditForm(formBlockRef.current);
     setActiveTagObj(tag);
     form.reset({
       name: typeof tag.name === "string" ? { [locale]: tag.name } : tag.name || {},
@@ -74,6 +79,13 @@ export default function AdminTags() {
   };
 
   const onSubmit = async (values: z.infer<typeof tagSchema>) => {
+    // The schema accepts a name when any locale has text; an emptied admin-locale name must not
+    // overwrite the real one (see categories/page.tsx).
+    if (!values.name?.[locale]?.trim()) {
+      form.setError(`name.${locale}` as `name.${string}`, { type: "manual", message: "error_required_field" });
+      return;
+    }
+
     try {
       if (isEditing) {
         const existingName = activeTagObj?.name && typeof activeTagObj.name === "object" ? activeTagObj.name : {};
@@ -100,8 +112,8 @@ export default function AdminTags() {
   return (
     <div className="space-y-6 font-sans">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("tags_manager")}</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">{t("tags_manager")}</h1>
+        <p className="text-xs text-muted-foreground">
           {t("tags_subtitle")}
         </p>
       </div>
@@ -110,24 +122,24 @@ export default function AdminTags() {
         {/* Tags List */}
         <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/50">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("all_tags")} ({tags.length})</h2>
+            <h2 className={BLOCK_HEADER_CLASS}>{t("all_tags")} ({tags.length})</h2>
           </div>
           <div>
             {isLoading ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
+              <div className="p-8 text-center text-xs text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
                 {t("loading_tags")}
               </div>
             ) : tags.length > 0 ? (
-              <VirtualScrollList
+              <PageVirtualList
                 items={tags}
                 estimateSize={76}
-                className="max-h-[70vh] divide-y divide-border/45"
+                className="divide-y divide-border/45"
                 onEndReached={loadMore}
                 renderItem={(tag) => (
-                  <div className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
-                    <div className="flex flex-col gap-1 w-full sm:w-auto overflow-hidden">
-                      <span className="font-semibold text-sm text-foreground truncate">
+                  <div className="p-4 h-full flex items-center justify-between gap-4 hover:bg-muted/10 transition-colors">
+                    <div className="flex flex-col gap-1 min-w-0 flex-1 overflow-hidden">
+                      <span className="font-semibold text-[13px] sm:text-sm text-foreground truncate">
                         #{loc(tag.name)}
                       </span>
                     </div>
@@ -140,10 +152,10 @@ export default function AdminTags() {
                 )}
               />
             ) : (
-              <div className="p-8 text-center text-sm text-muted-foreground">{t("no_tags")}</div>
+              <div className="p-8 text-center text-xs text-muted-foreground">{t("no_tags")}</div>
             )}
             {isLoadingMore && (
-              <div className="p-4 flex items-center justify-center text-sm text-muted-foreground border-t border-border bg-muted/5">
+              <div className="p-4 flex items-center justify-center text-xs text-muted-foreground border-t border-border bg-muted/5">
                 <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
                 {t("loading_more_tags")}
               </div>
@@ -152,15 +164,15 @@ export default function AdminTags() {
         </div>
 
         {/* Add / Edit Tag */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
-          <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
+          <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+            <h3 className={BLOCK_HEADER_CLASS}>
               {isEditing ? t("rename_tag") : t("add_new_tag")}
             </h3>
             {isEditing && (
               <button
                 onClick={resetForm}
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+                className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
               >
                 <X size={12} />
                 {t("cancel_action")}
@@ -175,7 +187,7 @@ export default function AdminTags() {
                 name={`name.${locale}` as any}
                 render={({ field }) => (
                   <FormItem className="space-y-1.5">
-                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tag_name")}</FormLabel>
+                    <FormLabel className={BLOCK_HEADER_CLASS}>{t("tag_name")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -184,7 +196,7 @@ export default function AdminTags() {
                         placeholder={t("placeholder_vintage")}
                       />
                     </FormControl>
-                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                    <FormMessage className="text-xs font-medium text-destructive" />
                   </FormItem>
                 )}
               />
@@ -192,19 +204,10 @@ export default function AdminTags() {
               <button
                 type="submit"
                 disabled={!form.formState.isValid || isCreating || isUpdating}
-                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
+                className="w-full flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
               >
-                {isCreating || isUpdating ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    {t("saving")}
-                  </>
-                ) : (
-                  <>
-                    {isEditing ? <Save size={16} /> : <Plus size={16} />}
-                    {isEditing ? t("save") : t("create_tag")}
-                  </>
-                )}
+                {isCreating || isUpdating ? <Loader2 className="animate-spin" size={16} /> : isEditing ? <Save size={16} /> : <Plus size={16} />}
+                  {isEditing ? t("save") : t("create_tag")}
               </button>
             </form>
           </Form>

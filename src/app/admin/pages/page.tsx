@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { scrollToEditForm } from "@/utils/scrollToEditForm";
 import { Plus, Edit, Save, X, Trash2, Loader2, Eye } from "lucide-react";
 import {
   useGetPagesQuery,
@@ -22,6 +23,7 @@ import * as z from "zod";
 import { pageSchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ApiMutationError, Page } from "@/types";
+import { BLOCK_HEADER_CLASS } from "@/utils/designTokens";
 
 export default function AdminPages() {
   const { t, loc, locale } = useTranslation();
@@ -95,8 +97,11 @@ export default function AdminPages() {
     closeOnError: false,
   });
 
+  const formBlockRef = useRef<HTMLDivElement>(null);
+
   const handleEdit = (page: Page) => {
     setIsEditing(page.id);
+    scrollToEditForm(formBlockRef.current);
     setActivePage(page);
     setSlugTouched(true);
     form.reset({
@@ -108,6 +113,13 @@ export default function AdminPages() {
   };
 
   const onSubmit = async (values: z.infer<typeof pageSchema>) => {
+    // The schema accepts a title when any language has text; an emptied admin-language title must
+    // not overwrite the real one on edit (see categories/page.tsx).
+    if (!values.title?.[locale]?.trim()) {
+      form.setError(`title.${locale}` as `title.${string}`, { type: "manual", message: "error_required_field" });
+      return;
+    }
+
     try {
       // An empty slug means "generate one from the title" on create and "keep the current one" on edit.
       const slug = values.slug || undefined;
@@ -137,18 +149,18 @@ export default function AdminPages() {
   return (
     <div className="space-y-6 font-sans">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("pages")}</h1>
-        <p className="text-sm text-muted-foreground">{t("pages_subtitle")}</p>
+        <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">{t("pages")}</h1>
+        <p className="text-xs text-muted-foreground">{t("pages_subtitle")}</p>
       </div>
 
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Pages list */}
         <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/50">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("all_pages")} ({pages.length})</h2>
+            <h2 className={BLOCK_HEADER_CLASS}>{t("all_pages")} ({pages.length})</h2>
           </div>
           {isLoading ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">
+            <div className="p-8 text-center text-xs text-muted-foreground">
               <Loader2 className="animate-spin inline mr-2" size={16} />
               {t("loading_pages")}
             </div>
@@ -158,10 +170,10 @@ export default function AdminPages() {
                 <div
                   key={page.id}
                   data-test-id={`page-row-${page.id}`}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors"
+                  className="p-4 flex items-center justify-between gap-4 hover:bg-muted/10 transition-colors"
                 >
                   <div className="flex flex-col gap-1 w-full sm:w-auto overflow-hidden">
-                    <span className="font-semibold text-sm text-foreground truncate">{loc(page.title)}</span>
+                    <span className="font-semibold text-[13px] sm:text-sm text-foreground truncate">{loc(page.title)}</span>
                     {!page.showInMenu && (
                       <span className="text-xs text-muted-foreground truncate">{t("page_hidden_from_menu")}</span>
                     )}
@@ -175,20 +187,20 @@ export default function AdminPages() {
               ))}
             </div>
           ) : (
-            <div className="p-8 text-center text-sm text-muted-foreground">{t("no_pages")}</div>
+            <div className="p-8 text-center text-xs text-muted-foreground">{t("no_pages")}</div>
           )}
         </div>
 
         {/* Add / edit page */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
-          <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
+          <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+            <h3 className={BLOCK_HEADER_CLASS}>
               {isEditing ? t("edit_page") : t("add_page")}
             </h3>
             {isEditing && (
               <button
                 onClick={resetForm}
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+                className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
               >
                 <X size={12} />
                 {t("cancel_action")}
@@ -203,11 +215,11 @@ export default function AdminPages() {
                   name={`title.${locale}` as any}
                   render={({ field }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("title")}</FormLabel>
+                      <FormLabel className={BLOCK_HEADER_CLASS}>{t("title")}</FormLabel>
                       <FormControl>
                         <Input {...field} value={field.value || ""} type="text" placeholder={t("placeholder_page_title")} />
                       </FormControl>
-                      <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                      <FormMessage className="text-xs font-medium text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -217,7 +229,7 @@ export default function AdminPages() {
                   name={`description.${locale}` as any}
                   render={({ field }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("description")}</FormLabel>
+                      <FormLabel className={BLOCK_HEADER_CLASS}>{t("description")}</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
@@ -228,7 +240,7 @@ export default function AdminPages() {
                         />
                       </FormControl>
                       <p className="text-xs text-muted-foreground">{t("page_description_hint")}</p>
-                      <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                      <FormMessage className="text-xs font-medium text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -238,7 +250,7 @@ export default function AdminPages() {
                   name="slug"
                   render={({ field }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("page_slug")}</FormLabel>
+                      <FormLabel className={BLOCK_HEADER_CLASS}>{t("page_slug")}</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -255,7 +267,7 @@ export default function AdminPages() {
                         />
                       </FormControl>
                       <p className="text-xs text-muted-foreground">{t("page_slug_hint")}</p>
-                      <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                      <FormMessage className="text-xs font-medium text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -284,19 +296,10 @@ export default function AdminPages() {
                 <button
                   type="submit"
                   disabled={!form.formState.isValid || isCreating || isUpdating}
-                  className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
+                  className="w-full flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
                 >
-                  {isCreating || isUpdating ? (
-                    <>
-                      <Loader2 className="animate-spin" size={16} />
-                      {t("saving")}
-                    </>
-                  ) : (
-                    <>
-                      {isEditing ? <Save size={16} /> : <Plus size={16} />}
-                      {isEditing ? t("save") : t("add_page")}
-                    </>
-                  )}
+                  {isCreating || isUpdating ? <Loader2 className="animate-spin" size={16} /> : isEditing ? <Save size={16} /> : <Plus size={16} />}
+                  {isEditing ? t("save") : t("add_page")}
                 </button>
               </form>
             </Form>

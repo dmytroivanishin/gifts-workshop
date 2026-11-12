@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/utils/cn";
 import { useState } from "react";
 import { MAX_UPLOAD_FILE_BYTES } from "@/utils/uploadLimits";
 import { Upload, Trash2, Loader2, AlertTriangle, Copy, X, ZoomIn } from "lucide-react";
@@ -21,6 +22,8 @@ import {
 } from "@/store/api";
 import { ApiMutationError } from "@/types";
 import { handleImageLoadError } from "@/utils/mediaPlaceholder";
+import { BLOCK_HEADER_CLASS, SELECTION_COUNT_CLASS } from "@/utils/designTokens";
+import { BUTTON_M_SIZE } from "@/utils/designTokens";
 
 // A single upload's outcome once it didn't simply succeed: either the server found this file's
 // content already stored under a different name (CP-50 point 4 — a hard 409 block, not just a
@@ -240,8 +243,8 @@ export default function AdminMedia() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("media_library")}</h1>
-        <p className="text-sm text-muted-foreground">{t("media_subtitle")}</p>
+        <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">{t("media_library")}</h1>
+        <p className="text-xs text-muted-foreground">{t("media_subtitle")}</p>
       </div>
 
       {/* Drag & Drop Upload Zone */}
@@ -250,13 +253,13 @@ export default function AdminMedia() {
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center gap-3 transition-colors ${dragActive
+        className={`border-2 border-dashed rounded-2xl p-5 sm:p-10 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-colors ${dragActive
           ? "border-primary bg-primary/5"
           : "border-border hover:border-muted-foreground/60 bg-card"
           }`}
       >
-        <div className="p-3 rounded-full bg-secondary text-muted-foreground">
-          <Upload size={24} />
+        <div className="p-2 sm:p-3 rounded-full bg-secondary text-muted-foreground">
+          <Upload size={20} className="sm:w-6 sm:h-6" />
         </div>
         <div className="text-center space-y-1">
           <p className="text-sm font-semibold text-muted-foreground">{t("drag_drop_files")}</p>
@@ -277,7 +280,7 @@ export default function AdminMedia() {
             </div>
           </div>
         ) : (
-          <label className="px-4 py-2 bg-secondary border border-border rounded-lg text-sm font-semibold text-subtle-foreground hover:text-foreground hover:bg-secondary/70 transition-colors cursor-pointer mt-2">
+          <label className={cn(BUTTON_M_SIZE, "inline-flex items-center bg-secondary border border-border rounded-lg font-medium text-subtle-foreground hover:text-foreground hover:bg-secondary/70 transition-colors cursor-pointer mt-2")}>
             {t("select_files")}
             <input type="file" multiple className="hidden" accept="image/jpeg,image/png,image/jpg" onChange={(event) => {
               if (event.target.files) {
@@ -305,7 +308,7 @@ export default function AdminMedia() {
             className="overflow-hidden"
           >
             <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+              <p className={`${BLOCK_HEADER_CLASS} flex items-center gap-1.5`}>
                 <AlertTriangle size={14} className="text-muted-foreground" />
                 {t("upload_issues")}
               </p>
@@ -342,10 +345,10 @@ export default function AdminMedia() {
           value={search}
           onChange={handleSearchChange}
           placeholder={t("placeholder_search_media")}
-          className="sm:max-w-sm"
+          className="sm:flex-1 md:flex-none md:max-w-sm"
         />
 
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-3 min-w-0 md:flex-1">
         {clipboard.ids.length > 0 && (
           <div
             data-test-id="clipboard-chip"
@@ -368,15 +371,15 @@ export default function AdminMedia() {
           </div>
         )}
         {selectedIds.size > 0 && (
-          <div data-test-id="bulk-action-bar" className="flex items-center gap-3 shrink-0">
-            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-              {selectedIds.size} {t("items_selected")}
+          <div data-test-id="bulk-action-bar" className="flex w-full items-center justify-between gap-3">
+            <span className={SELECTION_COUNT_CLASS}>
+              {t("items_selected")} {selectedIds.size}
             </span>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedIds(new Set())}
-                className="px-3 py-1.5 rounded-lg border border-border bg-card text-subtle-foreground hover:text-foreground hover:bg-muted font-medium text-xs transition-colors cursor-pointer"
+                className={cn(BUTTON_M_SIZE, "rounded-lg border border-border bg-card text-subtle-foreground hover:text-foreground hover:bg-muted font-medium transition-colors cursor-pointer")}
               >
                 {t("cancel") || "Cancel"}
               </button>
@@ -476,7 +479,7 @@ export default function AdminMedia() {
 
                 <button
                   onClick={() => handleDeleteClick(item.id)}
-                  className="w-full py-2 sm:py-1.5 rounded-lg border border-destructive/20 hover:border-destructive bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                  className={cn(BUTTON_M_SIZE, "w-full rounded-lg border border-destructive/20 hover:border-destructive bg-destructive/5 hover:bg-destructive text-destructive hover:text-white transition-all font-medium flex items-center justify-center gap-1.5 cursor-pointer")}
                   title={t("delete")}
                 >
                   <Trash2 size={14} />
@@ -487,7 +490,7 @@ export default function AdminMedia() {
             );
           })}
           {media.length === 0 && !isUploading && (
-            <div className="col-span-full p-8 text-center text-sm text-muted-foreground bg-card rounded-xl border border-border">
+            <div className="col-span-full p-8 text-center text-xs text-muted-foreground bg-card rounded-xl border border-border">
               {t("no_media") || "No media found. Upload some images!"}
             </div>
           )}
@@ -514,7 +517,7 @@ export default function AdminMedia() {
       <ConfirmModal
         isOpen={isBulkDeleteOpen}
         title={t("media_library")}
-        message={`${selectedIds.size} ${t("items_selected")}. ${t("confirm_bulk_delete_media")}`}
+        message={`${t("items_selected")} ${selectedIds.size}. ${t("confirm_bulk_delete_media")}`}
         confirmText={t("delete_selected")}
         cancelText={t("cancel") || "Cancel"}
         onConfirm={handleConfirmBulkDelete}

@@ -13,10 +13,14 @@ async function handleRequest(request: NextRequest): Promise<NextResponse> {
 
   // 1. Protect Admin UI Routes
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
+    // An expired or missing access token is renewed in the background from the refresh session (see
+    // api/v1/auth/session-redirect), and the browser comes back to this page. Login is shown only when there
+    // is no valid refresh session.
     const token = request.cookies.get("accessToken")?.value;
 
     if (!token || !(await verifyAdminToken(token))) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+      const back = encodeURIComponent(request.nextUrl.pathname + request.nextUrl.search);
+      return NextResponse.redirect(new URL(`/api/v1/auth/session-redirect?to=${back}`, request.url));
     }
   }
 

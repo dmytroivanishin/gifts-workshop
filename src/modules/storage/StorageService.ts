@@ -8,7 +8,7 @@ import type { ProcessedImageResult } from "@/interfaces/storage";
 import { mediaFolderRoot, mediaPublicBaseUrl } from "@/modules/storage/mediaFolder";
 
 // Media files live in a folder on disk, served by Caddy under S3_PUBLIC_URL. Stored URLs keep the shape
-// <S3_PUBLIC_URL>/<bucket>/<key>, so rows written before the switch from MinIO still point at the same paths.
+// <S3_PUBLIC_URL>/<bucket>/<key>, so the stored paths stay stable.
 // Created on first use, not at import: the build imports this module without the runtime env vars.
 let storage: LocalFolderStorage | undefined;
 function mediaStorage(): LocalFolderStorage {

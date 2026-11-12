@@ -23,6 +23,7 @@ import Combobox from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiMutationError, Page, SystemText, PopulatedPost, PopulatedCategory, Tag, Collection, LocalizedText } from "@/types";
+import { BLOCK_HEADER_CLASS } from "@/utils/designTokens";
 
 interface PageProps {
   params: Promise<{ entityType: string; id: string }>;
@@ -224,7 +225,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
 
   if (!entity && id !== "new") {
     return (
-      <div className="py-20 text-center text-sm text-muted-foreground">
+      <div className="py-20 text-center text-xs text-muted-foreground">
         {t("items_not_found") || "Entity not found"}
       </div>
     );
@@ -245,16 +246,16 @@ export default function LocalizationDetailPage({ params }: PageProps) {
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.push("/admin/localizations")}
-          className="p-2 rounded-lg bg-card border border-border text-subtle-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg bg-card border border-border text-subtle-foreground hover:text-foreground transition-colors cursor-pointer"
           title={t("back_to_list")}
         >
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">
             {t("translations_title") || "Localizations"}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {entityTypeLabel}
           </p>
         </div>
@@ -264,7 +265,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
         {isSystem && (
           <div className="bg-card rounded-xl border border-border overflow-hidden">
             <div className="p-4 border-b border-border bg-muted/50">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <h3 className={BLOCK_HEADER_CLASS}>
                 {t("system_text_settings") || "System Text Settings"}
               </h3>
             </div>
@@ -307,7 +308,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
           {activeLanguages.map((lang) => (
             <div key={lang} className="bg-card rounded-xl border border-border overflow-hidden h-fit">
               <div className="p-4 border-b border-border bg-muted/50">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h3 className={BLOCK_HEADER_CLASS}>
                   {lang} {isSystem ? "Translation" : ""}
                 </h3>
               </div>
@@ -325,7 +326,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                     invalid={Boolean(((lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")) && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title"))}
                     required={lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")}
                   />
-                  {(((lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")) && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title")) && <p className="text-[0.8rem] font-medium text-destructive mt-1.5">{getFieldError(`title.${lang}`) || getFieldError("title") || t("VALIDATION_ERROR") || "This field is required"}</p>}
+                  {(((lang === (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru")) && isSubmitted && (!titles[lang] || !titles[lang].trim())) || getFieldError(`title.${lang}`) || getFieldError("title")) && <p className="text-xs font-medium text-destructive mt-1.5">{getFieldError(`title.${lang}`) || getFieldError("title") || t("VALIDATION_ERROR") || "This field is required"}</p>}
                 </div>
 
               {!isTag && !isSystem && (
@@ -340,7 +341,7 @@ export default function LocalizationDetailPage({ params }: PageProps) {
                     rows={isPage ? 14 : 6}
                     invalid={Boolean(getFieldError(`description.${lang}`) || getFieldError("description"))}
                   />
-                  {(getFieldError(`description.${lang}`) || getFieldError("description")) && <p className="text-[0.8rem] font-medium text-destructive mt-1.5">{getFieldError(`description.${lang}`) || getFieldError("description")}</p>}
+                  {(getFieldError(`description.${lang}`) || getFieldError("description")) && <p className="text-xs font-medium text-destructive mt-1.5">{getFieldError(`description.${lang}`) || getFieldError("description")}</p>}
                 </div>
               )}
               </div>
@@ -365,19 +366,14 @@ export default function LocalizationDetailPage({ params }: PageProps) {
           <button
             type="submit"
             disabled={isSaving || !titles[process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru"] || !titles[process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "ru"].trim() || Object.keys(serverErrors).length > 0}
-            className="flex items-center gap-1.5 px-6 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-1.5 h-9 sm:h-10 px-6 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
           >
             {isSaving ? (
-              <>
-                <Loader2 className="animate-spin" size={16} />
-                {t("saving") || "Saving..."}
-              </>
+              <Loader2 className="animate-spin" size={16} />
             ) : (
-              <>
-                <Save size={16} />
-                {t("save") || "Save"}
-              </>
+              <Save size={16} />
             )}
+            {t("save") || "Save"}
           </button>
         </div>
       </form>

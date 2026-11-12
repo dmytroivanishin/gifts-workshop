@@ -44,6 +44,9 @@ export const env = {
   S3_BUCKET_NAME: process.env.S3_BUCKET_NAME!,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET!,
+  // Optional: the Yandex sign-in icon is shown only when both are set and not empty.
+  YANDEX_CLIENT_ID: process.env.YANDEX_CLIENT_ID ?? "",
+  YANDEX_CLIENT_SECRET: process.env.YANDEX_CLIENT_SECRET ?? "",
   ADMIN_EMAILS: (process.env.ADMIN_EMAILS ?? "").split(",").map(entry => entry.trim()),
   NEXT_PUBLIC_MAX_FILE_SIZE_MB: process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB!,
   SUPPORTED_LOCALES: (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES ?? "").split(",").map(entry => entry.trim()),

@@ -100,6 +100,8 @@ export interface Post {
   description: LocalizedText;
   slug: string;
   inStock: boolean;
+  // Whole roubles; null when no price is set (the public card then shows no price).
+  price: number | null;
   status: PostStatus;
   
   // Foreign Keys

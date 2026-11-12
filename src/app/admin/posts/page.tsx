@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/utils/cn";
 import { RowAction, RowActions } from "@/components/shared/RowAction";
 import { useState, useEffect, useRef } from "react";
 import { Plus, Edit, Trash2, Eye, Loader2 } from "lucide-react";
@@ -13,6 +14,8 @@ import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import SearchInput from "@/components/shared/SearchInput";
 import { MEDIA_PLACEHOLDER_DATA_URL, handleImageLoadError } from "@/utils/mediaPlaceholder";
+import { SELECTION_COUNT_CLASS } from "@/utils/designTokens";
+import { BUTTON_M_SIZE } from "@/utils/designTokens";
 
 export default function AdminDashboard() {
   const { t, loc } = useTranslation();
@@ -143,11 +146,11 @@ export default function AdminDashboard() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("posts_manager")}</h1>
+          <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">{t("posts_manager")}</h1>
         </div>
         <Link
           href="/admin/posts/new"
-          className="flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 w-full sm:w-auto bg-primary text-primary-foreground font-sans text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity"
+          className="flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 w-full sm:w-auto bg-primary text-primary-foreground font-sans text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity"
         >
           <Plus size={16} />
           {t("add_post")}
@@ -165,14 +168,14 @@ export default function AdminDashboard() {
 
         {selectedIds.size > 0 && (
           <div data-test-id="bulk-action-bar" className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-              {selectedIds.size} {t("items_selected")}
+            <span className={SELECTION_COUNT_CLASS}>
+              {t("items_selected")} {selectedIds.size}
             </span>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setRawSelectedIds(new Set())}
-                className="px-3 py-1.5 rounded-lg border border-border bg-card text-subtle-foreground hover:text-foreground hover:bg-muted font-medium text-xs transition-colors cursor-pointer"
+                className={cn(BUTTON_M_SIZE, "rounded-lg border border-border bg-card text-subtle-foreground hover:text-foreground hover:bg-muted font-medium transition-colors cursor-pointer")}
               >
                 {t("cancel") || "Cancel"}
               </button>
@@ -194,7 +197,7 @@ export default function AdminDashboard() {
       {/* Posts List */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         {isLoading && page === 1 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">{t("loading_posts")}</div>
+          <div className="p-8 text-center text-xs text-muted-foreground">{t("loading_posts")}</div>
         ) : posts.length > 0 ? (
           <>
             {/* Desktop Table */}
@@ -267,7 +270,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-4 text-sm text-muted-foreground">{categoryTitle}</td>
                       <td className="p-4">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusClasses(post.status)}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusClasses(post.status)}`}>
                           {t(post.status.toLowerCase())}
                         </span>
                       </td>
@@ -324,7 +327,7 @@ export default function AdminDashboard() {
                         title={t("select")}
                       />
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusClasses(post.status)}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusClasses(post.status)}`}>
                           {t(post.status.toLowerCase())}
                         </span>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStockClasses(post.inStock)}`}>
@@ -340,7 +343,7 @@ export default function AdminDashboard() {
                         className="w-16 h-16 object-cover rounded-lg bg-muted flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-foreground text-sm truncate">{postTitle}</div>
+                        <div className="font-semibold text-foreground text-[13px] sm:text-sm truncate">{postTitle}</div>
                         <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
                           {postDesc}
                         </div>
@@ -362,14 +365,14 @@ export default function AdminDashboard() {
             </div>
           </>
         ) : (
-          <div className="p-8 text-center text-sm text-muted-foreground">
+          <div className="p-8 text-center text-xs text-muted-foreground">
             {t("no_posts")}
           </div>
         )}
         
         {/* Unified Loader */}
         {posts.length > 0 && hasMore && (
-          <div ref={loaderRef} className="p-4 text-center text-sm text-muted-foreground bg-muted/5 border-t border-border flex items-center justify-center">
+          <div ref={loaderRef} className="p-4 text-center text-xs text-muted-foreground bg-muted/5 border-t border-border flex items-center justify-center">
             <Loader2 className="animate-spin mr-2 animate-duration-1000" size={16} />
             {t("loading_more_posts")}
           </div>
@@ -390,7 +393,7 @@ export default function AdminDashboard() {
       <ConfirmModal
         isOpen={isBulkDeleteOpen}
         title={t("posts")}
-        message={`${selectedIds.size} ${t("items_selected")}. ${t("confirm_bulk_delete_posts")}`}
+        message={`${t("items_selected")} ${selectedIds.size}. ${t("confirm_bulk_delete_posts")}`}
         confirmText={t("delete_selected")}
         cancelText={t("cancel") || "Cancel"}
         onConfirm={handleConfirmBulkDelete}

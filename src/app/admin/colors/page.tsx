@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Plus, Edit, Save, X, Trash2, Loader2 } from "lucide-react";
 import {
   useGetColorsQuery,
@@ -14,13 +14,15 @@ import { Input } from "@/components/ui/input";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import { RowAction, RowActions } from "@/components/shared/RowAction";
-import VirtualScrollList from "@/components/shared/VirtualScrollList";
+import PageVirtualList from "@/components/shared/PageVirtualList";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { colorSchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ApiMutationError } from "@/types";
+import { BLOCK_HEADER_CLASS } from "@/utils/designTokens";
+import { scrollToEditForm } from "@/utils/scrollToEditForm";
 
 export default function AdminColors() {
   const { t } = useTranslation();
@@ -65,9 +67,12 @@ export default function AdminColors() {
     closeOnError: false,
   });
 
+  const formBlockRef = useRef<HTMLDivElement>(null);
+
   const handleEdit = (color: { id: string; color: string }) => {
     setIsEditing(color.id);
     form.reset({ color: color.color });
+    scrollToEditForm(formBlockRef.current);
   };
 
   const onSubmit = async (values: z.infer<typeof colorSchema>) => {
@@ -92,21 +97,21 @@ export default function AdminColors() {
   return (
     <div className="space-y-6 font-sans">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("colors")}</h1>
-        <p className="text-sm text-muted-foreground">{t("colors_subtitle")}</p>
+        <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">{t("colors")}</h1>
+        <p className="text-xs text-muted-foreground">{t("colors_subtitle")}</p>
       </div>
 
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Left column: Add / Edit color form */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
-          <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
+          <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+            <h2 className={BLOCK_HEADER_CLASS}>
               {isEditing ? t("edit_color") : t("add_color")}
             </h2>
             {isEditing && (
               <button
                 onClick={resetForm}
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+                className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
               >
                 <X size={12} />
                 {t("cancel_action")}
@@ -121,7 +126,7 @@ export default function AdminColors() {
                 name="color"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">HEX</FormLabel>
+                    <FormLabel className={BLOCK_HEADER_CLASS}>HEX</FormLabel>
                     <div className="flex items-center gap-3">
                       <ColorPicker
                         value={field.value}
@@ -137,7 +142,7 @@ export default function AdminColors() {
                         />
                       </FormControl>
                     </div>
-                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                    <FormMessage className="text-xs font-medium text-destructive" />
                   </FormItem>
                 )}
               />
@@ -145,7 +150,7 @@ export default function AdminColors() {
               <button
                 type="submit"
                 disabled={!form.formState.isValid || isCreating || isUpdating}
-                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
               >
                 {isCreating || isUpdating ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -164,24 +169,24 @@ export default function AdminColors() {
         {/* Right column: Color list */}
         <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("colors_manager")}</h2>
+            <h2 className={BLOCK_HEADER_CLASS}>{t("colors_manager")}</h2>
             {isLoading && <Loader2 size={16} className="animate-spin text-muted-foreground" />}
           </div>
 
           <div>
             {colors.length > 0 ? (
-              <VirtualScrollList
+              <PageVirtualList
                 items={colors}
                 estimateSize={88}
-                className="max-h-[70vh] divide-y divide-border/45"
+                className="divide-y divide-border/45"
                 renderItem={(color) => (
-                  <div className="p-4 h-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 hover:bg-muted/10 transition-colors">
+                  <div className="p-4 h-full flex items-center justify-between gap-4 hover:bg-muted/10 transition-colors">
                     <div className="flex items-center gap-3">
                       <div
                         className="size-10 rounded-[9px] border border-border flex-shrink-0"
                         style={{ backgroundColor: color.color }}
                       />
-                      <span className="font-semibold text-sm uppercase text-foreground tracking-wider truncate">{color.color}</span>
+                      <span className="font-semibold text-[13px] sm:text-sm uppercase text-foreground tracking-wider truncate">{color.color}</span>
                     </div>
 
                     <RowActions>
@@ -193,7 +198,7 @@ export default function AdminColors() {
               />
             ) : (
               !isLoading && (
-                <div className="p-8 text-center text-sm text-muted-foreground">
+                <div className="p-8 text-center text-xs text-muted-foreground">
                   {t("colors_not_found")}
                 </div>
               )

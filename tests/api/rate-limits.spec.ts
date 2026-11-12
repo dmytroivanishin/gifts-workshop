@@ -34,7 +34,7 @@ test.describe("write-side rate limits", () => {
     const ctx = await ipContext("auth");
     let blockedAt = 0;
     for (let i = 1; i <= 25 && !blockedAt; i += 1) {
-      const res = await ctx.post("/api/v1/auth/google/exchange", { data: { code: "x", state: "y" } });
+      const res = await ctx.post("/api/v1/auth/oauth/exchange", { data: { code: "x", state: "y" } });
       if (res.status() === 429) blockedAt = i;
     }
     expect(blockedAt).toBe(21);

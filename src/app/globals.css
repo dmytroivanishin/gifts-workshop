@@ -4,6 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Mobile-first breakpoints for the admin: base = phone (<576), sm = large phone / small tablet
+   (576–767), md = tablet (768–1023), lg = desktop (1024+). sm is moved from Tailwind's 640 to 576. */
+@theme {
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

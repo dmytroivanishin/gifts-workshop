@@ -1,11 +1,12 @@
 "use client";
 
 import { addMissingTags, mergeTagsById } from "@/utils/tags";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Edit, Save, X, Loader2, Trash2 } from "lucide-react";
 import {
   useGetCategoriesQuery,
   useCreateCategoryMutation,
+  useUpdateCategoryMutation,
   useCreateTagMutation,
   useGetCollectionsQuery,
   useGetColorsQuery,
@@ -27,10 +28,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { categorySchema } from "@/common/validation/schemas";
+import { scrollToEditForm } from "@/utils/scrollToEditForm";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { SortableCategoryGroup } from "@/components/shared/SortableCategoryTree";
 import { getLocalizedField } from "@/utils/localization";
 import { ApiMutationError, PopulatedCategory, Tag } from "@/types";
+import { BLOCK_HEADER_CLASS } from "@/utils/designTokens";
 
 export default function AdminCategories() {
   const { t, loc, locale } = useTranslation();
@@ -46,7 +49,10 @@ export default function AdminCategories() {
   const [extraTags, setExtraTags] = useState<Tag[]>([]);
   const { data: collectionsResponse } = useGetCollectionsQuery();
   const { data: colorsResponse } = useGetColorsQuery();
-  const [saveCategory, { isLoading: isSaving }] = useCreateCategoryMutation();
+  // Separate mutations so the success toast says "created" only for a new category, not for an edit.
+  const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
+  const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
+  const isSaving = isCreating || isUpdating;
   const [reorderCategories] = useReorderCategoriesMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
   const [createTag] = useCreateTagMutation();
@@ -195,8 +201,11 @@ export default function AdminCategories() {
     setSessionColorId("");
   };
 
+  const formBlockRef = useRef<HTMLDivElement>(null);
+
   const handleEdit = (category: PopulatedCategory) => {
     setIsEditing(category.id);
+    scrollToEditForm(formBlockRef.current);
     setActiveCategoryObj(category);
     setSessionColorId("");
     form.reset({
@@ -217,6 +226,13 @@ export default function AdminCategories() {
   const onSubmit = async (values: z.infer<typeof categorySchema>) => {
     if (!selectedColorId || isCreatingColorPending) return;
 
+    // The schema accepts a title when any locale has text. On edit the form also carries the other
+    // locale's text, so an emptied admin-locale name would pass and overwrite the real title.
+    if (!values.title?.[locale]?.trim()) {
+      form.setError(`title.${locale}` as `title.${string}`, { type: "manual", message: "error_required_field" });
+      return;
+    }
+
     try {
       // Use the actual selected color details from state
       const submissionValues = {
@@ -228,7 +244,7 @@ export default function AdminCategories() {
         // Keep the other locales' text: the form only edits the admin's own locale.
         const existingTitle = activeCategoryObj?.title && typeof activeCategoryObj.title === "object" ? activeCategoryObj.title : {};
         const existingDesc = activeCategoryObj?.description && typeof activeCategoryObj.description === "object" ? activeCategoryObj.description : {};
-        await saveCategory({
+        await updateCategory({
           ...submissionValues,
           id: isEditing,
           title: { ...existingTitle, ...values.title },
@@ -236,7 +252,7 @@ export default function AdminCategories() {
           parentId: values.parentId || null,
         }).unwrap();
       } else {
-        await saveCategory(submissionValues).unwrap();
+        await createCategory(submissionValues).unwrap();
       }
 
       resetForm();
@@ -260,19 +276,19 @@ export default function AdminCategories() {
   return (
     <div className="space-y-6 font-sans">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("categories")}</h1>
-        <p className="text-sm text-muted-foreground">{t("categories_subtitle")}</p>
+        <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">{t("categories")}</h1>
+        <p className="text-xs text-muted-foreground">{t("categories_subtitle")}</p>
       </div>
 
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Category List */}
         <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/50">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("categories")}</h2>
+            <h2 className={BLOCK_HEADER_CLASS}>{t("categories")}</h2>
           </div>
           <div className="divide-y divide-border/45">
             {isLoading ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
+              <div className="p-8 text-center text-xs text-muted-foreground">
                 <Loader2 className="animate-spin inline mr-2" size={16} />
                 {t("loading_categories")}
               </div>
@@ -302,12 +318,12 @@ export default function AdminCategories() {
                   const catColor = category.color?.color || "transparent";
 
                   return (
-                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/10 transition-colors w-full">
+                    <div className="p-4 flex items-center justify-between gap-4 hover:bg-muted/10 transition-colors w-full">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-sm text-foreground truncate">{catTitleLoc}</span>
+                          <span className="font-semibold text-[13px] sm:text-sm text-foreground truncate">{catTitleLoc}</span>
                           <span
-                            className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider"
+                            className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider"
                             style={{
                               backgroundColor: `${catColor}25`,
                               color: catColor,
@@ -320,7 +336,7 @@ export default function AdminCategories() {
                             const parentCat = categories.find((parentCandidate) => parentCandidate.id === category.parentId);
                             const parentTitle = parentCat ? getLocalizedField(parentCat.title, locale) : "";
                             return parentTitle ? (
-                              <span className="text-[10px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-full border border-[#7D8945]/20 flex items-center gap-1 font-sans">
+                              <span className="max-w-full truncate text-[10px] font-medium text-[#7D8945] bg-[#7D8945]/10 px-2.5 py-0.5 rounded-full border border-[#7D8945]/20 flex items-center gap-1 font-sans">
                                 {t("subcategory_of")} <strong className="truncate max-w-[100px] sm:max-w-[150px]">{parentTitle}</strong>
                               </span>
                             ) : null;
@@ -338,7 +354,7 @@ export default function AdminCategories() {
                 }}
               />
             ) : (
-              <div className="p-8 text-center text-sm text-muted-foreground">
+              <div className="p-8 text-center text-xs text-muted-foreground">
                 {t("no_categories")}
               </div>
             )}
@@ -346,15 +362,15 @@ export default function AdminCategories() {
         </div>
 
         {/* Add / Edit Category */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
-          <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
+          <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+            <h3 className={BLOCK_HEADER_CLASS}>
               {isEditing ? t("edit_category") : t("add_category")}
             </h3>
             {isEditing && (
               <button
                 onClick={resetForm}
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+                className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
               >
                 <X size={12} />
                 {t("cancel_action")}
@@ -370,7 +386,7 @@ export default function AdminCategories() {
                 name={`title.${locale}` as any}
                 render={({ field }) => (
                   <FormItem className="space-y-1.5">
-                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("title")}</FormLabel>
+                    <FormLabel className={BLOCK_HEADER_CLASS}>{t("title")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -379,7 +395,7 @@ export default function AdminCategories() {
                         placeholder={t("placeholder_category_title")}
                       />
                     </FormControl>
-                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                    <FormMessage className="text-xs font-medium text-destructive" />
                   </FormItem>
                 )}
               />
@@ -389,7 +405,7 @@ export default function AdminCategories() {
                 name={`description.${locale}` as any}
                 render={({ field }) => (
                   <FormItem className="space-y-1.5">
-                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("description")}</FormLabel>
+                    <FormLabel className={BLOCK_HEADER_CLASS}>{t("description")}</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -398,7 +414,7 @@ export default function AdminCategories() {
                         rows={3}
                       />
                     </FormControl>
-                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                    <FormMessage className="text-xs font-medium text-destructive" />
                   </FormItem>
                 )}
               />
@@ -408,7 +424,7 @@ export default function AdminCategories() {
                 name="collectionId"
                 render={({ field }) => (
                   <FormItem className="space-y-1.5">
-                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("collections")}</FormLabel>
+                    <FormLabel className={BLOCK_HEADER_CLASS}>{t("collections")}</FormLabel>
                     <FormControl>
                       <Combobox
                         options={collections.map((collection) => ({ value: collection.id, label: getLocalizedField(collection.title, locale) }))}
@@ -419,7 +435,7 @@ export default function AdminCategories() {
                         clearable={false}
                       />
                     </FormControl>
-                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                    <FormMessage className="text-xs font-medium text-destructive" />
                   </FormItem>
                 )}
               />
@@ -429,7 +445,7 @@ export default function AdminCategories() {
                 name="parentId"
                 render={({ field }) => (
                   <FormItem className="space-y-1.5">
-                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("parent_category")}</FormLabel>
+                    <FormLabel className={BLOCK_HEADER_CLASS}>{t("parent_category")}</FormLabel>
                     <FormControl>
                       <Combobox
                         options={categories
@@ -441,7 +457,7 @@ export default function AdminCategories() {
                         searchPlaceholder={t("placeholder_search_categories")}
                       />
                     </FormControl>
-                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                    <FormMessage className="text-xs font-medium text-destructive" />
                   </FormItem>
                 )}
               />
@@ -451,7 +467,7 @@ export default function AdminCategories() {
                 name="tagsIds"
                 render={({ field }) => (
                   <FormItem className="space-y-1.5">
-                    <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("tags")}</FormLabel>
+                    <FormLabel className={BLOCK_HEADER_CLASS}>{t("tags")}</FormLabel>
                     <FormControl>
                       <Combobox
                         options={newTagOptions}
@@ -469,13 +485,13 @@ export default function AdminCategories() {
                         resolveLabel={resolveTagLabel}
                       />
                     </FormControl>
-                    <FormMessage className="text-[0.8rem] font-medium text-destructive" />
+                    <FormMessage className="text-xs font-medium text-destructive" />
                   </FormItem>
                 )}
               />
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("color_accent")}</label>
+                <label className={BLOCK_HEADER_CLASS}>{t("color_accent")}</label>
                 
                 {/* Presets Grid */}
                 {colorsList.length > 0 && (
@@ -502,7 +518,7 @@ export default function AdminCategories() {
 
                 <div className="flex items-center gap-3">
                   <ColorPicker value={color} onChange={(event) => setColor(event.target.value)} />
-                  <span className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">{color}</span>
+                  <span className="text-[13px] sm:text-sm font-semibold uppercase text-foreground tracking-wider">{color}</span>
                   {isCreatingColorPending && (
                     <span className="text-xs text-muted-foreground animate-pulse flex items-center gap-1">
                       <Loader2 size={12} className="animate-spin" />
@@ -515,7 +531,7 @@ export default function AdminCategories() {
               <button
                 type="submit"
                 disabled={!form.formState.isValid || isSaving || isCreatingColorPending}
-                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
               >
                 {(isSaving || isCreatingColorPending) ? (
                   <Loader2 size={16} className="animate-spin" />

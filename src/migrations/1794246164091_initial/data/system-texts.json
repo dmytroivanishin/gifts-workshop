@@ -65,7 +65,7 @@
   {
     "id": "e8bf9615-6842-4f66-a025-43e3e17b0259",
     "content": {
-      "en": "View Project",
+      "en": "View Work",
       "ru": "Смотреть работу"
     },
     "area": "shared",
@@ -335,7 +335,7 @@
   {
     "id": "e42a796b-1f77-4351-904e-f4283013100c",
     "content": {
-      "en": "Projects",
+      "en": "Works",
       "ru": "Работы"
     },
     "area": "admin",
@@ -344,7 +344,7 @@
   {
     "id": "9232c9ee-475a-4aa2-9863-5a67165e7f56",
     "content": {
-      "en": "Projects Manager",
+      "en": "Works Manager",
       "ru": "Управление работами"
     },
     "area": "admin",
@@ -461,8 +461,8 @@
   {
     "id": "67dbb9be-59a5-47f3-91b1-ecd364dc354d",
     "content": {
-      "en": "items selected",
-      "ru": "элементов выбрано"
+      "en": "Selected:",
+      "ru": "Выбрано:"
     },
     "area": "shared",
     "code": "items_selected"
@@ -587,7 +587,7 @@
   {
     "id": "e8c230a3-115f-43a2-b2f8-ad5a3160eb19",
     "content": {
-      "en": "Add Project",
+      "en": "Add Work",
       "ru": "Добавить работу"
     },
     "area": "admin",
@@ -596,7 +596,7 @@
   {
     "id": "3b2a7cf4-f70c-45c8-9bb4-5326528d00f8",
     "content": {
-      "en": "Search projects...",
+      "en": "Search works...",
       "ru": "Поиск работ..."
     },
     "area": "admin",
@@ -632,7 +632,7 @@
   {
     "id": "7f8bd8df-af49-4a54-bc3a-ab872d3e290d",
     "content": {
-      "en": "Loading projects...",
+      "en": "Loading works...",
       "ru": "Загрузка работ..."
     },
     "area": "admin",
@@ -641,7 +641,7 @@
   {
     "id": "048abf46-b239-49dc-8a83-3d03a40a898d",
     "content": {
-      "en": "No projects found.",
+      "en": "No works found.",
       "ru": "Работы не найдены."
     },
     "area": "admin",
@@ -650,7 +650,7 @@
   {
     "id": "bc5da684-4757-49ee-ab90-ef3d356fe3a3",
     "content": {
-      "en": "Are you sure you want to delete this project?",
+      "en": "Are you sure you want to delete this work?",
       "ru": "Вы уверены, что хотите удалить эту работу?"
     },
     "area": "admin",
@@ -659,7 +659,7 @@
   {
     "id": "78676ca4-3265-4203-bbe9-13543ccb50df",
     "content": {
-      "en": "Loading more projects...",
+      "en": "Loading more works...",
       "ru": "Загрузка работ..."
     },
     "area": "admin",
@@ -668,7 +668,7 @@
   {
     "id": "4165f0ed-a8bb-4db0-8b4b-c8132e14d29b",
     "content": {
-      "en": "View all tags in use, rename them, or delete them globally from all projects.",
+      "en": "View all tags in use, rename them, or delete them globally from all works.",
       "ru": "Просмотр всех используемых тегов, их переименование или глобальное удаление."
     },
     "area": "admin",
@@ -740,8 +740,8 @@
   {
     "id": "cc02648f-76a7-438b-9d3d-416d0bd137c9",
     "content": {
-      "en": "Are you sure you want to delete this tag? It will be removed from all projects.",
-      "ru": "Вы уверены, что хотите удалить этот тег? Он будет удален из всех проектов."
+      "en": "Are you sure you want to delete this tag? It will be removed from all works.",
+      "ru": "Вы уверены, что хотите удалить этот тег? Он будет удален из всех работ."
     },
     "area": "admin",
     "code": "delete_confirm_tag"
@@ -767,7 +767,7 @@
   {
     "id": "9d27030d-7312-4826-9190-58ac0310b641",
     "content": {
-      "en": "Upload and manage visual assets for your projects.",
+      "en": "Upload and manage visual assets for your works.",
       "ru": "Загрузка визуальных ресурсов для ваших работ и управление ими."
     },
     "area": "admin",
@@ -1082,8 +1082,8 @@
   {
     "id": "ad5deec8-0c83-4637-ae34-78a809ca22ad",
     "content": {
-      "en": "Edit Project",
-      "ru": "Редактировать проект"
+      "en": "Edit Work",
+      "ru": "Редактировать работу"
     },
     "area": "admin",
     "code": "edit_post"
@@ -1091,8 +1091,8 @@
   {
     "id": "d0f5ba08-71fd-42a5-b8a3-a3f1012d05db",
     "content": {
-      "en": "Create Project",
-      "ru": "Создать проект"
+      "en": "Create Work",
+      "ru": "Создать работу"
     },
     "area": "admin",
     "code": "create_post"
@@ -1101,7 +1101,7 @@
     "id": "83a1099e-9712-4783-9278-72da3ababdd5",
     "content": {
       "en": "Update details of your existing work.",
-      "ru": "Изменение деталей существующего проекта."
+      "ru": "Изменение деталей существующей работы."
     },
     "area": "admin",
     "code": "edit_post_subtitle"
@@ -1118,8 +1118,8 @@
   {
     "id": "75f7e2cf-0157-4e07-9075-543b638f7a2f",
     "content": {
-      "en": "Project title...",
-      "ru": "Название проекта..."
+      "en": "Work title...",
+      "ru": "Название работы..."
     },
     "area": "admin",
     "code": "placeholder_post_title"
@@ -1145,8 +1145,8 @@
   {
     "id": "64f64377-2192-40ca-ba2b-1a81ff0b759d",
     "content": {
-      "en": "Project description...",
-      "ru": "Описание проекта..."
+      "en": "Work description...",
+      "ru": "Описание работы..."
     },
     "area": "admin",
     "code": "placeholder_post_desc"
@@ -1226,8 +1226,8 @@
   {
     "id": "8c8b26d0-d49b-4fa2-9e8e-6257f989e7fb",
     "content": {
-      "en": "Project Gallery & Media",
-      "ru": "Галерея и медиафайлы проекта"
+      "en": "Work Gallery & Media",
+      "ru": "Галерея и медиафайлы работы"
     },
     "area": "admin",
     "code": "gallery_and_media"
@@ -1451,7 +1451,7 @@
   {
     "id": "ba86e1bd-0e97-4112-b86f-4616d3ba6b0d",
     "content": {
-      "en": "Project successfully created!",
+      "en": "Work successfully created!",
       "ru": "Работа успешно добавлена!"
     },
     "area": "admin",
@@ -1460,7 +1460,7 @@
   {
     "id": "14862204-6eba-47ef-afc1-ef7104d1632e",
     "content": {
-      "en": "Project successfully updated!",
+      "en": "Work successfully updated!",
       "ru": "Работа успешно обновлена!"
     },
     "area": "admin",
@@ -1469,7 +1469,7 @@
   {
     "id": "6a039132-c409-464b-a40a-066b1cca0eb3",
     "content": {
-      "en": "Project successfully deleted!",
+      "en": "Work successfully deleted!",
       "ru": "Работа успешно удалена!"
     },
     "area": "admin",
@@ -1622,8 +1622,8 @@
   {
     "id": "373f5e71-e06c-43a0-9af1-440a78c2fdbb",
     "content": {
-      "en": "Choose images from your library to add to this project.",
-      "ru": "Выберите изображения из библиотеки для добавления в проект."
+      "en": "Choose images from your library to add to this work.",
+      "ru": "Выберите изображения из библиотеки для добавления в работу."
     },
     "area": "shared",
     "code": "select_media_description"
@@ -1640,8 +1640,8 @@
   {
     "id": "913d38a2-3d0e-4613-81e7-c1ec5b2b9df1",
     "content": {
-      "en": "Confirm Selection",
-      "ru": "Подтвердить выбор"
+      "en": "Choose",
+      "ru": "Выбрать"
     },
     "area": "shared",
     "code": "confirm_selection"
@@ -1947,7 +1947,7 @@
     "id": "c5dcb023-7a83-4ce4-8cf7-82015aa29714",
     "content": {
       "ru": "Работа не найдена",
-      "en": "Project not found"
+      "en": "Work not found"
     },
     "area": "public",
     "code": "post_not_found"
@@ -1955,8 +1955,8 @@
   {
     "id": "ee0869c9-9081-445f-a493-ddb79710b661",
     "content": {
-      "ru": "Запрошенный проект не существует или был удален.",
-      "en": "The requested project does not exist or has been deleted."
+      "ru": "Запрошенная работа не существует или была удалена.",
+      "en": "The requested work does not exist or has been deleted."
     },
     "area": "public",
     "code": "post_not_found_desc"
@@ -2216,11 +2216,11 @@
   {
     "id": "2883341b-29e7-47b5-afac-fa3badec56d3",
     "content": {
-      "en": "Google sign-in failed. Please try again.",
-      "ru": "Не удалось войти через Google. Повторите попытку."
+      "en": "Sign-in failed. Please try again.",
+      "ru": "Не удалось войти. Повторите попытку."
     },
     "area": "admin",
-    "code": "GOOGLE_LOGIN_FAILED"
+    "code": "OAUTH_LOGIN_FAILED"
   },
   {
     "id": "c6b95069-e71c-40f5-8a86-712d31a79d1b",
@@ -2459,8 +2459,8 @@
   {
     "id": "a229c5fd-5653-4f48-b8fb-1b49b078e77f",
     "content": {
-      "en": "Developer: quick sign-in (no Google)",
-      "ru": "Разработчик: Быстрый Вход (Без Google)"
+      "en": "Developer: quick sign-in",
+      "ru": "Разработчик: Быстрый Вход"
     },
     "area": "admin",
     "code": "login_dev_bypass"
@@ -2756,7 +2756,7 @@
   {
     "id": "69e2fcd3-7475-4f91-9db9-79f399eca0da",
     "content": {
-      "en": "Are you sure you want to delete the selected projects? Their comments will be deleted too. This can't be undone.",
+      "en": "Are you sure you want to delete the selected works? Their comments will be deleted too. This can't be undone.",
       "ru": "Вы уверены, что хотите удалить выбранные работы? Их комментарии тоже будут удалены. Это действие нельзя отменить."
     },
     "area": "admin",
@@ -2765,7 +2765,7 @@
   {
     "id": "218c9715-f3d8-428e-9171-257f12137ba2",
     "content": {
-      "en": "Selected projects deleted.",
+      "en": "Selected works deleted.",
       "ru": "Выбранные работы удалены."
     },
     "area": "admin",
@@ -2887,5 +2887,95 @@
     },
     "area": "admin",
     "code": "FILE_TOO_LARGE"
+  },
+  {
+    "id": "6c57adc5-39b9-4a15-8142-53dd93654187",
+    "content": {
+      "en": "Tags",
+      "ru": "Теги"
+    },
+    "area": "admin",
+    "code": "menu_tags"
+  },
+  {
+    "id": "903bc1a4-56d3-422e-b27c-235d14d73cd9",
+    "content": {
+      "en": "Colors",
+      "ru": "Цвета"
+    },
+    "area": "admin",
+    "code": "menu_colors"
+  },
+  {
+    "id": "b00422bd-f736-4009-bd51-fee00d940710",
+    "content": {
+      "en": "Media",
+      "ru": "Медиа"
+    },
+    "area": "admin",
+    "code": "menu_media"
+  },
+  {
+    "id": "cc12bd71-ce34-4fb9-96a0-92860f1e59e6",
+    "content": {
+      "en": "Works",
+      "ru": "Работы"
+    },
+    "area": "admin",
+    "code": "menu_posts"
+  },
+  {
+    "id": "f89cecb1-bd9d-4297-93c1-200bf73dd063",
+    "content": {
+      "en": "Categories",
+      "ru": "Категории"
+    },
+    "area": "admin",
+    "code": "menu_categories"
+  },
+  {
+    "id": "1edd06ba-d9df-43ac-9ec4-1c38a9327bdc",
+    "content": {
+      "en": "Collections",
+      "ru": "Коллекции"
+    },
+    "area": "admin",
+    "code": "menu_collections"
+  },
+  {
+    "id": "74180338-a752-4eb4-a5b2-5dab14eef254",
+    "content": {
+      "en": "Pages",
+      "ru": "Страницы"
+    },
+    "area": "admin",
+    "code": "menu_pages"
+  },
+  {
+    "id": "0ca90ec2-5227-4e05-bc90-37955b356b90",
+    "content": {
+      "en": "Translations",
+      "ru": "Переводы"
+    },
+    "area": "admin",
+    "code": "menu_localizations"
+  },
+  {
+    "id": "bbf22838-9ffa-486c-9b8a-ce51877605a5",
+    "content": {
+      "en": "Comments",
+      "ru": "Комментарии"
+    },
+    "area": "admin",
+    "code": "menu_comments"
+  },
+  {
+    "id": "825e4287-7fb7-494c-903f-c96377bf3672",
+    "content": {
+      "ru": "Цена",
+      "en": "Price"
+    },
+    "area": "shared",
+    "code": "price"
   }
 ]

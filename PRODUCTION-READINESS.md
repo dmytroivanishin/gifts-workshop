@@ -81,9 +81,9 @@ State on 2026-09-23: `npx tsc --noEmit` 0 errors; `next build` passes (exit 0); 
 ### Secrets management
 - [x] `.env*` and `config/local.env` are git-ignored; `config/local.env` was never committed; no Google client-secret pattern (`GOCSPX`) in git history.
 - [x] `config/test.env` is tracked but contains only mock values.
-- [ ] `docker-compose.local.yml` (renamed from `docker-compose.yml` 2026-11-02) hardcodes dev passwords (`postgres_local_password`, `minio_admin_password`). Never reuse them in production.
+- [ ] `docker-compose.local.yml` (renamed from `docker-compose.yml` 2026-11-02) hardcodes dev passwords (`postgres_local_password`). Never reuse them in production.
 - [x] **Fixed 2026-10-02.** `seeds/initial-data/users.json` committed an admin email and a password-shaped value (always just the standard placeholder, never a real credential, but looked like one and had no loader anywhere); the file was deleted. The admin row is still auto-provisioned on first Google login (`auth/google/exchange/route.ts`), unaffected.
-- **(you)** Generate a strong `JWT_SECRET`, DB and MinIO credentials in Coolify's secret store.
+- **(you)** Generate a strong `JWT_SECRET` and DB credentials in Coolify's secret store.
 
 ### Input validation
 - [x] Every controller validates request bodies with Zod (`common/validation/schemas.ts`).
@@ -135,18 +135,18 @@ The 5 remaining moderate findings, all already known and accepted:
 ## Deployment (priority 1)
 
 ### Docker Compose / build
-- [x] Dev compose works as local infrastructure: postgres 16, pinned MinIO release, pgweb; `restart: always`; data persists in `./.docker/*` bind mounts.
-- [ ] Not production-ready as is: no `app` service, no Dockerfile / `.dockerignore`, no healthchecks, hardcoded creds, pgweb (8081) and the MinIO console (9001) published on host ports. Use compose only for local development; in Coolify provision Postgres/MinIO as managed resources or a separate production compose.
+- [x] Dev compose works as local infrastructure: postgres 16, Caddy (serves the media folder), pgweb; `restart: always`; data persists in `./.docker/*` bind mounts.
+- [ ] Not production-ready as is: no `app` service, no Dockerfile / `.dockerignore`, no healthchecks, hardcoded creds, pgweb (8081) published on host ports. Use compose only for local development; in Coolify provision Postgres as a managed resource or a separate production compose. Media is a folder on disk served by Caddy, no object-storage service.
 - [x] `next build` succeeds (2026-09-23: Next 16.2.6, Turbopack, 28 pages, TypeScript step passes, `Proxy` recognized). All app routes are dynamic (`ƒ`, including `/sitemap.xml`); only `/icon.png` and `/robots.txt` are static. The build needs the full env but no database: it also passes with an unreachable `DB_URI` (checked 2026-09-23), which is what a Docker build has. Use `bash scripts/run.sh build` (the script is not executable).
 - [ ] Dockerfile plan: multi-stage build, `output: "standalone"`, `NEXT_PUBLIC_*` as build args, secrets as runtime env, a migration step before start, and a base image that supports `sharp`.
-- [ ] `next.config.ts` has security headers and (since 2026-10-02) an `images` block, but no `output: "standalone"` yet — add it for a smaller image. `images.remotePatterns` (added 2026-10-02 for the public project gallery) allowlists the `S3_PUBLIC_URL` host; a dev-only `images.dangerouslyAllowLocalIP` was also needed, since Next 16 refuses to optimize an image whose host resolves to a private IP (which `localhost` — the local MinIO address — always does), guarded off in production where `S3_PUBLIC_URL` will be a real public domain.
+- [ ] `next.config.ts` has security headers and (since 2026-10-02) an `images` block, but no `output: "standalone"` yet — add it for a smaller image. `images.remotePatterns` (added 2026-10-02 for the public project gallery) allowlists the `S3_PUBLIC_URL` host; a dev-only `images.dangerouslyAllowLocalIP` was also needed, since Next 16 refuses to optimize an image whose host resolves to a private IP (which `localhost` — the local Caddy address — always does), guarded off in production where `S3_PUBLIC_URL` will be a real public domain.
 - [ ] Build needs the full env (`env.ts` throws at import when any of the 32 required variables is missing); decide which variables are build-time vs runtime in Coolify. `NEXT_PUBLIC_*` values are inlined at build.
 - [x] Health endpoint `GET /api/health` (2026-11-09): `select 1` with a 3 s timeout, 200 `{status:"ok"}` or 503 `{status:"unavailable"}`, no auth, `no-store`, never returns error text. Still to do at deploy: point Coolify's healthcheck and the uptime monitor at it.
 
 ### Coolify integration (not set up yet; nothing deployed)
 - [ ] Domain + Let's Encrypt (Coolify handles it); set `NEXT_PUBLIC_APP_URL` to the final HTTPS origin.
 - [ ] Env vars from `CLAUDE.md` §9 mapped to secrets (names only listed there), including `S3_PUBLIC_URL`.
-- [ ] Set `S3_PUBLIC_URL` to the public MinIO address once it is known (`CHANGE-PLAN.md` CP-8): a stable host such as `https://media.<domain>` that browsers can reach, with anonymous read on the bucket (`ensureBucket()` sets that when the bucket has no policy). `S3_ENDPOINT` stays the internal address the server connects to. The value is stored in every `media` row, so changing it later means a SQL `replace()`.
+- [ ] Set `S3_PUBLIC_URL` to the public media address once it is known (`CHANGE-PLAN.md` CP-8): the address Caddy serves the media folder on, such as `https://<domain>/static/media`. The value is stored in every `media` row, so changing it later means a SQL `replace()`.
 - [ ] Google OAuth for the production domain: register `https://<domain>/admin/login` as an authorized redirect URI and set `NEXT_PUBLIC_APP_URL` to the same origin in the build variables.
 
 ### Database
@@ -157,7 +157,7 @@ The 5 remaining moderate findings, all already known and accepted:
 
 ### Backups **(you)**
 - [ ] PostgreSQL: scheduled `pg_dump` (Coolify's scheduled backups to S3 are enough), tested restore.
-- [ ] MinIO bucket: `mc mirror` / provider snapshots.
+- [ ] Media folder (`.docker/media`): back it up together with the database.
 - [ ] Frequency and retention decided (suggested: daily DB, weekly bucket).
 
 ### Monitoring
@@ -190,7 +190,7 @@ The 5 remaining moderate findings, all already known and accepted:
 
 ## Performance (priority 3)
 
-- [ ] Images: 6 raw `<img>` remain (admin lists, drag-and-drop/crop widgets); `next/image` is used in 3 files (login page, home page, and the public project gallery, fixed 2026-10-02 — `next.config.ts` gained `images.remotePatterns` for the MinIO host). Stored thumbnails are ≤320 px, and the original is capped at 1000 px.
+- [ ] Images: 6 raw `<img>` remain (admin lists, drag-and-drop/crop widgets); `next/image` is used in 3 files (login page, home page, and the public project gallery, fixed 2026-10-02 — `next.config.ts` gained `images.remotePatterns` for the media host). Stored thumbnails are ≤320 px, and the original is capped at 1000 px.
 - [x] **Fixed 2026-10-05.** Bundle: `import * as LucideIcons from "lucide-react"` in the public project page defeated tree-shaking; replaced with a small curated set of explicitly named icon imports (`Link`, `Globe`, `Phone`, `MessageCircle`) merged into the existing `react-icons/fa` `ICON_MAP`, with `Link` as the final fallback. Every icon name in the currently configured `NEXT_PUBLIC_SOCIAL_LINKS` (`pinterest`, `telegram`, `instagram`, `vk`, `email`) was already covered by `ICON_MAP`, so nothing visible changes today — only a future unrecognized icon name now falls back to a generic icon instead of a dynamic any-string lookup across the whole Lucide set.
 - [x] **Fixed 2026-10-05.** Fonts via CSS `@import` from Google (blocking, third-party): now loaded through `next/font/google` (`Inter`, `Playfair Display`; same subsets `latin`+`cyrillic`, same weight range and italic style as the original `@import` URL), self-hosted at build time — 0 runtime requests to `fonts.googleapis.com`/`fonts.gstatic.com`, confirmed with a headless-browser check (computed `font-family` resolves correctly on `font-sans`/`font-heading` elements, no visual change in a before/after screenshot comparison).
 - [x] DB: 17 btree indexes on FKs/status; list queries use `getListRelations()` (partial select) instead of full relations.
@@ -222,15 +222,15 @@ The 5 remaining moderate findings, all already known and accepted:
 ## Decisions and status
 
 - **Coolify:** not set up yet. The chosen approach is a **Dockerfile** (B8 stays open until it exists).
-- **Public MinIO URL:** not chosen (nothing is deployed, no domain yet). The code no longer depends on the choice: the required `S3_PUBLIC_URL` is set when the address is known (`CHANGE-PLAN.md` CP-8); locally it equals `S3_ENDPOINT`. It must be set before the first upload in production, because it is stored in every `media` row.
+- **Public media URL:** not chosen (nothing is deployed, no domain yet). The code no longer depends on the choice: the required `S3_PUBLIC_URL` is set when the address is known (`CHANGE-PLAN.md` CP-8); locally it is `http://localhost:8080/static/media`. It must be set before the first upload in production, because it is stored in every `media` row.
 - **`NEXT_PUBLIC_DEV_MODE`:** nothing is deployed. When the pipeline exists it must be `false` in the build variables (B6). Since 2026-09-19 dev-login also refuses `NODE_ENV=production`, a second guard.
 - **Google OAuth:** login by email works locally without dev mode (checked by the user on 2026-09-23 after the `state`/PKCE change). When a domain exists, register `https://<domain>/admin/login` as an authorized redirect URI, set `NEXT_PUBLIC_APP_URL` to that origin, and keep the localhost URI for development.
 
 ## Still needed from you (later, one step at a time)
 
-Tracked in `CHANGE-PLAN.md` as CP-4 (CP-1 was answered on 2026-09-19; CP-2's dependency upgrade itself is done as of 2026-10-05, see "Dependency vulnerabilities" — only the manual-verification half remains); CP-8 (public MinIO address) waits for a domain and a server.
+Tracked in `CHANGE-PLAN.md` as CP-4 (CP-1 was answered on 2026-09-19; CP-2's dependency upgrade itself is done as of 2026-10-05, see "Dependency vulnerabilities" — only the manual-verification half remains); CP-8 (public media address) waits for a domain and a server.
 
-1. A real Google login and a real browser-driven image upload, now against `next@16.3.8`/`sharp@0.35.4` (CP-2's manual-verification step — Google OAuth can't be exercised by a script; the upload path itself was already checked end-to-end programmatically against the real MinIO instance).
+1. A real Google login and a real browser-driven image upload, now against `next@16.3.8`/`sharp@0.35.4` (CP-2's manual-verification step — Google OAuth can't be exercised by a script; the upload path itself was already checked end-to-end programmatically against the real media folder and Caddy).
 2. Check the B1–B6 fixes by hand, send the build and lint output, and decide about a mock `JWT_SECRET` in `config/test.env` (CP-4).
 
 Code changes so far: the B1–B6 fixes (2026-09-19); rate limiting with the `limit` cap, the dynamic sitemap, `S3_PUBLIC_URL` with `ensureBucket()`, and the Google login hardening (2026-09-23); the `next`/`sharp`/`eslint-config-next` dependency upgrade and `shadcn` → `devDependencies` (2026-10-05, one-off authorized exception to the usual "owner runs dependency upgrades" rule), in `src/` plus `package.json`/`package-lock.json`. No migration was changed; `config/test.env` got an `S3_PUBLIC_URL` line from the user. Everything else in this file is a recommendation.

@@ -4,6 +4,7 @@ import { createCategory, createCollection, createColor, createMedia, createPost 
 import { tinyPng } from "../../api/helpers/images";
 import { loginAsAdmin } from "../helpers/auth";
 import { pickComboboxOption } from "../helpers/combobox";
+import { categoryTitleSpan, categoryRow } from "../helpers/categoryRows";
 
 const FILE_KEY = "e2e-error-handling";
 
@@ -25,13 +26,7 @@ const FILE_KEY = "e2e-error-handling";
 // e2e file's absolute-count assertions for the rest of the run (the exact lesson CP-31 phase 3's
 // post-editor.spec.ts leak already taught).
 
-function categoryTitleSpan(page: Page, title: string) {
-  return page.locator("span.font-semibold.text-sm.text-foreground.truncate", { hasText: title });
-}
 
-function categoryRow(page: Page, title: string) {
-  return page.locator("div.p-4.flex.flex-col", { has: categoryTitleSpan(page, title) });
-}
 
 test.describe("admin: error toasts and conflict handling", () => {
   let admin: APIRequestContext;
