@@ -153,6 +153,8 @@ jobs:
 
   deploy:
     needs: build
+    # Explicit: a skipped wipe (wipe = skip) also skips build's dependants unless always() is set.
+    if: ${{ always() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
