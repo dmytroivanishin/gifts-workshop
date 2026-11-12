@@ -6,6 +6,9 @@
 	# Let's Encrypt rate-limited this domain after repeated failed attempts, so certificates come from ZeroSSL,
 	# which has its own limits. Both are free, publicly trusted and renewed by Caddy itself.
 	acme_ca https://acme.zerossl.com/v2/DV90
+	# ZeroSSL requires a contact address for the ACME account (certificate expiry notices only).
+	# The value comes from ACME_EMAIL in config/.env, written by the deploy from ADMIN_EMAILS.
+	email {$ACME_EMAIL}
 
 	# A client that sends a request body slower than this (or stalls) is disconnected, so the upload
 	# never holds the app's memory for longer than a minute. Covers the upload body, not the response.
