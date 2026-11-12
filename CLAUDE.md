@@ -234,6 +234,8 @@ SITE_{TITLE,TEMPLATE,DESCRIPTION,KEYWORDS,NAME}_{RU,EN}
 
 `NEXT_PUBLIC_*` values are inlined at build time. `MAX_FILES_PER_UPLOAD` (an optional variable outside this list, added 2026-10-02 to cap files per upload *request*) was removed 2026-10-12 along with the multi-file upload path it capped — `POST /media` now takes exactly one file per request, so there is no longer anything for the server to cap. The same day it came back in a different shape as `NEXT_PUBLIC_MAX_FILES_PER_UPLOAD` (optional, defaults to 30 if unset — not in this required list) — this one caps how many files the admin media page's own sequential loop will start in one *selection*, a client-only concern now that the server only ever sees one file per request; it defaults to matching `RATE_LIMITS.upload` (30/minute, `src/utils/rateLimit.ts`), so a larger selection doesn't just start failing with 429s partway through.
 
+Also optional, outside the required list: `YANDEX_CLIENT_ID` and `YANDEX_CLIENT_SECRET` (the Yandex sign-in icon on `/admin/login` shows only when both are non-empty; redirect address is the same `/admin/login` as Google's). Added in the deploy workflow as GitHub secrets.
+
 Also optional, outside the required list (added 2026-10-17, CP-17): `NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC` (defaults to `"en"` in code if unset, no env file change needed). It is unrelated to `NEXT_PUBLIC_DEFAULT_LOCALE` above, which stays the content-authoring fallback (`ru` — the i18n missing-translation fallback, the localization editor's required language). `NEXT_PUBLIC_DEFAULT_LOCALE_PUBLIC` is only read by `proxy.ts`'s public-routing fallback, to decide which locale a brand-new visitor with no saved cookie and no matching `Accept-Language` lands on.
 
 ---
