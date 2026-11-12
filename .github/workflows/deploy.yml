@@ -274,6 +274,8 @@ jobs:
             printf 'export GHCR_TOKEN=%q\n' "$GHCR_TOKEN"
             cat <<'REMOTE'
             set -euo pipefail
+            # Name the failing line: a silent stop is otherwise indistinguishable from success until the final check.
+            trap 'echo "Deploy failed at line $LINENO" >&2' ERR
 
             cd /opt/gifts-workshop
             compose=(docker compose -p gifts-workshop --env-file config/.env -f docker-compose.yml)
@@ -307,7 +309,8 @@ jobs:
             "${compose[@]}" up -d --remove-orphans app caddy
 
             # The Caddyfile is a bind mount: editing it does not recreate the container, so reload it.
-            "${compose[@]}" exec -T caddy caddy reload --config /etc/caddy/Caddyfile
+            # </dev/null: compose exec keeps stdin open even with -T, and stdin is this script.
+            "${compose[@]}" exec -T caddy caddy reload --config /etc/caddy/Caddyfile </dev/null
 
             # The image's HEALTHCHECK polls /api/health. Wait for it instead of assuming the start worked.
             container_id=$("${compose[@]}" ps -q app)
@@ -331,7 +334,7 @@ jobs:
             fi
 
             # Uploads must work: write and remove a probe file as the app's user, from inside the container.
-            if ! "${compose[@]}" exec -T app sh -c 'probe=".docker/media/.deploy-probe-$$"; touch "$probe" && rm "$probe"'; then
+            if ! "${compose[@]}" exec -T app sh -c 'probe=".docker/media/.deploy-probe-$$"; touch "$probe" && rm "$probe"' </dev/null; then
               echo "The app cannot write to the media folder. Check the ownership of /opt/gifts-workshop/media." >&2
               exit 1
             fi
