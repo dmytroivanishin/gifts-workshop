@@ -2216,11 +2216,11 @@
   {
     "id": "2883341b-29e7-47b5-afac-fa3badec56d3",
     "content": {
-      "en": "Google sign-in failed. Please try again.",
-      "ru": "Не удалось войти через Google. Повторите попытку."
+      "en": "Sign-in failed. Please try again.",
+      "ru": "Не удалось войти. Повторите попытку."
     },
     "area": "admin",
-    "code": "GOOGLE_LOGIN_FAILED"
+    "code": "OAUTH_LOGIN_FAILED"
   },
   {
     "id": "c6b95069-e71c-40f5-8a86-712d31a79d1b",
@@ -2459,8 +2459,8 @@
   {
     "id": "a229c5fd-5653-4f48-b8fb-1b49b078e77f",
     "content": {
-      "en": "Developer: quick sign-in (no Google)",
-      "ru": "Разработчик: Быстрый Вход (Без Google)"
+      "en": "Developer: quick sign-in",
+      "ru": "Разработчик: Быстрый Вход"
     },
     "area": "admin",
     "code": "login_dev_bypass"

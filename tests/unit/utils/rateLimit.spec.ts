@@ -65,7 +65,7 @@ describe("checkRateLimit", () => {
 describe("resolveRateLimitRule", () => {
   it("limits every auth route, whoever calls it", () => {
     expect(resolveRateLimitRule("POST", "/api/v1/auth/refresh", false)).toBe(RATE_LIMITS.auth);
-    expect(resolveRateLimitRule("POST", "/api/v1/auth/google/start", true)).toBe(RATE_LIMITS.auth);
+    expect(resolveRateLimitRule("POST", "/api/v1/auth/oauth/google/start", true)).toBe(RATE_LIMITS.auth);
   });
 
   it("limits the public comment form, uploads and other writes with their own rules", () => {

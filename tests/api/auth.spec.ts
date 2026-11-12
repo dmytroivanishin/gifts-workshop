@@ -17,8 +17,8 @@ test.describe("auth", () => {
     await anon.dispose();
   });
 
-  test("POST /auth/google/start returns a well-formed Google authorize URL and sets oauthState", async () => {
-    const res = await anon.post("/api/v1/auth/google/start");
+  test("POST /auth/oauth/google/start returns a well-formed Google authorize URL and sets oauthState", async () => {
+    const res = await anon.post("/api/v1/auth/oauth/google/start");
     const body = await expectSuccess<{ url: string }>(res);
     const url = new URL(body.data.url);
     expect(url.hostname).toBe("accounts.google.com");
@@ -31,8 +31,8 @@ test.describe("auth", () => {
     expect(setCookie).toContain("oauthState=");
   });
 
-  test("POST /auth/google/exchange without a matching state/cookie is 401", async () => {
-    const res = await anon.post("/api/v1/auth/google/exchange", {
+  test("POST /auth/oauth/exchange without a matching state/cookie is 401", async () => {
+    const res = await anon.post("/api/v1/auth/oauth/exchange", {
       data: { code: "irrelevant", state: "no-such-state" },
     });
     await expectError(res, 401);

@@ -186,7 +186,7 @@ export const commentSchema = z.object({
   replyId: optionalUuidSchema.optional(),
 });
 
-export const googleExchangeSchema = z.object({
+export const oauthExchangeSchema = z.object({
   code: z.string().min(1),
   state: z.string().min(1),
 });
