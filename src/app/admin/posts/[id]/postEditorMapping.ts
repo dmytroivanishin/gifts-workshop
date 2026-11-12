@@ -34,6 +34,7 @@ export function postToFormValues(post: PopulatedPost, locale: string): Partial<P
     categoryId,
     collectionId: collectionId || post.collectionId || "",
     inStock: post.inStock,
+    price: post.price ?? null,
     status: post.status,
     tagsIds: post.tags ? post.tags.map((tagOrId: Tag | string) => (typeof tagOrId === "string" ? tagOrId : tagOrId.id)) : [],
     posterId: poster ? (typeof poster === "string" ? poster : poster.id) : undefined,

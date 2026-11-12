@@ -4,6 +4,7 @@ import { adminContext } from "../../api/helpers/auth";
 import { createCategory, createColor, createTag } from "../../api/helpers/fixtures";
 import { loginAsAdmin } from "../helpers/auth";
 import { comboboxTrigger, pickComboboxOption } from "../helpers/combobox";
+import { categoryTitleSpan, categoryRow } from "../helpers/categoryRows";
 
 const FILE_KEY = "e2e-categories-edit";
 
@@ -35,13 +36,12 @@ test.describe("admin categories: edit through the left form panel", () => {
     return (await res.json()).data;
   }
 
-  // The panel saves through POST /categories for add and edit alike (the id travels in the body).
+  // Editing a category saves through PUT /categories/:id (store/api.ts updateCategory).
   const isSave = (res: { url(): string; request(): { method(): string } }) =>
-    new URL(res.url()).pathname === "/api/v1/categories" && res.request().method() === "POST";
+    new URL(res.url()).pathname.startsWith("/api/v1/categories/") && res.request().method() === "PUT";
 
-  const titleSpan = (page: Page, title: string) =>
-    page.locator("span.font-semibold.text-sm.text-foreground.truncate", { hasText: title });
-  const rowFor = (page: Page, title: string) => page.locator("div.p-4.flex.flex-col", { has: titleSpan(page, title) });
+  const titleSpan = categoryTitleSpan;
+  const rowFor = categoryRow;
 
   const heading = (page: Page, name: string) => page.getByRole("heading", { name, exact: true });
   const titleInput = (page: Page) => page.getByPlaceholder("placeholder_category_title");
@@ -151,9 +151,10 @@ test.describe("admin categories: edit through the left form panel", () => {
       await parentField(page).click();
       const panel = page.locator("[data-radix-popper-content-wrapper]");
       await panel.first().waitFor();
-      // A short list has no search box (and is rendered whole); a long one is virtualized, so narrow it.
+      // A short list has no search box (and is rendered whole); a long one is virtualized, so narrow it
+      // to this test's own marker (matches both the parent and the child, so the exclusion is really checked).
       const searchBox = panel.locator("input").first();
-      if (await searchBox.isVisible().catch(() => false)) await searchBox.fill(`Cat`);
+      if (await searchBox.isVisible().catch(() => false)) await searchBox.fill(marker);
       await expect(panel.getByRole("button", { name: `CatParent ${marker}`, exact: true })).toBeVisible();
       await expect(panel.getByRole("button", { name: `CatChild ${marker}`, exact: true })).toHaveCount(0);
       await page.keyboard.press("Escape");

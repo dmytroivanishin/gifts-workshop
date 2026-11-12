@@ -3,6 +3,7 @@ import { adminContext } from "../../api/helpers/auth";
 import { createCategory, createCollection, createColor, createMedia, createPost } from "../../api/helpers/fixtures";
 import { tinyPng } from "../../api/helpers/images";
 import { loginAsAdmin } from "../helpers/auth";
+import { pickComboboxOption } from "../helpers/combobox";
 
 // Scoped to admin pages, not public ones: the site will mostly be filled in from a phone, so the
 // editing side is the one that actually needs to work there. iPhone 13 (390px wide) is safely
@@ -97,7 +98,7 @@ test.describe("admin on a mobile viewport (390px): dashboard, categories, media 
     await page.goto("/admin/categories");
 
     await expect(
-      page.locator("span.font-semibold.text-sm.text-foreground.truncate", { hasText: "E2E Mobile Category" })
+      page.locator("span.font-semibold.text-foreground.truncate", { hasText: "E2E Mobile Category" })
     ).toBeVisible();
     expect(await hasNoHorizontalOverflow(page)).toBe(true);
 
@@ -139,11 +140,10 @@ test.describe("admin on a mobile viewport (390px): dashboard, categories, media 
 
     await page.getByLabel("title").fill("E2E Mobile New Post");
 
-    await page.getByText("placeholder_select_collection").click();
-    await page.getByRole("button", { name: "E2E Mobile Collection", exact: true }).click();
-
-    await page.getByText("placeholder_select_category").click();
-    await page.getByRole("button", { name: "E2E Mobile Category", exact: true }).click();
+    // Comboboxes virtualize their options and add a search box for long lists, so pick through the
+    // shared helper (it searches first) rather than clicking a row that may not be rendered yet.
+    await pickComboboxOption(page, "collection", "E2E Mobile Collection");
+    await pickComboboxOption(page, "category", "E2E Mobile Category");
 
     await page.getByText("add_media").click();
     await page.getByTestId(`media-option-${media.id}`).click();

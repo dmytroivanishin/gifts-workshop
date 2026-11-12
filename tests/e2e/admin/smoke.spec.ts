@@ -113,7 +113,7 @@ test.describe("admin smoke: every list page loads with real data and no console 
     // The same title also appears as an <option> in the "parent category" <select> in the
     // always-rendered add-category form, so scope to the row's own title span.
     await expect(
-      page.locator("span.font-semibold.text-sm.text-foreground.truncate", { hasText: "E2E Smoke Category" })
+      page.locator("span.font-semibold.text-foreground.truncate", { hasText: "E2E Smoke Category" })
     ).toBeVisible();
     expect(errors).toEqual([]);
   });

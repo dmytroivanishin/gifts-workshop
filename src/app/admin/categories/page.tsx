@@ -1,7 +1,7 @@
 "use client";
 
 import { addMissingTags, mergeTagsById } from "@/utils/tags";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Edit, Save, X, Loader2, Trash2 } from "lucide-react";
 import {
   useGetCategoriesQuery,
@@ -28,6 +28,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { categorySchema } from "@/common/validation/schemas";
+import { scrollToEditForm } from "@/utils/scrollToEditForm";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { SortableCategoryGroup } from "@/components/shared/SortableCategoryTree";
 import { getLocalizedField } from "@/utils/localization";
@@ -200,8 +201,11 @@ export default function AdminCategories() {
     setSessionColorId("");
   };
 
+  const formBlockRef = useRef<HTMLDivElement>(null);
+
   const handleEdit = (category: PopulatedCategory) => {
     setIsEditing(category.id);
+    scrollToEditForm(formBlockRef.current);
     setActiveCategoryObj(category);
     setSessionColorId("");
     form.reset({
@@ -319,7 +323,7 @@ export default function AdminCategories() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-[13px] sm:text-sm text-foreground truncate">{catTitleLoc}</span>
                           <span
-                            className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                            className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider"
                             style={{
                               backgroundColor: `${catColor}25`,
                               color: catColor,
@@ -358,7 +362,7 @@ export default function AdminCategories() {
         </div>
 
         {/* Add / Edit Category */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
+        <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
           <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
             <h3 className={BLOCK_HEADER_CLASS}>
               {isEditing ? t("edit_category") : t("add_category")}
@@ -514,7 +518,7 @@ export default function AdminCategories() {
 
                 <div className="flex items-center gap-3">
                   <ColorPicker value={color} onChange={(event) => setColor(event.target.value)} />
-                  <span className="text-[13px] sm:text-sm font-semibold uppercase text-muted-foreground tracking-wider">{color}</span>
+                  <span className="text-[13px] sm:text-sm font-semibold uppercase text-foreground tracking-wider">{color}</span>
                   {isCreatingColorPending && (
                     <span className="text-xs text-muted-foreground animate-pulse flex items-center gap-1">
                       <Loader2 size={12} className="animate-spin" />

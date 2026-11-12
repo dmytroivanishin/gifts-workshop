@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Plus, Edit, Save, X, Trash2, Loader2 } from "lucide-react";
 import {
   useGetColorsQuery,
@@ -22,6 +22,7 @@ import { colorSchema } from "@/common/validation/schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ApiMutationError } from "@/types";
 import { BLOCK_HEADER_CLASS } from "@/utils/designTokens";
+import { scrollToEditForm } from "@/utils/scrollToEditForm";
 
 export default function AdminColors() {
   const { t } = useTranslation();
@@ -66,9 +67,12 @@ export default function AdminColors() {
     closeOnError: false,
   });
 
+  const formBlockRef = useRef<HTMLDivElement>(null);
+
   const handleEdit = (color: { id: string; color: string }) => {
     setIsEditing(color.id);
     form.reset({ color: color.color });
+    scrollToEditForm(formBlockRef.current);
   };
 
   const onSubmit = async (values: z.infer<typeof colorSchema>) => {
@@ -99,7 +103,7 @@ export default function AdminColors() {
 
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Left column: Add / Edit color form */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
+        <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
           <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
             <h2 className={BLOCK_HEADER_CLASS}>
               {isEditing ? t("edit_color") : t("add_color")}

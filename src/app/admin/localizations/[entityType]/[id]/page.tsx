@@ -369,16 +369,11 @@ export default function LocalizationDetailPage({ params }: PageProps) {
             className="flex items-center gap-1.5 h-9 sm:h-10 px-6 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
           >
             {isSaving ? (
-              <>
-                <Loader2 className="animate-spin" size={16} />
-                {t("saving") || "Saving..."}
-              </>
+              <Loader2 className="animate-spin" size={16} />
             ) : (
-              <>
-                <Save size={16} />
-                {t("save") || "Save"}
-              </>
+              <Save size={16} />
             )}
+            {t("save") || "Save"}
           </button>
         </div>
       </form>

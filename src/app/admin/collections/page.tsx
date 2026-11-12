@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Plus, Edit, Save, X, Trash2, Loader2, Star } from "lucide-react";
 import {
   useGetCollectionsQuery,
@@ -20,6 +20,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { collectionSchema } from "@/common/validation/schemas";
+import { scrollToEditForm } from "@/utils/scrollToEditForm";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ApiMutationError, Collection } from "@/types";
 import { BLOCK_HEADER_CLASS } from "@/utils/designTokens";
@@ -71,8 +72,11 @@ export default function AdminCollections() {
     closeOnError: false,
   });
 
+  const formBlockRef = useRef<HTMLDivElement>(null);
+
   const handleEdit = (collection: Collection) => {
     setIsEditing(collection.id);
+    scrollToEditForm(formBlockRef.current);
     setActiveCollectionObj(collection);
     form.reset({
       title: typeof collection.title === "string" ? { [locale]: collection.title } : collection.title || {},
@@ -154,7 +158,7 @@ export default function AdminCollections() {
                         {loc(collection.title)}
                       </span>
                       {collection.main && (
-                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-lime-active text-lime-text uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-lime-active text-lime-text uppercase tracking-wider">
                           <Star size={10} className="fill-current" />
                           {t("main")}
                         </span>
@@ -182,7 +186,7 @@ export default function AdminCollections() {
         </div>
 
         {/* Add / Edit Form */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
+        <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
           <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
             <h3 className={BLOCK_HEADER_CLASS}>
               {isEditing ? t("edit_collection") : t("add_collection")}
@@ -273,17 +277,8 @@ export default function AdminCollections() {
                 disabled={!form.formState.isValid || isCreating || isUpdating}
                 className="w-full flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
               >
-                {isCreating || isUpdating ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    {t("saving")}
-                  </>
-                ) : (
-                  <>
-                    {isEditing ? <Save size={16} /> : <Plus size={16} />}
-                    {isEditing ? t("save") : t("add_collection")}
-                  </>
-                )}
+                {isCreating || isUpdating ? <Loader2 className="animate-spin" size={16} /> : isEditing ? <Save size={16} /> : <Plus size={16} />}
+                  {isEditing ? t("save") : t("add_collection")}
               </button>
             </form>
           </Form>

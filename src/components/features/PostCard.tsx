@@ -250,9 +250,16 @@ export function PostCard({ post, className, onLikeToggle, onCategorySelect }: Po
           </p>
 
           {/* Action Button */}
-          <div className="font-sans flex items-center text-sm font-medium transition-colors mt-auto" style={{ color: "#AFAA9E" }}>
-            {t("view_post")}
-            <ChevronRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
+          <div className="font-sans flex items-center justify-between gap-3 mt-auto">
+            <div className="flex items-center text-sm font-medium transition-colors" style={{ color: "#AFAA9E" }}>
+              {t("view_post")}
+              <ChevronRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
+            </div>
+            {post.price != null && (
+              <span className="font-serif text-[22px] font-medium leading-tight text-foreground whitespace-nowrap" data-test-id="post-price">
+                {`${post.price.toLocaleString("ru-RU")} р.`}
+              </span>
+            )}
           </div>
         </div>
       </Link>

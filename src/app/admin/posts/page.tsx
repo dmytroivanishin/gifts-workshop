@@ -169,7 +169,7 @@ export default function AdminDashboard() {
         {selectedIds.size > 0 && (
           <div data-test-id="bulk-action-bar" className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
             <span className={SELECTION_COUNT_CLASS}>
-              {selectedIds.size} {t("items_selected")}
+              {t("items_selected")} {selectedIds.size}
             </span>
             <div className="flex gap-2">
               <button
@@ -270,7 +270,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-4 text-sm text-muted-foreground">{categoryTitle}</td>
                       <td className="p-4">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusClasses(post.status)}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusClasses(post.status)}`}>
                           {t(post.status.toLowerCase())}
                         </span>
                       </td>
@@ -327,7 +327,7 @@ export default function AdminDashboard() {
                         title={t("select")}
                       />
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusClasses(post.status)}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusClasses(post.status)}`}>
                           {t(post.status.toLowerCase())}
                         </span>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStockClasses(post.inStock)}`}>
@@ -393,7 +393,7 @@ export default function AdminDashboard() {
       <ConfirmModal
         isOpen={isBulkDeleteOpen}
         title={t("posts")}
-        message={`${selectedIds.size} ${t("items_selected")}. ${t("confirm_bulk_delete_posts")}`}
+        message={`${t("items_selected")} ${selectedIds.size}. ${t("confirm_bulk_delete_posts")}`}
         confirmText={t("delete_selected")}
         cancelText={t("cancel") || "Cancel"}
         onConfirm={handleConfirmBulkDelete}

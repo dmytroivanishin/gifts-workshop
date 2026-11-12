@@ -9,8 +9,7 @@
 
 ## Стек
 
-Next.js 16 (App Router, TypeScript) · PostgreSQL + Drizzle ORM · MinIO (S3-совместимое
-хранилище) · Redux Toolkit + RTK Query · Tailwind CSS 4 + shadcn/ui · Google OAuth + JWT.
+Next.js 16 (App Router, TypeScript) · PostgreSQL + Drizzle ORM · медиа в папке на диске, раздаёт Caddy · Redux Toolkit + RTK Query · Tailwind CSS 4 + shadcn/ui · Google OAuth + JWT.
 Подробнее: `CLAUDE.md` §1.
 
 ## Локальный запуск
@@ -25,10 +24,10 @@ npm run local:infra:start
 
 Поднимает три контейнера из `docker-compose.local.yml`:
 - `gifts-workshop-postgres` — PostgreSQL 16, порт 5432, база `gifts_workshop`;
-- `gifts-workshop-minio` — MinIO, API на 9000, консоль на 9001;
+- `gifts-workshop-caddy` — Caddy, раздаёт медиа на `localhost:8080`;
 - `gifts-workshop-pgweb` — браузер БД на `localhost:8081`.
 
-Данные лежат в `./.docker/db-data` и `./.docker/minio-data` (в git не попадают).
+Данные лежат в `./.docker/db-data`, медиа — в `./.docker/media` (в git не попадают).
 
 ### 2. Создать `config/local.env`
 
@@ -36,7 +35,7 @@ npm run local:infra:start
 или возьмите `config/test.env` как шаблон с моками. Полный список обязательных переменных и их
 назначение — `CLAUDE.md` §9 (отдельного `.env.example` нет).
 
-Для локальной базы и бакета в нём должны стоять:
+Для локальной базы и папки с медиа в нём должны стоять:
 ```
 DB_URI="postgresql://postgres:postgres_local_password@127.0.0.1:5432/gifts_workshop"
 S3_BUCKET_NAME="gifts-workshop-media"
@@ -82,18 +81,15 @@ bash scripts/run.sh dev
    ```
    Если контейнер уже остановлен, сначала поднимите его под старым именем, либо, если данные
    не нужны, см. п. «Чистый старт» ниже.
-3. Переименовать бакет MinIO `portfolio-media` в `gifts-workshop-media` (через консоль
-   `localhost:9001` или `mc`). Без этого картинки из старых записей `media` не откроются:
-   их URL указывают на старый бакет.
-4. Обновить `config/local.env` по образцу из шага 2 выше.
-5. Поднять инфраструктуру заново: `npm run local:infra:start`.
+3. Обновить `config/local.env` по образцу из шага 2 выше.
+4. Поднять инфраструктуру заново: `npm run local:infra:start`.
 
 ### Чистый старт (если старые данные не нужны)
 
 Удаляет всё, включая картинки и записи. Выполнять только если данные действительно не нужны:
 ```bash
 docker-compose -f docker-compose.local.yml down
-docker run --rm -v "$PWD/.docker:/d" postgres:16-alpine sh -c 'rm -rf /d/db-data /d/minio-data'
+docker run --rm -v "$PWD/.docker:/d" postgres:16-alpine sh -c 'rm -rf /d/db-data /d/media'
 npm run local:infra:start
 bash scripts/run.sh migrate
 ```
@@ -102,7 +98,7 @@ bash scripts/run.sh migrate
 ## Скрипты
 
 ```bash
-npm run local:infra:start            # поднять Postgres, MinIO, pgweb (docker-compose.local.yml)
+npm run local:infra:start            # поднять Postgres, Caddy, pgweb (docker-compose.local.yml)
 npm run local:infra:stop             # остановить их
 bash scripts/run.sh migrate          # накатить миграции и сиды (идемпотентно)
 bash scripts/run.sh migrate:verify   # проверить: up.sql совпадает со schema.ts (на временной базе)
@@ -114,7 +110,7 @@ npm run lint                         # eslint — пока красный, см.
 
 Тесты (`scripts/run-test.sh`):
 ```bash
-scripts/run-test.sh test:infra:start   # тестовые Postgres :5433 и MinIO :9002 (с нуля, с drizzle-kit push)
+scripts/run-test.sh test:infra:start   # тестовые Postgres :5433 и Caddy :8082 (медиа), с нуля, с drizzle-kit push
 scripts/run-test.sh test:unit          # vitest
 scripts/run-test.sh test:api           # Playwright, проект api
 scripts/run-test.sh test:infra:stop

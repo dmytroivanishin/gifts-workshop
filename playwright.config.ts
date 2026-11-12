@@ -1,8 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // API tests (tests/api/**) hit a real running server with real HTTP requests — no mocking of the
-// DI container, Drizzle or Next's own request plumbing. They need the test Postgres + test MinIO
-// from docker-compose.test.yml (scripts/run-test.sh test:db:start) and config/test.env's vars
+// DI container, Drizzle or Next's own request plumbing. They need the test Postgres
+// from docker-compose.test.yml (scripts/run-test.sh test:infra:start) and config/test.env's vars
 // already exported into the process (scripts/run-test.sh sources them before `npm run test:api`).
 //
 // The "e2e" project (tests/e2e/**) drives a real Chromium browser against the same webServer —
@@ -39,6 +39,7 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
+  globalSetup: "./tests/e2e/global-setup.ts",
   webServer: {
     command: "npx next dev -p 3001",
     url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001",

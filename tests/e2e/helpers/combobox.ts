@@ -1,13 +1,14 @@
 import { expect, Locator, Page } from "@playwright/test";
 
-// The admin Combobox has no test ids of its own: its trigger is the `min-h-10` box inside the form
-// item whose <label> text is the field's (raw, in the empty test DB) translation key. The dropdown
+// The admin Combobox has no test ids of its own: its trigger is the clickable (`cursor-pointer`) box
+// inside the form item whose <label> text is the field's (raw, in the empty test DB) translation key.
+// (Its height class is now responsive — `min-h-9 sm:min-h-10` — so no height class is matched.) The dropdown
 // is rendered in a portal outside the form, so options are looked up on the page, not the form item.
 export function comboboxTrigger(page: Page, labelKey: string): Locator {
   const item = page
     .locator("div.space-y-1\\.5")
     .filter({ has: page.locator("label", { hasText: new RegExp(`^\\s*${labelKey}\\s*$`) }) });
-  return item.locator("div.min-h-10").first();
+  return item.locator("div.cursor-pointer").first();
 }
 
 // Opens the field's dropdown and picks an option by its exact label. Long lists are virtualized (only

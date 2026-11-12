@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { scrollToEditForm } from "@/utils/scrollToEditForm";
 import { Plus, Edit, Save, X, Trash2, Loader2, Eye } from "lucide-react";
 import {
   useGetPagesQuery,
@@ -96,8 +97,11 @@ export default function AdminPages() {
     closeOnError: false,
   });
 
+  const formBlockRef = useRef<HTMLDivElement>(null);
+
   const handleEdit = (page: Page) => {
     setIsEditing(page.id);
+    scrollToEditForm(formBlockRef.current);
     setActivePage(page);
     setSlugTouched(true);
     form.reset({
@@ -188,7 +192,7 @@ export default function AdminPages() {
         </div>
 
         {/* Add / edit page */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
+        <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
           <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
             <h3 className={BLOCK_HEADER_CLASS}>
               {isEditing ? t("edit_page") : t("add_page")}
@@ -294,17 +298,8 @@ export default function AdminPages() {
                   disabled={!form.formState.isValid || isCreating || isUpdating}
                   className="w-full flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
                 >
-                  {isCreating || isUpdating ? (
-                    <>
-                      <Loader2 className="animate-spin" size={16} />
-                      {t("saving")}
-                    </>
-                  ) : (
-                    <>
-                      {isEditing ? <Save size={16} /> : <Plus size={16} />}
-                      {isEditing ? t("save") : t("add_page")}
-                    </>
-                  )}
+                  {isCreating || isUpdating ? <Loader2 className="animate-spin" size={16} /> : isEditing ? <Save size={16} /> : <Plus size={16} />}
+                  {isEditing ? t("save") : t("add_page")}
                 </button>
               </form>
             </Form>

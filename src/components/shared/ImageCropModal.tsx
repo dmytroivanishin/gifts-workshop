@@ -31,9 +31,15 @@ export default function ImageCropModal({
   const dragStart = useRef({ x: 0, y: 0 });
   const { t } = useTranslation();
 
-  const imgWidth = media?.width || 300;
-  const imgHeight = media?.height || 300;
-  const isPortrait = imgHeight > imgWidth || orientation?.toLowerCase() === "portrait";
+  // The real pixel size of the loaded image is the source of truth for the clamp. The stored
+  // width/height can be missing or stale; with the 300x300 fallback the drag limit was wrong and the
+  // image could be pulled past its own edge.
+  const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(
+    media?.width && media?.height ? { width: media.width, height: media.height } : null
+  );
+  const imgWidth = naturalSize?.width || 300;
+  const imgHeight = naturalSize?.height || 300;
+  const isPortrait = imgHeight > imgWidth || (!naturalSize && orientation?.toLowerCase() === "portrait");
 
   const constrainPosition = (x: number, y: number, currentZoom: number) => {
     const baseWidth = isPortrait ? 300 : 300 * (imgWidth / imgHeight);
@@ -115,11 +121,18 @@ export default function ImageCropModal({
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="relative w-[300px] h-[300px] bg-muted border border-border rounded-2xl overflow-hidden cursor-move select-none"
+            // touch-none: a touch drag must move the image, not scroll the page behind the modal.
+            className="relative w-[300px] h-[300px] bg-muted border border-border rounded-2xl overflow-hidden cursor-move select-none touch-none"
           >
             <img
               src={imageUrl}
               onError={handleImageLoadError}
+              onLoad={(event) => {
+                const loaded = event.currentTarget;
+                if (loaded.naturalWidth && loaded.naturalHeight) {
+                  setNaturalSize({ width: loaded.naturalWidth, height: loaded.naturalHeight });
+                }
+              }}
               alt="Crop workspace"
               className="absolute pointer-events-none transition-transform duration-75"
               style={{

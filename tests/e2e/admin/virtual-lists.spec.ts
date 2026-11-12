@@ -38,13 +38,11 @@ test.describe("virtualized lists: Combobox server search/scroll, admin pages, ca
       });
 
       await page.getByText("placeholder_select_tags").click();
-      // Sanity precondition: both freshly-created tags are among the newest, so both are already
-      // visible on the unfiltered first page before any search happens — proves the later
-      // disappearance of Beta is really caused by the search narrowing results server-side, not
-      // by Beta never having been loaded in the first place.
-      await expect(page.getByRole("button", { name: `VList SearchAlpha ${marker}`, exact: true })).toBeVisible();
-      await expect(page.getByRole("button", { name: `VList SearchBeta ${marker}`, exact: true })).toBeVisible();
-
+      // Sanity precondition, checked through the API rather than the DOM: the Combobox virtualizes its
+      // list, so only a few rows exist in the DOM. Both freshly-created tags are on the unfiltered first
+      // page, so the later disappearance of Beta is really caused by the server-side search.
+      const firstPage = (await (await admin.get("/api/v1/tags?page=1&limit=20")).json()).data as { id: string }[];
+      expect(firstPage.map((tag) => tag.id)).toEqual(expect.arrayContaining([alpha.id, beta.id]));
       const searchInput = page.getByPlaceholder("placeholder_search_or_type_tag");
       const searchResponsePromise = page.waitForResponse(
         (res) => res.url().includes("/api/v1/tags") && res.url().includes("search=")
@@ -108,7 +106,8 @@ test.describe("virtualized lists: Combobox server search/scroll, admin pages, ca
       await loginAsAdmin(page);
       await page.goto("/admin/tags");
 
-      const list = page.getByTestId("virtual-scroll-list");
+      // The admin tags page is a window-scrolled list (PageVirtualList), not the Combobox's own box.
+      const list = page.getByTestId("page-virtual-list");
       await expect(list).toBeVisible();
       const countHeader = page.getByText(/all_tags \(\d+\)/);
 
@@ -124,7 +123,7 @@ test.describe("virtualized lists: Combobox server search/scroll, admin pages, ca
       // Windowed rendering: far fewer real rows in the DOM than the page claims are loaded.
       expect(initialRendered).toBeLessThan(initialLoaded);
 
-      await list.evaluate((el) => { el.scrollTop = el.scrollHeight; });
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       await expect(async () => {
         expect(await loadedCount()).toBeGreaterThan(initialLoaded);
       }).toPass({ timeout: 3000 });
@@ -185,7 +184,7 @@ test.describe("virtualized lists: Combobox server search/scroll, admin pages, ca
       await loginAsAdmin(page);
       await page.goto("/admin/colors");
 
-      const list = page.getByTestId("virtual-scroll-list");
+      const list = page.getByTestId("page-virtual-list");
       await expect(list).toBeVisible();
       const after = await list.evaluate((el, size) => Math.round(el.scrollHeight / size), estimateSize);
       expect(after).toBeGreaterThanOrEqual(before + 22);

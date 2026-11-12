@@ -85,7 +85,9 @@ export const categorySchema = z.object({
   title: localizedStringSchema,
   description: optionalLocalizedStringSchema.optional(),
   slug: slugSchema,
-  order: z.number().int().default(0),
+  // No default: a save that does not send an order must keep the category's current position (see
+  // categoryService.saveCategory). A default of 0 pushed every edited category to the top of the list.
+  order: z.number().int().optional(),
   color: colorSchema,
   parentId: optionalUuidSchema,
   collectionId: z.string({ message: "error_collection_required" }).uuid("error_collection_required"),
@@ -123,6 +125,11 @@ export const postSchemaBase = z.object({
     z.string({ message: "error_invalid_format" }).regex(/^[a-z0-9-]+$/, "error_invalid_slug").nullable()
   ),
   inStock: z.boolean({ message: "error_invalid_format" }).default(true),
+  // Whole roubles. Empty input arrives as null (no price shown); negatives and fractions are rejected.
+  price: z.preprocess(
+    (value) => (value === "" || value === undefined ? null : value),
+    z.number({ message: "error_invalid_format" }).int("error_invalid_format").min(0, "error_invalid_format").nullable()
+  ),
   status: z.enum(["Draft", "Published", "Archived"], { message: "error_invalid_format" }).default("Draft"),
   posterId: optionalUuidSchema,
   collectionId: optionalUuidSchema,

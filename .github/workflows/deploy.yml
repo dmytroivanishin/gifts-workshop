@@ -297,7 +297,7 @@ jobs:
               exit 1
             fi
 
-            # --remove-orphans also clears the MinIO container left by the previous release.
+            # --remove-orphans also clears containers left by the previous release.
             echo "Starting app and Caddy"
             "${compose[@]}" up -d --remove-orphans app caddy
 

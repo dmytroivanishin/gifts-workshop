@@ -177,7 +177,7 @@ export default function AdminComments() {
         <div className="flex items-center gap-2">
           <span className="font-semibold text-[13px] sm:text-sm text-foreground">{comment.name}</span>
           {isReply && (
-            <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider rounded-full border border-primary/20">
+            <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-wider rounded-full border border-primary/20">
               {t("admin")}
             </span>
           )}

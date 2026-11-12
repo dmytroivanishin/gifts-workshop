@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Plus, Edit, Save, X, Trash2, Loader2 } from "lucide-react";
 import {
   useCreateTagMutation,
@@ -18,6 +18,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { tagSchema } from "@/common/validation/schemas";
+import { scrollToEditForm } from "@/utils/scrollToEditForm";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ApiMutationError, Tag } from "@/types";
 import { BLOCK_HEADER_CLASS } from "@/utils/designTokens";
@@ -66,8 +67,11 @@ export default function AdminTags() {
     closeOnError: false,
   });
 
+  const formBlockRef = useRef<HTMLDivElement>(null);
+
   const handleEdit = (tag: Tag) => {
     setIsEditing(tag.id);
+    scrollToEditForm(formBlockRef.current);
     setActiveTagObj(tag);
     form.reset({
       name: typeof tag.name === "string" ? { [locale]: tag.name } : tag.name || {},
@@ -160,7 +164,7 @@ export default function AdminTags() {
         </div>
 
         {/* Add / Edit Tag */}
-        <div className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit">
+        <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
           <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
             <h3 className={BLOCK_HEADER_CLASS}>
               {isEditing ? t("rename_tag") : t("add_new_tag")}
@@ -202,17 +206,8 @@ export default function AdminTags() {
                 disabled={!form.formState.isValid || isCreating || isUpdating}
                 className="w-full flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer mt-4"
               >
-                {isCreating || isUpdating ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    {t("saving")}
-                  </>
-                ) : (
-                  <>
-                    {isEditing ? <Save size={16} /> : <Plus size={16} />}
-                    {isEditing ? t("save") : t("create_tag")}
-                  </>
-                )}
+                {isCreating || isUpdating ? <Loader2 className="animate-spin" size={16} /> : isEditing ? <Save size={16} /> : <Plus size={16} />}
+                  {isEditing ? t("save") : t("create_tag")}
               </button>
             </form>
           </Form>

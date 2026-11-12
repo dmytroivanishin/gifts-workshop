@@ -178,6 +178,7 @@ export const posts = pgTable("posts", {
   description: jsonb("description").$type<LocalizedText>().notNull(), 
   posterId: uuid("poster_id").references(() => media.id, { onDelete: "restrict" }),
   inStock: boolean("in_stock").default(true).notNull(),
+  price: integer("price"),
   status: varchar("status", { length: 50 }).default("Draft").notNull(),
   collectionId: uuid("collection_id").references(() => collections.id, { onDelete: "set null" }),
   categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),

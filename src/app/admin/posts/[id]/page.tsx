@@ -39,7 +39,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { ru, enUS, Locale } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ApiMutationError, Tag } from "@/types";
-import { BUTTON_M_SIZE } from "@/utils/designTokens";
+import { BLOCK_HEADER_CLASS, BUTTON_M_SIZE } from "@/utils/designTokens";
 
 const dateLocales: Record<string, Locale> = { ru, en: enUS };
 
@@ -87,6 +87,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
     collectionId: undefined as any,
     categoryId: undefined as any,
     inStock: true,
+    price: null as number | null,
     status: "Published" as any,
     tagsIds: [],
     media: [],
@@ -494,35 +495,65 @@ export default function PostFormPage({ params }: PostFormPageProps) {
 
             {/* Stock Row and Date */}
             <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="inStock"
-                render={({ field }) => (
-                  <FormItem className="space-y-1.5">
-                    <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
-                      {t("availability")}
-                    </FormLabel>
-                    <div className="flex items-center gap-2 min-h-11">
+              {/* Stock and price share one row: both columns start at the top, so the headers
+                  ("НАЛИЧИЕ", "ЦЕНА") and the controls (checkbox, number input) line up. */}
+              <div className="flex items-start justify-between gap-4">
+                <FormField
+                  control={form.control}
+                  name="inStock"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-1.5">
+                      <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
+                        {t("availability")}
+                      </FormLabel>
+                      <div className="flex items-center gap-2 h-9 sm:h-10">
+                        <FormControl>
+                          <Checkbox
+                            id="inStockCheckbox"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <label htmlFor="inStockCheckbox" className="text-[13px] font-medium text-muted-foreground cursor-pointer select-none whitespace-nowrap">
+                          {t("in_stock")}
+                        </label>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem className="ml-auto flex flex-col gap-1.5">
+                      <FormLabel className={BLOCK_HEADER_CLASS}>
+                        {t("price")}
+                      </FormLabel>
                       <FormControl>
-                        <Checkbox
-                          id="inStockCheckbox"
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          step={1}
+                          className="w-24"
+                          name={field.name}
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          value={field.value ?? ""}
+                          onChange={(event) => field.onChange(event.target.value === "" ? null : Number(event.target.value))}
                         />
                       </FormControl>
-                      <label htmlFor="inStockCheckbox" className="text-[13px] font-medium text-muted-foreground cursor-pointer select-none">
-                        {t("in_stock")}
-                      </label>
-                    </div>
-                  </FormItem>
-                )}
-              />
+                      <FormMessage className="text-xs font-medium text-destructive" />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
                 name="createdAt"
                 render={({ field }) => (
-                  <FormItem className="space-y-1.5">
+                  <FormItem className="flex flex-col gap-1.5">
                     <FormLabel className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground">
                       {t("creation_date") === "creation_date" ? "Дата публикации" : t("creation_date")}
                     </FormLabel>
@@ -660,14 +691,9 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                   className="flex items-center gap-1.5 h-9 px-4 sm:h-10 sm:px-5 bg-[#F9E4D3] text-[#904504] text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   {isSaving && form.getValues("status") === "Draft" ? (
-                    <>
-                      <Loader2 className="animate-spin" size={16} />
-                      {t("saving")}
-                    </>
+                    <Loader2 className="animate-spin" size={16} />
                   ) : (
-                    <>
-                      <Save size={16} />
-                    </>
+                    <Save size={16} />
                   )}
                 </button>
               )}
@@ -680,18 +706,13 @@ export default function PostFormPage({ params }: PostFormPageProps) {
                 className="flex items-center gap-1.5 h-9 px-4 sm:h-10 sm:px-5 bg-primary text-primary-foreground text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer"
               >
                 {isSaving && form.getValues("status") === "Published" ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    {t("saving")}
-                  </>
+                  <Loader2 className="animate-spin" size={16} />
                 ) : (
-                  <>
-                    <Send size={16} />
-                    {postResponse?.data?.status === "Published"
-                      ? (t("update") === "update" ? "Обновить" : t("update"))
-                      : (t("publish") === "publish" ? "Опубликовать" : t("publish"))}
-                  </>
+                  <Send size={16} />
                 )}
+                {postResponse?.data?.status === "Published"
+                  ? (t("update") === "update" ? "Обновить" : t("update"))
+                  : (t("publish") === "publish" ? "Опубликовать" : t("publish"))}
               </button>
             </div>
           </div>

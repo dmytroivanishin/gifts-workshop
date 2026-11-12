@@ -140,13 +140,16 @@ test.describe("public homepage: infinite scroll, category filter, favorites", ()
     await page.reload();
     // B4 (most recently created) is guaranteed to be on page 1 without scrolling; A1 is not
     // (posts render desc(createdAt), see the ordering note above).
-    await expect(page.getByText("E2E Home B4")).toBeVisible();
+    // The newest post is also shown as the page's hero heading (h1), so the grid card is matched by its
+    // own card heading (h3) rather than by bare text, which would match both.
+    const headingB4 = page.getByRole("heading", { level: 3, name: "E2E Home B4", exact: true });
+    await expect(headingB4).toBeVisible();
 
-    const cardB4 = page.locator("a", { has: page.getByText("E2E Home B4", { exact: true }) });
+    const cardB4 = page.locator("a", { has: headingB4 });
     await cardB4.getByTestId("like-button").click();
 
     await page.getByTitle("favorites").click();
-    await expect(page.getByText("E2E Home B4")).toBeVisible();
+    await expect(headingB4).toBeVisible();
     await expect(page.getByText("E2E Home A1")).not.toBeVisible();
     await expect(page.getByText("E2E Home B1")).not.toBeVisible();
 

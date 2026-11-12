@@ -109,7 +109,7 @@ export default function PostDetailClient({ slug, initialPost }: PostDetailClient
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Left Column: Masonry Grid of Images */}
-        <div className="lg:col-span-7">
+        <div className="order-2 lg:order-none lg:col-span-7">
           {images.length > 0 ? (
             <div className="columns-1 sm:columns-2 gap-4">
               {galleryMedia.map((mediaItem, index) => (
@@ -147,7 +147,7 @@ export default function PostDetailClient({ slug, initialPost }: PostDetailClient
         </div>
 
         {/* Right Column: Metadata, Description & Inquiries */}
-        <div className="lg:col-span-5 flex flex-col justify-start">
+        <div className="order-1 lg:order-none lg:col-span-5 flex flex-col justify-start">
           <div className="sticky top-24 space-y-6">
             {/* Category & Availability */}
             <div className="flex items-center gap-3">
@@ -178,6 +178,13 @@ export default function PostDetailClient({ slug, initialPost }: PostDetailClient
             <p className="font-sans text-base text-muted-foreground leading-relaxed whitespace-pre-line">
               {loc(post.description)}
             </p>
+
+            {/* Price: a plain number in the database, the currency is added here. */}
+            {post.price != null && (
+              <p className="font-serif text-lg font-medium text-foreground" data-test-id="post-price">
+                {`${t("price")}: ${post.price.toLocaleString("ru-RU")} р.`}
+              </p>
+            )}
 
             {/* Tags (if any) */}
             {post.tags && post.tags.length > 0 && (

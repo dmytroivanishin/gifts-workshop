@@ -44,7 +44,7 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 font-sans animate-fade-in">
-      <div className="bg-white rounded-3xl border border-border/45 w-full max-w-[440px] px-5 py-4 space-y-4 shadow-xl max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-3xl border border-border/45 w-full max-w-[440px] md:max-w-[640px] lg:max-w-[960px] xl:max-w-[1200px] px-5 py-4 space-y-4 shadow-xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between gap-4 border-b pb-2.5">
           <div className="min-w-0">
@@ -71,7 +71,7 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
               {t("no_media_found")}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-1">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4 p-1">
               {mediaList.map((media) => {
                 const isSelected = currentSelected.includes(media.id);
                 return (
@@ -102,7 +102,7 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
         {/* Footer */}
         <div className="border-t pt-3 flex justify-between items-center gap-3 mt-auto">
           <span className="min-w-0 text-[13px] font-medium text-muted-foreground">
-            {currentSelected.length} {t("items_selected")}
+            {t("items_selected")} {currentSelected.length}
           </span>
           <div className="flex shrink-0 gap-2">
             <button

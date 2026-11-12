@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Stack**
 - Next.js 16.2 (App Router, TypeScript strict), React 19.2. Frontend and backend live in one Next app (route handlers under `src/app/api/v1`).
 - PostgreSQL 16 + Drizzle ORM (`drizzle-orm`, `postgres` driver, `drizzle-kit`).
-- File storage: MinIO (S3-compatible, `minio` client) + `sharp` for image processing. DB browser: pgweb (dev only).
+- File storage: a local media folder `.docker/media/<bucket>`, served by Caddy (no S3/MinIO) + `sharp` for image processing. DB browser: pgweb (dev only).
 - Auth: Google OAuth (authorization code with `state` and PKCE, ID token verified) → own JWT (`jose`) in HttpOnly cookies, restricted to `ADMIN_EMAILS`. Rate limiting: `rate-limiter-flexible` (in memory) in `proxy.ts`.
 - State: Redux Toolkit + RTK Query (`src/store`). Forms: react-hook-form + zod 4.
 - UI: Tailwind CSS 4, shadcn/ui (style `radix-nova`, Radix), lucide-react, react-icons, framer-motion, dnd-kit (drag-and-drop), sonner (toasts), `@tanstack/react-virtual` (list virtualization, added 2026-11-04 — the shared `VirtualScrollList` wrapper, `src/components/shared/VirtualScrollList.tsx`). No dark mode.
@@ -91,7 +91,7 @@ bash scripts/run.sh dev       # next dev with config/local.env exported (plain `
 bash scripts/run.sh build     # next build (same env loading)
 bash scripts/run.sh start
 npm run lint                  # eslint (next core-web-vitals + typescript); currently RED, see §11
-npm run local:infra:start     # docker-compose.local.yml: local Postgres :5432, MinIO :9000/:9001, pgweb :8081
+npm run local:infra:start     # docker-compose.local.yml: local Postgres :5432, Caddy :8080 (media), pgweb :8081
 npm run local:infra:stop
 bash scripts/run.sh media:reconcile   # bucket vs `media` table: report orphan objects / missing files; `-- --delete` removes orphans (scripts/reconcile-media.ts)
 
@@ -102,7 +102,7 @@ npx drizzle-kit push          # or apply schema directly (dev/test)
 
 # Tests: API suite (tests/api/**, CP-31 phase 1), unit suite (tests/unit/**, phase 2) and e2e
 # suite (tests/e2e/**, phase 3, real Chromium via playwright.config.ts's "e2e" project) all exist
-scripts/run-test.sh test:infra:start # docker-compose.test.yml: test Postgres :5433 + test MinIO :9002 + drizzle-kit push (config/test.env)
+scripts/run-test.sh test:infra:start # docker-compose.test.yml: test Postgres :5433 + test Caddy :8082 (media) + drizzle-kit push (config/test.env)
 scripts/run-test.sh test:unit        # vitest run; needs config/test.env sourced first (always via this script,
                                       # never raw `npm run test:unit`/`npx vitest run` — src/modules/core/env.ts
                                       # validates all 26 required env vars at import time, and some unit specs
@@ -123,7 +123,7 @@ npx playwright test path/to/spec.ts --project=api   # single spec (api project; 
 scripts/run-test.sh test:infra:stop
 ```
 
-Nothing runs migrations at app startup or deploy time. The MinIO bucket is prepared lazily: `ensureBucket()` runs before the first upload of a process (see §8).
+Nothing runs migrations at app startup or deploy time. The media folder is created on first use (see §8).
 
 ---
 
@@ -143,7 +143,7 @@ components/{ui,shared,features}
 controllers/                one class per entity
 i18n/index.tsx              I18nProvider, useTranslation
 migrations/sql (Drizzle schema), migrations/1794246164091_initial (initial data JSON + index.ts)
-modules/core/{container,env}.ts, modules/logger, modules/storage (StorageService, minioClient)
+modules/core/{container,env}.ts, modules/logger, modules/storage (StorageService, localFolderStorage, mediaFolder)
 repositories/{interfaces.ts, drizzle/}   schema.ts, database.ts (singleton), one repo per entity
 services/                   one service per entity + interfaces.ts + pagination.ts
 store/                      api.ts (RTK Query, 42 endpoints, silent refresh), slices, middleware
@@ -204,27 +204,27 @@ The 6 `created_at` columns above (2026-11-04) were added by hand-editing the exi
 
 ---
 
-## 8. File Storage (MinIO / S3)
+## 8. File Storage (local folder, served by Caddy)
 
 - Used for post images. `MediaService.uploadMedia` → `StorageService.uploadImage` (`src/modules/storage`): the pre-check on `file.type`/size is a fast filter only; the real check is `sharp(buffer).metadata().format` after decoding — JPEG/PNG only (a mismatched or undecodable file is a `ValidationError`, 400, not a 500), resized to fit 1000×1000 (original) and 320×320 (thumbnail), format preserved. The stored extension and object `Content-Type` come from the decoded format too, not the client's filename/MIME (since 2026-09-28). Since 2026-10-12 `POST /media` takes exactly one file per request (`uploadMedia(file, userId)`, not an array) — the admin media library was already the endpoint's only caller and already sent one file per request, so this just makes the contract match reality; it also removes a dormant bug where a multi-file request that failed partway through silently dropped already-saved rows from its response (`CHANGE-PLAN.md` CP-16b). `MAX_FILES_PER_UPLOAD` (2026-10-02's cap on files-per-request) is gone with it — moot once more than one file per request is structurally impossible.
 - **Known gap, not yet fixed (found 2026-10-02):** `next.config.ts` doesn't set `experimental.proxyClientMaxBodySize`, so Next's own 10 MB default silently truncates the body of any request behind `proxy.ts` (nearly every route) before application code runs. Confirmed: a file at/over ~10 MB in one upload request gets cut mid-file and fails with a raw 500 (malformed multipart), not `NEXT_PUBLIC_MAX_FILE_SIZE_MB`'s intended clean 409 — a real risk for files near that size, since multipart framing overhead can push the real body slightly over 10 MB even for a file just under the configured limit. Fix: set that option to `NEXT_PUBLIC_MAX_FILE_SIZE_MB` plus some headroom — a `next.config.ts` change, planned separately (`CHANGE-PLAN.md` CP-16).
-- Objects are stored in bucket `S3_BUCKET_NAME` as `<uuid>-<timestamp>-<name>[-thumb].<ext>`; the public URL `${S3_PUBLIC_URL}/${bucket}/${object}` is stored in the `media` row (absolute URLs). `S3_ENDPOINT` is only the address the server connects to (an internal host in Docker or Coolify); `S3_PUBLIC_URL` is what browsers use. Changing it later means a SQL `replace()` on `media` (`CHANGE-PLAN.md` CP-8); `saveMedia` also accepts external URLs.
-- `ensureBucket()` (`minioClient.ts`) runs before the first upload of a process: it creates the bucket if missing and sets public read only when the bucket has no policy (an existing policy is kept); a failure is not cached. Deleting a media row also removes its two objects from MinIO (`StorageService.deleteImage()`, best-effort, skips external URLs; since 2026-09-28).
+- Files are stored under `.docker/media/${S3_BUCKET_NAME}/<display-name>-<timestamp>-<suffix>/{preview,thumb}.jpg`; the public URL `${S3_PUBLIC_URL}/${bucket}/<key>` (served by Caddy) is stored in the `media` row (absolute URLs). `S3_PUBLIC_URL` is what browsers use. Changing it later means a SQL `replace()` on `media` (`CHANGE-PLAN.md` CP-8); `saveMedia` also accepts external URLs.
+- The media folder (`.docker/media/<bucket>`, `mediaFolder.ts`) is created on first use. Deleting a media row also removes its two files from disk (`StorageService.deleteImage()`, best-effort, skips external URLs; since 2026-09-28).
 - A media row cannot be deleted while it is a post poster or gallery item (409 `MEDIA_IN_USE`).
 - No presigned URLs; reads are public, writes go through the API only.
-- There is no storage interface yet (planned Adapter/Strategy); `StorageService` talks to MinIO directly.
+- There is no storage interface yet (planned Adapter/Strategy); `StorageService` writes to the local folder directly.
 
 ---
 
 ## 9. Docker & Infrastructure
 
-`docker-compose.local.yml` (local dev only; renamed from `docker-compose.yml` 2026-11-02 so its name pairs clearly with `docker-compose.test.yml` — `docker-compose` no longer auto-discovers it without `-f`, hence `npm run local:infra:start`/`local:infra:stop` in §3): `postgres` (16-alpine, db `gift workshop`, :5432, data in `./.docker/db-data`), `minio` (pinned release, :9000 API / :9001 console, data in `./.docker/minio-data`), `pgweb` (:8081). Fixed subnet `10.10.10.0/24`, `restart: always`, no healthchecks, dev credentials hardcoded — this data is meant to persist across restarts (your working dev content), unlike the test stack below. `docker-compose.test.yml`: Postgres 15 on :5433 + an isolated MinIO on :9002 for API tests (`tests/api/**`, CP-31) — both services are deliberately volume-less so every `npm run test:infra:start`/`test:infra:stop` (via `scripts/run-test.sh`) starts from a truly blank state; a named volume here once accumulated an incompatible schema across runs and had to be cleared by hand, so it was dropped entirely 2026-11-02. **No app service, no Dockerfile, no CI.**
+`docker-compose.local.yml` (local dev only; renamed from `docker-compose.yml` 2026-11-02 so its name pairs clearly with `docker-compose.test.yml` — `docker-compose` no longer auto-discovers it without `-f`, hence `npm run local:infra:start`/`local:infra:stop` in §3): `postgres` (16-alpine, db `gift workshop`, :5432, data in `./.docker/db-data`), `pgweb` (:8081). Fixed subnet `10.10.10.0/24`, `restart: always`, no healthchecks, dev credentials hardcoded — this data is meant to persist across restarts (your working dev content), unlike the test stack below. `docker-compose.test.yml`: Postgres 15 on :5433 + a test Caddy on :8082 (media folder) for API tests (`tests/api/**`, CP-31) — both services are deliberately volume-less so every `npm run test:infra:start`/`test:infra:stop` (via `scripts/run-test.sh`) starts from a truly blank state; a named volume here once accumulated an incompatible schema across runs and had to be cleared by hand, so it was dropped entirely 2026-11-02. **No app service, no Dockerfile, no CI.**
 
 **Environment variable names** (values live in `config/local.env`, git-ignored; `config/test.env` holds mock values; all 26 listed are required by `env.ts`, including `JWT_SECRET` since 2026-09-19 and `S3_PUBLIC_URL` since 2026-09-23; `S3_FORCE_PATH_STYLE` and `GOOGLE_CALLBACK_URL` were required-but-unused and dropped from the list 2026-09-28 (the config files may still carry the lines, which is harmless); `config/test.env` has `S3_PUBLIC_URL` but still lacks `JWT_SECRET`, CP-4):
 
 ```
 DB_URI
-S3_ENDPOINT (server → MinIO)  S3_PUBLIC_URL (browser → images)  S3_ACCESS_KEY  S3_SECRET_KEY  S3_BUCKET_NAME
+S3_PUBLIC_URL (browser → media URLs, served by Caddy)  S3_BUCKET_NAME (media folder name)  — the `S3_` names are kept for compatibility, there is no S3 service
 GOOGLE_CLIENT_ID  GOOGLE_CLIENT_SECRET  ADMIN_EMAILS
 JWT_SECRET
 NEXT_PUBLIC_APP_URL (also the base of the Google redirect address)  NEXT_PUBLIC_DEFAULT_LOCALE  NEXT_PUBLIC_SUPPORTED_LOCALES
@@ -303,7 +303,7 @@ Full detail with file references: `PRODUCTION-READINESS.md`. Summary:
 
 ## 12. Production Readiness (VPS + Coolify)
 
-Checklist and open questions: `PRODUCTION-READINESS.md`. Headlines: close the §11 HIGH items (the Next/sharp upgrade); write the Dockerfile (chosen route) with a health endpoint and `output: "standalone"` (the sitemap is already dynamic and the build needs no database); set `S3_PUBLIC_URL` to the public MinIO address once it is known (stored in DB, `CHANGE-PLAN.md` CP-8) and register `https://<domain>/admin/login` in the Google console with `NEXT_PUBLIC_APP_URL` set to that origin; add a migration step to deploy; SSL via Coolify (Let's Encrypt); automated backups for Postgres and the bucket; keep `NEXT_PUBLIC_DEV_MODE=false` in build variables; never reuse compose dev credentials.
+Checklist and open questions: `PRODUCTION-READINESS.md`. Headlines: close the §11 HIGH items (the Next/sharp upgrade); write the Dockerfile (chosen route) with a health endpoint and `output: "standalone"` (the sitemap is already dynamic and the build needs no database); set `S3_PUBLIC_URL` to the public media address once it is known (stored in DB, `CHANGE-PLAN.md` CP-8) and register `https://<domain>/admin/login` in the Google console with `NEXT_PUBLIC_APP_URL` set to that origin; add a migration step to deploy; SSL via Coolify (Let's Encrypt); automated backups for Postgres and the bucket; keep `NEXT_PUBLIC_DEV_MODE=false` in build variables; never reuse compose dev credentials.
 
 ---
 

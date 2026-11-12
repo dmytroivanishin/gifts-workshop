@@ -46,10 +46,10 @@ describe("postMediaSchema.order (non-negative integer)", () => {
   });
 });
 
-describe("categorySchema.order (integer, default 0)", () => {
+describe("categorySchema.order (optional integer, no default)", () => {
   const valid = { title: { en: "x" }, collectionId: uuid(), color: { color: "#fff" } };
-  it("defaults to 0 and accepts negative integers", () => {
-    expect(categorySchema.parse(valid).order).toBe(0);
+  it("stays undefined when omitted so a save keeps the current position, and accepts negative integers", () => {
+    expect(categorySchema.parse(valid).order).toBeUndefined();
     expect(categorySchema.safeParse({ ...valid, order: -3 }).success).toBe(true);
   });
   it("rejects fractional orders", () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/utils/cn";
 
@@ -24,12 +24,31 @@ export default function PageVirtualList<T>({
   endReachedThreshold = 200,
 }: PageVirtualListProps<T>) {
   const listRef = useRef<HTMLDivElement>(null);
+  // Distance from the top of the document to the top of this list. The window virtualizer needs it to know
+  // which rows are in view. It has to be measured after layout: on phones the form sits above the list, so
+  // a value read during render (before the ref exists, as 0) pushed the visible range off and left rows blank.
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (!listRef.current) return;
+      setScrollMargin(listRef.current.getBoundingClientRect().top + window.scrollY);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    const observer = new ResizeObserver(measure);
+    observer.observe(document.body);
+    return () => {
+      window.removeEventListener("resize", measure);
+      observer.disconnect();
+    };
+  }, []);
 
   const virtualizer = useWindowVirtualizer({
     count: items.length,
     estimateSize: () => estimateSize,
     overscan: 5,
-    scrollMargin: listRef.current?.offsetTop ?? 0,
+    scrollMargin,
   });
 
   const virtualItems = virtualizer.getVirtualItems();

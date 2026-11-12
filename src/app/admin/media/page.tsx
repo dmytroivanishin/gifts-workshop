@@ -345,10 +345,10 @@ export default function AdminMedia() {
           value={search}
           onChange={handleSearchChange}
           placeholder={t("placeholder_search_media")}
-          className="sm:max-w-sm"
+          className="sm:flex-1 md:flex-none md:max-w-sm"
         />
 
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-3 min-w-0 md:flex-1">
         {clipboard.ids.length > 0 && (
           <div
             data-test-id="clipboard-chip"
@@ -371,9 +371,9 @@ export default function AdminMedia() {
           </div>
         )}
         {selectedIds.size > 0 && (
-          <div data-test-id="bulk-action-bar" className="flex items-center gap-3 shrink-0">
+          <div data-test-id="bulk-action-bar" className="flex w-full items-center justify-between gap-3">
             <span className={SELECTION_COUNT_CLASS}>
-              {selectedIds.size} {t("items_selected")}
+              {t("items_selected")} {selectedIds.size}
             </span>
             <div className="flex gap-2">
               <button
@@ -517,7 +517,7 @@ export default function AdminMedia() {
       <ConfirmModal
         isOpen={isBulkDeleteOpen}
         title={t("media_library")}
-        message={`${selectedIds.size} ${t("items_selected")}. ${t("confirm_bulk_delete_media")}`}
+        message={`${t("items_selected")} ${selectedIds.size}. ${t("confirm_bulk_delete_media")}`}
         confirmText={t("delete_selected")}
         cancelText={t("cancel") || "Cancel"}
         onConfirm={handleConfirmBulkDelete}

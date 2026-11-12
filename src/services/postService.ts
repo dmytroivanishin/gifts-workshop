@@ -166,6 +166,7 @@ export class PostService implements IPostService {
       title: body.title,
       description: body.description,
       inStock: body.inStock ?? true,
+      price: body.price ?? null,
       status: body.status ?? "Published",
       collectionId: body.collectionId,
       categoryId: body.categoryId,
@@ -197,6 +198,8 @@ export class PostService implements IPostService {
       title: body.title ?? existing.title,
       description: body.description ?? existing.description,
       inStock: body.inStock ?? existing.inStock,
+      // null is a real value here ("clear the price"), so only a missing field keeps the old one.
+      price: body.price === undefined ? existing.price : body.price,
       status: body.status ?? existing.status,
       collectionId: body.collectionId ?? existing.collectionId,
       categoryId: body.categoryId ?? existing.categoryId,

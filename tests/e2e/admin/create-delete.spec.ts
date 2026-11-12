@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { adminContext } from "../../api/helpers/auth";
 import { createCollection, createColor } from "../../api/helpers/fixtures";
 import { loginAsAdmin } from "../helpers/auth";
+import { categoryRow } from "../helpers/categoryRows";
 
 const FILE_KEY = "e2e-create-delete";
 
@@ -132,7 +133,7 @@ test.describe("admin: create and delete through the left form panel", () => {
       await submit.click();
       const id = await created(await posted, "categories");
 
-      const titleSpan = page.locator("span.font-semibold.text-sm.text-foreground.truncate", { hasText: title });
+      const titleSpan = page.locator("span.font-semibold.text-foreground.truncate", { hasText: title });
       await expect(titleSpan).toBeVisible();
       await expect(page.getByPlaceholder("placeholder_category_title")).toHaveValue("");
       const saved = (await (await admin.get(`/api/v1/categories/${id}`)).json()).data;
@@ -141,7 +142,7 @@ test.describe("admin: create and delete through the left form panel", () => {
       expect(saved.collectionId).toBeTruthy();
       expect(saved.color?.id).toBeTruthy();
 
-      const row = page.locator("div.p-4.flex.flex-col", { has: titleSpan });
+      const row = categoryRow(page, title);
       await row.getByTitle("delete").click();
       await confirmDelete(page);
       await expect(titleSpan).toHaveCount(0);

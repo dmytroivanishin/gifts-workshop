@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // bulkDeleteMedia calls storageService.deleteImages directly (not through a repo), same pattern
 // deleteMedia already uses for storageService.deleteImage — mocked so these tests never touch
-// MinIO, same convention postVisibility.spec.ts/categoryService.spec.ts already use for an
+// the disk, same convention postVisibility.spec.ts/categoryService.spec.ts already use for an
 // imported-not-injected dependency.
 vi.mock("@/modules/storage/StorageService", () => ({
   storageService: {
