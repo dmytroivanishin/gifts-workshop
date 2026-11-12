@@ -201,8 +201,6 @@ jobs:
           export DB_URI="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
           export S3_PUBLIC_URL="${NEXT_PUBLIC_APP_URL}/static/media"
           export NEXT_PUBLIC_DEV_MODE="false"
-          # Caddy needs one contact address for ZeroSSL. It is the first entry of ADMIN_EMAILS.
-          export ACME_EMAIL="${ADMIN_EMAILS%%,*}"
 
           # printf, not echo: values may contain spaces, quotes or backslashes.
           put() { printf '%s=%s\n' "$1" "${!1}"; }
@@ -226,7 +224,6 @@ jobs:
             put YANDEX_CLIENT_ID
             put YANDEX_CLIENT_SECRET
             put ADMIN_EMAILS
-            put ACME_EMAIL
             put JWT_SECRET
             put SITE_TITLE_RU
             put SITE_TITLE_EN
