@@ -214,7 +214,7 @@ export function SortableMediaGrid({
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         <SortableContext
           items={items.map((item) => item.mediaId)}
           strategy={rectSortingStrategy}
