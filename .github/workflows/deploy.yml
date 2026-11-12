@@ -326,6 +326,12 @@ jobs:
 
             if [ "$healthy" -ne 1 ]; then
               echo "App is not healthy after the deploy." >&2
+              # Why it failed, printed into this job's log: the container state and the last lines of its output.
+              echo "--- container health ---" >&2
+              docker inspect -f '{{json .State}}' "$container_id" >&2 || true
+              echo "--- app logs (last 150 lines) ---" >&2
+              "${compose[@]}" logs --no-color --tail 150 app </dev/null >&2 || true
+              echo "--- end of app logs ---" >&2
               if [ -n "$previous_tag" ]; then
                 echo "Rolling the app back to ${previous_tag}" >&2
                 IMAGE_TAG="$previous_tag" "${compose[@]}" up -d app
