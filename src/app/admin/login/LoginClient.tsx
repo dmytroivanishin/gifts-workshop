@@ -200,7 +200,7 @@ const PROVIDER_ICONS: Record<OAuthProviderId, ReactNode> = {
 };
 
 const PROVIDER_LABELS: Record<OAuthProviderId, (t: (key: string) => string) => string> = {
-  google: (t) => t("login_with_google"),
+  google: (t) => t("login_sign_in"),
   yandex: () => "Яндекс",
 };
 

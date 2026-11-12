@@ -2441,8 +2441,8 @@
   {
     "id": "5303ebb1-1dcf-4521-a07d-0c3abd3d27e8",
     "content": {
-      "en": "Sign in with your Google account to manage the gift workshop.",
-      "ru": "Авторизуйтесь через Google аккаунт для управления портфолио."
+      "en": "Sign in to manage the gift workshop.",
+      "ru": "Войдите, чтобы управлять мастерской подарков."
     },
     "area": "admin",
     "code": "login_subtitle"
@@ -2450,11 +2450,11 @@
   {
     "id": "b503bd68-56a2-4502-8a5d-8c3baa6e0273",
     "content": {
-      "en": "Sign in with Google",
-      "ru": "Войти через Google"
+      "en": "Sign in",
+      "ru": "Войти"
     },
     "area": "admin",
-    "code": "login_with_google"
+    "code": "login_sign_in"
   },
   {
     "id": "a229c5fd-5653-4f48-b8fb-1b49b078e77f",
