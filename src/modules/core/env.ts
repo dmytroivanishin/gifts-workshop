@@ -4,8 +4,6 @@ const requiredEnvVars = [
   "DB_URI",
   "S3_PUBLIC_URL",
   "S3_BUCKET_NAME",
-  "GOOGLE_CLIENT_ID",
-  "GOOGLE_CLIENT_SECRET",
   "ADMIN_EMAILS",
   "JWT_SECRET",
   "NEXT_PUBLIC_MAX_FILE_SIZE_MB",
@@ -42,8 +40,9 @@ export const env = {
   // Public base URL the media folder is served under (Caddy in dev, test and production)
   S3_PUBLIC_URL: process.env.S3_PUBLIC_URL!,
   S3_BUCKET_NAME: process.env.S3_BUCKET_NAME!,
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
-  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET!,
+  // Optional, like Yandex: the Google sign-in icon is shown only when both are set and not empty.
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? "",
   // Optional: the Yandex sign-in icon is shown only when both are set and not empty.
   YANDEX_CLIENT_ID: process.env.YANDEX_CLIENT_ID ?? "",
   YANDEX_CLIENT_SECRET: process.env.YANDEX_CLIENT_SECRET ?? "",

@@ -3,7 +3,8 @@
 # Secrets (Settings > Secrets and variables > Actions > Secrets):
 #   VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_KNOWN_HOSTS  (known_hosts line from ssh-keyscan, pinned)
 #   POSTGRES_USER, POSTGRES_PASSWORD        (hex only: they are put into DB_URI unescaped)
-#   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET
+#   JWT_SECRET
+#   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET  (optional: the Google sign-in icon shows only when both are set)
 #   YANDEX_CLIENT_ID, YANDEX_CLIENT_SECRET  (optional: the Yandex sign-in icon shows only when both are set)
 # Variables (Settings > Secrets and variables > Actions > Variables):
 #   POSTGRES_DB, S3_BUCKET_NAME, ADMIN_EMAILS, MEDIA_THUMBNAIL_MAX_PX, MEDIA_PREVIEW_MAX_PX
