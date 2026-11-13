@@ -29,6 +29,17 @@ export class MediaController {
     return sendSuccess(media);
   });
 
+  // Answers with only the id and name of the matching row, never the full media record.
+  findByContentHash = withErrorHandling(async (request: Request) => {
+    const url = new URL(request.url);
+    const { hash } = await validateRequest(
+      z.object({ hash: z.string().regex(/^[a-f0-9]{64}$/, "error_invalid_hash") }),
+      { hash: url.searchParams.get("hash") ?? "" }
+    );
+    const match = await this.mediaService.findByContentHash(hash);
+    return sendSuccess(match ? { id: match.id, displayName: match.displayName } : null);
+  });
+
   saveMedia = withErrorHandling(async (request: Request, id?: string) => {
     // Check if it's FormData (multipart/form-data)
     const contentType = request.headers.get("content-type") || "";

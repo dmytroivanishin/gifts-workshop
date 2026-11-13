@@ -38,6 +38,7 @@ const makeMediaRepo = (mediaList: Media[] = []) =>
 const makePostRepo = (usedIds: string[] = []) =>
   ({
     findUsedMediaIds: vi.fn().mockResolvedValue(new Set(usedIds)),
+    releaseArchivedPosters: vi.fn().mockResolvedValue(undefined),
   }) as unknown as IPostRepository;
 
 const media = (id: string): Media => ({

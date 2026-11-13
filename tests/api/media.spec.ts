@@ -51,14 +51,16 @@ test.describe("media", () => {
   // since NEXT_PUBLIC_MAX_FILE_SIZE_MB is also 10 — a known, already-documented gap (CLAUDE.md
   // §8/§11, CP-16, declined 2026-10-06). The clean-409 branch is effectively unreachable at this
   // configured limit; a raw malformed-multipart 500 is what actually happens instead.
-  test("an oversized file collides with Next's body-size cap (CP-16) and 500s, not the app's own clean 409", async () => {
+  // The controller checks Content-Length before reading the body, so an oversized upload is now a clean
+  // 409 FILE_TOO_LARGE instead of being cut by Next's proxy cap (CP-16 is no longer a live 500).
+  test("an oversized file is a clean 409 FILE_TOO_LARGE, decided from the Content-Length header", async () => {
     const maxMb = Number(process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB) || 10;
     const res = await admin.post("/api/v1/media", {
       multipart: {
         file: { name: "huge.jpg", mimeType: "image/jpeg", buffer: oversizedBuffer(maxMb + 1) },
       },
     });
-    await expectError(res, 500, "INTERNAL_SERVER_ERROR");
+    await expectError(res, 409, "FILE_TOO_LARGE");
   });
 
   test("a disallowed declared MIME type is rejected before decoding", async () => {
@@ -123,6 +125,33 @@ test.describe("media", () => {
     await original.cleanup();
   });
 
+  test("by-hash returns the id and name of a stored file with the same sha256, null otherwise", async () => {
+    const buffer = await tinyPng();
+    const stored = await createMedia(admin, buffer, { filename: "hash-probe.png" });
+    const hash = crypto.createHash("sha256").update(buffer).digest("hex");
+
+    const found = await expectSuccess<{ id: string; displayName: string } | null>(
+      await admin.get(`/api/v1/media/by-hash?hash=${hash}`)
+    );
+    expect(found.data).toEqual({ id: stored.id, displayName: stored.displayName });
+
+    const unknownHash = crypto.createHash("sha256").update(`never-stored-${Date.now()}`).digest("hex");
+    const missing = await expectSuccess<null>(await admin.get(`/api/v1/media/by-hash?hash=${unknownHash}`));
+    expect(missing.data).toBeNull();
+
+    await stored.cleanup();
+  });
+
+  test("by-hash rejects a malformed hash with a clean 400", async () => {
+    await expectError(await admin.get("/api/v1/media/by-hash?hash=not-a-hash"), 400);
+    await expectError(await admin.get("/api/v1/media/by-hash"), 400);
+  });
+
+  test("by-hash requires admin", async () => {
+    const hash = "a".repeat(64);
+    await expectError(await anon.get(`/api/v1/media/by-hash?hash=${hash}`), 401);
+  });
+
   // Both requests pass the "is there a row with this hash" check before either saves; only the unique
   // index on content_hash keeps a second row out, and the loser must still answer 409, not 500.
   test("two simultaneous uploads of the same bytes: one wins, the other is DUPLICATE_MEDIA", async () => {
@@ -181,6 +210,33 @@ test.describe("media", () => {
   // prove the in-use protection carries over to the batch unchanged (an id used as a poster is
   // reported back as blocked, never silently force-deleted), that the rest of the batch still
   // deletes, and that the request is validated/gated the same way every other write is.
+  // An archived post holds no media: its poster can be deleted, and the post stays archived without one.
+  // A draft still blocks the delete, same as before.
+  test("a poster used only by an archived post can be deleted; the post keeps existing without it", async () => {
+    const poster = await createMedia(admin);
+    const archived = await createPost(admin, { status: "Archived", posterId: poster.id });
+
+    await expectSuccess(await admin.delete(`/api/v1/media/${poster.id}`));
+
+    const after = await expectSuccess<{ status: string; posterId: string | null }>(
+      await admin.get(`/api/v1/posts/${archived.id}`)
+    );
+    expect(after.data.status).toBe("Archived");
+    expect(after.data.posterId).toBeNull();
+
+    await archived.cleanup();
+  });
+
+  test("a poster used by a draft still blocks the delete (409 MEDIA_IN_USE)", async () => {
+    const poster = await createMedia(admin);
+    const draft = await createPost(admin, { status: "Draft", posterId: poster.id });
+
+    await expectError(await admin.delete(`/api/v1/media/${poster.id}`), 409, "MEDIA_IN_USE");
+
+    await draft.cleanup();
+    await poster.cleanup();
+  });
+
   test("bulk delete removes every requested id in one request, reported back as deleted", async () => {
     const a = await createMedia(admin);
     const b = await createMedia(admin);

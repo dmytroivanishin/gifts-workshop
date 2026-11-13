@@ -26,6 +26,7 @@ const WRITE_TIMEOUT_MS = 30_000;
 // keep their already-stored, already-sized URLs.
 const THUMBNAIL_MAX_PX = Number(process.env.MEDIA_THUMBNAIL_MAX_PX) || 320;
 const PREVIEW_MAX_PX = Number(process.env.MEDIA_PREVIEW_MAX_PX) || 1000;
+const THUMBNAIL_SHARPEN_SIGMA = 0.4;
 
 // A small file can decode into a huge bitmap (a "decompression bomb"): the 10 MB size cap does not bound
 // memory, the pixel count does. 40 MP covers any phone camera.
@@ -99,7 +100,10 @@ export class StorageService {
         fit: 'inside',
         withoutEnlargement: true
       })
-      .jpeg({ quality: 90, progressive: true });
+      // Light unsharp mask after downscaling: small thumbnails look soft on high-density screens
+      // otherwise. Tune sigma here (0.5–1.0 is the usable range); no size or quality change.
+      .sharpen({ sigma: THUMBNAIL_SHARPEN_SIGMA })
+      .jpeg({ quality: 85, progressive: true });
 
     // Only the decode-and-encode step holds whole bitmaps in memory, so it is the part that takes a slot.
     // The write to the media folder below is disk I/O and does not wait behind it.

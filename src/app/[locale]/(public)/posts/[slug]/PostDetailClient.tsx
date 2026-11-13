@@ -122,7 +122,7 @@ export default function PostDetailClient({ slug, initialPost }: PostDetailClient
                   onClick={() => handleImageClick(index)}
                 >
                   <Image
-                    src={mediaItem?.thumbnailUrl || MEDIA_PLACEHOLDER_DATA_URL}
+                    src={mediaItem?.originalUrl || MEDIA_PLACEHOLDER_DATA_URL}
                     onError={handleImageLoadError}
                     alt={`${loc(post.title)} - ${index + 1}`}
                     width={mediaItem?.width || 400}

@@ -36,7 +36,7 @@ export default function MediaPickerModal({ onClose, onSelect, selectedIds }: Med
       const media = mediaList.find(candidate => candidate.id === id);
       return {
         mediaId: id,
-        url: media?.originalUrl || "",
+        url: media?.thumbnailUrl || "",
       };
     }).filter(entry => entry.url);
     onSelect(selectedData);

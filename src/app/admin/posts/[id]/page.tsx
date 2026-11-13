@@ -222,7 +222,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
     if (toAdd.length > 0) {
       handleMediaSelect([
         ...selectedImages,
-        ...toAdd.map((mediaId) => ({ mediaId, url: byId.get(mediaId)?.originalUrl || "" })),
+        ...toAdd.map((mediaId) => ({ mediaId, url: byId.get(mediaId)?.thumbnailUrl || "" })),
       ]);
     }
     clipboard.clear();

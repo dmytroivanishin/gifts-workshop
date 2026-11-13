@@ -19,6 +19,7 @@ import {
   useUploadMediaMutation,
   useDeleteMediaMutation,
   useBulkDeleteMediaMutation,
+  useLazyGetMediaByHashQuery,
 } from "@/store/api";
 import { ApiMutationError } from "@/types";
 import { handleImageLoadError } from "@/utils/mediaPlaceholder";
@@ -49,6 +50,21 @@ interface MediaItem {
 // through the loop.
 const MAX_FILES_PER_UPLOAD = Number(process.env.NEXT_PUBLIC_MAX_FILES_PER_UPLOAD) || 30;
 
+// One file's request is abandoned after this long, so a stalled mobile connection cannot freeze the whole batch.
+const UPLOAD_TIMEOUT_MS = 30_000;
+
+// Same bytes the server hashes (sha256 over the raw upload), so the two values match for an identical file.
+// Returns null when crypto.subtle is unavailable (plain-http LAN): the server's own check still catches duplicates.
+async function sha256Hex(file: File): Promise<string | null> {
+  if (!globalThis.crypto?.subtle) return null;
+  try {
+    const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  } catch {
+    return null;
+  }
+}
+
 export default function AdminMedia() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -65,6 +81,7 @@ export default function AdminMedia() {
 
   const { data: mediaData, isLoading } = useGetMediaQuery(search ? { search } : undefined);
   const [uploadMedia] = useUploadMediaMutation();
+  const [getMediaByHash] = useLazyGetMediaByHashQuery();
   const [deleteMedia] = useDeleteMediaMutation();
   const [bulkDeleteMedia, { isLoading: isBulkDeleting }] = useBulkDeleteMediaMutation();
   const {
@@ -183,11 +200,30 @@ export default function AdminMedia() {
       // Upload sequentially to show accurate progress bar
       for (let index = 0; index < acceptedFiles.length; index++) {
         setUploadStats({ total: acceptedFiles.length, current: index + 1 });
+        const file = acceptedFiles[index];
+
+        // Ask the server first: an identical file is reported as a duplicate without re-uploading it.
+        // If the check itself fails, fall through to the upload — the server still blocks duplicates.
+        const hash = await sha256Hex(file);
+        if (hash) {
+          try {
+            const existing = (await getMediaByHash(hash, false).unwrap()).data;
+            if (existing) {
+              setUploadIssues(prev => [...prev, { fileName: file.name, kind: 'duplicate', existingMediaName: existing.displayName }]);
+              continue;
+            }
+          } catch {
+            // Check unavailable: upload anyway, the server enforces the same rule.
+          }
+        }
+
         const formData = new FormData();
-        formData.append("file", acceptedFiles[index]);
+        formData.append("file", file);
+        const request = uploadMedia(formData);
+        const timer = setTimeout(() => request.abort(), UPLOAD_TIMEOUT_MS);
 
         try {
-          await uploadMedia(formData).unwrap();
+          await request.unwrap();
           anySucceeded = true;
         } catch (error: unknown) {
           // No dispatch(addNotification(...)) here: notificationMiddleware.ts already toasts
@@ -203,8 +239,10 @@ export default function AdminMedia() {
             )?.message;
             setUploadIssues(prev => [...prev, { fileName: acceptedFiles[index].name, kind: 'duplicate', existingMediaName }]);
           } else {
-            setUploadIssues(prev => [...prev, { fileName: acceptedFiles[index].name, kind: 'failed' }]);
+            setUploadIssues(prev => [...prev, { fileName: file.name, kind: 'failed' }]);
           }
+        } finally {
+          clearTimeout(timer);
         }
       }
 

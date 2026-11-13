@@ -11,5 +11,8 @@ export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, Qu
   // Batched version of countByPoster/countGalleryUsage for the bulk-delete path: one query each
   // across every requested id, instead of two queries per id in a loop.
   findUsedMediaIds(mediaIds: string[]): Promise<Set<string>>;
+  // Archived posts don't hold media: their poster is cleared right before the media row goes, so the
+  // poster FK (restrict) never blocks the delete.
+  releaseArchivedPosters(mediaIds: string[]): Promise<void>;
   deleteMany(ids: string[]): Promise<string[]>;
 }

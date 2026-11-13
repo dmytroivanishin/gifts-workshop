@@ -50,9 +50,9 @@ export function postToFormValues(post: PopulatedPost, locale: string): Partial<P
 }
 
 export function postToSelectedImages(post: PopulatedPost): SelectedMedia[] {
-  return (post.media as LoosePostMedia[]).map((postMedia) => ({
-    mediaId: mediaIdOf(postMedia),
-    url: typeof postMedia.media === "string" ? "" : postMedia.media.originalUrl,
+  return post.media.map((postMedia) => ({
+    mediaId: postMedia.media.id,
+    url: postMedia.media.thumbnailUrl,
     position: postMedia.position,
   }));
 }

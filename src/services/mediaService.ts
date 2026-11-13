@@ -124,6 +124,11 @@ export class MediaService implements IMediaService {
     return this.mediaRepo.getById(id);
   }
 
+  // Lets the admin page ask "does this exact file already exist?" before uploading it.
+  async findByContentHash(hash: string): Promise<Media | undefined> {
+    return this.mediaRepo.findByContentHash(hash);
+  }
+
   async saveMedia(body: Omit<Media, "id" | "userId" | "displayName" | "contentHash"> & { id?: string; userId?: string }): Promise<Media> {
     const id = body.id || randomUUID();
     const media: Media = {
@@ -157,6 +162,7 @@ export class MediaService implements IMediaService {
       throw new ConflictError("Cannot delete media because it is used in a post.", "MEDIA_IN_USE");
     }
 
+    await this.postRepo.releaseArchivedPosters([id]);
     const media = await this.mediaRepo.getById(id);
     const deleted = await this.mediaRepo.delete(id);
 
@@ -184,6 +190,7 @@ export class MediaService implements IMediaService {
       return { deleted: [], blocked };
     }
 
+    await this.postRepo.releaseArchivedPosters(candidateIds);
     // Object URLs are needed to clean up the stored files, so fetch the rows before deleting them.
     const mediaRows = await this.mediaRepo.getByIds(candidateIds);
     const deleted = await this.mediaRepo.deleteMany(candidateIds);

@@ -291,6 +291,11 @@ export const api = createApi({
        }),
        invalidatesTags: ["Collection", "Post", "Category"],
      }),
+     // Pre-upload duplicate check: the browser hashes the file and asks whether these exact bytes are already stored.
+     getMediaByHash: builder.query<{ data: { id: string; displayName: string } | null }, string>({
+       query: (hash) => `/media/by-hash?hash=${hash}`,
+     }),
+
      getMedia: builder.query<{ data: Media[] }, { search?: string } | void>({
        query: (params) => {
          const urlParams = new URLSearchParams();
@@ -518,6 +523,7 @@ export const api = createApi({
    useUpdateCollectionMutation,
    useDeleteCollectionMutation,
    useGetMediaQuery,
+   useLazyGetMediaByHashQuery,
    useUploadMediaMutation,
    useDeleteMediaMutation,
    useBulkDeleteMediaMutation,

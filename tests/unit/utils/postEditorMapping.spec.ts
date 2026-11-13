@@ -48,10 +48,18 @@ describe("postToFormValues", () => {
 });
 
 describe("postToSelectedImages", () => {
-  it("has no url for a media given only as an id", () => {
-    expect(postToSelectedImages(basePost)).toEqual([
-      { mediaId: "m1", url: "http://x/1.jpg", position: { x: 1, y: 2, zoom: 3 } },
-      { mediaId: "m2", url: "", position: undefined },
+  // Media is always a populated object on a post, and the editor shows the thumbnail everywhere.
+  it("maps each gallery item to its thumbnail url and keeps the saved position", () => {
+    const post = {
+      ...basePost,
+      media: [
+        { order: 5, mediaId: "m1", media: { id: "m1", thumbnailUrl: "http://x/t1.jpg", originalUrl: "http://x/1.jpg" }, position: { x: 1, y: 2, zoom: 3 } },
+        { order: 9, mediaId: "m2", media: { id: "m2", thumbnailUrl: "http://x/t2.jpg", originalUrl: "http://x/2.jpg" }, position: undefined },
+      ],
+    } as unknown as typeof basePost;
+    expect(postToSelectedImages(post)).toEqual([
+      { mediaId: "m1", url: "http://x/t1.jpg", position: { x: 1, y: 2, zoom: 3 } },
+      { mediaId: "m2", url: "http://x/t2.jpg", position: undefined },
     ]);
   });
 });

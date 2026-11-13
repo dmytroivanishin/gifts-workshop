@@ -2,7 +2,7 @@ import { DrizzleBaseRepository } from "./baseRepository";
 import { posts, postsToTags, tags, media, postsToMedia } from "./schema";
 import { Post, PopulatedPost, PaginationOptions, PopulatedPostMedia } from "@/types";
 import { drizzleDatabase } from "./database";
-import { eq, and, or, sql, inArray, desc } from "drizzle-orm";
+import { eq, ne, and, or, sql, inArray, desc } from "drizzle-orm";
 import { IPostRepository, QueryOptions } from "@/interfaces/repositories";
 import { isUUID } from "@/utils/uuid";
 import { diffIds } from "./upsert";
@@ -135,12 +135,13 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     return Number(count);
   }
 
+  // Archived posts never block a media delete (see releaseArchivedPosters).
   async countByPoster(mediaId: string): Promise<number> {
     if (!isUUID(mediaId)) return 0;
     const [{ count }] = await drizzleDatabase.getDb()
       .select({ count: sql<number>`count(*)` })
       .from(posts)
-      .where(eq(posts.posterId, mediaId));
+      .where(and(eq(posts.posterId, mediaId), ne(posts.status, "Archived")));
     return Number(count);
   }
 
@@ -149,8 +150,18 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     const [{ count }] = await drizzleDatabase.getDb()
       .select({ count: sql<number>`count(*)` })
       .from(postsToMedia)
-      .where(eq(postsToMedia.mediaId, mediaId));
+      .innerJoin(posts, eq(posts.id, postsToMedia.postId))
+      .where(and(eq(postsToMedia.mediaId, mediaId), ne(posts.status, "Archived")));
     return Number(count);
+  }
+
+  async releaseArchivedPosters(mediaIds: string[]): Promise<void> {
+    const validIds = mediaIds.filter(isUUID);
+    if (!validIds.length) return;
+    await drizzleDatabase.getDb()
+      .update(posts)
+      .set({ posterId: null })
+      .where(and(inArray(posts.posterId, validIds), eq(posts.status, "Archived")));
   }
 
   // Batched version of countByPoster/countGalleryUsage for the bulk-delete path: one query each
@@ -161,8 +172,11 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     if (!validIds.length) return new Set();
 
     const [posterRows, galleryRows] = await Promise.all([
-      drizzleDatabase.getDb().select({ id: posts.posterId }).from(posts).where(inArray(posts.posterId, validIds)),
-      drizzleDatabase.getDb().select({ id: postsToMedia.mediaId }).from(postsToMedia).where(inArray(postsToMedia.mediaId, validIds)),
+      drizzleDatabase.getDb().select({ id: posts.posterId }).from(posts)
+        .where(and(inArray(posts.posterId, validIds), ne(posts.status, "Archived"))),
+      drizzleDatabase.getDb().select({ id: postsToMedia.mediaId }).from(postsToMedia)
+        .innerJoin(posts, eq(posts.id, postsToMedia.postId))
+        .where(and(inArray(postsToMedia.mediaId, validIds), ne(posts.status, "Archived"))),
     ]);
 
     const used = new Set<string>();
