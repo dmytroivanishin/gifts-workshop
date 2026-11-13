@@ -227,6 +227,22 @@ test.describe("media", () => {
     await archived.cleanup();
   });
 
+  // Clearing the cover in the editor sends posterId: null. That must persist (it used to keep the old cover),
+  // otherwise the library reports the media as in use although no post shows it.
+  test("clearing the cover on save persists, and the media can then be deleted", async () => {
+    const poster = await createMedia(admin);
+    const post = await createPost(admin, { status: "Draft", posterId: poster.id });
+
+    await expectSuccess(await admin.put(`/api/v1/posts/${post.id}`, { data: { status: "Draft", posterId: null } }));
+
+    const after = await expectSuccess<{ posterId: string | null }>(await admin.get(`/api/v1/posts/${post.id}`));
+    expect(after.data.posterId).toBeNull();
+
+    await expectSuccess(await admin.delete(`/api/v1/media/${poster.id}`));
+
+    await post.cleanup();
+  });
+
   test("a poster used by a draft still blocks the delete (409 MEDIA_IN_USE)", async () => {
     const poster = await createMedia(admin);
     const draft = await createPost(admin, { status: "Draft", posterId: poster.id });

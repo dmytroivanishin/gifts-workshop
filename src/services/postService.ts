@@ -204,7 +204,10 @@ export class PostService implements IPostService {
       collectionId: body.collectionId ?? existing.collectionId,
       categoryId: body.categoryId ?? existing.categoryId,
       tagsIds: body.tagsIds || existing.tagsIds || [],
-      posterId: body.posterId ?? existing.posterId,
+      // null is a real value here ("no cover"), same as price: only a missing field keeps the old one.
+      // The old `??` kept the previous cover whenever the editor cleared it, so the post still
+      // pointed at the media and the library refused to delete it.
+      posterId: body.posterId === undefined ? existing.posterId : body.posterId,
       media: body.media || (existing.media ? existing.media.map(postMedia => ({
         id: postMedia.id,
         order: postMedia.order,

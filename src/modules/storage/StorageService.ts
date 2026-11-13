@@ -103,7 +103,7 @@ export class StorageService {
       // Light unsharp mask after downscaling: small thumbnails look soft on high-density screens
       // otherwise. Tune sigma here (0.5–1.0 is the usable range); no size or quality change.
       .sharpen({ sigma: THUMBNAIL_SHARPEN_SIGMA })
-      .jpeg({ quality: 85, progressive: true });
+      .jpeg({ quality: 90, progressive: true });
 
     // Only the decode-and-encode step holds whole bitmaps in memory, so it is the part that takes a slot.
     // The write to the media folder below is disk I/O and does not wait behind it.
