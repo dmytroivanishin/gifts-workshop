@@ -118,14 +118,16 @@ export default function AdminLayout({
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[60px] bg-background border-t flex items-center overflow-x-auto overflow-y-hidden z-50 scrollbar-none">
-        <div className="flex items-center px-4 w-max min-w-full shrink-0 justify-start gap-2">
-          {navLinks.map((link) => {
+        <div className="flex items-center px-4 w-max min-w-full shrink-0 justify-center-safe gap-0">
+          {navLinks.map((link, index) => {
             const isActive = pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex flex-col items-center justify-center min-w-[72px] px-2 h-full py-2 space-y-1 transition-colors ${
+                className={`relative flex flex-col items-center justify-center min-w-[80px] px-2 h-full py-2 space-y-1 transition-colors ${
+                  index > 0 ? "before:absolute before:left-0 before:top-3 before:bottom-3 before:w-px before:bg-tan-bg before:content-['']" : ""
+                } ${
                   isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >

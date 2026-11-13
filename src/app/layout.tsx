@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   applicationName: siteName,
   icons: {
     icon: "/icon.png",
-    apple: "/icon.png",
+    apple: { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
   },
 };
 
