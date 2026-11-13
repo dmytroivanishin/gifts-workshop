@@ -1,5 +1,7 @@
 "use client";
 
+import { FormPanelHeader } from "@/components/shared/FormPanelHeader";
+import { cn } from "@/utils/cn";
 import { useEffect, useRef, useState } from "react";
 import { scrollToEditForm } from "@/utils/scrollToEditForm";
 import { Plus, Edit, Save, X, Trash2, Loader2, Eye } from "lucide-react";
@@ -44,6 +46,7 @@ export default function AdminPages() {
   });
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [activePage, setActivePage] = useState<Page | null>(null);
 
   // The address is filled in from the title while the page is new, but once someone types in the
@@ -53,6 +56,7 @@ export default function AdminPages() {
 
   const resetForm = () => {
     setIsEditing(null);
+    setIsFormOpen(false);
     setActivePage(null);
     setSlugTouched(false);
     form.reset(defaultValues);
@@ -101,6 +105,7 @@ export default function AdminPages() {
 
   const handleEdit = (page: Page) => {
     setIsEditing(page.id);
+    setIsFormOpen(true);
     scrollToEditForm(formBlockRef.current);
     setActivePage(page);
     setSlugTouched(true);
@@ -193,21 +198,21 @@ export default function AdminPages() {
 
         {/* Add / edit page */}
         <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
-          <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-            <h3 className={BLOCK_HEADER_CLASS}>
-              {isEditing ? t("edit_page") : t("add_page")}
-            </h3>
-            {isEditing && (
-              <button
-                onClick={resetForm}
-                className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
-              >
-                <X size={12} />
-                {t("cancel_action")}
-              </button>
+          <FormPanelHeader
+            title={isEditing ? t("edit_page") : t("add_page")}
+            isOpen={isFormOpen}
+            onToggle={() => setIsFormOpen((open) => !open)}
+            action={isEditing && (
+                <button
+                  onClick={resetForm}
+                  className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
+                >
+                  <X size={12} />
+                  {t("cancel_action")}
+                </button>
             )}
-          </div>
-          <div className="p-5">
+          />
+          <div className={cn("p-5", !isFormOpen && "hidden", "lg:block")}>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
                 <FormField

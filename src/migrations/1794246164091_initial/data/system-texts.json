@@ -146,8 +146,8 @@
   {
     "id": "5d48d92a-956c-413d-a52f-1911982168c7",
     "content": {
-      "en": "Add Collection",
-      "ru": "Добавить коллекцию"
+      "en": "Add",
+      "ru": "Добавить"
     },
     "area": "admin",
     "code": "add_collection"
@@ -389,8 +389,8 @@
   {
     "id": "90039a06-bf31-4359-ac0b-da5115813dc1",
     "content": {
-      "en": "Add Color",
-      "ru": "Добавить цвет"
+      "en": "Add",
+      "ru": "Добавить"
     },
     "area": "admin",
     "code": "add_color"
@@ -398,8 +398,8 @@
   {
     "id": "a60ea7a9-4b7f-492f-b1ca-ec52816119f4",
     "content": {
-      "en": "Edit Color",
-      "ru": "Редактировать цвет"
+      "en": "Edit",
+      "ru": "Редактировать"
     },
     "area": "admin",
     "code": "edit_color"
@@ -479,8 +479,8 @@
   {
     "id": "e88c519c-1c9d-4c30-8bd3-bf5aa1080d34",
     "content": {
-      "en": "Edit Collection",
-      "ru": "Редактировать коллекцию"
+      "en": "Edit",
+      "ru": "Редактировать"
     },
     "area": "admin",
     "code": "edit_collection"
@@ -713,8 +713,8 @@
   {
     "id": "621df084-cae5-4957-90f0-d34e8f42dab3",
     "content": {
-      "en": "Add New Tag",
-      "ru": "Добавить тег"
+      "en": "Add",
+      "ru": "Добавить"
     },
     "area": "admin",
     "code": "add_new_tag"
@@ -731,8 +731,8 @@
   {
     "id": "81745a3b-1ec3-4190-a249-da4fcf0777d1",
     "content": {
-      "en": "Create Tag",
-      "ru": "Создать тег"
+      "en": "Create",
+      "ru": "Создать"
     },
     "area": "admin",
     "code": "create_tag"
@@ -749,8 +749,8 @@
   {
     "id": "2377cf2e-9d7c-464c-a1f8-277b7b12c2e9",
     "content": {
-      "en": "Rename Tag",
-      "ru": "Переименовать тег"
+      "en": "Rename",
+      "ru": "Переименовать"
     },
     "area": "admin",
     "code": "rename_tag"
@@ -893,8 +893,8 @@
   {
     "id": "ec308a6f-f824-47e3-88b7-0b5d199ef9e7",
     "content": {
-      "en": "Add Category",
-      "ru": "Добавить категорию"
+      "en": "Add",
+      "ru": "Добавить"
     },
     "area": "admin",
     "code": "add_category"
@@ -902,8 +902,8 @@
   {
     "id": "262555b1-f7c3-489e-a864-0282ea14ca1e",
     "content": {
-      "en": "Edit Category",
-      "ru": "Редактировать категорию"
+      "en": "Edit",
+      "ru": "Редактировать"
     },
     "area": "admin",
     "code": "edit_category"
@@ -979,6 +979,15 @@
     },
     "area": "admin",
     "code": "loading_collections"
+  },
+  {
+    "id": "bc913358-67ef-4344-acff-01666c8b87bc",
+    "content": {
+      "en": "Loading colors...",
+      "ru": "Загрузка цветов..."
+    },
+    "area": "admin",
+    "code": "loading_colors"
   },
   {
     "id": "3eec992b-02be-4038-ad8b-9ad1be9a017c",
@@ -1082,8 +1091,8 @@
   {
     "id": "ad5deec8-0c83-4637-ae34-78a809ca22ad",
     "content": {
-      "en": "Edit Work",
-      "ru": "Редактировать работу"
+      "en": "Edit",
+      "ru": "Редактировать"
     },
     "area": "admin",
     "code": "edit_post"
@@ -1091,8 +1100,8 @@
   {
     "id": "d0f5ba08-71fd-42a5-b8a3-a3f1012d05db",
     "content": {
-      "en": "Create Work",
-      "ru": "Создать работу"
+      "en": "Create",
+      "ru": "Создать"
     },
     "area": "admin",
     "code": "create_post"
@@ -2000,8 +2009,8 @@
   {
     "id": "c79f5228-8653-4c9e-81c1-cf4cb1a93c48",
     "content": {
-      "ru": "Добавить системный текст",
-      "en": "Add System Text"
+      "ru": "Добавить",
+      "en": "Add"
     },
     "area": "admin",
     "code": "add_system_text"
@@ -2594,8 +2603,8 @@
   {
     "id": "3706aa90-c56e-4d25-aec9-cac6b7f9e64c",
     "content": {
-      "en": "Add page",
-      "ru": "Добавить страницу"
+      "en": "Add",
+      "ru": "Добавить"
     },
     "area": "admin",
     "code": "add_page"
@@ -2603,8 +2612,8 @@
   {
     "id": "357780d5-ff2e-4e8e-bd61-4c0e4911721d",
     "content": {
-      "en": "Edit page",
-      "ru": "Редактировать страницу"
+      "en": "Edit",
+      "ru": "Редактировать"
     },
     "area": "admin",
     "code": "edit_page"

@@ -333,7 +333,7 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
     <div className="container mx-auto px-6 pb-10 pt-4 max-w-[1280px] font-sans">
 
       {/* Centered Logo */}
-      <div className="mx-auto max-w-[300px] text-center mb-14 mt-2 md:mt-6">
+      <div className="mx-auto max-w-[255px] md:max-w-[300px] text-center mb-6 md:mb-14 -mt-2 md:mt-6">
         <Image
           src="/images/logo.png"
           alt="Добрые Подарки"

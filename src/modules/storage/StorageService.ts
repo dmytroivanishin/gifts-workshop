@@ -99,7 +99,7 @@ export class StorageService {
         fit: 'inside',
         withoutEnlargement: true
       })
-      .jpeg({ quality: 75, progressive: true });
+      .jpeg({ quality: 90, progressive: true });
 
     // Only the decode-and-encode step holds whole bitmaps in memory, so it is the part that takes a slot.
     // The write to the media folder below is disk I/O and does not wait behind it.

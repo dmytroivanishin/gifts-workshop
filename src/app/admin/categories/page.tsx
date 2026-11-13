@@ -1,5 +1,7 @@
 "use client";
 
+import { FormPanelHeader } from "@/components/shared/FormPanelHeader";
+import { cn } from "@/utils/cn";
 import { addMissingTags, mergeTagsById } from "@/utils/tags";
 import { useState, useEffect, useRef } from "react";
 import { Plus, Edit, Save, X, Loader2, Trash2 } from "lucide-react";
@@ -71,6 +73,7 @@ export default function AdminCategories() {
   };
 
   const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const {
     isOpen: isDeleteOpen,
     targetId: deleteTargetId,
@@ -186,6 +189,7 @@ export default function AdminCategories() {
 
   const resetForm = () => {
     setIsEditing(null);
+    setIsFormOpen(false);
     setActiveCategoryObj(null);
     form.reset({
       title: {},
@@ -205,6 +209,7 @@ export default function AdminCategories() {
 
   const handleEdit = (category: PopulatedCategory) => {
     setIsEditing(category.id);
+    setIsFormOpen(true);
     scrollToEditForm(formBlockRef.current);
     setActiveCategoryObj(category);
     setSessionColorId("");
@@ -363,21 +368,21 @@ export default function AdminCategories() {
 
         {/* Add / Edit Category */}
         <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
-          <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-            <h3 className={BLOCK_HEADER_CLASS}>
-              {isEditing ? t("edit_category") : t("add_category")}
-            </h3>
-            {isEditing && (
-              <button
-                onClick={resetForm}
-                className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
-              >
-                <X size={12} />
-                {t("cancel_action")}
-              </button>
+          <FormPanelHeader
+            title={isEditing ? t("edit_category") : t("add_category")}
+            isOpen={isFormOpen}
+            onToggle={() => setIsFormOpen((open) => !open)}
+            action={isEditing && (
+                <button
+                  onClick={resetForm}
+                  className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
+                >
+                  <X size={12} />
+                  {t("cancel_action")}
+                </button>
             )}
-          </div>
-          <div className="p-5 space-y-4">
+          />
+          <div className={cn("p-5 space-y-4", !isFormOpen && "hidden", "lg:block")}>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
               

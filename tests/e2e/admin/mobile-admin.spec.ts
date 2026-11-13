@@ -102,6 +102,9 @@ test.describe("admin on a mobile viewport (390px): dashboard, categories, media 
     ).toBeVisible();
     expect(await hasNoHorizontalOverflow(page)).toBe(true);
 
+    // On a phone the add form starts folded; open it before reaching into it.
+    await page.getByRole("button", { name: "add_category" }).click();
+
     // The Tags Combobox dropdown must actually open and stay within the viewport, not get
     // clipped off-screen by a layout that assumes desktop width.
     await page.getByText("placeholder_select_tags").click();

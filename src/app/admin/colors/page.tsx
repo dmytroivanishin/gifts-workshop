@@ -1,5 +1,7 @@
 "use client";
 
+import { FormPanelHeader } from "@/components/shared/FormPanelHeader";
+import { cn } from "@/utils/cn";
 import { useRef, useState } from "react";
 import { Plus, Edit, Save, X, Trash2, Loader2 } from "lucide-react";
 import {
@@ -44,9 +46,11 @@ export default function AdminColors() {
 
   // Edit State
   const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const resetForm = () => {
     setIsEditing(null);
+    setIsFormOpen(false);
     form.reset(defaultValues);
   };
 
@@ -71,6 +75,7 @@ export default function AdminColors() {
 
   const handleEdit = (color: { id: string; color: string }) => {
     setIsEditing(color.id);
+    setIsFormOpen(true);
     form.reset({ color: color.color });
     scrollToEditForm(formBlockRef.current);
   };
@@ -104,21 +109,22 @@ export default function AdminColors() {
       <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Left column: Add / Edit color form */}
         <div ref={formBlockRef} className="lg:col-span-4 order-1 bg-card rounded-xl border border-border overflow-hidden h-fit scroll-mt-4">
-          <div className="relative p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-            <h2 className={BLOCK_HEADER_CLASS}>
-              {isEditing ? t("edit_color") : t("add_color")}
-            </h2>
-            {isEditing && (
-              <button
-                onClick={resetForm}
-                className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
-              >
-                <X size={12} />
-                {t("cancel_action")}
-              </button>
+          <FormPanelHeader
+            title={isEditing ? t("edit_color") : t("add_color")}
+            isOpen={isFormOpen}
+            onToggle={() => setIsFormOpen((open) => !open)}
+            headingLevel="h2"
+            action={isEditing && (
+                <button
+                  onClick={resetForm}
+                  className="text-xs sm:text-[13px] sm:font-medium sm:h-8 sm:px-3 sm:rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors sm:absolute sm:right-1 sm:top-1/2 sm:-translate-y-1/2"
+                >
+                  <X size={12} />
+                  {t("cancel_action")}
+                </button>
             )}
-          </div>
-          <div className="p-5 space-y-4">
+          />
+          <div className={cn("p-5 space-y-4", !isFormOpen && "hidden", "lg:block")}>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
               <FormField
@@ -170,11 +176,15 @@ export default function AdminColors() {
         <div className="lg:col-span-8 order-2 bg-card rounded-xl border border-border overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
             <h2 className={BLOCK_HEADER_CLASS}>{t("colors_manager")}</h2>
-            {isLoading && <Loader2 size={16} className="animate-spin text-muted-foreground" />}
           </div>
 
           <div>
-            {colors.length > 0 ? (
+            {isLoading ? (
+              <div className="p-8 text-center text-xs text-muted-foreground">
+                <Loader2 className="animate-spin inline mr-2" size={16} />
+                {t("loading_colors")}
+              </div>
+            ) : colors.length > 0 ? (
               <PageVirtualList
                 items={colors}
                 estimateSize={88}
@@ -197,11 +207,9 @@ export default function AdminColors() {
                 )}
               />
             ) : (
-              !isLoading && (
-                <div className="p-8 text-center text-xs text-muted-foreground">
-                  {t("colors_not_found")}
-                </div>
-              )
+              <div className="p-8 text-center text-xs text-muted-foreground">
+                {t("colors_not_found")}
+              </div>
             )}
           </div>
         </div>
