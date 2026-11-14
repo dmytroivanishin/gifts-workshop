@@ -3,7 +3,9 @@ import { IPostRepository, ICategoryRepository, ITagRepository, ICollectionReposi
 import { IPostService } from "@/interfaces/services";
 import { Post, PopulatedPost, Category, PaginatedResult } from "@/types";
 import { randomUUID } from "crypto";
-import { generateUniqueSlug } from "@/utils/slug";
+import { generateUniqueSlug, uniqueSlugFromBase } from "@/utils/slug";
+import { ConflictError } from "@/common/errors/conflict";
+import { PLACEHOLDER_DRAFT_LIMIT, nextPlaceholderNumber, placeholderSlug, placeholderTitle } from "@/utils/placeholderPost";
 import { isUUID } from "@/utils/uuid";
 import { resolveId, resolveMultipleIds } from "@/utils/idResolver";
 
@@ -239,5 +241,46 @@ export class PostService implements IPostService {
     const deleted = await this.postRepo.deleteMany([...new Set(ids)]);
     revalidateTag(POSTS_CACHE_TAG, { expire: 0 });
     return { deleted };
+  }
+
+  // The "Создать" button: a Draft with a numbered placeholder title and slug, saved at once so the editor
+  // opens on a real id. Only the Russian title is set and the slug is fixed, so no translation runs here.
+  // A real title gets translated the first time it is saved (updatePost regenerates the slug only when the
+  // title changes). If the slug is taken (two creations at the same moment), the standard suffix applies.
+  async createPlaceholderPost(userId: string | undefined): Promise<PopulatedPost> {
+    const draftCount = await this.postRepo.countByStatus("Draft");
+    if (draftCount >= PLACEHOLDER_DRAFT_LIMIT) {
+      throw new ConflictError(
+        `Draft limit reached: at most ${PLACEHOLDER_DRAFT_LIMIT} drafts. Fill in and publish some drafts first.`,
+        "DRAFT_LIMIT_REACHED"
+      );
+    }
+
+    const number = nextPlaceholderNumber(await this.postRepo.findPlaceholderSlugs());
+    const id = randomUUID();
+    const slug = await uniqueSlugFromBase(placeholderSlug(number), id, this.postRepo.getBySlug.bind(this.postRepo));
+
+    // A Draft may have no category (postSchema requires one only for Published). Post declares categoryId
+    // as required, the same known mismatch createPost works around with its loosely typed body.
+    const placeholder: Omit<Post, "categoryId"> & { categoryId?: string } = {
+      id,
+      title: { ru: placeholderTitle(number) },
+      description: {},
+      inStock: true,
+      price: null,
+      status: "Draft",
+      collectionId: undefined,
+      categoryId: undefined,
+      tagsIds: [],
+      posterId: undefined,
+      media: [],
+      slug,
+      userId,
+      createdAt: new Date(),
+    };
+
+    const saved = await this.postRepo.save(placeholder as Post);
+    revalidateTag(POSTS_CACHE_TAG, { expire: 0 });
+    return saved;
   }
 }

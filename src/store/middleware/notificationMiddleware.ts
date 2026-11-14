@@ -34,7 +34,6 @@ export const notificationMiddleware: Middleware =
       
       // Map specific mutation endpoints to success message keys
       const successMap: Record<string, string> = {
-        createPost: "post_created",
         updatePost: "post_updated",
         deletePost: "post_deleted",
         createCategory: "category_created",

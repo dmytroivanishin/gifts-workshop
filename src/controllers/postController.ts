@@ -82,4 +82,10 @@ export class PostController {
     const { ids } = await validateRequest(bulkIdsSchema, rawBody);
     return sendSuccess(await this.postService.bulkDeletePosts(ids));
   });
+
+  createPlaceholderPost = withErrorHandling(async () => {
+    const userId = await getUserId();
+    const post = await this.postService.createPlaceholderPost(userId);
+    return sendSuccess(post);
+  });
 }

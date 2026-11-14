@@ -4,12 +4,12 @@ import { cn } from "@/utils/cn";
 import { RowAction, RowActions } from "@/components/shared/RowAction";
 import { useState, useEffect, useRef } from "react";
 import { Plus, Edit, Trash2, Eye, Loader2 } from "lucide-react";
-import { useGetPostsQuery, useDeletePostMutation, useBulkDeletePostsMutation } from "@/store/api";
+import { useGetPostsQuery, useDeletePostMutation, useBulkDeletePostsMutation, useCreatePlaceholderPostMutation } from "@/store/api";
+import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { addNotification } from "@/store/slices/notificationSlice";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PopulatedPost } from "@/types";
-import Link from "next/link";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import SearchInput from "@/components/shared/SearchInput";
@@ -27,6 +27,16 @@ export default function AdminDashboard() {
   const [rawSelectedIds, setRawSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const dispatch = useDispatch();
+  const router = useRouter();
+  const [createPlaceholderPost, { isLoading: isCreatingPlaceholder }] = useCreatePlaceholderPostMutation();
+  const handleCreatePost = async () => {
+    try {
+      const response = await createPlaceholderPost().unwrap();
+      router.push(`/admin/posts/${response.data.id}`);
+    } catch {
+      // The global notification middleware already shows the server's error (e.g. the draft limit).
+    }
+  };
 
   const { data: response, isLoading, isFetching } = useGetPostsQuery({
     search: search || undefined,
@@ -148,13 +158,15 @@ export default function AdminDashboard() {
         <div>
           <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">{t("posts_manager")}</h1>
         </div>
-        <Link
-          href="/admin/posts/new"
-          className="flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 w-full sm:w-auto bg-primary text-primary-foreground font-sans text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity"
+        <button
+          type="button"
+          onClick={handleCreatePost}
+          disabled={isCreatingPlaceholder}
+          className="flex items-center justify-center gap-1.5 h-9 sm:h-10 px-4 w-full sm:w-auto bg-primary text-primary-foreground font-sans text-[13px] sm:text-sm font-semibold rounded-lg hover:opacity-95 transition-opacity disabled:opacity-60"
         >
           <Plus size={16} />
           {t("add_post")}
-        </Link>
+        </button>
       </div>
 
       {/* Filters Bar */}

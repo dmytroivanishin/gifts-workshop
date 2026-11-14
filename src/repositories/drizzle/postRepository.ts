@@ -1,6 +1,6 @@
 import { DrizzleBaseRepository } from "./baseRepository";
 import { posts, postsToTags, tags, media, postsToMedia } from "./schema";
-import { Post, PopulatedPost, PaginationOptions, PopulatedPostMedia } from "@/types";
+import { Post, PopulatedPost, PaginationOptions, PopulatedPostMedia, PostStatus } from "@/types";
 import { drizzleDatabase } from "./database";
 import { eq, ne, and, or, sql, inArray, desc } from "drizzle-orm";
 import { IPostRepository, QueryOptions } from "@/interfaces/repositories";
@@ -183,6 +183,25 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     for (const row of posterRows) if (row.id) used.add(row.id);
     for (const row of galleryRows) used.add(row.id);
     return used;
+  }
+
+  async countByStatus(status: PostStatus): Promise<number> {
+    const [row] = await drizzleDatabase
+      .getDb()
+      .select({ count: sql<number>`count(*)::int` })
+      .from(posts)
+      .where(eq(posts.status, status));
+    return row?.count ?? 0;
+  }
+
+  // Every post, whatever its status: a published "Untitled 1" must still raise the next placeholder number.
+  async findPlaceholderSlugs(): Promise<string[]> {
+    const rows = await drizzleDatabase
+      .getDb()
+      .select({ slug: posts.slug })
+      .from(posts)
+      .where(sql`${posts.slug} ~ ${"^untitled-[0-9]+$"}`);
+    return rows.map((row) => row.slug);
   }
 
   async getBySlug(slug: string): Promise<PopulatedPost | undefined> {

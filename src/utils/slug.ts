@@ -93,6 +93,15 @@ export async function generateUniqueSlug(
   getBySlug: (slug: string) => Promise<{ id: string } | null | undefined>
 ): Promise<string> {
   const baseSlug = truncateSlug(await generateSlugFromField(field));
+  return uniqueSlugFromBase(baseSlug, currentId, getBySlug);
+}
+
+// The same "-1", "-2" suffixing as generateUniqueSlug, for a base slug that is already known (no translation).
+export async function uniqueSlugFromBase(
+  baseSlug: string,
+  currentId: string,
+  getBySlug: (slug: string) => Promise<{ id: string } | null | undefined>
+): Promise<string> {
   let slug = baseSlug;
   let suffix = 1;
   while (true) {

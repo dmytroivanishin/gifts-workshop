@@ -12,4 +12,5 @@ export interface IPostService {
   updatePost(id: string, body: any): Promise<Post | undefined>;
   deletePost(id: string): Promise<boolean>;
   bulkDeletePosts(ids: string[]): Promise<{ deleted: string[] }>;
+  createPlaceholderPost(userId: string | undefined): Promise<PopulatedPost>;
 }

@@ -113,13 +113,12 @@ export const api = createApi({
       query: (id) => `/posts/${id}`,
       providesTags: (result, error, id) => [{ type: "Post", id }],
     }),
-    createPost: builder.mutation<{ data: PopulatedPost }, any>({
-      query: (body) => ({
-        url: "/posts",
+    createPlaceholderPost: builder.mutation<{ data: PopulatedPost }, void>({
+      query: () => ({
+        url: "/posts/placeholder",
         method: "POST",
-        body,
       }),
-      invalidatesTags: ["Post", "Tag"],
+      invalidatesTags: ["Post"],
     }),
     updatePost: builder.mutation<{ data: PopulatedPost }, { id: string } & any>({
       query: ({ id, ...body }) => ({
@@ -497,7 +496,7 @@ export const api = createApi({
  export const {
    useGetPostsQuery,
    useGetPostByIdQuery,
-   useCreatePostMutation,
+   useCreatePlaceholderPostMutation,
    useUpdatePostMutation,
    useDeletePostMutation,
    useGetCategoriesQuery,

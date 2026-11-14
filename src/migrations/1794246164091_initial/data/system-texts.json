@@ -2986,5 +2986,23 @@
     },
     "area": "shared",
     "code": "price"
+  },
+  {
+    "id": "c4afe5eb-7444-4cac-95ec-0ca382a361c0",
+    "content": {
+      "ru": "Лимит черновиков: 100. Заполните и опубликуйте часть черновиков, чтобы создать новый.",
+      "en": "Draft limit reached: 100. Fill in and publish some drafts to create a new one."
+    },
+    "area": "shared",
+    "code": "DRAFT_LIMIT_REACHED"
+  },
+  {
+    "id": "6ed41e18-7d87-4690-adc1-8b570f902be8",
+    "content": {
+      "ru": "Пост опубликован, но называется по шаблону. Укажите настоящее название, чтобы его легко было найти.",
+      "en": "The post is published under a template name. Add a real title so it is easy to find."
+    },
+    "area": "admin",
+    "code": "publish_placeholder_warning"
   }
 ]

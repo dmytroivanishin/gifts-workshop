@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Save, Loader2, Archive as ArchiveIcon, Send, Calendar as CalendarIcon, ClipboardPaste, X } from "lucide-react";
 import Link from "next/link";
 import {
-  useCreatePostMutation,
   useUpdatePostMutation,
   useGetPostByIdQuery,
   useGetCategoriesQuery,
@@ -22,6 +21,7 @@ import MediaPickerModal from "@/components/shared/MediaPickerModal";
 import { useMediaClipboard } from "@/hooks/useMediaClipboard";
 import { resolvePaste } from "@/utils/mediaClipboard";
 import { addNotification } from "@/store/slices/notificationSlice";
+import { isPlaceholderSlug, isPlaceholderTitle } from "@/utils/placeholderPost";
 import { useDispatch } from "react-redux";
 import Combobox from "@/components/ui/combobox";
 import { Input, FIELD_BASE } from "@/components/ui/input";
@@ -51,15 +51,22 @@ export default function PostFormPage({ params }: PostFormPageProps) {
   const { t, loc, locale } = useTranslation();
   const router = useRouter();
   const { id } = use(params);
-  const isEditMode = id !== "new";
+  // The old /admin/posts/new route is gone: the list button creates a placeholder first (api/v1/posts/placeholder),
+  // so every editor page has an id. Anyone who still types /new is sent back to the list.
+  const isNewRoute = id === "new";
 
   // Mutations & Queries
-  const [createPost, { isLoading: isCreating }] = useCreatePostMutation();
   const [updatePost, { isLoading: isUpdating }] = useUpdatePostMutation();
   const { data: postResponse, isLoading: isPostLoading } = useGetPostByIdQuery(id, {
-    skip: !isEditMode,
+    skip: isNewRoute,
   });
   const { data: categoriesResponse } = useGetCategoriesQuery();
+  // A placeholder (untitled-N, see utils/placeholderPost) still reads as a new post, even though it has an id.
+  const showCreateHeading = isPlaceholderSlug(postResponse?.data?.slug);
+
+  useEffect(() => {
+    if (isNewRoute) router.replace("/admin/posts");
+  }, [isNewRoute, router]);
   const [tagSearch, setTagSearch] = useState("");
   const { tags: searchedTags, hasMore: hasMoreTags, loadMore: loadMoreTags } = useTagsList(tagSearch);
   // Tags that must always resolve to a real name in the Combobox even when they fall outside
@@ -151,7 +158,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
 
   // Populate form if in Edit Mode
   useEffect(() => {
-    if (isEditMode && postResponse?.data) {
+    if (postResponse?.data) {
       const post = postResponse.data;
 
       form.reset(postToFormValues(post, locale));
@@ -170,11 +177,11 @@ export default function PostFormPage({ params }: PostFormPageProps) {
         }
       }
     }
-  }, [isEditMode, postResponse, form]);
+  }, [postResponse, form]);
 
-  // Auto-select defaults when only one option exists (for creation mode)
+  // Auto-select defaults when only one option exists (for a placeholder, i.e. a post still being created)
   useEffect(() => {
-    if (!isEditMode) {
+    if (showCreateHeading) {
       const currentCollectionId = form.getValues("collectionId");
       const currentCategoryId = form.getValues("categoryId");
 
@@ -189,7 +196,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
         }
       }
     }
-  }, [isEditMode, collections, categories, form]);
+  }, [showCreateHeading, collections, categories, form]);
 
   const handleMediaSelect = (mediaArray: { mediaId: string; url: string }[]) => {
     const newSelected = mediaArray.map(entry => {
@@ -255,18 +262,19 @@ export default function PostFormPage({ params }: PostFormPageProps) {
 
   const onSubmit = async (values: z.infer<typeof postSchema>) => {
     try {
-      if (isEditMode) {
-        const existingTitle = postResponse?.data?.title && typeof postResponse.data.title === "object" ? postResponse.data.title : {};
-        const existingDesc = postResponse?.data?.description && typeof postResponse.data.description === "object" ? postResponse.data.description : {};
+      const existingTitle = postResponse?.data?.title && typeof postResponse.data.title === "object" ? postResponse.data.title : {};
+      const existingDesc = postResponse?.data?.description && typeof postResponse.data.description === "object" ? postResponse.data.description : {};
 
-        await updatePost({
-          id,
-          ...values,
-          title: { ...existingTitle, ...values.title },
-          description: { ...existingDesc, ...values.description },
-        }).unwrap();
-      } else {
-        await createPost(values).unwrap();
+      await updatePost({
+        id,
+        ...values,
+        title: { ...existingTitle, ...values.title },
+        description: { ...existingDesc, ...values.description },
+      }).unwrap();
+
+      // Publishing a post still named by the template is allowed, but the author is told about it.
+      if (values.status === "Published" && isPlaceholderTitle(values.title?.ru)) {
+        dispatch(addNotification({ type: "warning", messageKey: "publish_placeholder_warning" }));
       }
 
       // A draft and a publish both return to the list.
@@ -282,7 +290,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
     }
   };
 
-  if (isEditMode && isPostLoading) {
+  if (isPostLoading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
         <Loader2 className="animate-spin text-muted-foreground" size={32} />
@@ -290,7 +298,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
     );
   }
 
-  const isSaving = isCreating || isUpdating;
+  const isSaving = isUpdating;
 
   // Options converters for Combobox
   const collectionOptions = collections.map((collection) => ({
@@ -336,10 +344,10 @@ export default function PostFormPage({ params }: PostFormPageProps) {
           </Link>
           <div>
             <h1 className="text-xl sm:text-[22px] lg:text-2xl font-bold tracking-tight text-foreground">
-              {isEditMode ? t("edit_post") : t("create_post")}
+              {showCreateHeading ? t("create_post") : t("edit_post")}
             </h1>
             <p className="text-xs text-muted-foreground">
-              {isEditMode ? t("edit_post_subtitle") : t("create_post_subtitle")}
+              {showCreateHeading ? t("create_post_subtitle") : t("edit_post_subtitle")}
             </p>
           </div>
         </div>

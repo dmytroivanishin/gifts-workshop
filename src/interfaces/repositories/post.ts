@@ -1,4 +1,4 @@
-import type { Post, PopulatedPost, PaginationOptions } from "@/types";
+import type { Post, PopulatedPost, PaginationOptions, PostStatus } from "@/types";
 import type { QueryOptions } from "../query";
 import type { IBaseRepository } from "./base";
 
@@ -15,4 +15,7 @@ export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, Qu
   // poster FK (restrict) never blocks the delete.
   releaseArchivedPosters(mediaIds: string[]): Promise<void>;
   deleteMany(ids: string[]): Promise<string[]>;
+  countByStatus(status: PostStatus): Promise<number>;
+  // Slugs of every post (any status) that look like the placeholder pattern untitled-N, for numbering.
+  findPlaceholderSlugs(): Promise<string[]>;
 }
