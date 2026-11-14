@@ -46,13 +46,13 @@ export default function AdminShell({
 
   const navLinks = [
     { href: "/admin/posts", icon: LayoutDashboard, menuLabel: t("menu_posts") },
+    { href: "/admin/media", icon: ImageIcon, menuLabel: t("menu_media") },
     { href: "/admin/categories", icon: FolderTree, menuLabel: t("menu_categories") },
     { href: "/admin/collections", icon: Layers, menuLabel: t("menu_collections") },
     { href: "/admin/tags", icon: Hash, menuLabel: t("menu_tags") },
     { href: "/admin/colors", icon: Palette, menuLabel: t("menu_colors") },
     { href: "/admin/pages", icon: FileText, menuLabel: t("menu_pages") },
     { href: "/admin/localizations", icon: Globe, menuLabel: t("menu_localizations") },
-    { href: "/admin/media", icon: ImageIcon, menuLabel: t("menu_media") },
     { href: "/admin/comments", icon: MessageSquare, menuLabel: t("menu_comments") },
   ];
 

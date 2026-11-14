@@ -2,7 +2,7 @@
 
 import { cn } from "@/utils/cn";
 import { useState } from "react";
-import { MAX_UPLOAD_FILE_BYTES } from "@/utils/uploadLimits";
+import { ALLOWED_UPLOAD_MIME_TYPES, MAX_UPLOAD_FILE_BYTES } from "@/utils/uploadLimits";
 import { Upload, Trash2, Loader2, AlertTriangle, Copy, X, ZoomIn } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/i18n";
@@ -182,10 +182,18 @@ export default function AdminMedia() {
       return;
     }
 
+    // Checked here, before anything is sent: an unsupported type is named right away. An empty type is let
+    // through (some Android pickers do not report one for HEIC); the server decodes the bytes either way.
     const allFiles = Array.from(files);
-    const oversized = allFiles.filter((file) => file.size > MAX_UPLOAD_FILE_BYTES);
-    const acceptedFiles = allFiles.filter((file) => file.size <= MAX_UPLOAD_FILE_BYTES);
-    setUploadIssues(oversized.map((file) => ({ fileName: file.name, kind: 'failed' as const })));
+    const isSupportedType = (file: File) => file.type === "" || ALLOWED_UPLOAD_MIME_TYPES.includes(file.type);
+    const unsupported = allFiles.filter((file) => !isSupportedType(file));
+    const supported = allFiles.filter(isSupportedType);
+    const oversized = supported.filter((file) => file.size > MAX_UPLOAD_FILE_BYTES);
+    const acceptedFiles = supported.filter((file) => file.size <= MAX_UPLOAD_FILE_BYTES);
+    setUploadIssues([...unsupported, ...oversized].map((file) => ({ fileName: file.name, kind: 'failed' as const })));
+    if (unsupported.length > 0) {
+      dispatch(addNotification({ type: 'error', messageKey: 'VALIDATION_ERROR', details: unsupported.map((file) => file.name).join(', ') }));
+    }
     if (oversized.length > 0) {
       dispatch(addNotification({ type: 'error', messageKey: 'FILE_TOO_LARGE', details: oversized.map((file) => file.name).join(', ') }));
     }
@@ -320,7 +328,7 @@ export default function AdminMedia() {
         ) : (
           <label className={cn(BUTTON_M_SIZE, "inline-flex items-center bg-secondary border border-border rounded-lg font-medium text-subtle-foreground hover:text-foreground hover:bg-secondary/70 transition-colors cursor-pointer mt-2")}>
             {t("select_files")}
-            <input type="file" multiple className="hidden" accept="image/jpeg,image/png,image/jpg" onChange={(event) => {
+            <input type="file" multiple className="hidden" accept="image/*" onChange={(event) => {
               if (event.target.files) {
                 handleFiles(event.target.files);
               }

@@ -412,16 +412,38 @@ test.describe("edge cases: uploads", () => {
     await expectError(res, 400, "VALIDATION_ERROR");
   });
 
-  for (const [format, mimeType] of [["gif", "image/gif"], ["webp", "image/webp"], ["tiff", "image/tiff"]] as const) {
-    test(`a real ${format} image is refused (only JPEG and PNG are accepted)`, async () => {
+  for (const [format, mimeType] of [["gif", "image/gif"], ["webp", "image/webp"]] as const) {
+    test(`a real ${format} image is accepted and stored as a JPEG`, async () => {
       const buffer = await sharp({ create: { width: 8, height: 8, channels: 3, background: { r: 1, g: 2, b: 3 } } })
         .toFormat(format)
         .toBuffer();
       const res = await upload({ name: `a.${format}`, mimeType, buffer });
-      expect(res.status(), await res.text()).toBeGreaterThanOrEqual(400);
-      expect(res.status()).toBeLessThan(500);
+      expect(res.status(), await res.text()).toBe(200);
+      const body = (await res.json()) as { data: { originalUrl: string } };
+      expect(body.data.originalUrl).toMatch(/\/preview\.jpg$/);
     });
   }
+
+  test("a transparent PNG is flattened onto white, not black, when stored as a JPEG", async () => {
+    const transparent = await sharp({ create: { width: 8, height: 8, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+      .png()
+      .toBuffer();
+    const res = await upload({ name: "clear.png", mimeType: "image/png", buffer: transparent });
+    expect(res.status(), await res.text()).toBe(200);
+    const body = (await res.json()) as { data: { originalUrl: string } };
+    const stored = await fetch(body.data.originalUrl);
+    const pixel = await sharp(Buffer.from(await stored.arrayBuffer())).raw().toBuffer();
+    expect([pixel[0], pixel[1], pixel[2]]).toEqual([255, 255, 255]);
+  });
+
+  test("a real TIFF image is refused with a clean 4xx (not on the accepted list)", async () => {
+    const buffer = await sharp({ create: { width: 8, height: 8, channels: 3, background: { r: 1, g: 2, b: 3 } } })
+      .toFormat("tiff")
+      .toBuffer();
+    const res = await upload({ name: "a.tiff", mimeType: "image/tiff", buffer });
+    expect(res.status(), await res.text()).toBeGreaterThanOrEqual(400);
+    expect(res.status()).toBeLessThan(500);
+  });
 
   test("an SVG declared as an image is refused", async () => {
     const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><script>alert(1)</script></svg>');

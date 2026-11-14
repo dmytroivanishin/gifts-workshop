@@ -26,7 +26,7 @@ const WRITE_TIMEOUT_MS = 30_000;
 // keep their already-stored, already-sized URLs.
 const THUMBNAIL_MAX_PX = Number(process.env.MEDIA_THUMBNAIL_MAX_PX) || 320;
 const PREVIEW_MAX_PX = Number(process.env.MEDIA_PREVIEW_MAX_PX) || 1000;
-const THUMBNAIL_SHARPEN_SIGMA = 0.4;
+const THUMBNAIL_SHARPEN_SIGMA = 0.5;
 
 // A small file can decode into a huge bitmap (a "decompression bomb"): the 10 MB size cap does not bound
 // memory, the pixel count does. 40 MP covers any phone camera.
@@ -36,6 +36,10 @@ const MAX_INPUT_PIXELS = 40_000_000;
 // number of parallel decodes sets the peak memory of the process; extra uploads wait their turn.
 const runSharpJob = createConcurrencyLimit(2);
 
+// Formats sharp can decode for this pipeline. "heif" covers both HEIC (iPhone) and AVIF.
+const ACCEPTED_INPUT_FORMATS: ReadonlySet<string> = new Set(["jpeg", "png", "gif", "webp", "heif"]);
+const WHITE_BACKGROUND = { r: 255, g: 255, b: 255 } as const;
+
 export class StorageService {
   /**
    * Processes and stores an image in the media folder (original and thumbnail).
@@ -44,9 +48,10 @@ export class StorageService {
     // The client-declared MIME type and the filename extension are both fully spoofable; the only
     // trustworthy signal is the format sharp actually decodes from the bytes. An unsupported or
     // undecodable file is a clean 400 (ValidationError), not a 500 from inside sharp's resize/encode
-    // step. JPEG and PNG are the only accepted INPUT formats; the OUTPUT is always JPEG regardless
-    // of which of the two was uploaded (below) — one content type, one extension, simpler pipeline.
-    // Sharp flattens a PNG's alpha channel onto white automatically when encoding to JPEG.
+    // step. The accepted INPUT formats are the ones sharp decodes (HEIC and AVIF both report as "heif");
+    // the OUTPUT is always JPEG regardless of the input (below) — one content type, one extension.
+    // Transparency is flattened onto white explicitly before encoding, since JPEG has no alpha channel
+    // and sharp would otherwise turn transparent pixels black.
     let format: string | undefined;
     let inputPixels = 0;
     try {
@@ -57,8 +62,8 @@ export class StorageService {
       // sharp throws when it cannot even parse a header (not an image at all), rather than
       // returning metadata with no format
     }
-    if (format !== 'jpeg' && format !== 'png') {
-      throw new ValidationError("Unsupported image format. Only JPEG and PNG are allowed.", [
+    if (!format || !ACCEPTED_INPUT_FORMATS.has(format)) {
+      throw new ValidationError("Unsupported image format. Allowed: JPG, PNG, GIF, WebP, HEIC, AVIF.", [
         { field: "file", message: `Detected format: ${format ?? "unknown"}` },
       ]);
     }
@@ -90,6 +95,7 @@ export class StorageService {
         fit: 'inside', // Preserves aspect ratio, scales down if larger
         withoutEnlargement: true // Doesn't scale up if smaller than the max
       })
+      .flatten({ background: WHITE_BACKGROUND })
       .jpeg({ quality: 80, progressive: true });
 
     // Process Thumbnail (Max THUMBNAIL_MAX_PX x THUMBNAIL_MAX_PX)
@@ -100,6 +106,7 @@ export class StorageService {
         fit: 'inside',
         withoutEnlargement: true
       })
+      .flatten({ background: WHITE_BACKGROUND })
       // Light unsharp mask after downscaling: small thumbnails look soft on high-density screens
       // otherwise. Tune sigma here (0.5–1.0 is the usable range); no size or quality change.
       .sharpen({ sigma: THUMBNAIL_SHARPEN_SIGMA })

@@ -1,4 +1,4 @@
-import { MAX_UPLOAD_FILE_BYTES } from "@/utils/uploadLimits";
+import { ALLOWED_UPLOAD_MIME_TYPES, MAX_UPLOAD_FILE_BYTES } from "@/utils/uploadLimits";
 import { IMediaRepository, IPostRepository, MediaQueryOptions } from "@/interfaces/repositories";
 import { IMediaService } from "@/interfaces/services";
 import { Media, PaginatedResult } from "@/types";
@@ -94,10 +94,13 @@ export class MediaService implements IMediaService {
   }
 
   async uploadMedia(file: File, userId: string): Promise<Media> {
-    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
-
-    if (!allowedTypes.includes(file.type)) {
-      throw new ConflictError(`Invalid file type: ${file.name}. Only JPG and PNG are allowed.`, "VALIDATION_ERROR");
+    // An empty type (some Android file pickers do not report one for HEIC) is let through: the real
+    // gate is sharp decoding the bytes in StorageService, so a missing type is not a reason to refuse.
+    if (file.type !== "" && !ALLOWED_UPLOAD_MIME_TYPES.includes(file.type)) {
+      throw new ConflictError(
+        `Unsupported file type for ${file.name} (${file.type}). Allowed: JPG, PNG, GIF, WebP, HEIC, AVIF.`,
+        "VALIDATION_ERROR"
+      );
     }
     if (file.size > MAX_UPLOAD_FILE_BYTES) {
       throw new ConflictError(`File ${file.name} is too large.`, "FILE_TOO_LARGE");
