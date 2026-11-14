@@ -108,6 +108,25 @@ test.describe("placeholder posts (Создать)", () => {
     expect(saved.data.slug).toBe(placeholder.slug);
   });
 
+  test("with 20 placeholders already present, a hand-typed 'Без названия 9' takes a unique slug and the next placeholder continues after the highest number", async () => {
+    const existing: PostBody[] = [];
+    for (let i = 0; i < 20; i++) existing.push(await createPlaceholder());
+    const existingSlugs = new Set(existing.map((p) => p.slug));
+    const highest = Math.max(...existing.map((p) => numberOf(p.slug)));
+
+    // A manual draft: no placeholder slug is requested, the title is typed by hand.
+    const manual = await expectSuccess<PostBody>(
+      await admin.post("/api/v1/posts", { data: { status: "Draft", title: { ru: "Без названия 9" } } })
+    );
+    created.push(manual.data.id);
+    expect(existingSlugs.has(manual.data.slug)).toBe(false);
+
+    // The number sequence is not disturbed by a manual title: the next placeholder is highest + 1.
+    const next = await createPlaceholder();
+    expect(numberOf(next.slug)).toBe(highest + 1);
+    expect(next.title.ru).toBe(`Без названия #${highest + 1}`);
+  });
+
   test("the 101st draft is refused with DRAFT_LIMIT_REACHED, and deleting one frees a slot", async () => {
     // Creates drafts until the server refuses. The cap is on the whole table, so other specs' drafts
     // count too: the loop stops at the first 409, not at a fixed number. 150 is a safety stop.
@@ -131,4 +150,5 @@ test.describe("placeholder posts (Создать)", () => {
     const retried = await expectSuccess<PostBody>(retry);
     created.push(retried.data.id);
   });
+
 });
