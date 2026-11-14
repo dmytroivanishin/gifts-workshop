@@ -47,6 +47,21 @@ interface PostFormPageProps {
   params: Promise<{ id: string }>;
 }
 
+// Only drafts and archived posts are saved in the background. A published post is changed only by an explicit save.
+const BACKGROUND_SAVE_STATUSES: readonly string[] = ["Draft", "Archived"];
+
+// Title and description are localized maps: keep the other locales already stored on the post.
+function buildPostBody(
+  values: z.infer<typeof postSchema>,
+  existing: { title?: Record<string, string>; description?: Record<string, string> } | undefined
+) {
+  return {
+    ...values,
+    title: { ...(existing?.title ?? {}), ...values.title },
+    description: { ...(existing?.description ?? {}), ...values.description },
+  };
+}
+
 export default function PostFormPage({ params }: PostFormPageProps) {
   const { t, loc, locale } = useTranslation();
   const router = useRouter();
@@ -262,15 +277,7 @@ export default function PostFormPage({ params }: PostFormPageProps) {
 
   const onSubmit = async (values: z.infer<typeof postSchema>) => {
     try {
-      const existingTitle = postResponse?.data?.title && typeof postResponse.data.title === "object" ? postResponse.data.title : {};
-      const existingDesc = postResponse?.data?.description && typeof postResponse.data.description === "object" ? postResponse.data.description : {};
-
-      await updatePost({
-        id,
-        ...values,
-        title: { ...existingTitle, ...values.title },
-        description: { ...existingDesc, ...values.description },
-      }).unwrap();
+      await updatePost({ id, ...buildPostBody(values, postResponse?.data) }).unwrap();
 
       // Publishing a post still named by the template is allowed, but the author is told about it.
       if (values.status === "Published" && isPlaceholderTitle(values.title?.ru)) {
@@ -289,6 +296,34 @@ export default function PostFormPage({ params }: PostFormPageProps) {
       console.error("Failed to save post", error);
     }
   };
+
+  // Leaving the tab or closing the browser sends a draft or archived post's unsaved edits to the server.
+  // keepalive lets the request finish after the page has gone. Nothing is shown if it fails.
+  const isFormDirty = form.formState.isDirty;
+  useEffect(() => {
+    if (isNewRoute || !id) return;
+    const saveInBackground = () => {
+      if (!isFormDirty) return;
+      const values = form.getValues();
+      if (!BACKGROUND_SAVE_STATUSES.includes(postResponse?.data?.status ?? "")) return;
+      if (!BACKGROUND_SAVE_STATUSES.includes(values.status)) return;
+      void fetch(`/api/v1/posts/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildPostBody(values, postResponse?.data)),
+        keepalive: true,
+      });
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") saveInBackground();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pagehide", saveInBackground);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pagehide", saveInBackground);
+    };
+  }, [id, isNewRoute, postResponse, form, isFormDirty]);
 
   if (isPostLoading) {
     return (
