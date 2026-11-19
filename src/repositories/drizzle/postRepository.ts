@@ -93,7 +93,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Drizzle's relational query-builder config type is generic over the schema/fields pair and can't be named without re-deriving that generic here; built up dynamically below.
     const queryOptions: any = {
       with: this.getListRelations(),
-      orderBy: [desc(posts.createdAt)]
+      orderBy: [desc(posts.order), desc(posts.createdAt)]
     };
 
     if (options?.limit) {
@@ -256,7 +256,7 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- same generic Drizzle relational query-builder config as in getAll above.
     const queryOptions: any = {
       with: this.getListRelations(),
-      orderBy: [desc(posts.createdAt)]
+      orderBy: [desc(posts.order), desc(posts.createdAt)]
     };
 
     if (conditions.length > 0) {
@@ -274,6 +274,20 @@ export class PostRepository extends DrizzleBaseRepository<Post, PopulatedPost, Q
 
     const records = await db.query.posts.findMany(queryOptions);
     return records.map(this.mapToPopulated.bind(this));
+  }
+
+  // One UPDATE with a CASE per row, the same pattern as categoryRepository.reorderCategories.
+  async reorderPosts(items: { id: string; order: number }[]): Promise<boolean> {
+    if (items.length === 0) return true;
+
+    const cases = items.map((item) => sql`when ${posts.id} = ${item.id} then ${item.order}::integer`);
+    const orderSql = sql`(case ${sql.join(cases, sql.raw(" "))} end)`;
+
+    await drizzleDatabase.getDb()
+      .update(posts)
+      .set({ order: orderSql })
+      .where(inArray(posts.id, items.map((item) => item.id)));
+    return true;
   }
 
   override async save(item: Post & { tagsIds?: string[] }): Promise<PopulatedPost> {

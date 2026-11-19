@@ -163,6 +163,7 @@ export class PostService implements IPostService {
     const id = body.id || randomUUID();
     const slug = await generateUniqueSlug(body.title, id, this.postRepo.getBySlug.bind(this.postRepo));
 
+    // order is left out: the database sequence gives the next number, which is the top of the list.
     const flatPost: Post = {
       id,
       title: body.title,
@@ -203,6 +204,7 @@ export class PostService implements IPostService {
       // null is a real value here ("clear the price"), so only a missing field keeps the old one.
       price: body.price === undefined ? existing.price : body.price,
       status: body.status ?? existing.status,
+      order: existing.order,
       collectionId: body.collectionId ?? existing.collectionId,
       categoryId: body.categoryId ?? existing.categoryId,
       tagsIds: body.tagsIds || existing.tagsIds || [],
@@ -283,4 +285,12 @@ export class PostService implements IPostService {
     revalidateTag(POSTS_CACHE_TAG, { expire: 0 });
     return saved;
   }
+
+  async reorderPosts(items: { id: string; order: number }[]): Promise<boolean> {
+    if (items.length === 0) return true;
+    const success = await this.postRepo.reorderPosts(items);
+    revalidateTag(POSTS_CACHE_TAG, { expire: 0 });
+    return success;
+  }
 }
+

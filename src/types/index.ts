@@ -103,6 +103,9 @@ export interface Post {
   // Whole roubles; null when no price is set (the public card then shows no price).
   price: number | null;
   status: PostStatus;
+  // Position in the public and admin lists: a higher number is higher up. A new row gets its value from
+  // the database sequence, so it is optional when writing; reorder sets it, the editor never does.
+  order?: number;
   
   // Foreign Keys
   posterId?: string;
@@ -116,7 +119,9 @@ export interface Post {
   createdAt: Date;
 }
 
-export interface PopulatedPost extends Omit<Post, 'media'> {
+export interface PopulatedPost extends Omit<Post, 'media' | 'order'> {
+  // Always present when read from the database; optional only on Post because a write leaves it to the sequence.
+  order: number;
   poster?: Media;
   collection?: Collection;
   category: PopulatedCategory;

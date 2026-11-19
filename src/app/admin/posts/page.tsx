@@ -3,8 +3,11 @@
 import { cn } from "@/utils/cn";
 import { RowAction, RowActions } from "@/components/shared/RowAction";
 import { useState, useEffect, useRef } from "react";
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortablePostRow } from "@/components/shared/SortablePostRow";
 import { Plus, Edit, Trash2, Eye, Loader2 } from "lucide-react";
-import { useGetPostsQuery, useDeletePostMutation, useBulkDeletePostsMutation, useCreatePlaceholderPostMutation } from "@/store/api";
+import { useGetPostsQuery, useDeletePostMutation, useBulkDeletePostsMutation, useCreatePlaceholderPostMutation, useReorderPostsMutation } from "@/store/api";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { addNotification } from "@/store/slices/notificationSlice";
@@ -46,6 +49,11 @@ export default function AdminDashboard() {
   });
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
   const [bulkDeletePosts, { isLoading: isBulkDeleting }] = useBulkDeletePostsMutation();
+  const [reorderPosts] = useReorderPostsMutation();
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const hasMore = response?.meta?.nextPage != null;
@@ -151,6 +159,44 @@ export default function AdminDashboard() {
     }
   };
 
+  // Only the loaded rows can be dragged. The loaded rows are always the top of the list (pages come in
+  // order), so every row between two loaded places has a known number. A search narrows the list, so it
+  // is not used for reordering.
+  const canReorder = !search && posts.length > 1;
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const previous = posts;
+    const oldIndex = previous.findIndex((post) => post.id === active.id);
+    const newIndex = previous.findIndex((post) => post.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    // A move only changes the rows between the two places. Those rows keep the numbers that already sit
+    // in that stretch, handed out again in the new order, so the set of numbers never changes and stays
+    // unique. Every row outside the stretch keeps its number and is not sent.
+    const from = Math.min(oldIndex, newIndex);
+    const to = Math.max(oldIndex, newIndex);
+    const reordered = arrayMove(previous, oldIndex, newIndex);
+    const numbersInStretch = previous.slice(from, to + 1).map((post) => post.order);
+    const previousOrderById = new Map(previous.map((post) => [post.id, post.order]));
+    const changed = reordered
+      .slice(from, to + 1)
+      .map((post, index) => ({ id: post.id, order: numbersInStretch[index] }))
+      .filter((item) => previousOrderById.get(item.id) !== item.order);
+
+    const numberById = new Map(changed.map((item) => [item.id, item.order]));
+    setPosts(reordered.map((post) => (numberById.has(post.id) ? { ...post, order: numberById.get(post.id) ?? post.order } : post)));
+    try {
+      await reorderPosts(changed).unwrap();
+    } catch (error: unknown) {
+      // The notification middleware already toasts the rejected mutation; put the list back as it was.
+      setPosts(previous);
+      console.error("Failed to reorder posts", error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -214,10 +260,12 @@ export default function AdminDashboard() {
           <>
             {/* Desktop Table */}
             {/* lg, not md: with the 256px sidebar the table needs ~720px, so between 768 and ~960px it clipped the actions column; the cards below fit any width. */}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={posts.map((post) => post.id)} strategy={verticalListSortingStrategy}>
             <table className="hidden lg:table w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  <th className="w-14 py-4 pl-4 pr-0">
+                  <th className="w-20 py-4 pl-3 pr-0">
                     <Checkbox
                       data-test-id="posts-select-all"
                       checked={areAllSelected}
@@ -254,15 +302,26 @@ export default function AdminDashboard() {
                   };
 
                   return (
-                    <tr key={post.id} className={`transition-colors ${selectedIds.has(post.id) ? "bg-primary/5" : "hover:bg-muted/30"}`}>
-                      <td className="w-14 py-4 pl-4 pr-0">
-                        <Checkbox
-                          data-test-id={`post-select-${post.id}`}
-                          checked={selectedIds.has(post.id)}
-                          onCheckedChange={() => toggleSelected(post.id)}
-                          aria-label={t("select")}
-                          title={t("select")}
-                        />
+                    <SortablePostRow
+                      key={post.id}
+                      id={post.id}
+                      disabled={!canReorder}
+                      as="tr"
+                      className={`transition-colors ${selectedIds.has(post.id) ? "bg-primary/5" : "hover:bg-muted/30"}`}
+                    >
+                    {(dragHandle) => (
+                    <>
+                      <td className="w-20 py-4 pl-3 pr-0">
+                        <div className="flex items-center gap-1">
+                          {dragHandle}
+                          <Checkbox
+                            data-test-id={`post-select-${post.id}`}
+                            checked={selectedIds.has(post.id)}
+                            onCheckedChange={() => toggleSelected(post.id)}
+                            aria-label={t("select")}
+                            title={t("select")}
+                          />
+                        </div>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
@@ -298,13 +357,19 @@ export default function AdminDashboard() {
                           <RowAction icon={Trash2} tone="destructive" title={t("delete")} onClick={() => handleDeleteClick(post.id)} />
                         </div>
                       </td>
-                    </tr>
+                    </>
+                    )}
+                    </SortablePostRow>
                   );
                 })}
               </tbody>
             </table>
+            </SortableContext>
+            </DndContext>
 
             {/* Mobile Cards */}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={posts.map((post) => post.id)} strategy={verticalListSortingStrategy}>
             <div className="lg:hidden divide-y divide-border/45">
               {posts.map((post) => {
                 const categoryObject = post.category && typeof post.category === "object" ? post.category : null;
@@ -326,18 +391,26 @@ export default function AdminDashboard() {
                 };
 
                 return (
-                  <div
+                  <SortablePostRow
                     key={`mobile-${post.id}`}
+                    id={post.id}
+                    disabled={!canReorder}
+                    as="div"
                     className={`p-4 space-y-4 transition-colors ${selectedIds.has(post.id) ? "bg-primary/5" : "hover:bg-muted/10"}`}
                   >
+                  {(dragHandle) => (
+                  <>
                     <div className="flex items-center justify-between gap-3">
-                      <Checkbox
-                        data-test-id={`post-select-${post.id}`}
-                        checked={selectedIds.has(post.id)}
-                        onCheckedChange={() => toggleSelected(post.id)}
-                        aria-label={t("select")}
-                        title={t("select")}
-                      />
+                      <div className="flex items-center gap-1">
+                        {dragHandle}
+                        <Checkbox
+                          data-test-id={`post-select-${post.id}`}
+                          checked={selectedIds.has(post.id)}
+                          onCheckedChange={() => toggleSelected(post.id)}
+                          aria-label={t("select")}
+                          title={t("select")}
+                        />
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusClasses(post.status)}`}>
                           {t(post.status.toLowerCase())}
@@ -371,10 +444,14 @@ export default function AdminDashboard() {
                         <RowAction icon={Trash2} tone="destructive" title={t("delete")} onClick={() => handleDeleteClick(post.id)} />
                       </RowActions>
                     </div>
-                  </div>
+                  </>
+                  )}
+                  </SortablePostRow>
                 );
               })}
             </div>
+            </SortableContext>
+            </DndContext>
           </>
         ) : (
           <div className="p-8 text-center text-xs text-muted-foreground">

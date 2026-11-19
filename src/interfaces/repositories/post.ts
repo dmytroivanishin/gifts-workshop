@@ -18,4 +18,5 @@ export interface IPostRepository extends IBaseRepository<Post, PopulatedPost, Qu
   countByStatus(status: PostStatus): Promise<number>;
   // Slugs of every post (any status) that look like the placeholder pattern untitled-N, for numbering.
   findPlaceholderSlugs(): Promise<string[]>;
+  reorderPosts(items: { id: string; order: number }[]): Promise<boolean>;
 }

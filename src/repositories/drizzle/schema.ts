@@ -1,5 +1,5 @@
-import { pgTable, uuid, varchar, text, boolean, integer, jsonb, timestamp, primaryKey, index, uniqueIndex } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { pgTable, pgSequence, uuid, varchar, text, boolean, integer, jsonb, timestamp, primaryKey, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
 import { LocalizedText, Position } from "@/types";
 
 // --- Users & Auth ---
@@ -171,6 +171,9 @@ export const categoriesToTagsRelations = relations(categoriesToTags, ({ one }) =
   tag: one(tags, { fields: [categoriesToTags.tagId], references: [tags.id] }),
 }));
 
+// Source of the manual post order: a new post takes the next value, so it lands on top (see the posts_order migration).
+export const postsOrderSeq = pgSequence("posts_order_seq");
+
 export const posts = pgTable("posts", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
@@ -178,6 +181,7 @@ export const posts = pgTable("posts", {
   description: jsonb("description").$type<LocalizedText>().notNull(), 
   posterId: uuid("poster_id").references(() => media.id, { onDelete: "restrict" }),
   inStock: boolean("in_stock").default(true).notNull(),
+  order: integer("order").default(sql`nextval('posts_order_seq')`).notNull(),
   price: integer("price"),
   status: varchar("status", { length: 50 }).default("Draft").notNull(),
   collectionId: uuid("collection_id").references(() => collections.id, { onDelete: "set null" }),

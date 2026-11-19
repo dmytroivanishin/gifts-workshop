@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { sendSuccess, CACHE_SECONDS, withErrorHandling } from "@/utils/apiResponse";
 import { IPostService } from "@/interfaces/services";
 import { NotFoundError } from "@/common/errors/notFound";
@@ -81,6 +82,16 @@ export class PostController {
     const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
     const { ids } = await validateRequest(bulkIdsSchema, rawBody);
     return sendSuccess(await this.postService.bulkDeletePosts(ids));
+  });
+
+  // Numbers of the rows a drag moved (see the admin posts page). Only the listed rows are updated.
+  reorderPosts = withErrorHandling(async (request: Request) => {
+    const rawBody = (await parseJsonBody(request)) as Record<string, unknown>;
+    // Only the rows whose number changed are sent, so the list length does not matter.
+    const items = await validateRequest(z.object({
+      items: z.array(z.object({ id: z.string().uuid(), order: z.number().int() })).min(1),
+    }), rawBody);
+    return sendSuccess(await this.postService.reorderPosts(items.items));
   });
 
   createPlaceholderPost = withErrorHandling(async () => {

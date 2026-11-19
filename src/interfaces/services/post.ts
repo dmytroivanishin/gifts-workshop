@@ -13,4 +13,5 @@ export interface IPostService {
   deletePost(id: string): Promise<boolean>;
   bulkDeletePosts(ids: string[]): Promise<{ deleted: string[] }>;
   createPlaceholderPost(userId: string | undefined): Promise<PopulatedPost>;
+  reorderPosts(items: { id: string; order: number }[]): Promise<boolean>;
 }
