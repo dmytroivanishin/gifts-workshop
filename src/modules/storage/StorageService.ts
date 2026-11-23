@@ -3,6 +3,7 @@ import { generateMediaName, generateStorageSuffix } from "@/utils/mediaName";
 import { logger } from "@/modules/logger";
 import { createConcurrencyLimit } from "@/utils/concurrencyLimit";
 import { ValidationError } from "@/common/errors/validation";
+import { ClientAbortedError } from "@/common/errors/clientAborted";
 import { LocalFolderStorage } from "@/modules/storage/localFolderStorage";
 import type { ProcessedImageResult } from "@/interfaces/storage";
 import { mediaFolderRoot, mediaPublicBaseUrl } from "@/modules/storage/mediaFolder";
@@ -44,7 +45,9 @@ export class StorageService {
   /**
    * Processes and stores an image in the media folder (original and thumbnail).
    */
-  async uploadImage(buffer: Buffer): Promise<ProcessedImageResult> {
+  // `signal` aborts when the client disconnects. Every write stops with it, and whatever this method has
+  // already stored is removed before the error leaves it.
+  async uploadImage(buffer: Buffer, signal?: AbortSignal): Promise<ProcessedImageResult> {
     // The client-declared MIME type and the filename extension are both fully spoofable; the only
     // trustworthy signal is the format sharp actually decodes from the bytes. An unsupported or
     // undecodable file is a clean 400 (ValidationError), not a 500 from inside sharp's resize/encode
@@ -127,14 +130,18 @@ export class StorageService {
     });
     const orientation = finalWidth >= finalHeight ? 'Landscape' : 'Portrait';
 
-    // Write both files to the media folder. Each write has its own time limit.
+    // Write both files to the media folder. Each write has its own time limit, and stops early if the client leaves.
+    if (signal?.aborted) throw new ClientAbortedError("storing");
+    const writeSignal = AbortSignal.any([AbortSignal.timeout(WRITE_TIMEOUT_MS), ...(signal ? [signal] : [])]);
     await mediaStorage().ensureReady();
-    await mediaStorage().put(uniqueOriginalName, originalBuffer, { signal: AbortSignal.timeout(WRITE_TIMEOUT_MS) });
+    await mediaStorage().put(uniqueOriginalName, originalBuffer, { signal: writeSignal });
 
     try {
-      await mediaStorage().put(uniqueThumbnailName, thumbnailBuffer, { signal: AbortSignal.timeout(WRITE_TIMEOUT_MS) });
+      if (signal?.aborted) throw new ClientAbortedError("storing");
+      await mediaStorage().put(uniqueThumbnailName, thumbnailBuffer, { signal: writeSignal });
     } catch (error) {
-      // Without this the preview stays on disk with no row pointing at it.
+      // Without this the preview stays on disk with no row pointing at it. Covers a client that left
+      // between the two writes, and a write that failed for any other reason.
       await this.removeKeys([uniqueOriginalName]);
       throw error;
     }

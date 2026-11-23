@@ -11,4 +11,21 @@ export async function register(): Promise<void> {
     // would sit idle instead of failing. Exit so the container restarts visibly.
     process.exit(1);
   }
+  const { installProcessErrorLogging } = await import("@/modules/logger/processErrors");
+  installProcessErrorLogging();
+}
+
+// Every error Next catches while handling a request ends up here, with where it happened.
+export async function onRequestError(
+  error: unknown,
+  request: { path: string; method: string },
+  context: { routerKind: string; routePath: string; routeType: string }
+): Promise<void> {
+  if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  const [{ logger }, { describeRequestError }] = await Promise.all([
+    import("@/modules/logger"),
+    import("@/utils/requestErrorLog"),
+  ]);
+  const entry = describeRequestError(error, request, context);
+  logger[entry.level](entry.message, { code: entry.code, ...entry.fields });
 }

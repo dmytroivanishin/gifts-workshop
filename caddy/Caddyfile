@@ -16,6 +16,19 @@
 	encode zstd gzip
 	header Strict-Transport-Security "max-age=31536000"
 
+	# One access-log line per request, written to stdout so Docker's json-file rotation (docker-compose.yml)
+	# covers it. Cookies and Authorization are dropped: they carry the admin session.
+	log {
+		output stdout
+		format filter {
+			wrap json
+			fields {
+				request>headers>Cookie delete
+				request>headers>Authorization delete
+			}
+		}
+	}
+
 	# Media: the folder the app writes to, served straight from disk (/srv/media is the host ./media).
 	# handle_path strips /static/media, so /static/media/<bucket>/<key> maps to /srv/media/<bucket>/<key>.
 	# S3_PUBLIC_URL in config/.env is <site>/static/media.

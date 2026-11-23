@@ -44,6 +44,82 @@ Running list of open steps for this repo. It is imported into `CLAUDE.md`, so it
 - **Решение (не принято):** варианты — после таймаута на клиенте спросить сервер по хешу и показать «загружено» вместо «не загружено»; либо на сервере отменять сохранение, если клиент ушёл (Next этого по умолчанию не делает).
 - Тестовые строки от проверки: `oujpou`, `zahuga`, `fleptree`, `ghost-510`, `ok-520`, `ok-530`, `ok-540` (dev-база, не удалены).
 
+### CP-68 · Прод на VPS: пропадающие загрузки, память, лимиты ресурсов, логи (added 2026-11-23)
+Статус (2026-11-23): блоки А–Ж сделаны в репозитории и проверены локально. Деплой и swap на VPS — за владельцем.
+- А (лимиты памяти, логи json-file 10m×5, `docker-compose.yml`): в репозитории, на сервере не проверено (деплой владельца).
+- В (серверная очистка при обрыве, `uploadAbort.ts`, `mediaService`, `mediaController`): проверено на настоящей базе и файлах. Обрыв до сохранения, после записи файлов и после записи строки не оставляет ни строки, ни файлов. Caddy `read_body 60s` обрывает загрузку ровно через 60 с и для потока, и для паузы.
+- Г (логи): `instrumentation.ts` `onRequestError` (обрыв клиента — warn без стека, ошибка — error со стеком, без query-строки и без заголовков), обработчики `uncaughtException`/`unhandledRejection` (только лог, процесс не завершается). Проверено вызовом крюков на настоящем логгере. Важно: собственная строка Next `Error: aborted` при обрыве тела запроса в эти крюки не попадает — такой обрыв виден в логе Caddy и в консольной строке Next.
+- Д (`media:reconcile`): сироты и старые временные файлы удаляются только с `--delete`, свежие временные не трогаются. Проверено на копии.
+- Е (браузер): тост с именем файла и двумя причинами, предупреждение `beforeunload`. Ключи `upload_connection_lost`/`upload_server_error` добавлены в dev-базу (только вставка, 334→336). Тесты `media-upload-errors.spec.ts` 3/3 на чистой базе.
+- Ж (тесты): юнит `requestErrorLog.spec.ts` (7), очистка временных файлов уже в `localFolderStorage.spec.ts`. Обрыв на каждом этапе — `mediaService.abort.spec.ts` (моки) и API-тест с обрывом тела; обрыв после сохранения на настоящей базе проверен вручную, автоматического теста на него нет. Медленная загрузка через Caddy — ручная проверка (прод-Caddyfile не входит в тестовую инфраструктуру).
+- Попутно исправлено: `package.json` вызывал несуществующий `docker-compose` (тест-инфраструктура молча не сбрасывалась), теперь `docker compose`. Медиа e2e переведены с удалённого маршрута `/admin/posts/new` на черновик через API (`media-clipboard.spec.ts`), первый тест `media.spec.ts` больше не оставляет строку при падении.
+- Решения владельца (2026-11-23): Caddy `read_body` 60s оставить; `beforeunload` оставить; временные папки в `media:reconcile` удаляются только с `--delete`; лимит 10 МБ в Next оставить. Тестовый бакет очищен через `media:reconcile --delete` (сироты старше 60 минут, затем свежие сироты, когда ни один тест не писал). Бакет владельца (28 файлов, 11 строк) не менялся.
+- Остаётся: развёртывание и swap на VPS (владелец). Небольшое замечание: `media:reconcile` при отсутствующей таблице `media` падает с трассировкой вместо понятного сообщения; не исправлял без вашего запроса.
+Контекст: прод поднимается через `.github/workflows/deploy.yml` (ручной запуск) по SSH в `/opt/gifts-workshop`, стек из `docker-compose.yml` (сервисы `caddy`, `postgres`, `migrate` (profile tools), `app`). Coolify не используется, `CLAUDE.md` в части деплоя устарел (CP-25 частично сделан). VPS: 1 vCPU, 2 ГБ RAM, swap нет, диск 20 ГБ.
+
+**Симптомы (владелец):** пакетная загрузка 25 фото через медиатеку: 3 файла падают без понятной причины, с каждым файлом сервер отвечает медленнее (1/25 быстро, 18/25 зависает). Вчера были обрывы интернета. Логи: `Error: aborted`, `ECONNRESET` (печатает сам Next, мимо винстона), 7 записей 20:41–21:02 UTC.
+
+**Что уже известно по данным:**
+- `free`: available ≈ 1.15 ГБ в покое. `sar -r` (10-минутные усреднения): в окне загрузок `used` +~85 МБ, `available` не ниже ~1.16 ГБ, `%commit` выше 100% в 4 замерах (нет swap). OOM не было: контейнер не перезапускался, в логах нет «Ready» после 19 ноября.
+- CPU по графикам хостера в среднем до 20% за неделю. Гипотеза CPU ослаблена, но секундные пики sharp на 1 vCPU усреднением не видны.
+- Caddy: `read_body 60s` (`caddy/Caddyfile`). Если это лимит на чтение всего тела (проверить в доках Caddy), загрузка дольше 60 с (меньше примерно 170 КБ/с для 10 МБ) обрывается на Caddy, приложение видит `aborted`. Это совпадает с вчерашними обрывами интернета. Решение сознательное (защита памяти), менять по решению владельца.
+- Next по умолчанию режет тело запроса от 10 МБ (`proxyClientMaxBodySize`, CP-16). Не решено.
+
+**Блок А. Лимиты ресурсов и логи (docker-compose.yml, для всех сервисов).**
+- `app`: `mem_limit: 768m`, `memswap_limit: 768m` (равен `mem_limit`, без swap хоста), `NODE_OPTIONS=--max-old-space-size=512`.
+- `postgres`: лимит памяти около 384m (shared_buffers по умолчанию 128 МБ).
+- `caddy`: около 128m.
+- `migrate`: лимит тоже, профиль tools.
+- Распределение CPU: `cpus` на каждый сервис, либо веса `cpu_shares`. Пока не решено: жёсткий `cpus` на `app` замедлит sharp, веса мягче. Решение владельца.
+- Сумма лимитов около 1.3 ГБ оставляет запас ОС и кэшу. Значения подтверждаются замерами `docker stats` под нагрузкой.
+- Логи: `logging: driver json-file, options: max-size 10m, max-file 5` для всех сервисов (владелец: «да 100%»).
+- Изменения вносятся только в репозитории (`docker-compose.yml`), деплой через workflow. Правка на сервере перезаписывается при каждом деплое.
+- Проверка после деплоя: `docker inspect` (лимиты), `docker stats --no-stream`, `docker inspect ... '{{.HostConfig.LogConfig}}'`.
+
+**Блок Б. Swap на VPS (вне репозитория, делает владелец).** Файл 2 ГБ через `fallocate` (`df -T /`: ext4 или xfs), `swappiness=10`, запись в `/etc/fstab`. Swap страхует от жёсткого падения хоста, а не решает нагрузку.
+
+**Блок В. Серверная обработка загрузки и единое правило очистки.**
+- Критерий обрыва: HTTP-запрос не завершился до конца (ответ не отправлен). Серверное определение: сигнал Next 16 (`request.signal`) или события сокета. Проверка доков Next 16 в `node_modules/next/dist/docs` до кода.
+- Единое правило: при обрыве удаляются строка в БД и файлы в итоговой папке, временная папка удаляется всегда. Без различения «записалось, но ответ не дошёл» и «обрыв посреди записи».
+- Порядок записи: временная папка `.tmp/<id>/` → переименование в итоговую папку (атомарно на одной ФС) → вставка строки в БД → проверка обрыва. До вставки обрыв: удалить временную папку. После вставки обрыв: удалить строку и итоговую папку.
+- Остаточное окно: после возврата обработчика Next пишет ответ сам, и обработчик не видит, дошёл ли он. Короткое окно принимается; при повторе загрузки хеш (CP-50) найдёт строку, если она осталась. Решение владельца: принимаем.
+- Падение процесса: не покрывается кодом. Покрывает `media:reconcile` (см. блок Д).
+- Логи при обрыве: `warn` с id запроса, именем и размером файла, `content-length` и полученными байтами, этап обрыва, что удалено (id строки, путь папки), память процесса. Успехи в консоль не пишем.
+
+**Блок Г. Логи и мониторинг.**
+- Глобальный обработчик внутри Next: `instrumentation.ts` с `onRequestError` (ошибки обработчиков с контекстом запроса). Проверить в доках Next 16.
+- Обработчики `uncaughtException` и `unhandledRejection` на уровне процесса.
+- Внешний слой: access log Caddy (не Traefik: в этом стеке прокси Caddy), с ротацией. Фиксирует статус и длительность каждого запроса, включая запросы, до которых Next не дошёл.
+- Память в логах: только внутри записей об ошибках и о медленной обработке (`process.memoryUsage()`). Отдельного периодического снимка не делаем.
+- Группировка повторяющихся одинаковых записей, если понадобится, отдельным решением.
+
+**Блок Д. `media:reconcile` (ручной запуск, как и решено).**
+- Объекты без строк (уже есть), строки без файлов (уже есть), временные папки `.tmp/` старше порога (новое, порог 60 минут, `--min-age-minutes`).
+- Открытый вопрос: удалять временные папки без `--delete` или только с ним. Решение владельца.
+
+**Блок Е. Браузер (страница медиатеки).**
+- При сетевой ошибке `fetch` (`TypeError`) и при ошибке сервера (HTTP с кодом) показываем тост и строку в панели с именем файла, как сейчас. Причины разделяем: «соединение прервано» и «ошибка сервера» (тексты, ключи в `system_texts` ru и en).
+- Имя файла добавляется в цикл загрузки страницы: RTK-промежуточный слой его не знает.
+- Страница закрыта или обновлена: показывать нечего. Пакет прерывается на текущем файле, после обновления пользователь видит, что файла нет.
+- Предупреждение `beforeunload` во время загрузки пакета: решение владельца (да или нет).
+
+**Блок Ж. Тесты, которые нужно сделать при реализации.**
+- Загрузка с ограниченной скоростью (`curl --limit-rate`) дольше 60 с: убедиться, что Caddy обрывает, и что строка и файлы удалены.
+- Обрыв посреди запроса (kill клиента) на каждом этапе: строка и файлы не остаются, временная папка удаляется.
+- Обрыв после вставки строки: строка и итоговая папка удаляются.
+- `media:reconcile` на искусственно созданных сиротах и временной папке.
+
+**Открытые вопросы владельца:**
+1. Лимиты: `app` 768m и `NODE_OPTIONS` 512, `postgres` 384m, `caddy` 128m — подходит?
+2. CPU: жёсткий `cpus` или веса `cpu_shares`?
+3. Swap 2 ГБ: делаете сами по командам.
+4. `read_body 60s` в Caddy: оставить, поднять или заменить? Сначала подтвердить по логам Caddy и доке, что это лимит на всё тело.
+5. Предупреждение `beforeunload`: да или нет.
+6. Временные папки в `reconcile` без `--delete`: удалять сразу или только с флагом.
+7. Лимит 10 МБ в Next (CP-16): оставить, поднять через `experimental.proxyClientMaxBodySize`?
+
+**Порядок работ (после ответов):** A (лимиты и логи в compose, деплой, проверка) → Б (swap, владелец) → В и Г (серверная очистка и логирование, с тестами Ж) → Е (браузер) → Д (reconcile) → документация (`CLAUDE.md` §9/§12 и `PRODUCTION-READINESS.md`, docs-sync).
+
 ### CP-64 · Big pre-launch round: e2e repair, security, refactor, design audits, edge-case tests, browser flows, load test (added 2026-11-09)
 Owner's 7 points, run **one at a time, stopping after each** (report, then the next on a yes). Order chosen so each step has a safety net from the previous one:
 1. **E2E repair (CP-59 list).** One spec at a time, ~30 s timeout, never raise a timeout: a timeout means something is wrong and gets diagnosed. Needs **the owner's `next dev` on :3000 stopped** (Playwright starts its own server and Next refuses a second one in the same directory). Specs to fix: `categories-edit`, `collections-edit`, `error-handling` (native selects → `Combobox`, media cards now have two buttons), `post-editor`, `locale-lockdown`, `media-clipboard` (never run), flaky `inline-create` colour test, `error-handling` leaks; add coverage for `Combobox` select / `RowAction` / `ColorPicker` and the pages/ribbon/dropdown work of today. Done when the full suite is green twice in a row from the same DB. **STEP 1 DONE 2026-11-09 (fixes and a leftover list below, awaiting the owner's go for step 2):** full suite 84/84 twice in a row from a fresh test DB. Fixed (tests only, no app code): new `tests/e2e/helpers/combobox.ts` (`comboboxTrigger`, `pickComboboxOption` — opens the field found by its label, searches when the list has a search box, waits for any previous dropdown to finish closing); `categories-edit` and `error-handling` and `post-editor` moved from native selects / old locators to it; `error-handling` media tests target the delete button by name (a card now has a view button too) and the leak of 1 colour + 1 collection per run is closed; `post-editor` scrolls the gallery into view before the mouse drag and waits for the lists to settle after creating tags inline; `categories-reorder` no longer assumes `order` 0/1/2 (API-created categories all get 0, so it now sets explicit positions first and compares against them, and scrolls rows into view); `post-detail` clicks the `change` button by role (a leftover info page titled `... changed` matched the text); `virtual-lists` colours failure was a stale dev disk cache when specs are run one by one (clear `.next/dev/cache/fetch-cache` before every single-spec run; the npm script already does it once per suite). NOT done: new coverage for `RowAction` / `ColorPicker` / Combobox clear (only the Combobox pick and search paths are exercised); a possible real UX issue seen on the way: a dropdown opened right after the previous one closed could lose the click (now guarded in the tests, the page itself was not changed).

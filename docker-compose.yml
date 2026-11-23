@@ -23,10 +23,25 @@
 # Only Caddy publishes ports (80 and 443). Postgres and the app are reachable only inside the
 # compose network.
 
+# Container stdout is kept on disk in rotated files: at most 5 files of 10 MB per service (about 50 MB,
+# the most recent entries). Older entries are deleted. Logs do not use RAM.
+# Memory limits: mem_limit with memswap_limit equal to it, so a container never uses swap on the host.
+# A container that exceeds its limit is killed alone (restart: unless-stopped brings it back), the
+# rest of the stack and the host are not affected. Limits are sized for the 2 GB VPS; check them
+# with `docker stats` under load and adjust here, not on the server (the deploy copies this file).
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    mem_limit: 128m
+    memswap_limit: 128m
+    logging: *default-logging
     environment:
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
     ports:
@@ -43,6 +58,9 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    mem_limit: 384m
+    memswap_limit: 384m
+    logging: *default-logging
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -60,6 +78,9 @@ services:
   migrate:
     image: ${IMAGE_REPO}-migrator:${IMAGE_TAG}
     env_file: config/.env
+    mem_limit: 256m
+    memswap_limit: 256m
+    logging: *default-logging
     depends_on:
       postgres:
         condition: service_healthy
@@ -69,6 +90,13 @@ services:
     image: ${IMAGE_REPO}:${IMAGE_TAG}
     restart: unless-stopped
     env_file: config/.env
+    mem_limit: 768m
+    memswap_limit: 768m
+    logging: *default-logging
+    # Node heap capped below the container limit, so V8 gives up before the kernel kills the container.
+    # sharp buffers live outside the heap, which is why the container limit itself is needed.
+    environment:
+      NODE_OPTIONS: --max-old-space-size=512
     volumes:
       # Mounted where the app looks for media: <cwd>/.docker/media (cwd is /app in the image).
       - ./media:/app/.docker/media

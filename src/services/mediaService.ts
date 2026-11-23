@@ -5,8 +5,10 @@ import { Media, PaginatedResult } from "@/types";
 import { randomUUID, createHash } from "crypto";
 import { paginate } from "./pagination";
 import { ConflictError } from "@/common/errors/conflict";
+import { ClientAbortedError } from "@/common/errors/clientAborted";
 import { storageService } from "@/modules/storage/StorageService";
 import { generateMediaName } from "@/utils/mediaName";
+import { abortedUploadError } from "@/utils/uploadAbort";
 
 const UNIQUE_VIOLATION = "23505";
 const CONTENT_HASH_INDEX = "media_content_hash_idx";
@@ -59,12 +61,23 @@ export class MediaService implements IMediaService {
     return paginate(mediaList, { page: 1, limit: mediaList.length });
   }
 
-  async uploadAndSaveMedia(buffer: Buffer, _mimeType: string, userId: string, contentHash?: string): Promise<Media> {
+  async uploadAndSaveMedia(
+    buffer: Buffer,
+    _mimeType: string,
+    userId: string,
+    contentHash?: string,
+    signal?: AbortSignal
+  ): Promise<Media> {
     // _mimeType is kept for the interface contract; StorageService now derives the real format
     // from the decoded bytes instead of trusting the client-declared type (CP-6 hardening).
     // contentHash is optional so this method still works for any caller that doesn't already have
     // one computed (uploadMedia below always passes it, to avoid hashing the buffer twice).
-    const processed = await storageService.uploadImage(buffer);
+    const processed = await storageService.uploadImage(buffer, signal);
+    if (signal?.aborted) {
+      // The client left after the files were stored: they go, and no row is written for them.
+      await storageService.deleteImage(processed.originalUrl, processed.thumbnailUrl);
+      throw new ClientAbortedError("before-save");
+    }
 
     const media: Media = {
       id: randomUUID(),
@@ -93,7 +106,9 @@ export class MediaService implements IMediaService {
     }
   }
 
-  async uploadMedia(file: File, userId: string): Promise<Media> {
+  // `signal` aborts when the client disconnects. Whatever was stored for this upload is removed before
+  // ClientAbortedError is thrown: files and row either both exist or neither does.
+  async uploadMedia(file: File, userId: string, signal?: AbortSignal): Promise<Media> {
     // An empty type (some Android file pickers do not report one for HEIC) is let through: the real
     // gate is sharp decoding the bytes in StorageService, so a missing type is not a reason to refuse.
     if (file.type !== "" && !ALLOWED_UPLOAD_MIME_TYPES.includes(file.type)) {
@@ -108,6 +123,8 @@ export class MediaService implements IMediaService {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    const fileInfo = { fileName: file.name, fileSize: file.size };
+    if (signal?.aborted) throw abortedUploadError("before-processing", fileInfo);
 
     // CP-50 point 4: hash the raw bytes before any resizing, and check for a match before doing
     // the (much more expensive) resize/storage-write work in uploadAndSaveMedia — a duplicate is
@@ -120,7 +137,26 @@ export class MediaService implements IMediaService {
       throw duplicateMediaError(existing);
     }
 
-    return this.uploadAndSaveMedia(buffer, file.type, userId, contentHash);
+    let media: Media;
+    try {
+      media = await this.uploadAndSaveMedia(buffer, file.type, userId, contentHash, signal);
+    } catch (error) {
+      if (error instanceof ClientAbortedError) throw abortedUploadError(error.stage, fileInfo);
+      // The storage layer may report the same abort as a write timeout; the signal is the real reason.
+      if (signal?.aborted) throw abortedUploadError("storing", fileInfo);
+      throw error;
+    }
+
+    if (signal?.aborted) {
+      // Saved, but the client left before the answer could be sent: the row and its files go together.
+      // Row first, as deleteMedia does: a crash in between leaves files with no row, which reconcile finds.
+      const storedUrls = [media.originalUrl, media.thumbnailUrl];
+      await this.mediaRepo.delete(media.id);
+      await storageService.deleteImage(media.originalUrl, media.thumbnailUrl);
+      throw abortedUploadError("after-save", { ...fileInfo, rowId: media.id, storedUrls });
+    }
+
+    return media;
   }
 
   async getMediaById(id: string): Promise<Media | undefined> {

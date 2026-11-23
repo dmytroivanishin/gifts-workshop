@@ -9,11 +9,17 @@ type RejectionPayload =
   | string
   | { data?: { error?: { code?: string; message?: string } }; error?: { code?: string; message?: string }; code?: string; message?: string };
 
+// Endpoints whose caller toasts its own failures, because the message needs context this layer does not have
+// (uploadMedia: the file name and whether the connection or the server failed). Everything else still gets
+// the automatic toast.
+const CALLER_TOASTS_ERRORS = new Set(["uploadMedia"]);
+
 export const notificationMiddleware: Middleware =
   (api) => (next) => (action) => {
 
     // Handle RTK Query errors
-    if (isRejectedWithValue(action)) {
+    const rejectedEndpoint = (action as { meta?: { arg?: { endpointName?: string } } }).meta?.arg?.endpointName;
+    if (isRejectedWithValue(action) && !CALLER_TOASTS_ERRORS.has(rejectedEndpoint ?? "")) {
       const payload = action.payload as RejectionPayload;
       const errorData = typeof payload === "string" ? payload : payload?.data?.error || payload?.error || payload;
       const errorCode = typeof errorData === "string" ? "UNKNOWN_ERROR" : errorData?.code || "UNKNOWN_ERROR";

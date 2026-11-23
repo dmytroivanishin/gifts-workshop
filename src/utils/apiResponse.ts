@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { BaseError } from "@/common/errors/base";
+import { ClientAbortedError } from "@/common/errors/clientAborted";
 import { InternalServerError } from "@/common/errors/internalServer";
 import { logger } from "@/modules/logger";
 import { mapDatabaseError } from "@/utils/databaseErrors";
@@ -41,6 +42,10 @@ export function sendSuccess(data: unknown, meta?: Record<string, unknown>, cache
 }
 
 export function sendError(rawError: unknown) {
+  // The client is gone: nobody reads this response, and the code that cleaned up already logged the abort.
+  if (rawError instanceof ClientAbortedError) {
+    return new NextResponse(null, { status: 499 });
+  }
   const mapped = mapDatabaseError(rawError);
   const error = mapped ?? rawError;
   if (mapped && rawError instanceof Error) {

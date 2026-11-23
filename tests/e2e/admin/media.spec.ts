@@ -43,14 +43,18 @@ test.describe("admin media: real file upload, failed-filename list, delete via C
     ]);
     const uploadedId = (await uploadResponse.json()).data.id as string;
 
-    await expect(grid).toHaveCount(before + 1, { timeout: 15_000 });
-    await expect(page.getByText(invalidName)).toBeVisible();
-
-    // Clean up the one real row this test created.
-    const newCard = page.getByTestId(`media-card-${uploadedId}`);
-    await newCard.locator("button").click();
-    await page.getByTestId("confirm-modal-confirm").click();
-    await expect(grid).toHaveCount(before, { timeout: 15_000 });
+    try {
+      await expect(grid).toHaveCount(before + 1, { timeout: 15_000 });
+      // The name is in the failure toast and in the inline list: either one proves it was listed.
+      await expect(page.getByText(invalidName).first()).toBeVisible();
+    } finally {
+      // Cleanup runs even when an assertion above fails: a leaked row would inflate every later
+      // test's count in this file.
+      const newCard = page.getByTestId(`media-card-${uploadedId}`);
+      await newCard.locator("button").click();
+      await page.getByTestId("confirm-modal-confirm").click();
+      await expect(grid).toHaveCount(before, { timeout: 15_000 });
+    }
   });
 
   test("uploading several valid images at once grows the grid by all of them", async ({ page }) => {

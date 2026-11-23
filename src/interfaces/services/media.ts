@@ -6,8 +6,8 @@ export interface IMediaService {
   getMediaById(id: string): Promise<Media | undefined>;
   findByContentHash(hash: string): Promise<Media | undefined>;
   saveMedia(body: Omit<Media, "id" | "userId" | "displayName" | "contentHash"> & { id?: string; userId?: string }): Promise<Media>;
-  uploadAndSaveMedia(buffer: Buffer, mimeType: string, userId: string, contentHash?: string): Promise<Media>;
-  uploadMedia(file: File, userId: string): Promise<Media>;
+  uploadAndSaveMedia(buffer: Buffer, mimeType: string, userId: string, contentHash?: string, signal?: AbortSignal): Promise<Media>;
+  uploadMedia(file: File, userId: string, signal?: AbortSignal): Promise<Media>;
   deleteMedia(id: string): Promise<boolean>;
   bulkDeleteMedia(ids: string[]): Promise<{ deleted: string[]; blocked: { id: string; reason: string }[] }>;
 }

@@ -9,6 +9,7 @@ import { ValidationError } from "@/common/errors/validation";
 import { UnauthorizedError } from "@/common/errors/unauthorized";
 import { ConflictError } from "@/common/errors/conflict";
 import { MAX_UPLOAD_BODY_BYTES } from "@/utils/uploadLimits";
+import { abortedUploadError, isClientDisconnect } from "@/utils/uploadAbort";
 import { getPaginationParams, getSearchParam } from "@/utils/paginationUtils";
 
 export class MediaController {
@@ -50,7 +51,16 @@ export class MediaController {
       if (declaredBytes > MAX_UPLOAD_BODY_BYTES) {
         throw new ConflictError("File is too large.", "FILE_TOO_LARGE");
       }
-      const formData = await request.formData();
+      let formData: FormData;
+      try {
+        formData = await request.formData();
+      } catch (error) {
+        // The body is cut short when the client leaves mid-upload; nothing has been stored yet, so only log it.
+        if (request.signal.aborted || isClientDisconnect(error)) {
+          throw abortedUploadError("reading-body", { contentLength: declaredBytes });
+        }
+        throw error;
+      }
       const file = formData.get("file") as File | null;
 
       const userId = await getUserId();
@@ -61,7 +71,7 @@ export class MediaController {
         throw new ValidationError("No file provided", [{ field: "file", message: "file is required" }]);
       }
 
-      const savedMedia = await this.mediaService.uploadMedia(file, userId);
+      const savedMedia = await this.mediaService.uploadMedia(file, userId, request.signal);
       return sendSuccess(savedMedia);
     } else {
       // Fallback for legacy JSON saving (e.g. updating positions)

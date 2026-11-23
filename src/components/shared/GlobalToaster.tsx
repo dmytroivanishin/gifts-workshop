@@ -20,6 +20,9 @@ export function GlobalToaster() {
         if (message === notification.messageKey && notification.details) {
           message = notification.details;
         }
+        if (notification.subject) {
+          message = `${message}: ${notification.subject}`;
+        }
 
         switch (notification.type) {
           case "success":

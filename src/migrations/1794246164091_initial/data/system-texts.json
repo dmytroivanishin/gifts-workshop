@@ -3004,5 +3004,59 @@
     },
     "area": "admin",
     "code": "publish_placeholder_warning"
+  },
+  {
+    "id": "930a3661-b655-4f28-b54f-b78daa193cdb",
+    "content": {
+      "en": "Connection lost, file not uploaded",
+      "ru": "Соединение прервано, файл не загружен"
+    },
+    "area": "admin",
+    "code": "upload_connection_lost"
+  },
+  {
+    "id": "c8c38148-2532-49cf-982a-25cf07ce52a6",
+    "content": {
+      "en": "Server error, file not uploaded",
+      "ru": "Ошибка сервера, файл не загружен"
+    },
+    "area": "admin",
+    "code": "upload_server_error"
+  },
+  {
+    "id": "da824bfc-da36-4fe2-af62-352918b3a520",
+    "content": {
+      "ru": "Загрузка ещё идёт",
+      "en": "Upload in progress"
+    },
+    "area": "admin",
+    "code": "leave_upload_title"
+  },
+  {
+    "id": "58fa4dc7-47f9-43de-9dfc-f8fdbcf430c0",
+    "content": {
+      "ru": "Файлы, которые ещё не загружены, не сохранятся. Уйти со страницы?",
+      "en": "Files that have not finished uploading will not be saved. Leave this page?"
+    },
+    "area": "admin",
+    "code": "leave_upload_message"
+  },
+  {
+    "id": "5a35cfcb-ea6c-40fc-90ef-e6c4d26358c9",
+    "content": {
+      "ru": "Уйти",
+      "en": "Leave"
+    },
+    "area": "admin",
+    "code": "leave_upload_confirm"
+  },
+  {
+    "id": "72d36e3a-bd04-4944-8667-39087df53549",
+    "content": {
+      "ru": "Остаться",
+      "en": "Stay"
+    },
+    "area": "admin",
+    "code": "leave_upload_stay"
   }
 ]

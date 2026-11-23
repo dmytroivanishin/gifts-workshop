@@ -11,14 +11,26 @@ const CLIPBOARD_KEY = "admin_media_clipboard";
 // toasts read their message key.
 test.describe("admin media: full-size viewer and the copy/paste buffer", () => {
   let admin: APIRequestContext;
+  const placeholderIds: string[] = [];
 
   test.beforeAll(async () => {
     admin = await adminContext(FILE_KEY);
   });
 
   test.afterAll(async () => {
+    for (const id of placeholderIds) await admin.delete(`/api/v1/posts/${id}`);
     await admin.dispose();
   });
+
+  // The /admin/posts/new route is gone: the list button creates a placeholder draft first. The test does
+  // the same through the API and opens its editor, so every paste test has a real editor page.
+  const openNewPostEditor = async (page: Page) => {
+    const res = await admin.post("/api/v1/posts/placeholder");
+    expect(res.ok()).toBe(true);
+    const id = (await res.json()).data.id as string;
+    placeholderIds.push(id);
+    await page.goto(`/admin/posts/${id}`);
+  };
 
   const storedIds = (page: Page) =>
     page.evaluate((key) => {
@@ -73,7 +85,7 @@ test.describe("admin media: full-size viewer and the copy/paste buffer", () => {
       await expect(chipCount(page)).toHaveText(/2$/);
       expect((await storedIds(page))?.sort()).toEqual([a.id, b.id].sort());
 
-      await page.goto("/admin/posts/new");
+      await openNewPostEditor(page);
       await expect(pasteCount(page)).toHaveText("2");
       await page.getByTestId("paste-media-button").click();
 
@@ -102,7 +114,7 @@ test.describe("admin media: full-size viewer and the copy/paste buffer", () => {
       // Deleted behind the buffer's back (another tab, another admin).
       expect((await admin.delete(`/api/v1/media/${b.id}`)).ok()).toBe(true);
 
-      await page.goto("/admin/posts/new");
+      await openNewPostEditor(page);
       await page.getByTestId("paste-media-button").click();
 
       await expect(page.getByTestId(`media-tile-${a.id}`)).toBeVisible();
@@ -132,7 +144,7 @@ test.describe("admin media: full-size viewer and the copy/paste buffer", () => {
       // Copy again and clear it from the editor side instead.
       await select(page, a.id);
       await page.getByTestId("bulk-copy-button").click();
-      await page.goto("/admin/posts/new");
+      await openNewPostEditor(page);
       await expect(pasteCount(page)).toHaveText("1");
       await page.getByTestId("paste-media-clear").click();
       await expect(page.getByTestId("paste-media-group")).toHaveCount(0);

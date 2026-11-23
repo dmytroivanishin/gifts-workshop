@@ -7,6 +7,7 @@ export interface NotificationItem {
   type: NotificationType;
   messageKey: string; // The i18n translation key
   details?: string;   // Optional raw details (e.g. dynamic field names)
+  subject?: string;   // Shown after the translated text, e.g. the file name a failed upload belongs to
 }
 
 interface NotificationState {

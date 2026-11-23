@@ -1,7 +1,8 @@
 import crypto from "crypto";
+import http from "node:http";
 import sharp from "sharp";
 import { test, expect, APIRequestContext } from "@playwright/test";
-import { adminContext, anonContext } from "./helpers/auth";
+import { adminContext, anonContext, clientIpFor } from "./helpers/auth";
 import { expectSuccess, expectError } from "./helpers/client";
 import { createMedia, createPost } from "./helpers/fixtures";
 import { tinyJpeg, tinyPng, tinyPortraitPng, oversizedBuffer, fakeImageBytes } from "./helpers/images";
@@ -374,6 +375,52 @@ test.describe("media", () => {
 
     await newer.cleanup();
     await older.cleanup();
+  });
+
+  // A real dropped connection: the request body is cut halfway and the socket is closed. The server is left
+  // with a request it never finishes reading, so nothing may be stored for it. The media list is the
+  // observable result: it must be exactly as it was before.
+  test("a client that disconnects mid-upload leaves no row and no file behind", async () => {
+    const { data: before } = await expectSuccess<unknown[]>(await admin.get("/api/v1/media"));
+
+    const boundary = `----abort${crypto.randomUUID()}`;
+    const image = await tinyJpeg();
+    const head = Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="dropped.jpg"\r\nContent-Type: image/jpeg\r\n\r\n`
+    );
+    const tail = Buffer.from(`\r\n--${boundary}--\r\n`);
+    const body = Buffer.concat([head, image, tail]);
+
+    const cookie = (await admin.storageState()).cookies.map((c) => `${c.name}=${c.value}`).join("; ");
+    const base = new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001");
+
+    await new Promise<void>((resolve) => {
+      const req = http.request({
+        hostname: base.hostname,
+        port: base.port,
+        path: "/api/v1/media",
+        method: "POST",
+        headers: {
+          "content-type": `multipart/form-data; boundary=${boundary}`,
+          "content-length": String(body.length),
+          cookie,
+          "x-forwarded-for": clientIpFor("media-abort"),
+        },
+      });
+      req.on("error", () => resolve()); // expected: the socket was closed on purpose
+      req.write(body.subarray(0, Math.floor(body.length / 2)));
+      setTimeout(() => {
+        req.destroy();
+        resolve();
+      }, 300);
+    });
+
+    // Give the server time to notice the closed socket and finish its cleanup. Nothing is awaited on the
+    // server side, so this is a fixed pause; the assertion is that the list did NOT grow.
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const { data: after } = await expectSuccess<unknown[]>(await admin.get("/api/v1/media"));
+    expect(after.length).toBe(before.length);
   });
 
   // Opt-in: deliberately exhausts the shared upload rate-limit window (RATE_LIMITS.upload,

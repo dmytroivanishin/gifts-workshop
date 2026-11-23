@@ -1,12 +1,13 @@
 "use client";
 
 import { cn } from "@/utils/cn";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ALLOWED_UPLOAD_MIME_TYPES, MAX_UPLOAD_FILE_BYTES } from "@/utils/uploadLimits";
 import { Upload, Trash2, Loader2, AlertTriangle, Copy, X, ZoomIn } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "@/i18n";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { useUploadLeaveGuard } from "@/hooks/useUploadLeaveGuard";
 import SearchInput from "@/components/shared/SearchInput";
 import { SelectionMark } from "@/components/shared/SelectionMark";
 import { FullscreenGallery } from "@/components/shared/FullscreenGallery";
@@ -70,6 +71,13 @@ export default function AdminMedia() {
   const dispatch = useDispatch();
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Leaving mid-batch: an in-app link asks with our own dialog, and a confirmed leave stops the remaining
+  // files. Closing or reloading the tab still gets the browser's prompt (see useUploadLeaveGuard).
+  const cancelUploadRef = useRef(false);
+  const leaveGuard = useUploadLeaveGuard(isUploading, () => {
+    cancelUploadRef.current = true;
+  });
   const [uploadStats, setUploadStats] = useState({ total: 0, current: 0 });
   const [uploadIssues, setUploadIssues] = useState<UploadIssue[]>([]);
   const [search, setSearch] = useState("");
@@ -199,6 +207,7 @@ export default function AdminMedia() {
     }
     if (acceptedFiles.length === 0) return;
 
+    cancelUploadRef.current = false;
     setIsUploading(true);
     setUploadStats({ total: acceptedFiles.length, current: 0 });
 
@@ -207,6 +216,7 @@ export default function AdminMedia() {
 
       // Upload sequentially to show accurate progress bar
       for (let index = 0; index < acceptedFiles.length; index++) {
+        if (cancelUploadRef.current) break;
         setUploadStats({ total: acceptedFiles.length, current: index + 1 });
         const file = acceptedFiles[index];
 
@@ -234,11 +244,10 @@ export default function AdminMedia() {
           await request.unwrap();
           anySucceeded = true;
         } catch (error: unknown) {
-          // No dispatch(addNotification(...)) here: notificationMiddleware.ts already toasts
-          // every rejected RTK Query mutation app-wide (isRejectedWithValue), including this one
-          // — a toast dispatched here too was a duplicate of that one, not a second real error.
-          // This block only needs to feed the inline uploadIssues panel.
-          const errorData = (error as ApiMutationError)?.data;
+          // The middleware does not toast uploadMedia (see CALLER_TOASTS_ERRORS), so this block owns the
+          // toast for each failed file: it names the file and says whether the connection or the server failed.
+          const rejection = error as ApiMutationError & { status?: unknown };
+          const errorData = rejection?.data;
           const errorCode = errorData?.error?.code;
 
           if (errorCode === 'DUPLICATE_MEDIA') {
@@ -246,8 +255,18 @@ export default function AdminMedia() {
               (detail) => detail.field === 'existingMediaName'
             )?.message;
             setUploadIssues(prev => [...prev, { fileName: acceptedFiles[index].name, kind: 'duplicate', existingMediaName }]);
+            dispatch(addNotification({ type: 'error', messageKey: 'DUPLICATE_MEDIA', subject: file.name }));
           } else {
             setUploadIssues(prev => [...prev, { fileName: file.name, kind: 'failed' }]);
+            // RTK Query reports a request that never got an HTTP answer with a string status (FETCH_ERROR,
+            // TIMEOUT_ERROR, ...); an HTTP answer carries its numeric status.
+            const connectionLost = typeof rejection?.status === 'string';
+            const serverMessageKey = errorCode && t(errorCode) !== errorCode ? errorCode : 'upload_server_error';
+            dispatch(addNotification({
+              type: 'error',
+              messageKey: connectionLost ? 'upload_connection_lost' : serverMessageKey,
+              subject: file.name,
+            }));
           }
         } finally {
           clearTimeout(timer);
@@ -548,6 +567,16 @@ export default function AdminMedia() {
         initialIndex={viewerIndex ?? 0}
         isOpen={viewerIndex !== null}
         onClose={() => setViewerIndex(null)}
+      />
+
+      <ConfirmModal
+        isOpen={leaveGuard.isLeaveOpen}
+        title={t("leave_upload_title")}
+        message={t("leave_upload_message")}
+        confirmText={t("leave_upload_confirm")}
+        cancelText={t("leave_upload_stay")}
+        onConfirm={leaveGuard.confirmLeave}
+        onClose={leaveGuard.stay}
       />
 
       <ConfirmModal
