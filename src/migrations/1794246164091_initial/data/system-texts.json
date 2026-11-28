@@ -3058,5 +3058,14 @@
     },
     "area": "admin",
     "code": "leave_upload_stay"
+  },
+  {
+    "id": "29c8744f-5e38-4a1a-b9eb-4c1ea9dcc995",
+    "content": {
+      "ru": "Наша мастерская пока наполняется, на полках ещё не все работы",
+      "en": "Our workshop is still filling up, not all the works are on the shelves yet"
+    },
+    "area": "public",
+    "code": "catalog_filling_notice"
   }
 ]

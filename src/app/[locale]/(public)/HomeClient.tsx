@@ -572,6 +572,10 @@ export default function HomeClient({ initialCategories, initialPosts, initialMet
         </div>
       </section>
 
+      <div role="status" className="mx-auto max-w-2xl mb-8 rounded-xl border border-border bg-card px-5 py-3 text-center text-sm text-tan-text">
+        {t("catalog_filling_notice")}
+      </div>
+
       {/* Grid Layout */}
       {displayedPosts.length > 0 ? (
         <>
